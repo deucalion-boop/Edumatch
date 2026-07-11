@@ -1,0 +1,269 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\ITLOG0720\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.7.0
+2 info using node@v24.4.1
+3 silly config load:file:C:\Users\ITLOG0720\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\ITLOG0720\CODE\Edumatch\backend\.npmrc
+5 silly config load:file:C:\Users\ITLOG0720\.npmrc
+6 silly config load:file:C:\Users\ITLOG0720\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install
+8 verbose argv "install"
+9 verbose logfile logs-max:10 dir:c:\Users\ITLOG0720\CODE\Edumatch\.npm-cache\_logs\2026-02-20T22_33_42_608Z-
+10 verbose logfile c:\Users\ITLOG0720\CODE\Edumatch\.npm-cache\_logs\2026-02-20T22_33_42_608Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 silly idealTree buildDeps
+14 silly fetch manifest express-rate-limit@^8.1.0
+15 silly packumentCache full:https://registry.npmjs.org/express-rate-limit cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/express-rate-limit 3087ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/express-rate-limit set size:undefined disposed:false
+18 silly fetch manifest express@^5.2.1
+19 silly packumentCache full:https://registry.npmjs.org/express cache-miss
+20 http fetch GET 200 https://registry.npmjs.org/express 3250ms (cache miss)
+21 silly packumentCache full:https://registry.npmjs.org/express set size:undefined disposed:false
+22 silly fetch manifest helmet@^8.1.0
+23 silly packumentCache full:https://registry.npmjs.org/helmet cache-miss
+24 http fetch GET 200 https://registry.npmjs.org/npm 6857ms
+25 http fetch GET 200 https://registry.npmjs.org/helmet 1688ms (cache miss)
+26 silly packumentCache full:https://registry.npmjs.org/helmet set size:undefined disposed:false
+27 silly fetch manifest openai@^5.23.0
+28 silly packumentCache full:https://registry.npmjs.org/openai cache-miss
+29 http fetch GET 200 https://registry.npmjs.org/openai 13451ms (cache miss)
+30 silly packumentCache full:https://registry.npmjs.org/openai set size:undefined disposed:false
+31 silly fetch manifest ws@^8.18.0
+32 silly packumentCache full:https://registry.npmjs.org/ws cache-miss
+33 http fetch GET 200 https://registry.npmjs.org/ws 3859ms (cache miss)
+34 silly packumentCache full:https://registry.npmjs.org/ws set size:undefined disposed:false
+35 silly fetch manifest bufferutil@^4.0.1
+36 silly packumentCache full:https://registry.npmjs.org/bufferutil cache-miss
+37 http fetch GET 200 https://registry.npmjs.org/bufferutil 2513ms (cache miss)
+38 silly packumentCache full:https://registry.npmjs.org/bufferutil set size:undefined disposed:false
+39 silly fetch manifest utf-8-validate@>=5.0.2
+40 silly packumentCache full:https://registry.npmjs.org/utf-8-validate cache-miss
+41 http fetch GET 200 https://registry.npmjs.org/utf-8-validate 2755ms (cache miss)
+42 silly packumentCache full:https://registry.npmjs.org/utf-8-validate set size:undefined disposed:false
+43 silly fetch manifest zod@^3.23.8
+44 silly packumentCache full:https://registry.npmjs.org/zod cache-miss
+45 http fetch GET 200 https://registry.npmjs.org/zod 14100ms (cache miss)
+46 silly packumentCache full:https://registry.npmjs.org/zod set size:undefined disposed:false
+47 silly fetch manifest pdf-parse@^1.1.1
+48 silly packumentCache full:https://registry.npmjs.org/pdf-parse cache-miss
+49 http fetch GET 200 https://registry.npmjs.org/pdf-parse 4391ms (cache miss)
+50 silly packumentCache full:https://registry.npmjs.org/pdf-parse set size:undefined disposed:false
+51 silly placeDep ROOT express-rate-limit@8.2.1 OK for: backend@1.0.0 want: ^8.1.0
+52 silly placeDep ROOT helmet@8.1.0 OK for: backend@1.0.0 want: ^8.1.0
+53 silly placeDep ROOT openai@5.23.2 OK for: backend@1.0.0 want: ^5.23.0
+54 silly placeDep ROOT pdf-parse@1.1.4 OK for: backend@1.0.0 want: ^1.1.1
+55 silly fetch manifest ip-address@10.0.1
+56 silly packumentCache full:https://registry.npmjs.org/ip-address cache-miss
+57 silly fetch manifest node-ensure@^0.0.0
+58 silly packumentCache full:https://registry.npmjs.org/node-ensure cache-miss
+59 http fetch GET 200 https://registry.npmjs.org/ip-address 1505ms (cache miss)
+60 silly packumentCache full:https://registry.npmjs.org/ip-address set size:undefined disposed:false
+61 http fetch GET 200 https://registry.npmjs.org/node-ensure 3083ms (cache miss)
+62 silly packumentCache full:https://registry.npmjs.org/node-ensure set size:undefined disposed:false
+63 silly placeDep ROOT ip-address@10.0.1 OK for: express-rate-limit@8.2.1 want: 10.0.1
+64 silly placeDep ROOT node-ensure@0.0.0 OK for: pdf-parse@1.1.4 want: ^0.0.0
+65 silly reify moves {}
+66 silly audit bulk request {
+66 silly audit   '@mongodb-js/saslprep': [ '1.4.6' ],
+66 silly audit   '@types/webidl-conversions': [ '7.0.3' ],
+66 silly audit   '@types/whatwg-url': [ '13.0.0' ],
+66 silly audit   accepts: [ '2.0.0' ],
+66 silly audit   anymatch: [ '3.1.3' ],
+66 silly audit   'append-field': [ '1.0.0' ],
+66 silly audit   'balanced-match': [ '1.0.2' ],
+66 silly audit   bcryptjs: [ '3.0.3' ],
+66 silly audit   'binary-extensions': [ '2.3.0' ],
+66 silly audit   'body-parser': [ '2.2.2' ],
+66 silly audit   'brace-expansion': [ '1.1.12' ],
+66 silly audit   braces: [ '3.0.3' ],
+66 silly audit   bson: [ '7.2.0' ],
+66 silly audit   'buffer-equal-constant-time': [ '1.0.1' ],
+66 silly audit   'buffer-from': [ '1.1.2' ],
+66 silly audit   busboy: [ '1.6.0' ],
+66 silly audit   bytes: [ '3.1.2' ],
+66 silly audit   'call-bind-apply-helpers': [ '1.0.2' ],
+66 silly audit   'call-bound': [ '1.0.4' ],
+66 silly audit   chokidar: [ '3.6.0' ],
+66 silly audit   'concat-map': [ '0.0.1' ],
+66 silly audit   'concat-stream': [ '2.0.0' ],
+66 silly audit   'content-disposition': [ '1.0.1' ],
+66 silly audit   'content-type': [ '1.0.5' ],
+66 silly audit   cookie: [ '0.7.2' ],
+66 silly audit   'cookie-signature': [ '1.2.2' ],
+66 silly audit   cors: [ '2.8.6' ],
+66 silly audit   debug: [ '4.4.3' ],
+66 silly audit   depd: [ '2.0.0' ],
+66 silly audit   dotenv: [ '17.3.1' ],
+66 silly audit   'dunder-proto': [ '1.0.1' ],
+66 silly audit   'ecdsa-sig-formatter': [ '1.0.11' ],
+66 silly audit   'ee-first': [ '1.1.1' ],
+66 silly audit   encodeurl: [ '2.0.0' ],
+66 silly audit   'es-define-property': [ '1.0.1' ],
+66 silly audit   'es-errors': [ '1.3.0' ],
+66 silly audit   'es-object-atoms': [ '1.1.1' ],
+66 silly audit   'escape-html': [ '1.0.3' ],
+66 silly audit   etag: [ '1.8.1' ],
+66 silly audit   express: [ '5.2.1' ],
+66 silly audit   'fill-range': [ '7.1.1' ],
+66 silly audit   finalhandler: [ '2.1.1' ],
+66 silly audit   forwarded: [ '0.2.0' ],
+66 silly audit   fresh: [ '2.0.0' ],
+66 silly audit   fsevents: [ '2.3.3' ],
+66 silly audit   'function-bind': [ '1.1.2' ],
+66 silly audit   'get-intrinsic': [ '1.3.0' ],
+66 silly audit   'get-proto': [ '1.0.1' ],
+66 silly audit   'glob-parent': [ '5.1.2' ],
+66 silly audit   gopd: [ '1.2.0' ],
+66 silly audit   'has-flag': [ '3.0.0' ],
+66 silly audit   'has-symbols': [ '1.1.0' ],
+66 silly audit   hasown: [ '2.0.2' ],
+66 silly audit   'http-errors': [ '2.0.1' ],
+66 silly audit   'iconv-lite': [ '0.7.2' ],
+66 silly audit   'ignore-by-default': [ '1.0.1' ],
+66 silly audit   inherits: [ '2.0.4' ],
+66 silly audit   'ipaddr.js': [ '1.9.1' ],
+66 silly audit   'is-binary-path': [ '2.1.0' ],
+66 silly audit   'is-extglob': [ '2.1.1' ],
+66 silly audit   'is-glob': [ '4.0.3' ],
+66 silly audit   'is-number': [ '7.0.0' ],
+66 silly audit   'is-promise': [ '4.0.0' ],
+66 silly audit   jsonwebtoken: [ '9.0.3' ],
+66 silly audit   jwa: [ '2.0.1' ],
+66 silly audit   jws: [ '4.0.1' ],
+66 silly audit   kareem: [ '3.2.0' ],
+66 silly audit   'lodash.includes': [ '4.3.0' ],
+66 silly audit   'lodash.isboolean': [ '3.0.3' ],
+66 silly audit   'lodash.isinteger': [ '4.0.4' ],
+66 silly audit   'lodash.isnumber': [ '3.0.3' ],
+66 silly audit   'lodash.isplainobject': [ '4.0.6' ],
+66 silly audit   'lodash.isstring': [ '4.0.1' ],
+66 silly audit   'lodash.once': [ '4.1.1' ],
+66 silly audit   'math-intrinsics': [ '1.1.0' ],
+66 silly audit   'media-typer': [ '1.1.0', '0.3.0' ],
+66 silly audit   'memory-pager': [ '1.5.0' ],
+66 silly audit   'merge-descriptors': [ '2.0.0' ],
+66 silly audit   'mime-db': [ '1.54.0', '1.52.0' ],
+66 silly audit   'mime-types': [ '3.0.2', '2.1.35' ],
+66 silly audit   minimatch: [ '3.1.2' ],
+66 silly audit   minimist: [ '1.2.8' ],
+66 silly audit   mkdirp: [ '0.5.6' ],
+66 silly audit   mongodb: [ '7.0.0' ],
+66 silly audit   'mongodb-connection-string-url': [ '7.0.1' ],
+66 silly audit   mongoose: [ '9.2.1' ],
+66 silly audit   mpath: [ '0.9.0' ],
+66 silly audit   mquery: [ '6.0.0' ],
+66 silly audit   ms: [ '2.1.3' ],
+66 silly audit   multer: [ '2.0.2' ],
+66 silly audit   'type-is': [ '1.6.18', '2.0.1' ],
+66 silly audit   negotiator: [ '1.0.0' ],
+66 silly audit   nodemon: [ '3.1.11' ],
+66 silly audit   'normalize-path': [ '3.0.0' ],
+66 silly audit   'object-assign': [ '4.1.1' ],
+66 silly audit   'object-inspect': [ '1.13.4' ],
+66 silly audit   'on-finished': [ '2.4.1' ],
+66 silly audit   once: [ '1.4.0' ],
+66 silly audit   parseurl: [ '1.3.3' ],
+66 silly audit   'path-to-regexp': [ '8.3.0' ],
+66 silly audit   picomatch: [ '2.3.1' ],
+66 silly audit   'proxy-addr': [ '2.0.7' ],
+66 silly audit   'pstree.remy': [ '1.1.8' ],
+66 silly audit   punycode: [ '2.3.1' ],
+66 silly audit   qs: [ '6.15.0' ],
+66 silly audit   'range-parser': [ '1.2.1' ],
+66 silly audit   'raw-body': [ '3.0.2' ],
+66 silly audit   'readable-stream': [ '3.6.2' ],
+66 silly audit   readdirp: [ '3.6.0' ],
+66 silly audit   router: [ '2.2.0' ],
+66 silly audit   'safe-buffer': [ '5.2.1' ],
+66 silly audit   'safer-buffer': [ '2.1.2' ],
+66 silly audit   semver: [ '7.7.4' ],
+66 silly audit   send: [ '1.2.1' ],
+66 silly audit   'serve-static': [ '2.2.1' ],
+66 silly audit   setprototypeof: [ '1.2.0' ],
+66 silly audit   'side-channel': [ '1.1.0' ],
+66 silly audit   'side-channel-list': [ '1.0.0' ],
+66 silly audit   'side-channel-map': [ '1.0.1' ],
+66 silly audit   'side-channel-weakmap': [ '1.0.2' ],
+66 silly audit   sift: [ '17.1.3' ],
+66 silly audit   'simple-update-notifier': [ '2.0.0' ],
+66 silly audit   'sparse-bitfield': [ '3.0.3' ],
+66 silly audit   statuses: [ '2.0.2' ],
+66 silly audit   streamsearch: [ '1.1.0' ],
+66 silly audit   string_decoder: [ '1.3.0' ],
+66 silly audit   'supports-color': [ '5.5.0' ],
+66 silly audit   'to-regex-range': [ '5.0.1' ],
+66 silly audit   toidentifier: [ '1.0.1' ],
+66 silly audit   touch: [ '3.1.1' ],
+66 silly audit   tr46: [ '5.1.1' ],
+66 silly audit   typedarray: [ '0.0.6' ],
+66 silly audit   undefsafe: [ '2.0.5' ],
+66 silly audit   unpipe: [ '1.0.0' ],
+66 silly audit   'util-deprecate': [ '1.0.2' ],
+66 silly audit   vary: [ '1.1.2' ],
+66 silly audit   'webidl-conversions': [ '7.0.0' ],
+66 silly audit   'whatwg-url': [ '14.2.0' ],
+66 silly audit   wrappy: [ '1.0.2' ],
+66 silly audit   xtend: [ '4.0.2' ],
+66 silly audit   'express-rate-limit': [ '8.2.1' ],
+66 silly audit   helmet: [ '8.1.0' ],
+66 silly audit   openai: [ '5.23.2' ],
+66 silly audit   'pdf-parse': [ '1.1.4' ],
+66 silly audit   'ip-address': [ '10.0.1' ],
+66 silly audit   'node-ensure': [ '0.0.0' ]
+66 silly audit }
+67 http cache node-ensure@https://registry.npmjs.org/node-ensure/-/node-ensure-0.0.0.tgz 1ms (cache hit)
+68 http cache ip-address@https://registry.npmjs.org/ip-address/-/ip-address-10.0.1.tgz 0ms (cache hit)
+69 http cache openai@https://registry.npmjs.org/openai/-/openai-5.23.2.tgz 0ms (cache hit)
+70 http cache pdf-parse@https://registry.npmjs.org/pdf-parse/-/pdf-parse-1.1.4.tgz 0ms (cache hit)
+71 silly tarball no local data for node-ensure@https://registry.npmjs.org/node-ensure/-/node-ensure-0.0.0.tgz. Extracting by manifest.
+72 silly tarball no local data for ip-address@https://registry.npmjs.org/ip-address/-/ip-address-10.0.1.tgz. Extracting by manifest.
+73 silly tarball no local data for openai@https://registry.npmjs.org/openai/-/openai-5.23.2.tgz. Extracting by manifest.
+74 http cache helmet@https://registry.npmjs.org/helmet/-/helmet-8.1.0.tgz 0ms (cache hit)
+75 http cache express-rate-limit@https://registry.npmjs.org/express-rate-limit/-/express-rate-limit-8.2.1.tgz 0ms (cache hit)
+76 silly tarball no local data for pdf-parse@https://registry.npmjs.org/pdf-parse/-/pdf-parse-1.1.4.tgz. Extracting by manifest.
+77 silly tarball no local data for helmet@https://registry.npmjs.org/helmet/-/helmet-8.1.0.tgz. Extracting by manifest.
+78 silly tarball no local data for express-rate-limit@https://registry.npmjs.org/express-rate-limit/-/express-rate-limit-8.2.1.tgz. Extracting by manifest.
+79 http fetch GET 200 https://registry.npmjs.org/ip-address/-/ip-address-10.0.1.tgz 282ms (cache miss)
+80 http fetch GET 200 https://registry.npmjs.org/node-ensure/-/node-ensure-0.0.0.tgz 1288ms (cache miss)
+81 http fetch GET 200 https://registry.npmjs.org/express-rate-limit/-/express-rate-limit-8.2.1.tgz 1412ms (cache miss)
+82 http fetch GET 200 https://registry.npmjs.org/helmet/-/helmet-8.1.0.tgz 1634ms (cache miss)
+83 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 1926ms
+84 silly audit report {
+84 silly audit report   minimatch: [
+84 silly audit report     {
+84 silly audit report       id: 1113371,
+84 silly audit report       url: 'https://github.com/advisories/GHSA-3ppc-4f35-3m26',
+84 silly audit report       title: 'minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern',
+84 silly audit report       severity: 'high',
+84 silly audit report       vulnerable_versions: '<10.2.1',
+84 silly audit report       cwe: [Array],
+84 silly audit report       cvss: [Object]
+84 silly audit report     }
+84 silly audit report   ]
+84 silly audit report }
+85 silly packumentCache corgi:https://registry.npmjs.org/minimatch cache-miss
+86 http fetch GET 200 https://registry.npmjs.org/minimatch 71ms (cache miss)
+87 silly packumentCache corgi:https://registry.npmjs.org/minimatch set size:undefined disposed:false
+88 silly packumentCache corgi:https://registry.npmjs.org/nodemon cache-miss
+89 http fetch GET 200 https://registry.npmjs.org/nodemon 1613ms (cache miss)
+90 silly packumentCache corgi:https://registry.npmjs.org/nodemon set size:undefined disposed:false
+91 http fetch GET 200 https://registry.npmjs.org/openai/-/openai-5.23.2.tgz 5815ms (cache miss)
+92 http fetch GET 200 https://registry.npmjs.org/pdf-parse/-/pdf-parse-1.1.4.tgz 7986ms (cache miss)
+93 silly ADD node_modules/node-ensure
+94 silly ADD node_modules/ip-address
+95 silly ADD node_modules/pdf-parse
+96 silly ADD node_modules/openai
+97 silly ADD node_modules/helmet
+98 silly ADD node_modules/express-rate-limit
+99 verbose cwd C:\Users\ITLOG0720\CODE\Edumatch\backend
+100 verbose os Windows_NT 10.0.26100
+101 verbose node v24.4.1
+102 verbose npm  v11.7.0
+103 notice
+103 notice New minor version of npm available! 11.7.0 -> 11.10.1
+103 notice Changelog: https://github.com/npm/cli/releases/tag/v11.10.1
+103 notice To update run: npm install -g npm@11.10.1
+103 notice  { force: true, Symbol(proc-log.meta): true }
+104 verbose exit 0
+105 info ok

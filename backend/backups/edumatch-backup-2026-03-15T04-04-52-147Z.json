@@ -1,0 +1,624 @@
+{
+  "generatedAt": "2026-03-15T04:04:52.142Z",
+  "databaseName": "edumatch",
+  "collections": {
+    "settings": [],
+    "subjectenrollments": [
+      {
+        "_id": "69b5b94aa908c0ae507bc81a",
+        "subjectId": "69b5b90ca908c0ae507bc7fe",
+        "teacherId": "69b5b8bca908c0ae507bc7c1",
+        "studentId": "69b5b949a908c0ae507bc818",
+        "status": "approved",
+        "requestedAt": "2026-03-14T19:38:50.075Z",
+        "decidedAt": "2026-03-14T19:38:50.075Z",
+        "createdAt": "2026-03-14T19:38:50.076Z",
+        "updatedAt": "2026-03-14T19:38:50.076Z",
+        "__v": 0
+      },
+      {
+        "_id": "69b5d8bf7125e33ffe144267",
+        "subjectId": "69b5d87d7125e33ffe14424b",
+        "teacherId": "69b5c2f28a1bd882141f6501",
+        "studentId": "69b5d8bf7125e33ffe144265",
+        "status": "approved",
+        "requestedAt": "2026-03-14T21:53:03.246Z",
+        "decidedAt": "2026-03-14T21:53:03.246Z",
+        "createdAt": "2026-03-14T21:53:03.247Z",
+        "updatedAt": "2026-03-14T21:53:03.247Z",
+        "__v": 0
+      }
+    ],
+    "subjects": [
+      {
+        "_id": "69b5b90ca908c0ae507bc7fe",
+        "name": "Mathematics",
+        "className": "Math 10 - Morning",
+        "code": "MAT-S9REB",
+        "track": "GENERAL",
+        "subjectCategory": "Math",
+        "section": "SOUTH 2",
+        "description": "Educational Purposes",
+        "teacherId": "69b5b8bca908c0ae507bc7c1",
+        "isActive": true,
+        "createdAt": "2026-03-14T19:37:48.097Z",
+        "updatedAt": "2026-03-14T19:37:48.097Z",
+        "__v": 0
+      },
+      {
+        "_id": "69b5d87d7125e33ffe14424b",
+        "name": "Mathematics",
+        "className": "Math 10 - Morning",
+        "code": "MAT-VSSZS",
+        "track": "GENERAL",
+        "subjectCategory": "Math",
+        "section": "SOUTH 2",
+        "description": "Educational Purposes",
+        "teacherId": "69b5c2f28a1bd882141f6501",
+        "isActive": true,
+        "createdAt": "2026-03-14T21:51:57.558Z",
+        "updatedAt": "2026-03-14T21:51:57.558Z",
+        "__v": 0
+      }
+    ],
+    "assessments": [],
+    "recommendations": [
+      {
+        "_id": "69b5d91e06dcebe2c9f97394",
+        "studentId": "69b5d8bf7125e33ffe144265",
+        "__v": 0,
+        "assessmentAttempts": [],
+        "createdAt": "2026-03-14T21:54:38.906Z",
+        "lastReason": "Student insights refreshed",
+        "recommendationExplanation": "No recommendation available yet. Complete more assessments to generate your academic recommendation.",
+        "recommendedStrand": {
+          "name": null,
+          "confidence": null,
+          "generatedAt": null,
+          "topTwoStrands": []
+        },
+        "records": [
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Initial recommendation generated",
+            "timestamp": "2026-03-14T21:54:38.905Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T21:54:38.920Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T21:56:06.752Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T21:57:14.402Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T21:57:27.853Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T21:58:28.415Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T21:59:28.443Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:00:28.460Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:01:28.442Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:01:34.190Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:02:19.867Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:03:20.443Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:04:20.447Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:05:20.453Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:06:20.445Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:07:20.444Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:08:20.453Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:10:09.478Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:11:09.476Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:12:09.476Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:13:09.478Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:14:09.477Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:15:09.497Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:16:09.487Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:17:09.492Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:18:09.494Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:19:09.496Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:20:09.514Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:21:09.509Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:22:09.516Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:23:09.515Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:24:09.518Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:25:09.530Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:26:09.522Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:27:09.522Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:28:09.523Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:29:09.529Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:30:09.546Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:31:09.542Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:32:09.553Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:33:09.538Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:34:09.552Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:35:09.548Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:36:09.568Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:37:09.561Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:38:09.560Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:39:09.570Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:40:09.565Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-14T22:41:09.585Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-15T03:56:29.850Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-15T03:57:22.223Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-15T03:58:16.121Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-15T04:02:33.843Z"
+          },
+          {
+            "event": "Strand Recommendation Updated",
+            "reason": "Student insights refreshed",
+            "timestamp": "2026-03-15T04:02:43.035Z"
+          }
+        ],
+        "strandScores": {
+          "STEM": 0,
+          "HUMSS": 0,
+          "ABM": 0,
+          "TVL": 0
+        },
+        "subjectPerformance": [],
+        "updatedAt": "2026-03-15T04:02:43.035Z"
+      }
+    ],
+    "users": [
+      {
+        "_id": "699d7987e67353ab0e898fc5",
+        "name": "System Admin",
+        "email": "admin@gmail.com",
+        "password": "$2b$10$UnH4rxbmOmdjC.J/3H0TDOdQNulFUBwh5Xs4irDp0Fl4io/n2zJ8q",
+        "role": "admin",
+        "status": "active",
+        "invite": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "sentAt": null,
+          "usedAt": null
+        },
+        "failedLoginAttempts": 0,
+        "lockUntil": null,
+        "lastLoginAt": "2026-03-15T03:59:37.073Z",
+        "lastActivityAt": "2026-03-15T04:04:52.136Z",
+        "department": "",
+        "dateOfBirth": null,
+        "profileImage": "",
+        "contactNumber": "",
+        "gradeLevel": "",
+        "enrollment": {
+          "teacherId": null,
+          "status": "",
+          "track": "",
+          "trackId": "",
+          "requestedAt": null,
+          "approvedAt": null,
+          "progress": {
+            "averageScore": 0,
+            "completedAssessments": 0,
+            "masteryProgress": 0
+          }
+        },
+        "createdAt": "2026-02-24T10:12:23.496Z",
+        "updatedAt": "2026-03-15T04:04:52.136Z",
+        "__v": 0,
+        "strand": "",
+        "subject": "",
+        "username": "Admin",
+        "forcePasswordChange": false,
+        "hasSeenDashboardTour": false,
+        "hasCompletedTeacherTour": false,
+        "hasCompletedStudentTour": false
+      },
+      {
+        "_id": "69b5c28e8a1bd882141f64e8",
+        "name": "Mark James Legatic",
+        "email": "markjameslegatic@gmail.com",
+        "username": "James123",
+        "forcePasswordChange": false,
+        "temporaryPasswordIssuedAt": null,
+        "role": "headteacher",
+        "status": "active",
+        "invite": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "sentAt": "2026-03-14T20:18:22.856Z",
+          "usedAt": null
+        },
+        "resetPassword": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "requestedAt": null,
+          "usedAt": null
+        },
+        "failedLoginAttempts": 0,
+        "lockUntil": null,
+        "lastLoginAt": "2026-03-14T20:18:56.205Z",
+        "lastActivityAt": "2026-03-14T20:20:09.310Z",
+        "strand": "",
+        "subject": "",
+        "department": "Mathematics",
+        "managedBy": null,
+        "profileImage": "",
+        "contactNumber": "09123456789",
+        "gradeLevel": "",
+        "enrollment": {
+          "progress": {
+            "masteryProgress": 0,
+            "averageScore": 0,
+            "completedAssessments": 0,
+            "lastCalculatedAt": null
+          },
+          "teacherId": null,
+          "status": "",
+          "track": "",
+          "trackId": "",
+          "requestedAt": null,
+          "approvedAt": null
+        },
+        "createdAt": "2026-03-14T20:18:22.851Z",
+        "updatedAt": "2026-03-14T20:20:09.310Z",
+        "__v": 0,
+        "password": "$2b$10$IH68eqVFyFtf4a4w64O8meAiSFr2l.kHIHC/P3SCQTftJ4joh.rB2"
+      },
+      {
+        "_id": "69b5c2f28a1bd882141f6501",
+        "name": "Kenneth Legatic",
+        "email": "kennethlegatic112808@gmail.com",
+        "username": "Ken123",
+        "forcePasswordChange": false,
+        "temporaryPasswordIssuedAt": null,
+        "role": "teacher",
+        "status": "active",
+        "invite": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "sentAt": "2026-03-14T20:20:02.295Z",
+          "usedAt": null
+        },
+        "resetPassword": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "requestedAt": null,
+          "usedAt": null
+        },
+        "failedLoginAttempts": 0,
+        "lockUntil": null,
+        "lastLoginAt": "2026-03-15T04:03:19.664Z",
+        "lastActivityAt": "2026-03-15T04:04:16.527Z",
+        "strand": "",
+        "subject": "Mathematics",
+        "department": "Mathematics",
+        "managedBy": "69b5c28e8a1bd882141f64e8",
+        "profileImage": "",
+        "contactNumber": "09123456789",
+        "gradeLevel": "",
+        "enrollment": {
+          "progress": {
+            "masteryProgress": 0,
+            "averageScore": 0,
+            "completedAssessments": 0,
+            "lastCalculatedAt": null
+          },
+          "teacherId": null,
+          "status": "",
+          "track": "",
+          "trackId": "",
+          "requestedAt": null,
+          "approvedAt": null
+        },
+        "createdAt": "2026-03-14T20:20:02.293Z",
+        "updatedAt": "2026-03-15T04:04:16.527Z",
+        "__v": 0,
+        "password": "$2b$10$GuFs3BGj9k7NceL4EKyIyuDunIgVel/M/rD0Jl1Q147CLqZxCGhjW",
+        "hasSeenDashboardTour": true,
+        "hasCompletedStudentTour": false,
+        "hasCompletedTeacherTour": true
+      },
+      {
+        "_id": "69b5d8bf7125e33ffe144265",
+        "name": "James Legatic",
+        "email": "legaticmarkjames@gmail.com",
+        "username": "Mark123",
+        "forcePasswordChange": false,
+        "temporaryPasswordIssuedAt": null,
+        "hasCompletedTeacherTour": false,
+        "role": "student",
+        "status": "active",
+        "invite": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "sentAt": "2026-03-14T21:53:03.249Z",
+          "usedAt": null
+        },
+        "resetPassword": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "requestedAt": null,
+          "usedAt": null
+        },
+        "failedLoginAttempts": 0,
+        "lockUntil": null,
+        "lastLoginAt": "2026-03-15T03:56:29.522Z",
+        "lastActivityAt": "2026-03-15T04:02:45.648Z",
+        "strand": "",
+        "subject": "",
+        "department": "Mathematics",
+        "managedBy": "69b5c2f28a1bd882141f6501",
+        "profileImage": "",
+        "contactNumber": "09123456789",
+        "gradeLevel": "Grade 10",
+        "enrollment": {
+          "teacherId": "69b5c2f28a1bd882141f6501",
+          "status": "approved",
+          "track": "GENERAL",
+          "trackId": "69b5d87d7125e33ffe14424b",
+          "requestedAt": "2026-03-14T21:53:03.241Z",
+          "approvedAt": "2026-03-14T21:53:03.241Z",
+          "progress": {
+            "masteryProgress": 0,
+            "averageScore": 0,
+            "completedAssessments": 0,
+            "lastCalculatedAt": "2026-03-15T04:04:14.332Z"
+          }
+        },
+        "createdAt": "2026-03-14T21:53:03.243Z",
+        "updatedAt": "2026-03-15T04:04:14.333Z",
+        "__v": 0,
+        "password": "$2b$10$i6WhKQSUrfxc5Fj7EkziUel8A1uInQjO.9TheYtTPFTpm2upui/hi",
+        "hasCompletedStudentTour": true
+      },
+      {
+        "_id": "69b62fd5a113681b2e19b345",
+        "name": "Ian Desperado",
+        "email": "desperadoian56@gmail.com",
+        "username": "Ian123",
+        "forcePasswordChange": true,
+        "temporaryPasswordIssuedAt": "2026-03-15T04:04:37.729Z",
+        "hasCompletedTeacherTour": false,
+        "hasCompletedStudentTour": false,
+        "role": "secretary",
+        "status": "active",
+        "invite": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "sentAt": "2026-03-15T04:04:37.729Z",
+          "usedAt": null
+        },
+        "resetPassword": {
+          "tokenHash": "",
+          "expiresAt": null,
+          "requestedAt": null,
+          "usedAt": null
+        },
+        "failedLoginAttempts": 0,
+        "lockUntil": null,
+        "lastLoginAt": null,
+        "lastActivityAt": null,
+        "strand": "",
+        "subject": "",
+        "department": "",
+        "managedBy": null,
+        "profileImage": "",
+        "contactNumber": "09123456789",
+        "gradeLevel": "",
+        "enrollment": {
+          "progress": {
+            "masteryProgress": 0,
+            "averageScore": 0,
+            "completedAssessments": 0,
+            "lastCalculatedAt": null
+          },
+          "teacherId": null,
+          "status": "",
+          "track": "",
+          "trackId": "",
+          "requestedAt": null,
+          "approvedAt": null
+        },
+        "createdAt": "2026-03-15T04:04:37.724Z",
+        "updatedAt": "2026-03-15T04:04:37.731Z",
+        "__v": 0,
+        "password": "$2b$10$P7wqKf3aJpBv04dCqcrkve5J81O3suYbyj5tiZKBy42gbW2Y58kt6"
+      }
+    ],
+    "lessons": [],
+    "submissions": []
+  }
+}
