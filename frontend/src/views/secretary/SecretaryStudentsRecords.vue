@@ -39,18 +39,19 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div class="teacher-profile">
-          <div class="teacher-avatar">
-            <img :src="avatarUrl" :alt="displayName">
+        <div class="secretary-profile">
+          <div class="secretary-avatar">
+            <i class="fas fa-user" aria-hidden="true"></i>
           </div>
-          <div class="teacher-info">
+          <div class="secretary-info">
             <h5>{{ displayName }}</h5>
-            <p class="teacher-role">Secretary</p>
-            <div class="teacher-status">
-              <span class="status-indicator active"></span>
-              <span>Records access</span>
+            <div class="secretary-profile-meta">
+              <p class="secretary-role">Secretary</p>
+              <div class="secretary-status">
+                <span class="secretary-profile-status-indicator active"></span>
+                <span>active</span>
+              </div>
             </div>
-            <div class="secretary-sidebar-chip">Archive Tools</div>
           </div>
         </div>
       </div>
@@ -68,10 +69,6 @@
             <div>
               <h1>Student Records</h1>
               <p class="header-subtitle">Track each learner's adviser, recommendation progress, and AI strand guidance in one place.</p>
-            </div>
-            <div class="secretary-access-chip">
-              <i class="fas fa-box-archive"></i>
-              <span>Archive workflow</span>
             </div>
           </div>
 
@@ -379,12 +376,6 @@ const archiveSchoolYearInput = ref('')
 const CORE_DEPARTMENTS = ['Mathematics', 'English', 'Science', 'TLE', 'Filipino', 'Araling Panlipunan', 'Edukasyon sa Pagpapakatao (ESP)', 'MAPEH']
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
-const avatarUrl = computed(() => {
-  const profileImage = String(authStore.user?.profileImage || '').trim()
-  if (profileImage) return profileImage
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName.value)}&background=334155&color=fff`
-})
-
 const resolveApiBaseUrl = () => {
   const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
   if (!configured) return '/api'
@@ -1056,17 +1047,36 @@ onBeforeUnmount(() => {
   border-radius: 20px;
   background: linear-gradient(180deg, #ffffff, #f8fbfb);
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.secretary-table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.secretary-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.secretary-table-wrap::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+}
+
+.secretary-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 .secretary-table {
   width: 100%;
-  min-width: 1080px;
+  min-width: 980px;
   border-collapse: separate;
   border-spacing: 0;
 }
 
 .secretary-table thead th {
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: left;
   background: linear-gradient(180deg, #f8fafc, #f1f5f9);
   border-bottom: 1px solid #dbe4ec;
@@ -1079,7 +1089,7 @@ onBeforeUnmount(() => {
 }
 
 .secretary-table tbody td {
-  padding: 1rem;
+  padding: 0.75rem;
   border-bottom: 1px solid #edf2f7;
   color: #0f172a;
   font-size: 0.9rem;

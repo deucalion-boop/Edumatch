@@ -512,27 +512,11 @@
           <div class="section-header">
             <div class="records-section-heading">
               <h3 class="section-title">Attendance</h3>
-              <p class="section-subtitle">Switch between handled-class attendance and advisory attendance without leaving the records workspace.</p>
             </div>
           </div>
 
           <div class="attendance-shell">
             <section class="attendance-hero-card">
-              <div class="attendance-hero-copy">
-                <span class="attendance-kicker">Attendance Overview</span>
-                <h4>{{ attendanceHeroTitle }}</h4>
-                <p>{{ attendanceHeroDescription }}</p>
-                <div class="attendance-hero-chips">
-                  <span class="record-chip chip-neutral">{{ attendanceScopeLabel(attendanceScope) }}</span>
-                  <span class="record-chip chip-subject">
-                    {{ isAdvisoryAttendance ? (teacherAdvisorySection?.name || 'No advisory section') : (selectedAttendanceSubject?.code || 'Select a subject') }}
-                  </span>
-                  <span v-if="!isAdvisoryAttendance && selectedAttendanceSubject?.department" class="record-chip chip-type">{{ selectedAttendanceSubject.department }}</span>
-                  <span class="record-chip chip-neutral">{{ attendanceRecordStateLabel }}</span>
-                  <span v-if="attendanceDateKey" class="record-chip chip-type">{{ formatDate(attendanceDateKey) }}</span>
-                </div>
-              </div>
-
               <div class="attendance-summary-grid">
                 <article class="attendance-summary-card">
                   <i class="fas fa-users attendance-summary-icon" aria-hidden="true"></i>
@@ -710,6 +694,7 @@
                   <span class="attendance-legend-pill status-excused">Excused</span>
                 </div>
               </div>
+
             </section>
           </div>
 
@@ -726,8 +711,6 @@
               <div class="attendance-panel-head">
                 <div>
                   <span class="attendance-panel-kicker">Attendance Roster</span>
-                  <h4>Daily Attendance Sheet</h4>
-                  <p>{{ attendanceRosterContextLabel }}<template v-if="attendanceDateKey"> for {{ formatDate(attendanceDateKey) }}</template></p>
                 </div>
                 <div v-if="attendanceCurrentRecord" class="attendance-record-badges">
                   <span class="record-chip" :class="attendanceCurrentRecord.isLocked ? 'chip-success' : 'chip-neutral'">
@@ -886,8 +869,6 @@
                 <div class="attendance-panel-head">
                 <div>
                     <span class="attendance-panel-kicker">Attendance History</span>
-                    <h4>Recent Records</h4>
-                    <p>Select a saved day to reopen it.</p>
                   </div>
                   <i class="fas fa-chevron-down attendance-history-chevron" aria-hidden="true"></i>
                 </div>
@@ -5585,7 +5566,7 @@ onBeforeUnmount(() => {
 }
 
 .attendance-hero-card {
-  grid-template-columns: minmax(230px, 0.7fr) minmax(0, 2fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 1rem;
   padding: 1rem;
@@ -5972,7 +5953,8 @@ onBeforeUnmount(() => {
 }
 
 .attendance-summary-icon {
-  grid-row: 1 / 3;
+  grid-row: 1;
+  align-self: start;
   width: 30px;
   height: 30px;
   border-radius: 10px;
@@ -5987,6 +5969,15 @@ onBeforeUnmount(() => {
 .attendance-summary-card span,
 .attendance-summary-card strong {
   grid-column: 2;
+}
+
+.attendance-summary-card span {
+  grid-row: 1;
+  align-self: center;
+}
+
+.attendance-summary-card strong {
+  grid-row: 2;
 }
 
 .attendance-scope-btn,
@@ -6617,6 +6608,218 @@ onBeforeUnmount(() => {
 
   .attendance-panel {
     padding: clamp(1rem, 1vw, 1.25rem);
+  }
+}
+
+/* Final responsive layout corrections for the attendance workspace. */
+.attendance-section,
+.attendance-shell,
+.attendance-hero-card,
+.attendance-toolbar-card,
+.attendance-layout,
+.attendance-panel {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.attendance-toolbar-card {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  column-gap: clamp(0.75rem, 1.2vw, 1.25rem);
+  row-gap: clamp(0.75rem, 1vw, 1rem);
+}
+
+.attendance-scope-panel,
+.attendance-toolbar-grid,
+.attendance-legend-block {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.attendance-toolbar-grid {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  grid-template-columns: minmax(170px, 1fr) minmax(190px, 0.9fr) minmax(280px, 1.3fr);
+}
+
+.attendance-scope-panel {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+}
+
+.attendance-scope-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+.attendance-scope-btn {
+  width: 100%;
+  min-width: 0;
+}
+
+.attendance-legend-block {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  align-self: start;
+  justify-self: end;
+  gap: 0.75rem;
+}
+
+.attendance-legend-row {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+.attendance-toolbar-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.attendance-toolbar-actions .pagination-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+}
+
+@media (max-width: 1400px) {
+  .attendance-hero-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-summary-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .attendance-toolbar-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .attendance-legend-block {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 1200px) {
+  .attendance-hero-card,
+  .attendance-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-history-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .attendance-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .attendance-summary-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .attendance-toolbar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .attendance-toolbar-actions-card {
+    grid-column: 1 / -1;
+  }
+
+  .attendance-scope-panel,
+  .attendance-roster-toolbar {
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 768px) {
+  .attendance-section {
+    padding: clamp(0.65rem, 2.5vw, 1rem) !important;
+    overflow-x: clip;
+  }
+
+  .attendance-toolbar-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-toolbar-grid,
+  .attendance-legend-block,
+  .attendance-roster-toolbar-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-toolbar-actions-card,
+  .attendance-legend-block {
+    grid-column: auto;
+  }
+
+  .attendance-scope-panel,
+  .attendance-toolbar-grid,
+  .attendance-legend-block {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .attendance-legend-block {
+    justify-self: stretch;
+  }
+
+  .attendance-scope-switch,
+  .attendance-legend-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .attendance-scope-btn {
+    flex: 1 1 180px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 576px) {
+  .attendance-hero-card,
+  .attendance-toolbar-card,
+  .attendance-panel {
+    padding: 0.75rem;
+    border-radius: 16px;
+  }
+
+  .attendance-toolbar-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-toolbar-actions .pagination-btn {
+    min-height: 48px;
+  }
+
+  .attendance-scope-switch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-legend-pill {
+    flex: 1 1 calc(50% - 0.35rem);
+    text-align: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .attendance-summary-grid,
+  .attendance-history-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-summary-card:last-child {
+    grid-column: auto;
   }
 }
 </style>

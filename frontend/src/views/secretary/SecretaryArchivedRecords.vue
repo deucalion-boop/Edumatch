@@ -1,5 +1,5 @@
 <template>
-  <div class="teacher-dashboard secretary-dashboard-page">
+  <div class="teacher-dashboard secretary-dashboard-page secretary-archived-page">
     <aside id="secretary-sidebar-drawer" class="teacher-sidebar" :class="{ active: isSidebarOpen }">
       <div class="sidebar-header">
         <div class="teacher-logo">
@@ -39,18 +39,19 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div class="teacher-profile">
-          <div class="teacher-avatar">
-            <img :src="avatarUrl" :alt="displayName">
+        <div class="secretary-profile">
+          <div class="secretary-avatar">
+            <i class="fas fa-user" aria-hidden="true"></i>
           </div>
-          <div class="teacher-info">
+          <div class="secretary-info">
             <h5>{{ displayName }}</h5>
-            <p class="teacher-role">Secretary</p>
-            <div class="teacher-status">
-              <span class="status-indicator active"></span>
-              <span>Archive access</span>
+            <div class="secretary-profile-meta">
+              <p class="secretary-role">Secretary</p>
+              <div class="secretary-status">
+                <span class="secretary-profile-status-indicator active"></span>
+                <span>active</span>
+              </div>
             </div>
-            <div class="secretary-sidebar-chip">Historical Records</div>
           </div>
         </div>
       </div>
@@ -68,10 +69,6 @@
             <div>
               <h1>Archived Student Records</h1>
               <p class="header-subtitle">Review inactive student accounts archived by school year for retrieval and historical tracking.</p>
-            </div>
-            <div class="secretary-access-chip">
-              <i class="fas fa-clock-rotate-left"></i>
-              <span>Historical archive</span>
             </div>
           </div>
 
@@ -271,12 +268,6 @@ let pdfApprovalStatusRefreshTimer = null
 let pdfApprovalPollingTimer = null
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
-const avatarUrl = computed(() => {
-  const profileImage = String(authStore.user?.profileImage || '').trim()
-  if (profileImage) return profileImage
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName.value)}&background=334155&color=fff`
-})
-
 const resolveApiBaseUrl = () => {
   const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
   if (!configured) return '/api'
@@ -794,6 +785,37 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.secretary-archived-page .secretary-table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.secretary-archived-page .secretary-table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.secretary-archived-page .secretary-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.secretary-archived-page .secretary-table-wrap::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+}
+
+.secretary-archived-page .secretary-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.secretary-archived-page .secretary-student-table {
+  min-width: 900px;
+}
+
+.secretary-archived-page .secretary-student-table th,
+.secretary-archived-page .secretary-student-table td {
+  padding: 0.75rem;
+}
+
 .secretary-top-header { padding: 0.9rem 1rem !important; border-radius: 18px !important; }
 .secretary-header-content { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .secretary-header-copy { display: flex; align-items: center; gap: 0.9rem; flex: 1 1 auto; min-width: 0; }

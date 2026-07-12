@@ -39,18 +39,19 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div class="teacher-profile">
-          <div class="teacher-avatar">
-            <img :src="avatarUrl" :alt="displayName">
+        <div class="secretary-profile">
+          <div class="secretary-avatar">
+            <i class="fas fa-user" aria-hidden="true"></i>
           </div>
-          <div class="teacher-info">
+          <div class="secretary-info">
             <h5>{{ displayName }}</h5>
-            <p class="teacher-role">Secretary</p>
-            <div class="teacher-status">
-              <span class="status-indicator active"></span>
-              <span>View-only access</span>
+            <div class="secretary-profile-meta">
+              <p class="secretary-role">Secretary</p>
+              <div class="secretary-status">
+                <span class="secretary-profile-status-indicator active"></span>
+                <span>active</span>
+              </div>
             </div>
-            <div class="secretary-sidebar-chip">Monitoring Access</div>
           </div>
         </div>
       </div>
@@ -68,10 +69,6 @@
             <div>
               <h1>Secretary User List</h1>
               <p class="header-subtitle">Review and search HeadTeacher and Teacher records in one dedicated view-only directory.</p>
-            </div>
-            <div class="secretary-access-chip">
-              <i class="fas fa-eye"></i>
-              <span>View-only monitoring</span>
             </div>
           </div>
 
@@ -243,12 +240,6 @@ const filters = ref({ role: 'all', department: 'all', status: 'all' })
 const CORE_DEPARTMENTS = ['Mathematics', 'English', 'Science', 'TLE', 'Filipino', 'Araling Panlipunan', 'Edukasyon sa Pagpapakatao (ESP)', 'MAPEH']
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
-const avatarUrl = computed(() => {
-  const profileImage = String(authStore.user?.profileImage || '').trim()
-  if (profileImage) return profileImage
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName.value)}&background=334155&color=fff`
-})
-
 const resolveApiBaseUrl = () => {
   const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
   if (!configured) return '/api'
