@@ -10,9 +10,10 @@
             </div>
           </div>
           <div class="header-actions">
+            <div class="header-right-controls">
             <button
               type="button"
-              class="btn btn-outline"
+              class="header-tour-btn dashboard-home-btn"
               aria-label="Home Dashboard"
               title="Home Dashboard"
               @click="router.push('/teacher/dashboard')"
@@ -73,10 +74,11 @@
                 </button>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </header>
-      <div class="student-dashboard-page">
+      <div class="teacher-profile-page">
         <div v-if="isLoading" class="profile-content">
           <div class="profile-main">
             <div class="profile-details-card">
@@ -102,7 +104,7 @@
               <div class="profile-header">
                 <div class="profile-avatar">
                   <div class="profile-avatar-placeholder" id="profile-image" aria-hidden="true">
-                    <img v-if="user.profileImage" :src="user.profileImage" alt="Profile avatar">
+                    <img v-if="teacherAvatarUrl" :src="teacherAvatarUrl" alt="Profile avatar">
                     <i v-else class="fas fa-user icon-sem-profile"></i>
                   </div>
                   <div class="avatar-actions">
@@ -172,20 +174,20 @@
               </div>
               <div class="detail-item">
                 <div class="detail-icon">
-                  <i class="fas fa-calendar icon-sem-assignments"></i>
-                </div>
-                <div class="detail-content">
-                  <div class="detail-label">Joined</div>
-                  <div class="detail-value">{{ user.createdAt ? formatDate(user.createdAt) : 'Not provided' }}</div>
-                </div>
-              </div>
-              <div class="detail-item">
-                <div class="detail-icon">
                   <i class="fas fa-user-check icon-sem-profile"></i>
                 </div>
                 <div class="detail-content">
                   <div class="detail-label">Role</div>
                   <div class="detail-value">{{ user.role || 'teacher' }}</div>
+                </div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <i class="fas fa-calendar icon-sem-assignments"></i>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Joined</div>
+                  <div class="detail-value">{{ user.createdAt ? formatDate(user.createdAt) : 'Not provided' }}</div>
                 </div>
               </div>
             </div>
@@ -873,10 +875,11 @@ const handleEscape = (event) => {
 }
 
 const teacherAvatarUrl = computed(() => {
-  if (user.profileImage) return user.profileImage
+  const userProfileImage = String(user.profileImage || '').trim()
+  if (userProfileImage && !userProfileImage.toLowerCase().includes('ui-avatars.com')) return userProfileImage
   const profileImage = String(authStore.user?.profileImage || '').trim()
-  if (profileImage) return resolveProfileImageUrl(profileImage)
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'Teacher')}&background=334155&color=fff`
+  if (profileImage && !profileImage.toLowerCase().includes('ui-avatars.com')) return resolveProfileImageUrl(profileImage)
+  return ''
 })
 
 onMounted(() => {
@@ -982,9 +985,16 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border: 1px solid #dbe2ea;
+  transition: all 0.2s ease;
 }
 
-.student-dashboard-page {
+.header-tour-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.teacher-profile-page {
   width: 100%;
 }
 
@@ -992,44 +1002,6 @@ onBeforeUnmount(() => {
   margin-left: 0 !important;
   width: 100%;
   max-width: none;
-}
-
-.teacher-main > .top-header {
-  background: #ffffff !important;
-  border-radius: 16px !important;
-  padding: 1rem 1.1rem !important;
-  margin-bottom: 0.95rem !important;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06) !important;
-  border: 1px solid #e2e8f0 !important;
-}
-
-.teacher-main > .top-header .header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.teacher-main > .top-header .header-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
-}
-
-.teacher-main > .top-header .header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-
-.teacher-main > .top-header .header-actions .btn {
-  min-height: 40px;
-}
-
-.teacher-main > .top-header .header-subtitle {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin: 0;
-  font-weight: 400;
 }
 
 .profile-content {
@@ -1045,31 +1017,45 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.teacher-dashboard .student-dashboard-page .profile-card,
-.teacher-dashboard .student-dashboard-page .profile-details-card,
-.teacher-dashboard .student-dashboard-page .profile-tab-content {
+.teacher-dashboard .teacher-profile-page .profile-card,
+.teacher-dashboard .teacher-profile-page .profile-details-card,
+.teacher-dashboard .teacher-profile-page .profile-tab-content {
   border: 1px solid rgba(148, 163, 184, 0.22) !important;
   border-radius: 20px !important;
   box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08) !important;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
 }
 
-.teacher-dashboard .student-dashboard-page .profile-card,
-.teacher-dashboard .student-dashboard-page .profile-details-card {
-  padding: 24px;
+.teacher-dashboard .teacher-profile-page .profile-card,
+.teacher-dashboard .teacher-profile-page .profile-details-card {
+  padding: 22px;
 }
 
-.teacher-dashboard .student-dashboard-page .profile-card {
-  margin-top: 6px;
+.teacher-dashboard .teacher-profile-page .profile-card {
+  margin-top: 1px;
   border-radius: 24px !important;
+  background: linear-gradient(180deg, #F9FAFB 0%, #F9FAFB 100%) padding-box, linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
 }
 
-.teacher-dashboard .student-dashboard-page .profile-header {
-  display: block;
-  text-align: center;
-  margin-bottom: 18px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+.teacher-dashboard .teacher-profile-page .profile-tab-content {
+  border-color: transparent !important;
+  background: linear-gradient(180deg, #F9FAFB 0%, #F9FAFB 100%) padding-box, linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
+}
+
+.teacher-dashboard .teacher-profile-page .profile-details-card {
+  border-color: transparent !important;
+  background: linear-gradient(180deg, #F9FAFB 0%, #F9FAFB 100%) padding-box, linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
+}
+
+.teacher-dashboard .teacher-profile-page .profile-header {
+  display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-top: 6px;
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .profile-avatar {
@@ -1155,7 +1141,44 @@ onBeforeUnmount(() => {
 
 .profile-actions {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+}
+
+.profile-actions .btn-primary {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 16px;
+  background: #111111 !important;
+  border: 1px solid #111111 !important;
+  border-radius: 11px;
+  color: #ffffff !important;
+  background-image: none !important;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.18);
+}
+
+.profile-actions .btn-primary:hover {
+  background: #1f2937 !important;
+  border-color: #1f2937 !important;
+  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.2);
+}
+
+.profile-actions .btn-outline {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 16px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+  color: #111827 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.profile-actions .btn-outline:hover {
+  background: transparent !important;
+  color: #111111 !important;
+  box-shadow: none !important;
+  transform: none;
 }
 
 .details-title {
@@ -1216,7 +1239,7 @@ onBeforeUnmount(() => {
   margin-bottom: 24px;
 }
 
-.teacher-dashboard .student-dashboard-page .profile-form-section {
+.teacher-dashboard .teacher-profile-page .profile-form-section {
   padding: 20px;
   border-radius: 16px;
   background: #f8fafc;
@@ -1327,16 +1350,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .teacher-main {
-    padding: 0.85rem !important;
-  }
-
-  .teacher-main > .top-header {
-    top: 8px !important;
-    margin-bottom: 14px !important;
-    padding: 12px !important;
-  }
-
   .profile-card,
   .profile-details-card,
   .profile-tab-content {

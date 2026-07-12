@@ -55,12 +55,12 @@
               </div>
             </div>
             
-            <div class="profile-actions">
+            <div class="profile-actions" data-tour="profile-edit-actions">
               <button class="btn btn-primary btn-block" @click="enableEditMode">
                 <i class="fas fa-edit student-profile-edit-icon"></i>
                 Edit Profile
               </button>
-              <button class="btn btn-outline btn-block" @click="shareProfile">
+              <button class="btn btn-outline btn-block student-share-profile-btn" @click="shareProfile">
                 <i class="fas fa-share-alt icon-sem-profile"></i>
                 Share Profile
               </button>

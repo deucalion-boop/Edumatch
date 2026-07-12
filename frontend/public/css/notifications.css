@@ -1,0 +1,168 @@
+:is(body.student-dashboard, body.teacher-dashboard) .notification-menu {
+    position: relative;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-bell {
+    position: relative;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid #111111 !important;
+    border-radius: 50%;
+    background: #ffffff !important;
+    color: #111111 !important;
+    box-shadow: none !important;
+    transition: all var(--transition-speed) var(--transition-easing);
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-bell:hover {
+    border-color: #111111 !important;
+    background: #f8fafc !important;
+    color: #111111 !important;
+    box-shadow: none !important;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-bell i {
+    font-size: 1em;
+    color: #111111 !important;
+    background: none !important;
+    -webkit-text-fill-color: #111111 !important;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--danger-color);
+    color: #ffffff;
+    font-size: 0.75rem;
+    animation: bounce 2s infinite;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    right: 0;
+    width: min(92vw, 460px);
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    border: 1px solid #dbe4f1;
+    border-radius: 20px;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.16);
+    padding: 0.95rem;
+    z-index: 1200;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-header h3 {
+    min-width: 0;
+    flex: 1 1 auto;
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-clear {
+    width: auto !important;
+    min-width: max-content !important;
+    height: 36px !important;
+    min-height: 36px;
+    padding: 0.45rem 0.8rem !important;
+    border: 1px solid #d7dfec !important;
+    border-radius: 12px;
+    background: #ffffff !important;
+    color: #334155 !important;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    flex-shrink: 0;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-clear:hover:not(:disabled) {
+    background: #f8fafc !important;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-clear:disabled {
+    opacity: 0.55 !important;
+    cursor: not-allowed;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-close {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #d7dfec !important;
+    border-radius: 12px;
+    background: #ffffff !important;
+    color: #475569 !important;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-close:hover {
+    background: #f8fafc !important;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-close i {
+    color: #475569 !important;
+    background: none !important;
+    -webkit-text-fill-color: #475569 !important;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-bell:focus-visible,
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-clear:focus-visible,
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-close:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    :is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown {
+        position: fixed;
+        top: 78px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-height: calc(100vh - 96px);
+    }
+}

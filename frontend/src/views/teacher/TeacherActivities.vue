@@ -113,7 +113,8 @@
       <div class="sidebar-footer">
         <div class="teacher-profile">
           <div class="teacher-avatar">
-            <img :src="teacherAvatarUrl" :alt="teacherFullName" />
+            <img v-if="teacherAvatarUrl" :src="teacherAvatarUrl" :alt="teacherFullName" />
+            <i v-else class="fas fa-user" aria-hidden="true"></i>
           </div>
           <div class="teacher-info">
             <h5>{{ teacherFullName }}</h5>
@@ -798,9 +799,8 @@ const teacherStrand = computed(() => String(user.value.strand || "").trim());
 const teacherStatus = computed(() => String(user.value.status || "Online").trim() || "Online");
 const teacherAvatarUrl = computed(() => {
   const profileImage = String(authStore.user?.profileImage || "").trim();
-  if (profileImage) return profileImage;
-  const name = encodeURIComponent(teacherName.value);
-  return `https://ui-avatars.com/api/?name=${name}&background=334155&color=fff`;
+  if (profileImage && !profileImage.toLowerCase().includes("ui-avatars.com")) return profileImage;
+  return "";
 });
 
 /** Sidebar (mobile) */

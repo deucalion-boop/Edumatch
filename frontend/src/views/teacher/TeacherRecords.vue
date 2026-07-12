@@ -105,7 +105,8 @@
       <div class="sidebar-footer">
         <div class="teacher-profile">
           <div class="teacher-avatar">
-            <img :src="teacherAvatarUrl" :alt="teacherFullName" />
+            <img v-if="teacherAvatarUrl" :src="teacherAvatarUrl" :alt="teacherFullName" />
+            <i v-else class="fas fa-user" aria-hidden="true"></i>
           </div>
           <div class="teacher-info">
             <h5>{{ teacherFullName }}</h5>
@@ -518,7 +519,7 @@
           <div class="attendance-shell">
             <section class="attendance-hero-card">
               <div class="attendance-hero-copy">
-                <span class="attendance-kicker">Daily Sheet</span>
+                <span class="attendance-kicker">Attendance Overview</span>
                 <h4>{{ attendanceHeroTitle }}</h4>
                 <p>{{ attendanceHeroDescription }}</p>
                 <div class="attendance-hero-chips">
@@ -534,22 +535,27 @@
 
               <div class="attendance-summary-grid">
                 <article class="attendance-summary-card">
-                  <span>Approved Students</span>
+                  <i class="fas fa-users attendance-summary-icon" aria-hidden="true"></i>
+                  <span>Total Students</span>
                   <strong>{{ attendanceSnapshot.totalStudents }}</strong>
                 </article>
                 <article class="attendance-summary-card status-present">
+                  <i class="fas fa-user-check attendance-summary-icon" aria-hidden="true"></i>
                   <span>Present</span>
                   <strong>{{ attendanceSnapshot.presentCount }}</strong>
                 </article>
                 <article class="attendance-summary-card status-late">
+                  <i class="fas fa-clock attendance-summary-icon" aria-hidden="true"></i>
                   <span>Late</span>
                   <strong>{{ attendanceSnapshot.lateCount }}</strong>
                 </article>
                 <article class="attendance-summary-card status-absent">
+                  <i class="fas fa-user-times attendance-summary-icon" aria-hidden="true"></i>
                   <span>Absent</span>
                   <strong>{{ attendanceSnapshot.absentCount }}</strong>
                 </article>
                 <article class="attendance-summary-card status-excused">
+                  <i class="fas fa-file-alt attendance-summary-icon" aria-hidden="true"></i>
                   <span>Excused</span>
                   <strong>{{ attendanceSnapshot.excusedCount }}</strong>
                 </article>
@@ -560,7 +566,7 @@
             <section class="attendance-toolbar-card">
               <div class="attendance-toolbar-header">
                 <div class="attendance-toolbar-header-copy">
-                  <span class="attendance-toolbar-kicker">Attendance Setup</span>
+                  <span class="attendance-toolbar-kicker">Quick Setup</span>
                   <h5>Choose the roster you want to take attendance for</h5>
                   <p>
                     {{ isAdvisoryAttendance
@@ -669,7 +675,8 @@
                       :disabled="!canLoadAttendance || isAttendanceLoading"
                       @click="fetchAttendanceRoster"
                     >
-                      {{ isAttendanceLoading ? 'Loading...' : 'Load Roster' }}
+                      <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                      {{ isAttendanceLoading ? 'Loading...' : 'Load' }}
                     </button>
                     <button
                       type="button"
@@ -677,7 +684,8 @@
                       :disabled="!canSaveAttendance"
                       @click="saveAttendance"
                     >
-                      {{ isAttendanceSaving ? 'Saving...' : 'Save Attendance' }}
+                      <i class="fas fa-save" aria-hidden="true"></i>
+                      {{ isAttendanceSaving ? 'Saving...' : 'Save' }}
                     </button>
                     <button
                       type="button"
@@ -685,7 +693,8 @@
                       :disabled="!canLockAttendance"
                       @click="lockAttendance"
                     >
-                      {{ isAttendanceLocking ? 'Locking...' : 'Lock Attendance' }}
+                      <i class="fas fa-lock" aria-hidden="true"></i>
+                      {{ isAttendanceLocking ? 'Locking...' : 'Lock' }}
                     </button>
                   </div>
                   <small class="attendance-actions-hint">Load the roster first, then save changes and lock the record once it is complete.</small>
@@ -716,7 +725,7 @@
             <article class="attendance-panel">
               <div class="attendance-panel-head">
                 <div>
-                  <span class="attendance-panel-kicker">Roster</span>
+                  <span class="attendance-panel-kicker">Attendance Roster</span>
                   <h4>Daily Attendance Sheet</h4>
                   <p>{{ attendanceRosterContextLabel }}<template v-if="attendanceDateKey"> for {{ formatDate(attendanceDateKey) }}</template></p>
                 </div>
@@ -872,14 +881,19 @@
               </div>
             </article>
 
-            <article class="attendance-panel attendance-history-panel">
-              <div class="attendance-panel-head">
+            <details class="attendance-panel attendance-history-panel" open>
+              <summary class="attendance-history-summary">
+                <div class="attendance-panel-head">
                 <div>
-                  <span class="attendance-panel-kicker">Archive</span>
-                  <h4>Recent Attendance History</h4>
-                  <p>Saved attendance records stay grouped into one attendance record per scope and date. Select any saved day below to reopen it in the roster workspace.</p>
+                    <span class="attendance-panel-kicker">Attendance History</span>
+                    <h4>Recent Records</h4>
+                    <p>Select a saved day to reopen it.</p>
+                  </div>
+                  <i class="fas fa-chevron-down attendance-history-chevron" aria-hidden="true"></i>
                 </div>
-              </div>
+              </summary>
+
+              <div class="attendance-history-content">
 
               <div class="attendance-history-summary-grid">
                 <article class="attendance-history-stat">
@@ -902,7 +916,6 @@
               </div>
 
               <div v-else-if="attendanceRecords.length === 0" class="table-state">
-                <i class="fas fa-calendar-check"></i>
                 <span>{{ isAdvisoryAttendance ? 'No advisory attendance records saved yet.' : 'No handled-class attendance records saved yet for this subject.' }}</span>
               </div>
 
@@ -941,7 +954,8 @@
                   </div>
                 </button>
               </div>
-            </article>
+              </div>
+            </details>
           </div>
         </section>
       </div>
@@ -1374,9 +1388,8 @@ const teacherRole = computed(() => {
 const teacherStatus = computed(() => String(teacher.status || 'Online').trim() || 'Online')
 const teacherAvatarUrl = computed(() => {
   const profileImage = String(authStore.user?.profileImage || '').trim()
-  if (profileImage) return profileImage
-  const name = encodeURIComponent(displayName.value)
-  return `https://ui-avatars.com/api/?name=${name}&background=334155&color=fff`
+  if (profileImage && !profileImage.toLowerCase().includes('ui-avatars.com')) return profileImage
+  return ''
 })
 
 const resolveApiBaseUrl = () => {
@@ -5484,7 +5497,7 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 820px) {
   .attendance-hero-card,
   .attendance-toolbar-card,
   .attendance-panel {
@@ -5555,6 +5568,1055 @@ onBeforeUnmount(() => {
 
   .attendance-history-meta {
     justify-items: start;
+  }
+}
+
+/* Streamlined classroom attendance workflow */
+.attendance-section {
+  gap: 0.9rem;
+}
+
+.attendance-section > .section-header {
+  margin-bottom: 0;
+}
+
+.attendance-shell {
+  gap: 0.75rem;
+}
+
+.attendance-hero-card {
+  grid-template-columns: minmax(230px, 0.7fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+}
+
+.attendance-hero-copy {
+  gap: 0.35rem;
+}
+
+.attendance-hero-copy h4 {
+  font-size: 1.05rem;
+}
+
+.attendance-hero-copy > p {
+  display: none;
+}
+
+.attendance-hero-chips {
+  gap: 0.35rem;
+}
+
+.attendance-summary-grid {
+  gap: 0.6rem;
+}
+
+.attendance-summary-card {
+  min-height: 76px;
+  padding: 0.75rem 0.85rem;
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.attendance-summary-card strong {
+  font-size: 1.35rem;
+}
+
+.attendance-toolbar-card {
+  grid-template-columns: minmax(240px, auto) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 18px;
+  margin-bottom: 0;
+}
+
+.attendance-toolbar-header {
+  display: none;
+}
+
+.attendance-scope-panel {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.attendance-scope-panel-copy small,
+.attendance-scope-panel-copy .attendance-step-badge,
+.attendance-toolbar-field-card > .attendance-step-badge,
+.attendance-date-card-copy,
+.attendance-date-quick-actions,
+.attendance-date-helper,
+.attendance-actions-hint {
+  display: none;
+}
+
+.attendance-scope-switch {
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+}
+
+.attendance-scope-btn {
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+}
+
+.attendance-toolbar-grid {
+  grid-template-columns: minmax(180px, 1fr) minmax(170px, 0.7fr) minmax(330px, 1.35fr);
+  align-items: end;
+  gap: 0.6rem;
+}
+
+.attendance-toolbar-field-card {
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.attendance-context-card {
+  min-height: 42px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px;
+}
+
+.attendance-toolbar-actions {
+  gap: 0.45rem;
+}
+
+.attendance-toolbar-actions .pagination-btn {
+  min-height: 42px;
+  padding-inline: 0.65rem;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+.attendance-legend-block {
+  gap: 0.35rem;
+  align-self: center;
+}
+
+.attendance-legend-row {
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+}
+
+.attendance-legend-pill {
+  padding: 0.35rem 0.55rem;
+}
+
+.attendance-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  align-items: start;
+  gap: 0.85rem;
+}
+
+.attendance-panel {
+  min-width: 0;
+  padding: 0.9rem;
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.attendance-panel-head p {
+  line-height: 1.35;
+}
+
+.attendance-roster-toolbar {
+  padding: 0.75rem;
+  border-radius: 14px;
+}
+
+.attendance-roster-table-wrap {
+  max-height: 65vh;
+  overflow: auto;
+  border-radius: 14px;
+}
+
+.attendance-roster-table {
+  min-width: 720px;
+}
+
+.attendance-roster-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.attendance-roster-table thead th:first-child {
+  left: 0;
+  z-index: 5;
+}
+
+.attendance-roster-cell-student {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 260px;
+  background: #ffffff;
+}
+
+.attendance-roster-row:nth-child(even),
+.attendance-roster-row:nth-child(even) .attendance-roster-cell-student {
+  background: #f8fbff;
+}
+
+.attendance-roster-row:hover,
+.attendance-roster-row:hover .attendance-roster-cell-student {
+  background: #f8fafc;
+}
+
+.attendance-roster-cell {
+  padding-block: 0.95rem;
+}
+
+.attendance-status-select {
+  min-height: 46px;
+  cursor: pointer;
+}
+
+.attendance-history-panel {
+  position: sticky;
+  top: 1rem;
+  display: block;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+}
+
+.attendance-history-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.attendance-history-summary::-webkit-details-marker {
+  display: none;
+}
+
+.attendance-history-summary .attendance-panel-head {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.attendance-history-chevron {
+  transition: transform 0.18s ease;
+}
+
+.attendance-history-panel[open] .attendance-history-chevron {
+  transform: rotate(180deg);
+}
+
+.attendance-history-content {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.attendance-history-summary-grid {
+  gap: 0.4rem;
+}
+
+.attendance-history-stat {
+  padding: 0.6rem;
+  border-radius: 12px;
+}
+
+.attendance-history-stat span {
+  font-size: 0.62rem;
+}
+
+.attendance-history-list {
+  gap: 0.55rem;
+}
+
+.attendance-history-item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.65rem;
+  border-radius: 12px;
+}
+
+.attendance-history-date-badge {
+  min-width: 0;
+  padding: 0.6rem;
+  border-radius: 10px;
+}
+
+.attendance-history-meta {
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr auto;
+  justify-items: start;
+}
+
+@media (max-width: 1180px) {
+  .attendance-toolbar-card {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .attendance-scope-panel {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .attendance-scope-switch {
+    justify-content: flex-end;
+  }
+
+  .attendance-legend-block {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .attendance-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-history-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .attendance-hero-card {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-summary-grid {
+    grid-template-columns: repeat(5, minmax(110px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .attendance-toolbar-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .attendance-toolbar-actions-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .attendance-section {
+    gap: 0.7rem;
+  }
+
+  .attendance-scope-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-scope-switch {
+    justify-content: stretch;
+  }
+
+  .attendance-toolbar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-toolbar-actions-card {
+    grid-column: auto;
+  }
+
+  .attendance-toolbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-legend-block {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-legend-row {
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  .attendance-panel-head {
+    gap: 0.55rem;
+  }
+
+  .attendance-roster-table-wrap {
+    max-height: 70vh;
+  }
+}
+
+/* Education-first brand polish and interaction states */
+.attendance-hero-card {
+  background:
+    radial-gradient(circle at top right, rgba(187, 255, 89, 0.16), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+}
+
+.attendance-toolbar-card,
+.attendance-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+}
+
+.attendance-kicker,
+.attendance-panel-kicker,
+.attendance-toolbar-kicker {
+  background: rgba(30, 67, 7, 0.09);
+  color: #1e4307;
+}
+
+.attendance-summary-card {
+  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 0.55rem;
+}
+
+.attendance-summary-icon {
+  grid-row: 1 / 3;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 67, 7, 0.09);
+  color: #1e4307;
+  font-size: 0.8rem;
+}
+
+.attendance-summary-card span,
+.attendance-summary-card strong {
+  grid-column: 2;
+}
+
+.attendance-scope-btn,
+.attendance-date-chip,
+.attendance-bulk-btn,
+.attendance-clear-filters-btn,
+.attendance-history-item,
+.attendance-toolbar-actions .pagination-btn {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.attendance-scope-btn.active,
+.attendance-date-chip.active {
+  background: rgba(187, 255, 89, 0.22);
+  border-color: #bbff59;
+  color: #1e4307;
+}
+
+.attendance-scope-btn:hover:not(:disabled),
+.attendance-date-chip:hover,
+.attendance-bulk-btn:hover:not(:disabled),
+.attendance-clear-filters-btn:hover {
+  border-color: #1e4307;
+  color: #1e4307;
+  box-shadow: 0 6px 14px rgba(30, 67, 7, 0.1);
+}
+
+.attendance-load-btn {
+  background: #ffffff;
+  border-color: #111111;
+  color: #111111;
+}
+
+.attendance-save-btn {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+.attendance-lock-btn {
+  background: #ffffff;
+  border-color: #111111;
+  color: #111111;
+}
+
+.attendance-toolbar-actions .pagination-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(17, 17, 17, 0.16);
+}
+
+.attendance-toolbar-actions .attendance-load-btn:not(:disabled):hover,
+.attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover {
+  background: #111111;
+  color: #ffffff;
+}
+
+.attendance-toolbar-actions .attendance-save-btn:not(:disabled):hover {
+  background: #ffffff;
+  color: #111111;
+}
+
+.attendance-toolbar-actions .pagination-btn:focus-visible {
+  outline-color: #111111;
+}
+
+.attendance-toolbar-actions .pagination-btn i {
+  margin-right: 0.35rem;
+  color: currentColor !important;
+}
+
+.attendance-toolbar-actions .attendance-save-btn i,
+.attendance-toolbar-actions .attendance-load-btn:not(:disabled):hover i,
+.attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover i {
+  color: #ffffff !important;
+}
+
+.attendance-toolbar-actions .attendance-load-btn i,
+.attendance-toolbar-actions .attendance-lock-btn i,
+.attendance-toolbar-actions .attendance-save-btn:not(:disabled):hover i {
+  color: #111111 !important;
+}
+
+.attendance-student-avatar,
+.attendance-history-item.active .attendance-history-date-badge {
+  background: linear-gradient(135deg, #1e4307 0%, #ffd542 100%);
+  box-shadow: 0 8px 16px rgba(30, 67, 7, 0.16);
+}
+
+.attendance-history-item:hover,
+.attendance-history-item.active {
+  border-color: #1e4307;
+  box-shadow: 0 0 0 3px rgba(187, 255, 89, 0.18);
+}
+
+.attendance-search-input-wrap:focus-within,
+.attendance-date-input-wrap:focus-within {
+  border-color: #1e4307;
+  box-shadow: 0 0 0 3px rgba(187, 255, 89, 0.24);
+}
+
+.attendance-section button:focus-visible,
+.attendance-section select:focus-visible,
+.attendance-section input:focus-visible,
+.attendance-history-summary:focus-visible {
+  outline: 3px solid #bbff59;
+  outline-offset: 2px;
+}
+
+.attendance-section button:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+.attendance-section .fa-spinner {
+  color: #1e4307;
+}
+
+.attendance-section .fa-spinner + span {
+  position: relative;
+}
+
+.attendance-section .fa-spinner + span::after {
+  content: '';
+  display: block;
+  width: min(220px, 60vw);
+  height: 6px;
+  margin-top: 0.55rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f9fafb 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: attendance-skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes attendance-skeleton {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attendance-section *,
+  .attendance-section *::before,
+  .attendance-section *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .attendance-hero-card,
+  .attendance-toolbar-card,
+  .attendance-panel {
+    border-radius: 16px;
+    padding: 0.75rem;
+  }
+
+  .attendance-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .attendance-scope-btn,
+  .attendance-toolbar-actions .pagination-btn,
+  .attendance-date-input-wrap,
+  .attendance-search-input-wrap,
+  .attendance-filter-field select,
+  .attendance-status-select {
+    min-height: 48px;
+  }
+
+  .attendance-roster-toolbar {
+    padding: 0.65rem;
+  }
+
+  .attendance-roster-table-wrap {
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .attendance-roster-table,
+  .attendance-roster-table tbody,
+  .attendance-roster-row,
+  .attendance-roster-cell {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .attendance-roster-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .attendance-roster-table tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .attendance-roster-row,
+  .attendance-roster-row:nth-child(even) {
+    border: 1px solid #dbe4ef;
+    border-radius: 14px;
+    background: #ffffff;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  }
+
+  .attendance-roster-cell {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    border-top: 1px solid #eef2f7;
+  }
+
+  .attendance-roster-cell::before {
+    color: #64748b;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .attendance-roster-cell-student,
+  .attendance-roster-row:nth-child(even) .attendance-roster-cell-student,
+  .attendance-roster-row:hover .attendance-roster-cell-student {
+    position: static;
+    display: block;
+    min-width: 0;
+    padding: 0.85rem 0.75rem;
+    border-top: 0;
+    background: #f8fafc;
+  }
+
+  .attendance-roster-cell-student::before {
+    display: none;
+  }
+
+  .attendance-roster-cell:nth-child(2)::before {
+    content: 'Grade';
+  }
+
+  .attendance-roster-cell:nth-child(3)::before {
+    content: 'Section';
+  }
+
+  .attendance-roster-cell-action::before {
+    content: 'Status';
+  }
+
+  .attendance-roster-cell-action {
+    width: 100%;
+  }
+
+  .attendance-status-select {
+    min-width: 0;
+  }
+
+  .attendance-history-item {
+    grid-template-columns: 68px minmax(0, 1fr);
+  }
+}
+
+/* Responsive hardening for the complete attendance workspace */
+.attendance-section {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  gap: clamp(0.75rem, 1.2vw, 1.25rem);
+}
+
+.teacher-avatar > .fa-user {
+  color: #1e4307 !important;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.attendance-section *,
+.attendance-section *::before,
+.attendance-section *::after {
+  box-sizing: border-box;
+}
+
+.attendance-section > *,
+.attendance-shell,
+.attendance-layout,
+.attendance-panel,
+.attendance-roster-body,
+.attendance-roster-toolbar,
+.attendance-toolbar-grid,
+.attendance-toolbar-field-card,
+.attendance-history-content {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.attendance-section .section-title {
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.65rem);
+  line-height: 1.2;
+}
+
+.attendance-section .section-subtitle,
+.attendance-panel-head p,
+.attendance-roster-results {
+  font-size: clamp(0.78rem, 0.74rem + 0.16vw, 0.9rem);
+  overflow-wrap: anywhere;
+}
+
+.attendance-hero-copy h4,
+.attendance-panel-head h4 {
+  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.3rem);
+  line-height: 1.25;
+}
+
+.attendance-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 138px), 1fr));
+  gap: clamp(0.5rem, 0.8vw, 0.75rem);
+  width: 100%;
+  overflow: visible;
+}
+
+.attendance-summary-card {
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(72px, 7vw, 84px);
+  padding: clamp(0.625rem, 0.8vw, 0.875rem);
+}
+
+.attendance-summary-card span {
+  min-width: 0;
+  font-size: clamp(0.64rem, 0.6rem + 0.14vw, 0.76rem);
+  overflow-wrap: anywhere;
+}
+
+.attendance-summary-card strong {
+  font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.55rem);
+}
+
+.attendance-toolbar-card {
+  width: 100%;
+  padding: clamp(0.75rem, 1vw, 1rem);
+  gap: clamp(0.625rem, 1vw, 1rem);
+}
+
+.attendance-scope-switch,
+.attendance-legend-row,
+.attendance-toolbar-actions,
+.attendance-bulk-action-row {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.attendance-scope-btn {
+  flex: 1 1 150px;
+  justify-content: center;
+  min-width: 0;
+  min-height: 44px;
+  white-space: normal;
+  text-align: center;
+}
+
+.attendance-toolbar-grid {
+  width: 100%;
+  grid-template-columns: minmax(180px, 1fr) minmax(170px, 0.8fr) minmax(280px, 1.35fr);
+  gap: clamp(0.5rem, 0.8vw, 0.75rem);
+}
+
+.attendance-section input,
+.attendance-section select,
+.attendance-section button {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.attendance-toolbar-field-card .filter-field select,
+.attendance-date-input-wrap,
+.attendance-date-input-wrap input,
+.attendance-search-input-wrap,
+.attendance-search-input-wrap input,
+.attendance-filter-field select,
+.attendance-status-select {
+  width: 100%;
+  min-height: 44px;
+}
+
+.attendance-toolbar-actions {
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.attendance-toolbar-actions .pagination-btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+
+.attendance-legend-pill {
+  flex: 0 1 auto;
+  min-height: 32px;
+  white-space: normal;
+  text-align: center;
+}
+
+.attendance-layout {
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) clamp(280px, 24vw, 340px);
+  gap: clamp(0.75rem, 1.2vw, 1.25rem);
+  margin-top: clamp(1rem, 1.4vw, 1.5rem);
+}
+
+.attendance-roster-toolbar-fields {
+  grid-template-columns: minmax(180px, 1.5fr) minmax(150px, 0.75fr);
+  min-width: min(100%, 400px);
+}
+
+.attendance-roster-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.attendance-roster-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.attendance-roster-table th:first-child {
+  width: 38%;
+}
+
+.attendance-roster-table th:nth-child(2) {
+  width: 15%;
+}
+
+.attendance-roster-table th:nth-child(3) {
+  width: 20%;
+}
+
+.attendance-roster-table th:last-child {
+  width: 27%;
+}
+
+.attendance-roster-cell,
+.attendance-roster-section,
+.attendance-student-copy,
+.attendance-student-copy strong,
+.attendance-student-email,
+.attendance-student-email span {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.attendance-roster-cell-action {
+  width: auto;
+}
+
+.attendance-status-select {
+  min-width: 0;
+}
+
+.attendance-history-panel,
+.attendance-history-item,
+.attendance-history-copy,
+.attendance-history-meta {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.attendance-history-copy strong,
+.attendance-history-copy small,
+.attendance-history-count {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1180px) {
+  .attendance-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-history-panel {
+    position: static;
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .attendance-toolbar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .attendance-toolbar-actions-card {
+    grid-column: 1 / -1;
+  }
+
+  .attendance-roster-toolbar,
+  .attendance-roster-toolbar-actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .attendance-section {
+    gap: 0.75rem;
+  }
+
+  .attendance-section > .section-header {
+    padding-inline: 0.125rem;
+  }
+
+  .attendance-hero-card,
+  .attendance-toolbar-card,
+  .attendance-panel {
+    padding: 0.75rem;
+  }
+
+  .attendance-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .attendance-summary-card {
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: 0.45rem;
+  }
+
+  .attendance-summary-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .attendance-toolbar-grid,
+  .attendance-roster-toolbar-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-toolbar-actions-card {
+    grid-column: auto;
+  }
+
+  .attendance-toolbar-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-toolbar-actions .pagination-btn,
+  .attendance-clear-filters-btn {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .attendance-legend-row {
+    width: 100%;
+    overflow: visible;
+  }
+
+  .attendance-legend-pill {
+    flex: 1 1 calc(50% - 0.35rem);
+  }
+
+  .attendance-roster-toolbar-actions,
+  .attendance-bulk-actions,
+  .attendance-bulk-action-row {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .attendance-bulk-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-height: 44px;
+  }
+
+  .attendance-roster-cell {
+    grid-template-columns: minmax(70px, 30%) minmax(0, 1fr);
+  }
+
+  .attendance-history-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .attendance-history-item {
+    grid-template-columns: minmax(62px, 76px) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 360px) {
+  .attendance-history-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-summary-card {
+    min-height: 64px;
+  }
+
+  .attendance-scope-switch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-history-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendance-history-date-badge,
+  .attendance-history-meta {
+    grid-column: 1;
+  }
+}
+
+@media (min-width: 1600px) {
+  .attendance-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  }
+
+  .attendance-panel {
+    padding: clamp(1rem, 1vw, 1.25rem);
   }
 }
 </style>

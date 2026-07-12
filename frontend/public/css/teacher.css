@@ -2828,7 +2828,6 @@ p {
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid var(--primary-color);
 }
 
 .avatar-edit-btn {
@@ -3811,7 +3810,7 @@ body.teacher-dashboard .teacher-sidebar .nav-link.active {
 }
 
 body.teacher-dashboard i[class*="fa-"] {
-    color: #374151 !important;
+    color: #111111 !important;
 }
 
 body.teacher-dashboard .btn i[class*="fa-"],
@@ -4634,7 +4633,7 @@ body.teacher-dashboard .teacher-sidebar .nav-link.active :is(span, .nav-link-tit
     font-weight: 700 !important;
 }
 
-body.teacher-dashboard .teacher-sidebar .nav-link i {
+body.teacher-dashboard .teacher-sidebar .nav-link i:not(.nav-link-caret) {
     width: 28px !important;
     height: 28px !important;
     display: inline-flex !important;
@@ -4652,8 +4651,8 @@ body.teacher-dashboard .teacher-sidebar .nav-link:hover .nav-link-main > i {
     transform: translateX(2px) !important;
 }
 
-body.teacher-dashboard .teacher-sidebar .nav-link:hover i,
-body.teacher-dashboard .teacher-sidebar .nav-link.active i {
+body.teacher-dashboard .teacher-sidebar .nav-link:hover i:not(.nav-link-caret),
+body.teacher-dashboard .teacher-sidebar .nav-link.active i:not(.nav-link-caret) {
     background: rgba(255, 255, 255, 0.86) !important;
     border-color: rgba(30, 67, 7, 0.16) !important;
     color: #111111 !important;
@@ -4712,6 +4711,8 @@ body.teacher-dashboard .teacher-sidebar .nav-link-caret {
     border: none !important;
     border-radius: 999px !important;
     background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
     color: currentColor !important;
     -webkit-text-fill-color: currentColor !important;
     transform: rotate(0deg) !important;
@@ -4725,6 +4726,10 @@ body.teacher-dashboard .teacher-sidebar .nav-link-dropdown.is-expanded .nav-link
 body.teacher-dashboard .teacher-sidebar .nav-link-dropdown:hover .nav-link-caret,
 body.teacher-dashboard .teacher-sidebar .nav-link-dropdown.active .nav-link-caret,
 body.teacher-dashboard .teacher-sidebar .nav-link-dropdown.is-expanded .nav-link-caret {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
     color: #1e4307 !important;
     -webkit-text-fill-color: #1e4307 !important;
 }
@@ -4865,6 +4870,12 @@ body.teacher-dashboard .teacher-sidebar .sidebar-footer .teacher-avatar img {
     display: block !important;
 }
 
+body.teacher-dashboard .teacher-sidebar .sidebar-footer .teacher-avatar > .fa-user {
+    color: #1e4307 !important;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+}
+
 body.teacher-dashboard .teacher-sidebar .sidebar-footer .teacher-info {
     min-width: 0 !important;
     display: grid !important;
@@ -4949,5 +4960,57 @@ body.teacher-dashboard .teacher-sidebar .sidebar-footer .status-indicator {
 
     body.teacher-dashboard .teacher-sidebar.active {
         transform: translateX(0) !important;
+    }
+}
+
+/* Match the Teacher Profile layout rhythm to the Student Profile page. */
+body.teacher-dashboard .teacher-main > .top-header[data-tour="profile-header"] {
+    top: 1px;
+    margin-bottom: 22px;
+    padding: 12px 14px;
+    border-radius: 14px;
+}
+
+body.teacher-dashboard .teacher-main > .teacher-profile-page {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+body.teacher-dashboard .teacher-main > .teacher-profile-page > .profile-content {
+    grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) !important;
+    gap: 24px !important;
+    padding: 0 0 24px !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+}
+
+@media (max-width: 1100px) {
+    body.teacher-dashboard .teacher-main > .teacher-profile-page > .profile-content {
+        grid-template-columns: 1fr !important;
+        padding: 0 16px 16px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.teacher-dashboard .teacher-main > .top-header[data-tour="profile-header"] {
+        top: 8px;
+        margin-bottom: 12px;
+        padding: 10px 12px !important;
+    }
+}
+
+@media (max-width: 560px) {
+    body.teacher-dashboard .teacher-main > .top-header[data-tour="profile-header"] {
+        padding: 9px 10px !important;
+        border-radius: 12px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 540px) and (max-width: 960px) {
+    body.teacher-dashboard .teacher-main > .top-header[data-tour="profile-header"] {
+        padding: 8px 10px !important;
+        margin-bottom: 10px;
     }
 }
