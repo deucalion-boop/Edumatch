@@ -99,15 +99,15 @@
       <div class="sidebar-footer">
         <div class="teacher-profile">
           <div class="teacher-avatar">
-            <img v-if="teacherAvatarUrl" :src="teacherAvatarUrl" :alt="teacherFullName" />
-            <i v-else class="fas fa-user" aria-hidden="true"></i>
+            <i class="fas fa-user" aria-hidden="true"></i>
           </div>
           <div class="teacher-info">
             <h5>{{ teacherFullName }}</h5>
             <p class="teacher-role">{{ teacherRole }}</p>
-            <p v-if="teacherSubject" class="teacher-strand">{{ teacherSubject }}</p>
-            <p v-else-if="teacherStrand" class="teacher-strand">{{ teacherStrand }}</p>
-            <div class="teacher-status"><span class="status-indicator active"></span><span>{{ teacherStatus }}</span></div>
+            <div class="teacher-status">
+              <span class="status-indicator active"></span>
+              <span>{{ teacherStatus }}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -107,13 +107,11 @@
       <div class="sidebar-footer">
         <div class="teacher-profile">
           <div class="teacher-avatar">
-            <img v-if="teacherAvatarUrl" :src="teacherAvatarUrl" :alt="teacherFullName" />
-            <i v-else class="fas fa-user" aria-hidden="true"></i>
+            <i class="fas fa-user" aria-hidden="true"></i>
           </div>
           <div class="teacher-info">
             <h5>{{ teacherFullName }}</h5>
             <p class="teacher-role">{{ teacherRole }}</p>
-            <p v-if="teacherStrand" class="teacher-strand">{{ teacherStrand }}</p>
             <div class="teacher-status">
               <span class="status-indicator active"></span>
               <span>{{ teacherStatus }}</span>
@@ -322,66 +320,6 @@
             </div>
           </section>
 
-          <section class="teacher-notifications section-card animated-card" data-tour="teacher-recent-activity" :aria-busy="isActivityRefreshing ? 'true' : 'false'">
-            <div class="teacher-activity-header">
-              <div class="teacher-activity-copy">
-                <span class="teacher-activity-kicker">Classroom Feed</span>
-                <h3 class="section-title">Recent Activity</h3>
-                <p class="teacher-activity-subtitle">Latest lessons, deadlines, and classroom updates from your workspace.</p>
-              </div>
-              <div class="teacher-activity-actions">
-                <span class="teacher-activity-status" :class="{ 'is-empty': activityNotifications.length === 0 }">
-                  <i :class="activityNotifications.length === 0 ? 'fas fa-sparkles' : 'fas fa-wave-square'"></i>
-                  {{ activityNotifications.length === 0 ? 'Quiet right now' : `${activityNotifications.length} updates` }}
-                </span>
-                <button type="button" class="btn btn-outline teacher-activity-refresh" :disabled="isActivityRefreshing" @click="refreshActivityFeed">
-                  <i class="fas" :class="isActivityRefreshing ? 'fa-spinner fa-spin' : 'fa-rotate-right'"></i>
-                  <span>{{ isActivityRefreshing ? 'Refreshing' : 'Refresh' }}</span>
-                </button>
-              </div>
-            </div>
-            <div v-if="activityNotifications.length === 0" class="teacher-activity-empty" :class="{ 'is-loading': isActivityRefreshing }">
-              <div class="teacher-activity-empty-visual" aria-hidden="true">
-                <span class="teacher-activity-empty-glow"></span>
-                <div class="teacher-activity-empty-icon">
-                  <i class="fas fa-clock-rotate-left"></i>
-                </div>
-              </div>
-              <div class="teacher-activity-empty-copy">
-                <p class="teacher-activity-empty-title">{{ isActivityRefreshing ? 'Checking for classroom updates' : 'No recent activity yet' }}</p>
-                <span class="empty-subtext">
-                  {{ isActivityRefreshing
-                    ? 'We are pulling the latest lessons, assessments, and classroom events for your dashboard.'
-                    : 'New lessons, assessments, and classroom updates will appear here as soon as you publish or schedule them.' }}
-                </span>
-              </div>
-              <div class="teacher-activity-empty-tags">
-                <span class="teacher-activity-tag">Lessons</span>
-                <span class="teacher-activity-tag">Deadlines</span>
-                <span class="teacher-activity-tag">Classroom updates</span>
-              </div>
-            </div>
-            <div v-else class="teacher-activity-list">
-              <article
-                v-for="notification in activityNotifications"
-                :key="`feed-${notification.id}`"
-                class="teacher-activity-item"
-                :class="`is-${notification.tone}`"
-              >
-                <div class="teacher-activity-icon" :class="`is-${notification.tone}`">
-                  <i :class="notification.icon"></i>
-                </div>
-                <div class="teacher-activity-content">
-                  <div class="teacher-activity-item-top">
-                    <strong class="teacher-activity-item-title">{{ notification.message }}</strong>
-                    <span class="teacher-activity-pill" :class="`is-${notification.tone}`">{{ notification.label }}</span>
-                  </div>
-                  <p class="teacher-activity-item-meta">{{ notification.meta }}</p>
-                </div>
-              </article>
-            </div>
-          </section>
-
         </div>
       </div>
 
@@ -505,12 +443,6 @@ export default {
         title: 'Dashboard Overview',
         description: 'These summary cards show important teacher insights such as total students, total activities, completed assessments, and recent system updates.',
         selector: '[data-tour="teacher-kpi"]'
-      },
-      {
-        key: 'recent-activity',
-        title: 'Recent Activity',
-        description: 'This activity feed highlights recent updates such as lesson publishing, new assessments, and tracked deadlines for your classes.',
-        selector: '[data-tour="teacher-recent-activity"]'
       },
       {
         key: 'activities-link',

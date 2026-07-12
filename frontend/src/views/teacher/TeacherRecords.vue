@@ -105,8 +105,7 @@
       <div class="sidebar-footer">
         <div class="teacher-profile">
           <div class="teacher-avatar">
-            <img v-if="teacherAvatarUrl" :src="teacherAvatarUrl" :alt="teacherFullName" />
-            <i v-else class="fas fa-user" aria-hidden="true"></i>
+            <i class="fas fa-user" aria-hidden="true"></i>
           </div>
           <div class="teacher-info">
             <h5>{{ teacherFullName }}</h5>
