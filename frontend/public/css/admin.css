@@ -14245,3 +14245,33 @@ body.admin-dashboard .analytics-section.section-card {
         linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) padding-box,
         linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
 }
+
+/* Final KPI grid sizing: keep every card inside its track and preserve a
+   clearly visible gutter after all earlier dashboard overrides. */
+body.admin-dashboard .admin-main .analytics-section .analytics-grid {
+    display: grid !important;
+    column-gap: 24px !important;
+    row-gap: 24px !important;
+}
+
+body.admin-dashboard .admin-main .analytics-section .analytics-grid > .analytics-card {
+    box-sizing: border-box !important;
+    inline-size: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    justify-self: stretch !important;
+}
+
+@media (max-width: 768px) {
+    body.admin-dashboard .admin-main .analytics-section .analytics-grid {
+        gap: 16px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    body.admin-dashboard .admin-main .analytics-section .analytics-grid {
+        gap: 14px !important;
+    }
+}

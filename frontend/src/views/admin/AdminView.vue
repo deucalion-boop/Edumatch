@@ -1340,15 +1340,15 @@ export default {
 
 .analytics-grid {
   align-items: stretch;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
-  gap: 0.9rem !important;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(155px, 16vw, 175px), 1fr)) !important;
+  gap: clamp(1rem, 1.5vw, 1.25rem) !important;
 }
 
 .analytics-card {
   min-height: 0 !important;
-  aspect-ratio: 1 / 1 !important;
-  border-radius: 16px !important;
-  padding: 1rem !important;
+  aspect-ratio: 4 / 3 !important;
+  border-radius: clamp(12px, 1.2vw, 14px) !important;
+  padding: clamp(0.72rem, 1vw, 0.82rem) !important;
   border: 1px solid rgba(169, 213, 95, 0.52) !important;
   background: linear-gradient(180deg, #fbfce9 0%, #fbfce9 100%) !important;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06) !important;
@@ -1361,29 +1361,30 @@ export default {
   display: flex !important;
   justify-content: space-between !important;
   align-items: flex-start !important;
-  gap: 0.65rem !important;
-  margin-bottom: 0.8rem !important;
+  gap: clamp(0.4rem, 0.7vw, 0.55rem) !important;
+  margin-bottom: clamp(0.45rem, 0.8vw, 0.6rem) !important;
 }
 
 .analytics-main {
-  gap: 0.3rem !important;
+  gap: 0.2rem !important;
 }
 
 .analytics-value {
-  font-size: clamp(1.7rem, 2.2vw, 2.25rem) !important;
+  font-size: clamp(1.4rem, 1.8vw, 1.8rem) !important;
+  line-height: 1.05 !important;
 }
 
 .analytics-label {
   letter-spacing: 0.07em !important;
-  font-size: 0.68rem !important;
-  line-height: 1.3 !important;
+  font-size: clamp(0.59rem, 0.65vw, 0.64rem) !important;
+  line-height: 1.25 !important;
 }
 
 .analytics-footer {
-  margin-top: 0.7rem !important;
-  padding-top: 0.7rem !important;
-  font-size: 0.74rem !important;
-  line-height: 1.35 !important;
+  margin-top: clamp(0.4rem, 0.7vw, 0.55rem) !important;
+  padding-top: clamp(0.4rem, 0.7vw, 0.55rem) !important;
+  font-size: clamp(0.61rem, 0.7vw, 0.67rem) !important;
+  line-height: 1.3 !important;
 }
 
 .analytics-footer--split {
@@ -1402,10 +1403,35 @@ export default {
 }
 
 .analytics-icon {
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 14px !important;
-  font-size: 0.95rem !important;
+  width: clamp(32px, 3vw, 36px) !important;
+  height: clamp(32px, 3vw, 36px) !important;
+  border-radius: clamp(10px, 1vw, 12px) !important;
+  font-size: clamp(0.78rem, 0.9vw, 0.86rem) !important;
+}
+
+.analytics-card .trend-pill {
+  gap: 0.25rem;
+  padding: clamp(0.22rem, 0.35vw, 0.28rem) clamp(0.42rem, 0.6vw, 0.52rem);
+  font-size: clamp(0.62rem, 0.7vw, 0.68rem);
+  line-height: 1.15;
+}
+
+/* Match the global dashboard selector so cards cannot overflow their tracks. */
+:global(body.admin-dashboard) .analytics-grid {
+  grid-template-columns: repeat(auto-fit, minmax(clamp(155px, 16vw, 175px), 1fr)) !important;
+  column-gap: clamp(1.25rem, 1.8vw, 1.5rem) !important;
+  row-gap: clamp(1.25rem, 1.8vw, 1.5rem) !important;
+}
+
+:global(body.admin-dashboard) .analytics-grid > .analytics-card {
+  box-sizing: border-box !important;
+  width: auto !important;
+  inline-size: auto !important;
+  justify-self: stretch !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 0 !important;
+  padding: clamp(0.72rem, 1vw, 0.82rem) !important;
 }
 
 .analytics-board-grid {
@@ -1909,6 +1935,16 @@ export default {
 }
 
 @media (max-width: 768px) {
+  :global(body.admin-dashboard) .analytics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.9rem !important;
+  }
+
+  :global(body.admin-dashboard) .analytics-grid > .analytics-card {
+    min-width: 0 !important;
+    padding: 0.75rem !important;
+  }
+
   .analytics-board-grid {
     grid-template-columns: 1fr;
   }
@@ -1940,13 +1976,13 @@ export default {
 
   .analytics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.75rem !important;
+    gap: 0.9rem !important;
   }
 
   .analytics-card {
     min-height: 0 !important;
-    aspect-ratio: 1 / 1 !important;
-    padding: 0.85rem !important;
+    aspect-ratio: 4 / 3 !important;
+    padding: 0.75rem !important;
     border-radius: 14px !important;
     display: flex !important;
     flex-direction: column !important;
@@ -1960,10 +1996,10 @@ export default {
   }
 
   .analytics-icon {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 12px !important;
-    font-size: 0.9rem !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 11px !important;
+    font-size: 0.82rem !important;
   }
 
   .analytics-main {
@@ -1971,7 +2007,7 @@ export default {
   }
 
   .analytics-value {
-    font-size: 1.55rem !important;
+    font-size: 1.4rem !important;
     letter-spacing: -0.05em !important;
   }
 
@@ -1983,7 +2019,7 @@ export default {
   .analytics-footer {
     margin-top: 0.55rem !important;
     padding-top: 0.55rem !important;
-    font-size: 0.68rem !important;
+    font-size: 0.64rem !important;
     line-height: 1.3 !important;
   }
 
@@ -2028,6 +2064,16 @@ export default {
 }
 
 @media (max-width: 480px) {
+  :global(body.admin-dashboard) .analytics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+
+  :global(body.admin-dashboard) .analytics-grid > .analytics-card {
+    min-height: clamp(138px, 42vw, 158px) !important;
+    padding: 0.7rem !important;
+  }
+
   .analytics-section {
     padding: 0.9rem !important;
   }
@@ -2040,21 +2086,23 @@ export default {
   }
 
   .analytics-grid {
-    gap: 0.6rem !important;
+    gap: 0.75rem !important;
   }
 
   .analytics-card {
-    padding: 0.75rem !important;
+    aspect-ratio: auto !important;
+    min-height: clamp(138px, 42vw, 158px) !important;
+    padding: 0.7rem !important;
     border-radius: 12px !important;
   }
 
   .analytics-value {
-    font-size: 1.35rem !important;
+    font-size: 1.28rem !important;
   }
 
   .analytics-icon {
-    width: 34px !important;
-    height: 34px !important;
+    width: 32px !important;
+    height: 32px !important;
   }
 
 }
