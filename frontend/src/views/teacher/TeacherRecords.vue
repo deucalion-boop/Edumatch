@@ -6382,9 +6382,13 @@ onBeforeUnmount(() => {
 }
 
 .attendance-toolbar-actions .pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   min-width: 0;
   min-height: 44px;
+  text-align: center;
   overflow-wrap: anywhere;
 }
 

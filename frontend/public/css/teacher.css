@@ -4046,7 +4046,7 @@ body.teacher-dashboard .top-header {
 body.teacher-dashboard .calendar-card.section-card {
     background:
         linear-gradient(180deg, #ffffff 0%, #ffffff 100%) padding-box,
-        linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
+        linear-gradient(135deg, #8bc66a 0%, #d8edcc 48%, #a9d58f 100%) border-box !important;
     border: 1px solid transparent !important;
 }
 
@@ -4577,11 +4577,9 @@ body.teacher-dashboard .teacher-sidebar .nav-section {
 
 body.teacher-dashboard .teacher-sidebar .nav-section-title {
     display: inline-block !important;
-    background: linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) !important;
-    background-clip: text !important;
-    -webkit-background-clip: text !important;
-    color: transparent !important;
-    -webkit-text-fill-color: transparent !important;
+    background: none !important;
+    color: #1e4307 !important;
+    -webkit-text-fill-color: #1e4307 !important;
     font-size: 0.75rem !important;
     font-weight: 600 !important;
     letter-spacing: 0.5px !important;

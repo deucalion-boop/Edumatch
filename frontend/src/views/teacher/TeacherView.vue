@@ -274,42 +274,51 @@
               No event types selected. Turn on at least one filter to show calendar items.
             </p>
 
-            <div class="calendar-weekdays">
-              <span v-for="day in weekDays" :key="day">{{ day }}</span>
-            </div>
+            <p class="calendar-scroll-hint" aria-hidden="true">
+              <i class="fas fa-arrows-left-right"></i>
+              Swipe to view the full month
+            </p>
 
-            <div class="calendar-grid">
-              <div
-                v-for="dayCell in calendarCells"
-                :key="dayCell.key"
-                class="calendar-day"
-                :class="{
-                  'is-empty': !dayCell.day,
-                  'is-today': dayCell.isToday,
-                  'has-events': dayCell.eventCount > 0
-                }"
-              >
-                <template v-if="dayCell.day">
-                  <span class="day-number">{{ dayCell.day }}</span>
-                  <div v-if="dayCell.events.length > 0" class="day-events">
-                    <span
-                      v-for="event in dayCell.events.slice(0, 2)"
-                      :key="event.id"
-                      class="day-event-pill"
-                      :class="`is-${event.type || 'lesson'}`"
-                      :title="event.tooltip"
-                    >
-                      <span class="event-title">{{ event.title }}</span>
-                      <span class="event-time">{{ event.timeLabel }}</span>
-                    </span>
-                    <span v-if="dayCell.events.length > 2" class="day-event-more">+{{ dayCell.events.length - 2 }} more</span>
+            <div class="calendar-scroll-area" tabindex="0" aria-label="Monthly calendar. Scroll horizontally to view all days.">
+              <div class="calendar-scroll-content">
+                <div class="calendar-weekdays">
+                  <span v-for="day in weekDays" :key="day">{{ day }}</span>
+                </div>
+
+                <div class="calendar-grid">
+                  <div
+                    v-for="dayCell in calendarCells"
+                    :key="dayCell.key"
+                    class="calendar-day"
+                    :class="{
+                      'is-empty': !dayCell.day,
+                      'is-today': dayCell.isToday,
+                      'has-events': dayCell.eventCount > 0
+                    }"
+                  >
+                    <template v-if="dayCell.day">
+                      <span class="day-number">{{ dayCell.day }}</span>
+                      <div v-if="dayCell.events.length > 0" class="day-events">
+                        <span
+                          v-for="event in dayCell.events.slice(0, 2)"
+                          :key="event.id"
+                          class="day-event-pill"
+                          :class="`is-${event.type || 'lesson'}`"
+                          :title="event.tooltip"
+                        >
+                          <span class="event-title">{{ event.title }}</span>
+                          <span class="event-time">{{ event.timeLabel }}</span>
+                        </span>
+                        <span v-if="dayCell.events.length > 2" class="day-event-more">+{{ dayCell.events.length - 2 }} more</span>
+                      </div>
+                      <span
+                        v-if="dayCell.eventCount > 0"
+                        class="day-dot"
+                        :class="`is-${dayCell.events[0]?.type || 'lesson'}`"
+                      ></span>
+                    </template>
                   </div>
-                  <span
-                    v-if="dayCell.eventCount > 0"
-                    class="day-dot"
-                    :class="`is-${dayCell.events[0]?.type || 'lesson'}`"
-                  ></span>
-                </template>
+                </div>
               </div>
             </div>
 
@@ -1665,7 +1674,7 @@ export default {
   border-radius: 16px;
   background:
     linear-gradient(180deg, #ffffff 0%, #ffffff 100%) padding-box,
-    linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box;
+    linear-gradient(135deg, #8bc66a 0%, #d8edcc 48%, #a9d58f 100%) border-box;
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
   padding: 1rem 1.05rem;
   margin-bottom: 1rem;
@@ -1683,7 +1692,7 @@ export default {
   margin: 0;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: #5b9b3c;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -1721,8 +1730,14 @@ export default {
 
 .calendar-nav-btn:hover,
 .calendar-today-btn:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: #a9d295;
+  background: #f2f9ee;
+}
+
+.calendar-today-btn {
+  border-color: #b9dca7;
+  background: #eef8e9;
+  color: #4f8f2f;
 }
 
 .calendar-filters {
@@ -1763,9 +1778,9 @@ export default {
 }
 
 .calendar-filter-btn.is-all {
-  background: #e2e8f0;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: #eef8e9;
+  border-color: #b9dca7;
+  color: #4f8f2f;
 }
 
 .calendar-filter-btn.is-lesson {
@@ -1801,6 +1816,30 @@ export default {
   color: #64748b;
   font-size: 0.78rem;
   line-height: 1.45;
+}
+
+.calendar-scroll-hint {
+  display: none;
+}
+
+.calendar-scroll-area {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 12px;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #b9dca7 transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.calendar-scroll-area:focus-visible {
+  outline: 3px solid rgba(105, 170, 71, 0.22);
+  outline-offset: 3px;
+}
+
+.calendar-scroll-content {
+  min-width: 0;
 }
 
 .calendar-weekdays {
@@ -1848,8 +1887,14 @@ export default {
 }
 
 .calendar-day.is-today {
-  border-color: #334155;
-  box-shadow: inset 0 0 0 1px #334155;
+  border-color: #8fbd76;
+  background: #f7fbf4;
+  box-shadow: inset 0 0 0 1px #8fbd76;
+}
+
+.calendar-day.is-today .day-number {
+  color: #4f8f2f;
+  font-weight: 800;
 }
 
 .day-number {
@@ -2334,40 +2379,86 @@ export default {
   }
 
   .calendar-header {
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    margin-bottom: 0.7rem;
   }
 
   .calendar-filters {
     width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0.1rem 0 0.45rem;
+    margin-bottom: 0.5rem;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .calendar-filter-label {
-    width: 100%;
+  .calendar-filters::-webkit-scrollbar,
+  .calendar-legend::-webkit-scrollbar {
+    display: none;
   }
 
   .calendar-filter-btn {
-    flex: 1 1 calc(50% - 0.5rem);
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding-inline: 0.85rem;
   }
 
   .calendar-controls {
-    width: 100%;
-    justify-content: space-between;
+    flex: 0 0 auto;
   }
 
   .calendar-nav-btn,
   .calendar-today-btn {
-    flex: 1;
+    min-width: 42px;
+    height: 42px;
+  }
+
+  .calendar-today-btn {
+    min-width: 68px;
+  }
+
+  .calendar-scroll-hint {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin: 0 0 0.45rem;
+    color: #6b7f61;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .calendar-scroll-area {
+    margin-inline: -0.15rem;
+    padding: 0.15rem 0.15rem 0.45rem;
+  }
+
+  .calendar-scroll-content {
+    min-width: 620px;
   }
 
   .calendar-day {
-    min-height: 80px;
-    padding: 0.35rem;
+    min-height: 86px;
+    padding: 0.42rem;
   }
 
   .calendar-weekdays,
   .calendar-grid {
-    gap: 0.25rem;
+    gap: 0.35rem;
+  }
+
+  .calendar-legend {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendar-legend span {
+    flex: 0 0 auto;
   }
 
   .teacher-activity-item {
@@ -2389,6 +2480,59 @@ export default {
   .teacher-activity-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .calendar-title {
+    font-size: 1.05rem;
+  }
+
+  .calendar-kicker {
+    font-size: 0.66rem;
+  }
+
+  .calendar-controls {
+    gap: 0.25rem;
+  }
+
+  .calendar-nav-btn,
+  .calendar-today-btn {
+    min-width: 40px;
+    height: 40px;
+    padding-inline: 0.5rem;
+  }
+
+  .calendar-today-btn {
+    min-width: 60px;
+  }
+
+  .calendar-filter-label {
+    display: none;
+  }
+
+  .calendar-filter-btn {
+    min-height: 38px;
+    padding-inline: 0.7rem;
+    font-size: 0.73rem;
+  }
+
+  .calendar-scroll-content {
+    min-width: 560px;
+  }
+
+  .calendar-day {
+    min-height: 78px;
+  }
+
+  .day-event-pill {
+    font-size: 0.58rem;
+  }
+
+  .day-event-pill .event-time {
+    display: none;
+  }
+
+  .day-event-pill .event-title {
+    max-width: 100%;
   }
 
   .teacher-activity-status,

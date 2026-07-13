@@ -232,115 +232,74 @@
               {{ flash.message }}
             </div>
 
-            <form class="builder-form lesson-form-modern" @submit.prevent="submitLesson">
-              <div class="form-section-break">
-                <div>
-                  <span class="builder-section-step">Step 1</span>
-                  <h3>Lesson Details</h3>
-                  <p>Start with the lesson title and subject so the uploaded file is attached to the right class content.</p>
-                </div>
-              </div>
-
-              <section class="lesson-form-section">
-                <div class="lesson-form-section-head">
-                  <h3>Lesson Information</h3>
-                  <p>Add the core metadata so this lesson is categorized correctly.</p>
-                </div>
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label for="lessonTitle">Lesson Title <span class="required-indicator">*</span></label>
-                    <input
-                      id="lessonTitle"
-                      v-model.trim="lessonForm.lessonTitle"
-                      type="text"
-                      placeholder="Example: Introduction to Quadratic Functions"
-                      required
-                    />
-                  </div>
-
-                  <div class="form-group">
-                    <label for="lessonClass">Class <span class="required-indicator">*</span></label>
-                    <select id="lessonClass" v-model="lessonForm.subjectId" required :disabled="teacherClasses.length === 0">
-                      <option value="">{{ teacherClasses.length === 0 ? 'Create a class first in Students' : 'Select class' }}</option>
-                      <option v-for="classItem in teacherClasses" :key="classItem.id" :value="classItem.id">{{ classItem.label }}</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="lessonSubject">Subject <span class="required-indicator">*</span></label>
-                    <select id="lessonSubject" v-model="lessonForm.subject" required :disabled="Boolean(teacherSubject)">
-                      <option value="">{{ teacherSubject ? 'Assigned subject' : 'Select subject' }}</option>
-                      <option v-for="subject in lessonSubjectOptions" :key="subject" :value="subject">{{ subject }}</option>
-                    </select>
-                  </div>
-                </div>
-              </section>
-
-              <div class="form-section-break">
-                <div>
-                  <span class="builder-section-step">Step 2</span>
-                  <h3>Upload Lesson File</h3>
-                  <p>Upload one PDF lesson plan that students can open and review from the lesson page.</p>
-                </div>
-              </div>
-
-              <section class="lesson-form-section">
-                <div class="lesson-form-section-head">
-                  <h3>Attachments</h3>
-                  <p>Upload one lesson plan file in PDF format only (max 10MB).</p>
-                </div>
-
-                <div
-                  class="lesson-upload-box"
-                  :class="{ 'is-dragging': isLessonDropActive }"
-                  @dragenter.prevent="onLessonDragEnter"
-                  @dragover.prevent="onLessonDragOver"
-                  @dragleave.prevent="onLessonDragLeave"
-                  @drop.prevent="onLessonDrop"
-                >
-                  <input
-                    id="lessonPlanFile"
-                    ref="lessonPlanFileInput"
-                    type="file"
-                    required
-                    accept=".pdf,application/pdf"
-                    class="lesson-upload-input"
-                    @change="onLessonFileChange"
-                  />
-                  <div class="lesson-upload-content">
-                    <i class="fas fa-file-pdf"></i>
-                    <h4>Drag and drop your lesson plan PDF here</h4>
-                    <p>or</p>
-                    <button type="button" class="btn btn-outline btn-sm" @click="triggerLessonFileBrowse">
-                      Browse PDF
+            <form class="builder-form lesson-form-modern wizard-form" novalidate @submit.prevent="lessonCurrentStep < 3 ? goToNextLessonStep() : submitLesson()">
+              <nav class="wizard-progress" aria-label="Lesson creation progress">
+                <div class="wizard-progress-track" aria-hidden="true"><span :style="{ width: `${lessonProgress}%` }"></span></div>
+                <ol>
+                  <li v-for="step in lessonWizardSteps" :key="step.number" :class="{ active: step.number === lessonCurrentStep, completed: step.number < lessonCurrentStep }">
+                    <button type="button" class="wizard-step-button" :disabled="step.number > lessonCurrentStep" :aria-current="step.number === lessonCurrentStep ? 'step' : undefined" @click="selectLessonWizardStep(step.number)">
+                      <span class="wizard-step-marker"><i v-if="step.number < lessonCurrentStep" class="fas fa-check" aria-hidden="true"></i><span v-else>{{ step.number }}</span></span>
+                      <span class="wizard-step-copy"><strong>{{ step.label }}</strong><small>{{ step.number < lessonCurrentStep ? 'Completed' : (step.number === lessonCurrentStep ? 'Current step' : 'Remaining') }}</small></span>
                     </button>
-                  </div>
-                </div>
+                  </li>
+                </ol>
+              </nav>
 
-                <div v-if="lessonForm.lessonPlanFile" class="attachment-list">
-                  <div class="attachment-item">
-                    <span class="attachment-name">{{ lessonForm.lessonPlanFile.name }}</span>
-                    <span class="attachment-meta">{{ formatBytes(lessonForm.lessonPlanFile.size) }}</span>
-                  </div>
-                </div>
-              </section>
+              <transition name="wizard-slide" mode="out-in">
+                <div :key="lessonCurrentStep" class="wizard-step-panel">
+                  <template v-if="lessonCurrentStep === 1">
+                    <div class="form-section-break"><div><span class="builder-section-step">Step 1 of 3</span><h3>Lesson Details</h3><p>Start with the lesson title and subject so the file is attached to the right class content.</p></div></div>
+                    <section class="lesson-form-section">
+                      <div class="lesson-form-section-head"><h3>Lesson Information</h3><p>All fields in this step are required.</p></div>
+                      <div class="form-grid">
+                        <div class="form-group" :class="{ 'has-error': lessonStepAttempted[1] && lessonStepErrors.lessonTitle }">
+                          <label for="lessonTitle">Lesson Title <span class="required-indicator">*</span></label>
+                          <input id="lessonTitle" v-model.trim="lessonForm.lessonTitle" type="text" placeholder="Example: Introduction to Quadratic Functions" required :aria-invalid="Boolean(lessonStepAttempted[1] && lessonStepErrors.lessonTitle)" aria-describedby="lessonTitle-error" @blur="lessonStepAttempted[1] = true" />
+                          <p v-if="lessonStepAttempted[1] && lessonStepErrors.lessonTitle" id="lessonTitle-error" class="field-error" role="alert">{{ lessonStepErrors.lessonTitle }}</p>
+                        </div>
+                        <div class="form-group" :class="{ 'has-error': lessonStepAttempted[1] && lessonStepErrors.subjectId }">
+                          <label for="lessonClass">Class <span class="required-indicator">*</span></label>
+                          <select id="lessonClass" v-model="lessonForm.subjectId" required :disabled="teacherClasses.length === 0" :aria-invalid="Boolean(lessonStepAttempted[1] && lessonStepErrors.subjectId)" aria-describedby="lessonClass-error" @blur="lessonStepAttempted[1] = true">
+                            <option value="">{{ teacherClasses.length === 0 ? 'Create a class first in Students' : 'Select class' }}</option><option v-for="classItem in teacherClasses" :key="classItem.id" :value="classItem.id">{{ classItem.label }}</option>
+                          </select>
+                          <p v-if="lessonStepAttempted[1] && lessonStepErrors.subjectId" id="lessonClass-error" class="field-error" role="alert">{{ lessonStepErrors.subjectId }}</p>
+                        </div>
+                        <div class="form-group" :class="{ 'has-error': lessonStepAttempted[1] && lessonStepErrors.subject }">
+                          <label for="lessonSubject">Subject <span class="required-indicator">*</span></label>
+                          <select id="lessonSubject" v-model="lessonForm.subject" required :disabled="Boolean(teacherSubject)" :aria-invalid="Boolean(lessonStepAttempted[1] && lessonStepErrors.subject)" aria-describedby="lessonSubject-error" @blur="lessonStepAttempted[1] = true">
+                            <option value="">{{ teacherSubject ? 'Assigned subject' : 'Select subject' }}</option><option v-for="subject in lessonSubjectOptions" :key="subject" :value="subject">{{ subject }}</option>
+                          </select>
+                          <p v-if="lessonStepAttempted[1] && lessonStepErrors.subject" id="lessonSubject-error" class="field-error" role="alert">{{ lessonStepErrors.subject }}</p>
+                        </div>
+                      </div>
+                    </section>
+                  </template>
 
-              <div class="form-section-break">
-                <div>
-                  <span class="builder-section-step">Step 3</span>
-                  <h3>Publish Lesson</h3>
-                  <p>Publish the lesson once the title, subject, and PDF are ready.</p>
-                </div>
-              </div>
+                  <template v-else-if="lessonCurrentStep === 2">
+                    <div class="form-section-break"><div><span class="builder-section-step">Step 2 of 3</span><h3>Upload Lesson File</h3><p>Upload one PDF lesson plan for students to review.</p></div></div>
+                    <section class="lesson-form-section">
+                      <div class="lesson-form-section-head"><h3>Attachment</h3><p>PDF format only, up to 10MB.</p></div>
+                      <div class="lesson-upload-box" :class="{ 'is-dragging': isLessonDropActive, 'has-error': lessonStepAttempted[2] && lessonStepErrors.lessonPlanFile }" @dragenter.prevent="onLessonDragEnter" @dragover.prevent="onLessonDragOver" @dragleave.prevent="onLessonDragLeave" @drop.prevent="onLessonDrop">
+                        <input id="lessonPlanFile" ref="lessonPlanFileInput" type="file" accept=".pdf,application/pdf" class="lesson-upload-input" :aria-invalid="Boolean(lessonStepAttempted[2] && lessonStepErrors.lessonPlanFile)" aria-describedby="lessonPlanFile-error" @change="onLessonFileChange($event); lessonStepAttempted[2] = true" />
+                        <div class="lesson-upload-content"><i class="fas fa-file-pdf"></i><h4>Drag and drop your lesson plan PDF here</h4><p>or choose a file from your device</p><button type="button" class="btn btn-outline btn-sm" @click="triggerLessonFileBrowse">Browse PDF</button></div>
+                      </div>
+                      <p v-if="lessonStepAttempted[2] && lessonStepErrors.lessonPlanFile" id="lessonPlanFile-error" class="field-error" role="alert">{{ lessonStepErrors.lessonPlanFile }}</p>
+                      <div v-if="lessonForm.lessonPlanFile" class="attachment-list"><div class="attachment-item"><span class="attachment-name">{{ lessonForm.lessonPlanFile.name }}</span><span class="attachment-meta">{{ formatBytes(lessonForm.lessonPlanFile.size) }}</span></div></div>
+                    </section>
+                  </template>
 
-              <div class="form-actions lesson-actions">
-                <button class="btn btn-outline" type="button" :disabled="isPostingLesson" @click="resetLessonForm">
-                  Cancel
-                </button>
-                <button class="btn btn-primary" type="submit" :disabled="isPostingLesson || teacherClasses.length === 0" data-tour="challenges-post-lesson-action">
-                  <i class="fas" :class="isPostingLesson ? 'fa-spinner fa-spin' : 'fa-upload'"></i>
-                  {{ isPostingLesson ? "Publishing..." : "Publish Lesson" }}
-                </button>
+                  <template v-else>
+                    <div class="form-section-break"><div><span class="builder-section-step">Step 3 of 3</span><h3>Review and Publish</h3><p>Confirm the lesson information before making it available to students.</p></div><span class="wizard-ready-pill"><i class="fas fa-circle-check"></i> Ready</span></div>
+                    <section class="wizard-review-card"><dl><div><dt>Lesson title</dt><dd>{{ lessonForm.lessonTitle }}</dd></div><div><dt>Class</dt><dd>{{ teacherClasses.find(item => item.id === lessonForm.subjectId)?.label }}</dd></div><div><dt>Subject</dt><dd>{{ lessonForm.subject }}</dd></div><div><dt>PDF</dt><dd>{{ lessonForm.lessonPlanFile?.name }} · {{ formatBytes(lessonForm.lessonPlanFile?.size) }}</dd></div></dl></section>
+                  </template>
+                </div>
+              </transition>
+
+              <div class="form-actions wizard-actions lesson-actions">
+                <button v-if="lessonCurrentStep === 1" class="btn btn-outline" type="button" :disabled="isPostingLesson" @click="resetLessonForm()">Cancel</button>
+                <button v-else class="btn btn-outline" type="button" :disabled="isPostingLesson" @click="goToPreviousLessonStep"><i class="fas fa-arrow-left"></i> Back</button>
+                <button v-if="lessonCurrentStep < 3" class="btn btn-primary" type="button" :disabled="!lessonCanContinue" :aria-disabled="!lessonCanContinue" @click="goToNextLessonStep">Next <i class="fas fa-arrow-right"></i></button>
+                <button v-else class="btn btn-primary" type="submit" :disabled="isPostingLesson || teacherClasses.length === 0" data-tour="challenges-post-lesson-action"><i class="fas" :class="isPostingLesson ? 'fa-spinner fa-spin' : 'fa-upload'"></i>{{ isPostingLesson ? "Publishing..." : "Publish Lesson" }}</button>
               </div>
             </form>
           </section>
@@ -364,8 +323,22 @@
               {{ flash.message }}
             </div>
 
-            <form class="builder-form builder-form-assessment" @submit.prevent>
-              <div class="form-grid">
+            <form class="builder-form builder-form-assessment wizard-form" novalidate @submit.prevent="challengeCurrentStep < 4 ? goToNextChallengeStep() : undefined">
+              <nav class="wizard-progress" aria-label="Activity and assessment creation progress">
+                <div class="wizard-progress-track" aria-hidden="true"><span :style="{ width: `${challengeProgress}%` }"></span></div>
+                <ol>
+                  <li v-for="step in challengeWizardSteps" :key="step.number" :class="{ active: step.number === challengeCurrentStep, completed: step.number < challengeCurrentStep }">
+                    <button type="button" class="wizard-step-button" :disabled="step.number > challengeCurrentStep" :aria-current="step.number === challengeCurrentStep ? 'step' : undefined" @click="selectChallengeWizardStep(step.number)">
+                      <span class="wizard-step-marker"><i v-if="step.number < challengeCurrentStep" class="fas fa-check" aria-hidden="true"></i><span v-else>{{ step.number }}</span></span>
+                      <span class="wizard-step-copy"><strong>{{ step.label }}</strong><small>{{ step.number < challengeCurrentStep ? 'Completed' : (step.number === challengeCurrentStep ? 'Current step' : 'Remaining') }}</small></span>
+                    </button>
+                  </li>
+                </ol>
+              </nav>
+
+              <transition name="wizard-slide" mode="out-in">
+              <div :key="challengeCurrentStep" class="form-grid wizard-step-grid" @focusout="challengeStepAttempted[challengeCurrentStep] = true">
+                <template v-if="challengeCurrentStep === 1">
                 <div class="form-section-break full">
                   <div>
                     <span class="builder-section-step">Step 1</span>
@@ -385,12 +358,15 @@
                     type="text"
                     :placeholder="isActivityAssessment ? 'e.g., Reflection Activity 1' : 'e.g., Module 1 Quiz'"
                     :required="!isActivityAssessment"
+                    :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.challengeTitle)"
+                    aria-describedby="challengeTitle-error"
                   />
+                  <p v-if="challengeStepAttempted[1] && challengeStepErrors.challengeTitle" id="challengeTitle-error" class="field-error" role="alert">{{ challengeStepErrors.challengeTitle }}</p>
                 </div>
 
                 <div class="form-group">
                   <label for="linkedLesson">Linked Lesson</label>
-                  <select id="linkedLesson" v-model="challengeForm.linkedLesson" :required="!challengeForm.subjectId">
+                  <select id="linkedLesson" v-model="challengeForm.linkedLesson" :required="!challengeForm.subjectId" :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.linkedLesson)" aria-describedby="challengeContext-error">
                     <option value="">Select lesson</option>
                     <option v-for="lesson in lessonOptions" :key="lesson.id" :value="lesson.id">
                       {{ lesson.title }}{{ lesson.classLabel ? ` · ${lesson.classLabel}` : '' }}
@@ -400,7 +376,7 @@
 
                 <div class="form-group">
                   <label for="challengeClass">Class to Publish</label>
-                  <select id="challengeClass" v-model="challengeForm.subjectId" :required="!challengeForm.linkedLesson" :disabled="teacherClasses.length === 0">
+                  <select id="challengeClass" v-model="challengeForm.subjectId" :required="!challengeForm.linkedLesson" :disabled="teacherClasses.length === 0" :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.linkedLesson)" aria-describedby="challengeContext-error">
                     <option value="">
                       {{ teacherClasses.length === 0
                         ? 'No class available'
@@ -413,6 +389,10 @@
                   <p class="helper-copy">Choose the class that should receive this assessment when you are not linking a lesson.</p>
                 </div>
 
+                <p v-if="challengeStepAttempted[1] && challengeStepErrors.linkedLesson" id="challengeContext-error" class="field-error full" role="alert">{{ challengeStepErrors.linkedLesson }}</p>
+                </template>
+
+                <template v-else-if="challengeCurrentStep === 2">
                 <div class="form-section-break full">
                   <div>
                     <span class="builder-section-step">Step 2</span>
@@ -435,7 +415,7 @@
 
                 <div class="form-group" v-if="isGradingAssessment">
                   <label for="challengeGradingPeriod">Grading Period</label>
-                  <select id="challengeGradingPeriod" v-model="challengeForm.gradingPeriod" required>
+                  <select id="challengeGradingPeriod" v-model="challengeForm.gradingPeriod" required :aria-invalid="Boolean(challengeStepAttempted[2] && challengeStepErrors.challengeGradingPeriod)" aria-describedby="challengeGradingPeriod-error">
                     <option value="">Select grading period</option>
                     <option value="1st">1st Grading</option>
                     <option value="2nd">2nd Grading</option>
@@ -446,9 +426,14 @@
 
                 <div v-if="!isActivityAssessment" class="form-group">
                   <label for="challengeTopic">Topic</label>
-                  <input id="challengeTopic" v-model.trim="challengeForm.challengeTopic" type="text" placeholder="e.g., Photosynthesis Process" required />
+                  <input id="challengeTopic" v-model.trim="challengeForm.challengeTopic" type="text" placeholder="e.g., Photosynthesis Process" required :aria-invalid="Boolean(challengeStepAttempted[2] && challengeStepErrors.challengeTopic)" aria-describedby="challengeTopic-error" />
                 </div>
 
+                <p v-if="challengeStepAttempted[2] && challengeStepErrors.challengeGradingPeriod" id="challengeGradingPeriod-error" class="field-error full" role="alert">{{ challengeStepErrors.challengeGradingPeriod }}</p>
+                <p v-if="challengeStepAttempted[2] && challengeStepErrors.challengeTopic" id="challengeTopic-error" class="field-error full" role="alert">{{ challengeStepErrors.challengeTopic }}</p>
+                </template>
+
+                <template v-else-if="challengeCurrentStep === 3">
                 <div class="form-section-break full">
                   <div>
                     <span class="builder-section-step">Step 3</span>
@@ -470,7 +455,10 @@
                     min="1"
                     max="100"
                     required
+                    :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeQuestionCount)"
+                    aria-describedby="challengeQuestionCount-error"
                   />
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeQuestionCount" id="challengeQuestionCount-error" class="field-error" role="alert">{{ challengeStepErrors.challengeQuestionCount }}</p>
                 </div>
 
                 <div v-if="!isActivityAssessment" class="form-group">
@@ -482,26 +470,31 @@
                     min="1"
                     max="300"
                     required
+                    :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeExamDurationMinutes)"
+                    aria-describedby="challengeExamDurationMinutes-error"
                   />
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeExamDurationMinutes" id="challengeExamDurationMinutes-error" class="field-error" role="alert">{{ challengeStepErrors.challengeExamDurationMinutes }}</p>
                 </div>
 
                 <div v-if="!isActivityAssessment" class="form-group">
                   <label for="challengeExamType">Exam Type</label>
-                  <select id="challengeExamType" v-model="challengeForm.challengeExamType" required>
+                  <select id="challengeExamType" v-model="challengeForm.challengeExamType" required :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeExamType)" aria-describedby="challengeExamType-error">
                     <option value="">Select exam type</option>
                     <option value="multiple_choice">Multiple Choice</option>
                     <option value="identification">Identification</option>
                     <option value="true_false">True or False</option>
                     <option value="mixed">Mixed</option>
                   </select>
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeExamType" id="challengeExamType-error" class="field-error" role="alert">{{ challengeStepErrors.challengeExamType }}</p>
                 </div>
 
                 <div class="form-group">
                   <label for="challengeSubject">Subject</label>
-                  <select id="challengeSubject" v-model="challengeForm.subject" required :disabled="Boolean(teacherSubject) || !selectedAssessmentStrand">
+                  <select id="challengeSubject" v-model="challengeForm.subject" required :disabled="Boolean(teacherSubject) || !selectedAssessmentStrand" :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeSubject)" aria-describedby="challengeSubject-error">
                     <option value="">{{ !selectedAssessmentStrand ? 'Select lesson or class first' : (teacherSubject ? 'Assigned subject' : 'Select subject') }}</option>
                     <option v-for="subject in assessmentSubjectOptions" :key="subject" :value="subject">{{ subject }}</option>
                   </select>
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeSubject" id="challengeSubject-error" class="field-error" role="alert">{{ challengeStepErrors.challengeSubject }}</p>
                 </div>
 
                 <div v-if="isActivityAssessment" class="form-group">
@@ -513,33 +506,40 @@
                     min="1"
                     max="100"
                     required
+                    :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeActivityPoints)"
+                    aria-describedby="challengeActivityPoints-error"
                   />
                   <p class="helper-copy">Set the score students will see for this activity, from 1 to 100.</p>
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeActivityPoints" id="challengeActivityPoints-error" class="field-error" role="alert">{{ challengeStepErrors.challengeActivityPoints }}</p>
                 </div>
 
                 <div v-if="!isActivityAssessment" class="form-group">
                   <label for="challengeDifficulty">Difficulty</label>
-                  <select id="challengeDifficulty" v-model="challengeForm.challengeDifficulty" required>
+                  <select id="challengeDifficulty" v-model="challengeForm.challengeDifficulty" required :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeDifficulty)" aria-describedby="challengeDifficulty-error">
                     <option value="">Select difficulty</option>
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
                     <option value="hard">Hard</option>
                   </select>
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeDifficulty" id="challengeDifficulty-error" class="field-error" role="alert">{{ challengeStepErrors.challengeDifficulty }}</p>
                 </div>
 
                 <div v-if="!isActivityAssessment" class="form-group">
                   <label for="challengePoints">Total Points</label>
-                  <input id="challengePoints" v-model.number="challengeForm.challengePoints" type="number" min="10" max="500" required />
+                  <input id="challengePoints" v-model.number="challengeForm.challengePoints" type="number" min="10" max="500" required :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengePoints)" aria-describedby="challengePoints-error" />
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengePoints" id="challengePoints-error" class="field-error" role="alert">{{ challengeStepErrors.challengePoints }}</p>
                 </div>
 
                 <div class="form-group">
                   <label for="challengeDeadlineDate">Deadline Date</label>
-                  <input id="challengeDeadlineDate" v-model="challengeForm.deadlineDate" type="date" required />
+                  <input id="challengeDeadlineDate" v-model="challengeForm.deadlineDate" type="date" required :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeDeadlineDate)" aria-describedby="challengeDeadlineDate-error" />
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeDeadlineDate" id="challengeDeadlineDate-error" class="field-error" role="alert">{{ challengeStepErrors.challengeDeadlineDate }}</p>
                 </div>
 
                 <div class="form-group">
                   <label for="challengeDeadlineTime">Deadline Time</label>
-                  <input id="challengeDeadlineTime" v-model="challengeForm.deadlineTime" type="time" required />
+                  <input id="challengeDeadlineTime" v-model="challengeForm.deadlineTime" type="time" required :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeDeadlineTime)" aria-describedby="challengeDeadlineTime-error" />
+                  <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeDeadlineTime" id="challengeDeadlineTime-error" class="field-error" role="alert">{{ challengeStepErrors.challengeDeadlineTime }}</p>
                 </div>
 
                 <div class="form-group full">
@@ -549,6 +549,9 @@
                   </div>
                 </div>
 
+                </template>
+
+                <template v-else>
                 <div class="form-section-break full">
                   <div>
                     <span class="builder-section-step">Step 4</span>
@@ -568,6 +571,8 @@
                     v-model.trim="challengeForm.challengeDescription"
                     :placeholder="isActivityAssessment ? 'Write the activity directions, expected output, and turn-in reminders for students...' : 'Write the assessment prompt and directions for students...'"
                     required
+                    :aria-invalid="Boolean(challengeStepAttempted[4] && challengeStepErrors.challengeDescription)"
+                    aria-describedby="challengeDescription-error"
                   />
                 </div>
 
@@ -675,16 +680,22 @@
                     </div>
                   </transition>
                 </div>
+                <p v-if="challengeStepAttempted[4] && challengeStepErrors.challengeDescription" id="challengeDescription-error" class="field-error full" role="alert">{{ challengeStepErrors.challengeDescription }}</p>
+                </template>
               </div>
+              </transition>
 
-              <div class="form-actions">
+              <div class="form-actions wizard-actions">
+                <button v-if="challengeCurrentStep > 1" class="btn btn-outline" type="button" :disabled="isGenerating || isPublishingActivity || isSavingGeneratedAssessment" @click="goToPreviousChallengeStep"><i class="fas fa-arrow-left"></i> Back</button>
+                <span v-else class="wizard-action-spacer" aria-hidden="true"></span>
+                <button v-if="challengeCurrentStep < 4" class="btn btn-primary" type="button" :disabled="!challengeCanContinue" :aria-disabled="!challengeCanContinue" @click="goToNextChallengeStep">Next <i class="fas fa-arrow-right"></i></button>
                 <button
-                  v-if="!isActivityAssessment"
+                  v-if="challengeCurrentStep === 4 && !isActivityAssessment"
                   class="btn btn-outline"
                   type="button"
                   id="generateAssessmentBtn"
                   data-tour="challenges-generate-action"
-                  :disabled="!canGenerate || isGenerating"
+                  :disabled="!canGenerate || isGenerating || !challengeCanContinue"
                   :title="generateButtonTitle"
                   @click="generateWithAi"
                 >
@@ -692,20 +703,20 @@
                   {{ isGenerating ? "Generating..." : "Generate with AI" }}
                 </button>
                 <button
-                  v-if="isActivityAssessment"
+                  v-if="challengeCurrentStep === 4 && isActivityAssessment"
                   class="btn btn-primary"
                   type="button"
-                  :disabled="!canPublishActivity || isPublishingActivity"
+                  :disabled="!canPublishActivity || isPublishingActivity || !challengeCanContinue"
                   @click="publishActivity"
                 >
                   <i class="fas" :class="isPublishingActivity ? 'fa-spinner fa-spin' : 'fa-upload'"></i>
                   {{ isPublishingActivity ? "Publishing..." : "Publish Activity" }}
                 </button>
                 <button
-                  v-if="!isActivityAssessment && generatedQuestions.length > 0 && isGeneratedPreviewVisible"
+                  v-if="challengeCurrentStep === 4 && !isActivityAssessment && generatedQuestions.length > 0 && isGeneratedPreviewVisible"
                   class="btn btn-primary"
                   type="button"
-                  :disabled="isSavingGeneratedAssessment"
+                  :disabled="isSavingGeneratedAssessment || !generatedQuestionsAreValid || !challengeCanContinue"
                   @click="finalizeGeneratedAssessment"
                 >
                   <i class="fas" :class="isSavingGeneratedAssessment ? 'fa-spinner fa-spin' : 'fa-check-circle'"></i>
@@ -994,6 +1005,64 @@ const isLessonDropActive = ref(false);
 const lessonPlanFileInput = ref(null);
 const activityAttachmentInput = ref(null);
 const isActivityDropActive = ref(false);
+const lessonCurrentStep = ref(1);
+const lessonStepAttempted = reactive({ 1: false, 2: false, 3: false });
+const lessonWizardSteps = [
+  { number: 1, label: "Details" },
+  { number: 2, label: "PDF upload" },
+  { number: 3, label: "Review" },
+];
+
+const getLessonStepErrors = (step) => {
+  const errors = {};
+  if (step === 1) {
+    if (!String(lessonForm.lessonTitle || "").trim()) errors.lessonTitle = "Enter a lesson title.";
+    if (!String(lessonForm.subjectId || "").trim()) errors.subjectId = "Select the class that will receive this lesson.";
+    if (!String(lessonForm.subject || "").trim()) errors.subject = "Select a subject.";
+  }
+  if (step === 2) {
+    const file = lessonForm.lessonPlanFile;
+    if (!file) {
+      errors.lessonPlanFile = "Upload a PDF lesson plan to continue.";
+    } else if (getFileExtension(file.name) !== ".pdf") {
+      errors.lessonPlanFile = "The lesson plan must be a PDF file.";
+    } else if (Number(file.size || 0) > MAX_LESSON_PDF_BYTES) {
+      errors.lessonPlanFile = "The PDF must be 10MB or smaller.";
+    }
+  }
+  return errors;
+};
+
+const lessonStepErrors = computed(() => getLessonStepErrors(lessonCurrentStep.value));
+const lessonCanContinue = computed(() => Object.keys(lessonStepErrors.value).length === 0);
+const lessonProgress = computed(() => ((lessonCurrentStep.value - 1) / (lessonWizardSteps.length - 1)) * 100);
+
+async function focusFirstInvalidField(errorKeys) {
+  await nextTick();
+  const firstKey = Object.keys(errorKeys || {})[0];
+  if (!firstKey) return;
+  const target = document.getElementById(firstKey);
+  target?.focus();
+}
+
+async function goToNextLessonStep() {
+  lessonStepAttempted[lessonCurrentStep.value] = true;
+  const errors = getLessonStepErrors(lessonCurrentStep.value);
+  if (Object.keys(errors).length > 0) {
+    await focusFirstInvalidField(errors);
+    return;
+  }
+  lessonCurrentStep.value = Math.min(lessonWizardSteps.length, lessonCurrentStep.value + 1);
+}
+
+function goToPreviousLessonStep() {
+  lessonCurrentStep.value = Math.max(1, lessonCurrentStep.value - 1);
+}
+
+function selectLessonWizardStep(step) {
+  if (step >= lessonCurrentStep.value) return;
+  lessonCurrentStep.value = step;
+}
 
 function formatClassLabel(classItem) {
   const className = String(classItem?.className || "").trim();
@@ -1040,6 +1109,7 @@ async function loadClassOptions() {
 function onLessonFileChange(e) {
   const files = Array.from(e.target.files || []);
   lessonForm.lessonPlanFile = files.length > 0 ? files[0] : null;
+  lessonStepAttempted[2] = true;
 }
 
 function onLessonDragEnter() {
@@ -1062,6 +1132,7 @@ function onLessonDrop(event) {
   isLessonDropActive.value = false;
   const droppedFiles = Array.from(event.dataTransfer?.files || []);
   lessonForm.lessonPlanFile = droppedFiles.length > 0 ? droppedFiles[0] : null;
+  lessonStepAttempted[2] = true;
   if (lessonPlanFileInput.value) {
     const dataTransfer = new DataTransfer();
     if (lessonForm.lessonPlanFile) dataTransfer.items.add(lessonForm.lessonPlanFile);
@@ -1081,14 +1152,16 @@ function formatBytes(value) {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function resetLessonForm() {
+function resetLessonForm({ preserveFlash = false } = {}) {
   lessonForm.lessonTitle = "";
   if (!teacherClasses.value.some((item) => item.id === lessonForm.subjectId)) {
     lessonForm.subjectId = teacherClasses.value[0]?.id || "";
   }
   lessonForm.subject = teacherSubject.value || "";
   lessonForm.lessonPlanFile = null;
-  if (flash.value?.tab === "lesson") flash.value = null;
+  lessonCurrentStep.value = 1;
+  Object.keys(lessonStepAttempted).forEach((step) => { lessonStepAttempted[step] = false; });
+  if (!preserveFlash && flash.value?.tab === "lesson") flash.value = null;
   if (lessonPlanFileInput.value) lessonPlanFileInput.value.value = "";
 }
 
@@ -1173,7 +1246,7 @@ async function submitLesson() {
       }
     });
     // Reset form
-    resetLessonForm();
+    resetLessonForm({ preserveFlash: true });
   } catch (err) {
     if (axios.isAxiosError(err)) {
       if (!err.response) {
@@ -1356,6 +1429,85 @@ const generateButtonTitle = computed(() => {
 const isGradingAssessment = computed(() => challengeForm.assessmentMode === "grading_assessment");
 const isQuizAssessment = computed(() => challengeForm.assessmentMode === "quiz");
 const isActivityAssessment = computed(() => challengeForm.assessmentMode === "activity");
+const challengeCurrentStep = ref(1);
+const challengeStepAttempted = reactive({ 1: false, 2: false, 3: false, 4: false });
+const challengeWizardSteps = computed(() => [
+  { number: 1, label: "Context" },
+  { number: 2, label: "Type" },
+  { number: 3, label: isActivityAssessment.value ? "Details" : "Settings" },
+  { number: 4, label: isActivityAssessment.value ? "Publish" : "Generate" },
+]);
+
+const getChallengeStepErrors = (step) => {
+  const errors = {};
+  const hasContext = Boolean(String(challengeForm.linkedLesson || "").trim() || String(challengeForm.subjectId || "").trim());
+  if (step === 1) {
+    if (!isActivityAssessment.value && !String(challengeForm.challengeTitle || "").trim()) {
+      errors.challengeTitle = "Enter an assessment title.";
+    }
+    if (!hasContext) errors.linkedLesson = "Select a linked lesson or a class to publish to.";
+  }
+  if (step === 2) {
+    if (!String(challengeForm.assessmentMode || "").trim()) errors.challengeAssessmentMode = "Select a type.";
+    if (isGradingAssessment.value && !String(challengeForm.gradingPeriod || "").trim()) {
+      errors.challengeGradingPeriod = "Select the grading period for this exam.";
+    }
+    if (!isActivityAssessment.value && !String(challengeForm.challengeTopic || "").trim()) {
+      errors.challengeTopic = "Enter the assessment topic.";
+    }
+  }
+  if (step === 3) {
+    if (!String(challengeForm.subject || "").trim()) errors.challengeSubject = "Select a subject.";
+    if (isActivityAssessment.value) {
+      const points = Number(challengeForm.activityPoints);
+      if (!Number.isInteger(points) || points < 1 || points > 100) errors.challengeActivityPoints = "Enter a whole number from 1 to 100.";
+    } else {
+      const questionCount = Number(challengeForm.challengeQuestionCount);
+      const duration = Number(challengeForm.examDurationMinutes);
+      const totalPoints = Number(challengeForm.challengePoints);
+      if (!Number.isInteger(questionCount) || questionCount < 1 || questionCount > 100) errors.challengeQuestionCount = "Enter 1 to 100 questions.";
+      if (!Number.isInteger(duration) || duration < 1 || duration > 300) errors.challengeExamDurationMinutes = "Enter a timer from 1 to 300 minutes.";
+      if (!String(challengeForm.challengeExamType || "").trim()) errors.challengeExamType = "Select an exam type.";
+      if (!String(challengeForm.challengeDifficulty || "").trim()) errors.challengeDifficulty = "Select a difficulty.";
+      if (!Number.isFinite(totalPoints) || totalPoints < 10 || totalPoints > 500) errors.challengePoints = "Enter total points from 10 to 500.";
+    }
+    if (!String(challengeForm.deadlineDate || "").trim()) errors.challengeDeadlineDate = "Select a deadline date.";
+    if (!String(challengeForm.deadlineTime || "").trim()) errors.challengeDeadlineTime = "Select a deadline time.";
+    const deadline = buildSubmissionDeadlineIso(challengeForm.deadlineDate, challengeForm.deadlineTime);
+    if (deadline && new Date(deadline).getTime() <= Date.now()) errors.challengeDeadlineDate = "Set a deadline in the future.";
+  }
+  if (step === 4 && !String(challengeForm.challengeDescription || "").trim()) {
+    errors.challengeDescription = isActivityAssessment.value ? "Enter clear activity instructions." : "Enter assessment instructions.";
+  }
+  return errors;
+};
+
+const challengeStepErrors = computed(() => getChallengeStepErrors(challengeCurrentStep.value));
+const challengeCanContinue = computed(() => Object.keys(challengeStepErrors.value).length === 0);
+const challengeProgress = computed(() => ((challengeCurrentStep.value - 1) / (challengeWizardSteps.value.length - 1)) * 100);
+const generatedQuestionsAreValid = computed(() => generatedQuestions.value.length > 0 && generatedQuestions.value.every((question) => (
+  String(question.prompt || "").trim() && String(question.answer || "").trim()
+)));
+
+async function goToNextChallengeStep() {
+  challengeStepAttempted[challengeCurrentStep.value] = true;
+  const errors = getChallengeStepErrors(challengeCurrentStep.value);
+  if (Object.keys(errors).length > 0) {
+    await focusFirstInvalidField(errors);
+    return;
+  }
+  challengeCurrentStep.value = Math.min(challengeWizardSteps.value.length, challengeCurrentStep.value + 1);
+}
+
+function goToPreviousChallengeStep() {
+  challengeCurrentStep.value = Math.max(1, challengeCurrentStep.value - 1);
+}
+
+function selectChallengeWizardStep(step) {
+  if (step >= challengeCurrentStep.value) return;
+  challengeCurrentStep.value = step;
+}
+
 const canManageActivityAttachments = computed(() => (
   isActivityAssessment.value
 ));
@@ -1419,6 +1571,8 @@ function resetAssessmentBuilder() {
   generatedDraftMeta.value = null;
   isGeneratedPreviewVisible.value = false;
   showCorrectAnswers.value = false;
+  challengeCurrentStep.value = 1;
+  Object.keys(challengeStepAttempted).forEach((step) => { challengeStepAttempted[step] = false; });
   if (activityAttachmentInput.value) activityAttachmentInput.value.value = "";
 }
 
@@ -2120,6 +2274,11 @@ watch(
     if (value !== "grading_assessment") {
       challengeForm.gradingPeriod = "";
     }
+    if (value !== "activity" && challengeCurrentStep.value > 1 && !String(challengeForm.challengeTitle || "").trim()) {
+      challengeStepAttempted[1] = true;
+      challengeCurrentStep.value = 1;
+      focusFirstInvalidField({ challengeTitle: "Enter an assessment title." });
+    }
   }
 );
 
@@ -2318,7 +2477,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #475569;
+  color: #5b9b3c;
 }
 
 .panel-badge {
@@ -2328,9 +2487,9 @@ onBeforeUnmount(() => {
   min-height: 36px;
   padding: 0.5rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  color: #0f172a;
+  border: 1px solid #b9dca7;
+  background: #eef8e9;
+  color: #4f8f2f;
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
@@ -2386,9 +2545,9 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 0.9rem;
   padding: 1rem 1rem 0.9rem;
-  border: 1px solid #dbe2ea;
+  border: 1px solid #d3e7c8;
   border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbf4 100%);
 }
 
 .form-section-break h3 {
@@ -2410,8 +2569,8 @@ onBeforeUnmount(() => {
   min-height: 26px;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #dcfce7;
+  color: #4f8f2f;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -2481,8 +2640,8 @@ onBeforeUnmount(() => {
 }
 
 .lesson-upload-box {
-  border: 1px dashed #93c5fd;
-  background: #f8fbff;
+  border: 1px dashed #9bc783;
+  background: #f7fbf4;
   border-radius: var(--radius-md);
   min-height: 160px;
   display: flex;
@@ -2494,9 +2653,9 @@ onBeforeUnmount(() => {
 }
 
 .lesson-upload-box.is-dragging {
-  border-color: #2563eb;
-  background: #eff6ff;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: #69aa47;
+  background: #eef8e9;
+  box-shadow: 0 0 0 3px rgba(105, 170, 71, 0.15);
 }
 
 .lesson-upload-input {
@@ -2511,7 +2670,7 @@ onBeforeUnmount(() => {
 }
 
 .lesson-upload-content i {
-  color: #1d4ed8;
+  color: #69aa47;
   font-size: 1.6rem;
 }
 
@@ -2901,6 +3060,288 @@ onBeforeUnmount(() => {
   color: #4b5563;
 }
 
+/* Accessible multi-step builders */
+.wizard-form {
+  overflow: hidden;
+}
+
+.wizard-progress {
+  position: relative;
+  padding: 0.8rem 0.35rem 1rem;
+}
+
+.wizard-progress ol {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--wizard-columns, 4), minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-form-modern .wizard-progress ol {
+  --wizard-columns: 3;
+}
+
+.wizard-progress-track {
+  position: absolute;
+  top: 1.85rem;
+  left: calc(12.5% + 0.35rem);
+  right: calc(12.5% + 0.35rem);
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.lesson-form-modern .wizard-progress-track {
+  left: calc(16.666% + 0.35rem);
+  right: calc(16.666% + 0.35rem);
+}
+
+.wizard-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #69aa47, #9acb63);
+  transition: width 0.35s ease;
+}
+
+.wizard-step-button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.wizard-step-button:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.wizard-step-marker {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 0 0 5px #ffffff;
+  transition: transform 0.22s ease, border-color 0.22s ease, background-color 0.22s ease, color 0.22s ease;
+}
+
+.wizard-progress li.active .wizard-step-marker,
+.wizard-progress li.completed .wizard-step-marker {
+  border-color: #69aa47;
+  background: #69aa47;
+  color: #ffffff;
+}
+
+.wizard-progress li.active .wizard-step-marker {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 5px #dcfce7;
+}
+
+.wizard-step-copy {
+  display: grid;
+  gap: 0.05rem;
+}
+
+.wizard-step-copy strong {
+  color: #334155;
+  font-size: 0.78rem;
+}
+
+.wizard-progress li.active .wizard-step-copy strong,
+.wizard-progress li.completed .wizard-step-copy strong {
+  color: #4f8f2f;
+}
+
+.builder-main .btn-primary {
+  border-color: #69aa47 !important;
+  background: #69aa47 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+
+.builder-main .btn-primary:hover:not(:disabled) {
+  border-color: #5b9b3c !important;
+  background: #5b9b3c !important;
+  transform: translateY(-1px);
+}
+
+.builder-main .btn-primary:disabled {
+  border-color: #b7d3a8 !important;
+  background: #b7d3a8 !important;
+  color: #ffffff !important;
+}
+
+.wizard-step-copy small {
+  color: #94a3b8;
+  font-size: 0.68rem;
+}
+
+.wizard-step-panel,
+.wizard-step-grid {
+  min-width: 0;
+}
+
+.wizard-step-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.wizard-step-grid {
+  align-items: start;
+}
+
+.wizard-slide-enter-active,
+.wizard-slide-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.wizard-slide-enter-from {
+  opacity: 0;
+  transform: translateX(16px);
+}
+
+.wizard-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-12px);
+}
+
+.field-error {
+  margin: 0.1rem 0 0;
+  color: #b91c1c;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.form-group.has-error input,
+.form-group.has-error select,
+.form-group.has-error textarea,
+.form-group input[aria-invalid="true"],
+.form-group select[aria-invalid="true"],
+.form-group textarea[aria-invalid="true"],
+.lesson-upload-box.has-error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.wizard-error-summary {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.8rem;
+}
+
+.wizard-error-summary ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.15rem;
+}
+
+.wizard-review-card {
+  padding: 1rem;
+  border: 1px solid #bbf7d0;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.wizard-review-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.wizard-review-card dl > div {
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  border: 1px solid #dcfce7;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.wizard-review-card dt {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.wizard-review-card dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #14532d;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.wizard-ready-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.wizard-actions {
+  min-height: 62px;
+}
+
+.wizard-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-width: 120px;
+}
+
+.wizard-actions .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  box-shadow: none;
+}
+
+.wizard-action-spacer {
+  flex: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wizard-progress-track span,
+  .wizard-step-marker,
+  .wizard-slide-enter-active,
+  .wizard-slide-leave-active {
+    transition: none;
+  }
+}
+
 /* Mobile layout */
 @media (max-width: 768px) {
   .builder-main,
@@ -2942,6 +3383,32 @@ onBeforeUnmount(() => {
   .form-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .wizard-progress {
+    overflow-x: auto;
+    padding-inline: 0;
+  }
+
+  .wizard-progress ol {
+    min-width: 520px;
+  }
+
+  .lesson-form-modern .wizard-progress ol {
+    min-width: 400px;
+  }
+
+  .wizard-progress-track {
+    left: 65px;
+    right: 65px;
+  }
+
+  .wizard-review-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-action-spacer {
+    display: none;
   }
 }
 

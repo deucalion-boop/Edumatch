@@ -121,116 +121,101 @@
     ></button>
 
     <main class="teacher-main">
-      <header class="top-header" data-tour="students-header">
+      <header class="top-header student-dashboard-header" data-tour="students-header">
         <div class="header-content">
           <div class="header-left">
             <button type="button" class="mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar"><i class="fas fa-bars"></i></button>
-            <div>
+            <div class="student-header-copy">
+              <span class="student-page-eyebrow">Student Management</span>
               <h1>Students</h1>
-              <p class="header-subtitle">Manage enrollment, progress, and current activity for {{ teacherSubject || 'your assigned subject' }}.</p>
             </div>
           </div>
           <div class="header-actions">
             <div class="header-right-controls">
-            <div class="tour-button-anchor" data-tour="students-invite-button">
-              <button type="button" class="btn btn-primary btn-sm" :disabled="!hasAdvisorySection" @click="openStudentInviteModal" aria-label="Invite Student" :title="hasAdvisorySection ? 'Invite Student' : 'Assign an advisory section first'">
-                <i class="fas fa-plus"></i>
+              <button type="button" class="header-tour-btn" @click="launchManualTour" aria-label="Help and tour" title="Help / Tour">
+                <i class="fas fa-question-circle"></i>
               </button>
-            </div>
-            <button
-              type="button"
-              class="header-tour-btn"
-              @click="launchManualTour"
-              aria-label="Help and tour"
-              title="Help / Tour"
-            >
-              <i class="fas fa-question-circle"></i>
-            </button>
-            <div ref="notificationMenuRef" class="notification-menu">
-              <button type="button" class="notification-bell" @click="toggleNotificationsPanel" aria-label="Notifications" :aria-expanded="showNotificationsPanel ? 'true' : 'false'">
-                <i class="fas fa-bell"></i>
-                <span v-if="unreadNotificationCount > 0" class="notification-count">{{ unreadNotificationCount }}</span>
-              </button>
-              <div v-if="showNotificationsPanel" class="notification-dropdown">
-                <div class="notification-dropdown-header">
-                  <h3>Notifications</h3>
-                  <div class="notification-dropdown-actions">
-                    <button type="button" class="notification-dropdown-clear" :disabled="notifications.length === 0" @click="clearAllNotifications">
-                      Clear all
-                    </button>
-                    <button type="button" class="notification-dropdown-close" @click="closeNotificationsPanel" aria-label="Close notifications">
-                      <i class="fas fa-times"></i>
-                    </button>
+              <div ref="notificationMenuRef" class="notification-menu">
+                <button type="button" class="notification-bell" @click="toggleNotificationsPanel" aria-label="Notifications" :aria-expanded="showNotificationsPanel ? 'true' : 'false'">
+                  <i class="fas fa-bell"></i>
+                  <span v-if="unreadNotificationCount > 0" class="notification-count">{{ unreadNotificationCount }}</span>
+                </button>
+                <div v-if="showNotificationsPanel" class="notification-dropdown">
+                  <div class="notification-dropdown-header">
+                    <h3>Notifications</h3>
+                    <div class="notification-dropdown-actions">
+                      <button type="button" class="notification-dropdown-clear" :disabled="notifications.length === 0" @click="clearAllNotifications">Clear all</button>
+                      <button type="button" class="notification-dropdown-close" @click="closeNotificationsPanel" aria-label="Close notifications"><i class="fas fa-times"></i></button>
+                    </div>
                   </div>
+                  <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" />
                 </div>
-                <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" />
               </div>
-            </div>
-            <div ref="accountMenuRef" class="account-menu">
-              <button
-                type="button"
-                class="header-tour-btn account-menu-trigger"
-                aria-label="Account menu"
-                title="Account"
-                @click="toggleAccountMenu"
-              >
-                <i class="fas fa-cog"></i>
-              </button>
-              <div v-if="isAccountMenuOpen" class="account-menu-dropdown">
-                <button type="button" class="account-menu-item" @click="goToProfile">
-                  <i class="fas fa-user"></i>
-                  <span>Profile</span>
-                </button>
-                <button type="button" class="account-menu-item" @click="goToSettings">
-                  <i class="fas fa-cog"></i>
-                  <span>Settings</span>
-                </button>
-                <button type="button" class="account-menu-item danger" @click="handleLogout">
-                  <i class="fas fa-sign-out-alt"></i>
-                  <span>Logout</span>
-                </button>
+              <div ref="accountMenuRef" class="account-menu">
+                <button type="button" class="header-tour-btn account-menu-trigger" aria-label="Account menu" title="Account" @click="toggleAccountMenu"><i class="fas fa-cog"></i></button>
+                <div v-if="isAccountMenuOpen" class="account-menu-dropdown">
+                  <button type="button" class="account-menu-item" @click="goToProfile"><i class="fas fa-user"></i><span>Profile</span></button>
+                  <button type="button" class="account-menu-item" @click="goToSettings"><i class="fas fa-cog"></i><span>Settings</span></button>
+                  <button type="button" class="account-menu-item danger" @click="handleLogout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+                </div>
               </div>
-            </div>
             </div>
           </div>
+        </div>
+        <div class="student-header-context" :class="{ 'is-unassigned': !hasAdvisorySection }">
+          <div class="student-context-icon"><i class="fas fa-layer-group"></i></div>
+          <div class="student-context-copy">
+            <strong>{{ hasAdvisorySection ? `Advisory Section ${teacherAdvisorySectionName}` : 'Advisory section unassigned' }}</strong>
+            <span>{{ hasAdvisorySection ? 'New student accounts are placed in this section; handled classes remain code-based.' : 'Ask your Head Teacher to assign an advisory section before inviting students.' }}</span>
+          </div>
+          <span class="student-context-subject"><i class="fas fa-book-open"></i>{{ teacherSubject || 'Department subject' }}</span>
         </div>
       </header>
       <section v-if="toast.show" class="students-toast" :class="`toast-${toast.type}`" aria-live="polite">
         <i class="fas" :class="toast.type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'"></i>
         <span>{{ toast.message }}</span>
       </section>
-      <section class="section-card animated-card teacher-advisory-card">
-        <div class="section-header class-list-header">
-          <div>
-            <h3 class="section-title">Advisory Section</h3>
-            <p class="class-list-subtitle">
-              <template v-if="hasAdvisorySection">
-                New student accounts created here will be placed in Section {{ teacherAdvisorySectionName }} only. Handled classes stay separate and are joined later with class codes.
-              </template>
-              <template v-else>
-                No advisory section is assigned yet. Ask your Head Teacher to assign one before creating student accounts.
-              </template>
-            </p>
-          </div>
-          <div class="class-list-meta">
-            <span class="meta-chip">
-              <i class="fas fa-layer-group"></i>
-              {{ teacherAdvisorySectionName || 'Unassigned' }}
-            </span>
-            <span class="meta-chip">
-              <i class="fas fa-building"></i>
-              {{ teacherSubject || 'Department subject' }}
-            </span>
-          </div>
-        </div>
+      <section class="student-kpi-grid" aria-label="Student management overview">
+        <article class="student-kpi-card kpi-classes">
+          <span class="student-kpi-icon"><i class="fas fa-chalkboard"></i></span>
+          <div><span>Total Classes</span><strong>{{ subjects.length }}</strong><small>Handled classes</small></div>
+        </article>
+        <article class="student-kpi-card kpi-students">
+          <span class="student-kpi-icon"><i class="fas fa-user-graduate"></i></span>
+          <div><span>Total Students</span><strong>{{ students.length }}</strong><small>Active roster</small></div>
+        </article>
+        <article class="student-kpi-card kpi-pending">
+          <span class="student-kpi-icon"><i class="fas fa-user-clock"></i></span>
+          <div><span>Pending Requests</span><strong>{{ enrollmentRequests.length }}</strong><small>Awaiting review</small></div>
+        </article>
+        <article class="student-kpi-card kpi-progress">
+          <span class="student-kpi-icon"><i class="fas fa-chart-line"></i></span>
+          <div><span>Average Progress</span><strong>{{ averageProgress }}%</strong><small>Across all students</small></div>
+        </article>
       </section>
-      <section class="section-card animated-card class-list-section" data-tour="students-subjects-section">
-        <div class="section-header class-list-header class-management-header">
+
+      <section class="student-management-grid">
+      <section class="section-card animated-card dashboard-panel class-management-panel" :class="{ 'has-open-class-menu': subjectActionsMenuId }" data-tour="students-subjects-section">
+        <div class="dashboard-panel-header class-management-header">
           <div class="class-management-header-copy">
+            <span class="dashboard-panel-eyebrow">Teaching spaces</span>
             <h3 class="section-title">Class Management</h3>
-            <p class="class-list-subtitle">Create your class, share the class code, and review only the students who joined that handled class.</p>
+            <p class="class-list-subtitle">Create classes, share codes, and manage enrolled students.</p>
           </div>
           <div class="results-controls class-management-controls">
+            <div class="tour-button-anchor" data-tour="students-invite-button">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm create-class-btn student-invite-icon-btn"
+                :disabled="!hasAdvisorySection"
+                @click="openStudentInviteModal"
+                aria-label="Invite Student"
+                :title="hasAdvisorySection ? 'Invite Student' : 'Assign an advisory section first'"
+              >
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                <span>Invite Student</span>
+              </button>
+            </div>
             <button type="button" class="btn btn-primary btn-sm create-class-btn" @click="openCreateClassModal">
               <i class="fas fa-plus"></i>
               Create Class
@@ -238,62 +223,79 @@
           </div>
         </div>
 
-        <div v-if="subjects.length === 0" class="table-state">
-          <i class="fas fa-chalkboard"></i>
-          <span>Create your first class to generate a class code.</span>
+        <div v-if="subjects.length === 0" class="dashboard-empty-state">
+          <span class="dashboard-empty-icon"><i class="fas fa-chalkboard"></i></span>
+          <div><strong>No classes yet</strong><p>Create your first class to generate a secure enrollment code.</p></div>
         </div>
 
         <div v-else class="subject-management-grid">
-          <article v-for="subject in subjects" :key="subject.id" class="subject-management-card">
+          <article v-for="subject in subjects" :key="subject.id" class="subject-management-card" :class="{ 'menu-open': subjectActionsMenuId === subject.id }">
             <div class="subject-management-head">
               <div class="subject-management-title-block">
-                <span class="subject-management-label">{{ subject.name }}</span>
                 <h4>{{ subject.className || subject.name }}</h4>
                 <p>{{ subject.track || 'General' }} · {{ subject.code }}</p>
               </div>
-              <span class="subject-management-code">{{ subject.code }}</span>
-            </div>
-            <div class="subject-management-actions">
-              <button type="button" class="record-link record-link-button subject-copy-btn" @click="copySubjectCode(subject)">
-                <i class="fas fa-copy"></i>
-                Copy Code
-              </button>
-              <button type="button" class="record-link record-link-button subject-students-btn" @click="openSubjectStudentsModal(subject)">
-                <i class="fas fa-user-minus"></i>
-                Manage Students
-              </button>
-              <button type="button" class="record-link record-link-button subject-edit-btn" @click="openEditClassModal(subject)">
-                <i class="fas fa-pen"></i>
-                Edit Class
-              </button>
-              <button
-                type="button"
-                class="record-link record-link-button subject-delete-btn"
-                :title="subject.canDelete ? 'Delete class' : resolveDeleteClassBlockedReason(subject)"
-                @click="openDeleteClassModal(subject)"
-              >
-                <i class="fas fa-trash-alt"></i>
-                Delete Class
-              </button>
+              <div class="subject-management-menu-wrap" @click.stop>
+                <span class="subject-management-code">{{ subject.code }}</span>
+                <button
+                  type="button"
+                  class="subject-menu-trigger"
+                  aria-label="Class actions"
+                  :aria-expanded="subjectActionsMenuId === subject.id"
+                  :aria-controls="`subject-actions-${subject.id}`"
+                  @click="toggleSubjectActionsMenu(subject.id)"
+                >
+                  <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
+                </button>
+                <div
+                  v-if="subjectActionsMenuId === subject.id"
+                  :id="`subject-actions-${subject.id}`"
+                  class="subject-management-actions subject-actions-menu"
+                  role="menu"
+                >
+                  <button type="button" role="menuitem" class="record-link record-link-button subject-students-btn" @click="subjectActionsMenuId = ''; openSubjectStudentsModal(subject)">
+                    <i class="fas fa-users-gear"></i>
+                    Manage Students
+                  </button>
+                  <button type="button" role="menuitem" class="record-link record-link-button subject-copy-btn" @click="subjectActionsMenuId = ''; copySubjectCode(subject)">
+                    <i class="fas fa-copy"></i>
+                    Copy Code
+                  </button>
+                  <button type="button" role="menuitem" class="record-link record-link-button subject-edit-btn" @click="subjectActionsMenuId = ''; openEditClassModal(subject)">
+                    <i class="fas fa-pen"></i>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="record-link record-link-button subject-delete-btn"
+                    :title="subject.canDelete ? 'Delete class' : resolveDeleteClassBlockedReason(subject)"
+                    @click="subjectActionsMenuId = ''; openDeleteClassModal(subject)"
+                  >
+                    <i class="fas fa-trash-alt"></i>
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
             <p v-if="subject.description" class="subject-management-copy">{{ subject.description }}</p>
             <div class="subject-management-meta">
-              <span class="subject-metric-chip">{{ subject.lessonCount }} lessons</span>
-              <span class="subject-metric-chip">{{ subject.assessmentCount }} assessments</span>
-              <span class="subject-metric-chip">{{ subject.approvedStudentsCount }} students</span>
-              <span v-if="subject.pendingRequestsCount > 0" class="subject-metric-chip">{{ subject.pendingRequestsCount }} pending</span>
-              <span v-if="subject.attendanceRecordCount > 0" class="subject-metric-chip">{{ subject.attendanceRecordCount }} attendance</span>
+              <span class="subject-metric-chip"><i class="fas fa-file-lines"></i><strong>{{ subject.lessonCount }}</strong> Lessons</span>
+              <span class="subject-metric-chip"><i class="fas fa-clipboard-check"></i><strong>{{ subject.assessmentCount }}</strong> Assessments</span>
+              <span class="subject-metric-chip"><i class="fas fa-user-graduate"></i><strong>{{ subject.approvedStudentsCount }}</strong> Students</span>
+              <span v-if="subject.pendingRequestsCount > 0" class="subject-metric-chip is-pending"><i class="fas fa-clock"></i><strong>{{ subject.pendingRequestsCount }}</strong> Pending</span>
             </div>
             <p v-if="subject.approvedStudentsCount === 0" class="subject-management-waiting">Waiting for students to join with the class code</p>
           </article>
         </div>
       </section>
 
-      <section class="section-card animated-card class-list-section enrollment-requests-section">
-        <div class="section-header class-list-header">
+      <section class="section-card animated-card dashboard-panel enrollment-requests-section">
+        <div class="dashboard-panel-header">
           <div>
-            <h3 class="section-title">Class Requests</h3>
-            <p class="class-list-subtitle">Review class-code join requests before students unlock lessons and assessments.</p>
+            <span class="dashboard-panel-eyebrow">Enrollment queue</span>
+            <h3 class="section-title">Pending Requests</h3>
+            <p class="class-list-subtitle">Approve class-code requests before students receive access.</p>
           </div>
           <div class="class-list-meta">
             <span class="meta-chip">
@@ -303,84 +305,32 @@
           </div>
         </div>
 
-        <div class="class-list-table-wrap">
-          <table class="class-list-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Email</th>
-                <th>Class</th>
-                <th>Requested</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody v-if="isEnrollmentRequestsLoading">
-              <tr>
-                <td colspan="5">
-                  <div class="table-state">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span>Loading enrollment requests...</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-
-            <tbody v-else-if="enrollmentRequests.length === 0">
-              <tr>
-                <td colspan="5">
-                  <div class="table-state">
-                    <i class="fas fa-user-check"></i>
-                    <span>No pending enrollment requests</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-
-            <tbody v-else>
-              <tr v-for="request in paginatedEnrollmentRequests" :key="request.id">
-                <td>
-                  <div class="student-identity">
-                    <img :src="request.avatar" :alt="request.name" class="student-avatar" />
-                    <div class="student-details">
-                      <strong>{{ request.name }}</strong>
-                      <small>{{ request.sectionName || 'No section' }}</small>
-                    </div>
-                  </div>
-                </td>
-                <td class="student-email">{{ request.email }}</td>
-                <td>
-                  <div class="student-recommendation-cell">
-                    <strong>{{ request.className || request.subjectName }}</strong>
-                    <small>{{ request.subjectCode }}</small>
-                  </div>
-                </td>
-                <td>{{ formatDateTime(request.requestedAt) }}</td>
-                <td>
-                  <div class="request-actions">
-                    <button
-                      type="button"
-                      class="btn btn-primary btn-sm"
-                      :disabled="requestActionId === request.id"
-                      @click="updateEnrollmentRequest(request, 'approve')"
-                    >
-                      <i class="fas" :class="requestActionId === request.id ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-                      Approve
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-outline btn-sm"
-                      :disabled="requestActionId === request.id"
-                      @click="updateEnrollmentRequest(request, 'reject')"
-                    >
-                      <i class="fas fa-times"></i>
-                      Reject
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-if="isEnrollmentRequestsLoading" class="dashboard-empty-state request-empty-state">
+          <span class="dashboard-empty-icon"><i class="fas fa-spinner fa-spin"></i></span>
+          <div><strong>Loading requests</strong><p>Checking the latest enrollment queue...</p></div>
+        </div>
+        <div v-else-if="enrollmentRequests.length === 0" class="dashboard-empty-state request-empty-state is-success">
+          <span class="dashboard-empty-icon"><i class="fas fa-user-check"></i></span>
+          <div><strong>You're all caught up</strong><p>New class enrollment requests will appear here.</p></div>
+        </div>
+        <div v-else class="enrollment-request-list">
+          <article v-for="request in paginatedEnrollmentRequests" :key="request.id" class="enrollment-request-card">
+            <div class="request-student-row">
+              <div class="student-identity">
+                <img :src="request.avatar" :alt="request.name" class="student-avatar" />
+                <div class="student-details"><strong>{{ request.name }}</strong><small>{{ request.email }}</small></div>
+              </div>
+              <span class="request-time"><i class="fas fa-clock"></i>{{ formatDateTime(request.requestedAt) }}</span>
+            </div>
+            <div class="request-class-row">
+              <span><i class="fas fa-chalkboard"></i>{{ request.className || request.subjectName }}</span>
+              <strong>{{ request.subjectCode }}</strong>
+            </div>
+            <div class="request-actions">
+              <button type="button" class="btn btn-primary btn-sm" :disabled="requestActionId === request.id" @click="updateEnrollmentRequest(request, 'approve')"><i class="fas" :class="requestActionId === request.id ? 'fa-spinner fa-spin' : 'fa-check'"></i>Approve</button>
+              <button type="button" class="btn btn-outline btn-sm" :disabled="requestActionId === request.id" @click="updateEnrollmentRequest(request, 'reject')"><i class="fas fa-times"></i>Reject</button>
+            </div>
+          </article>
         </div>
 
         <div v-if="enrollmentRequests.length > ENROLLMENT_REQUESTS_PAGE_SIZE" class="class-requests-pagination">
@@ -407,11 +357,14 @@
         </div>
       </section>
 
-      <section class="section-card animated-card class-list-section" data-tour="students-classlist-section">
-        <div class="section-header class-list-header">
+      </section>
+
+      <section class="section-card animated-card class-list-section student-list-panel" data-tour="students-classlist-section">
+        <div class="student-list-header">
           <div>
-            <h3 class="section-title">Class List</h3>
-            <p class="class-list-subtitle">Handled-class roster and learning progress overview</p>
+            <span class="dashboard-panel-eyebrow">Roster overview</span>
+            <h3 class="section-title">Student List</h3>
+            <p class="class-list-subtitle">Monitor participation, performance, and strand recommendations.</p>
           </div>
           <div class="class-list-meta">
             <span class="meta-chip">
@@ -422,6 +375,52 @@
               <i class="fas fa-chart-line"></i>
               Avg Progress {{ averageProgress }}%
             </span>
+          </div>
+        </div>
+
+        <div class="student-roster-tabs" role="tablist" aria-label="Student roster type">
+          <button
+            type="button"
+            role="tab"
+            class="student-roster-tab"
+            :class="{ active: studentRosterView === 'advisory' }"
+            :aria-selected="studentRosterView === 'advisory'"
+            @click="studentRosterView = 'advisory'"
+          >
+            <i class="fas fa-layer-group" aria-hidden="true"></i>
+            <span>Advisory Class</span>
+            <strong>{{ advisoryStudents.length }}</strong>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="student-roster-tab"
+            :class="{ active: studentRosterView === 'handled' }"
+            :aria-selected="studentRosterView === 'handled'"
+            @click="studentRosterView = 'handled'"
+          >
+            <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
+            <span>Handled Classes</span>
+            <strong>{{ handledClassStudents.length }}</strong>
+          </button>
+          <p class="student-roster-context">
+            <template v-if="studentRosterView === 'advisory'">
+              Section {{ teacherAdvisorySectionName || 'Unassigned' }} students enrolled in your classes
+            </template>
+            <template v-else>Students from other sections enrolled through your class codes</template>
+          </p>
+        </div>
+
+        <div class="student-list-toolbar" aria-label="Student list tools">
+          <label class="student-search-field">
+            <i class="fas fa-search"></i>
+            <input type="search" placeholder="Search students..." aria-label="Search students" />
+          </label>
+          <label class="student-toolbar-select"><i class="fas fa-filter"></i><select aria-label="Filter by class"><option>All Classes</option><option v-for="subject in subjects" :key="subject.id">{{ subject.className || subject.name }}</option></select></label>
+          <label class="student-toolbar-select"><i class="fas fa-arrow-down-wide-short"></i><select aria-label="Sort students"><option>Sort: Name</option><option>Sort: Progress</option><option>Sort: Average</option><option>Sort: Status</option></select></label>
+          <div class="student-toolbar-actions">
+            <button type="button" class="toolbar-icon-btn" title="Export roster" aria-label="Export roster" onclick="window.print()"><i class="fas fa-file-export"></i><span>Export</span></button>
+            <button type="button" class="toolbar-icon-btn" title="Refresh student list" aria-label="Refresh student list" :disabled="isLoading" @click="fetchStudents"><i class="fas" :class="isLoading ? 'fa-spinner fa-spin' : 'fa-rotate'"></i><span>Refresh</span></button>
           </div>
         </div>
 
@@ -450,19 +449,19 @@
               </tr>
             </tbody>
 
-            <tbody v-else-if="students.length === 0">
+            <tbody v-else-if="visibleRosterStudents.length === 0">
               <tr>
                 <td colspan="7">
                   <div class="table-state">
                     <i class="fas fa-user-graduate"></i>
-                    <span>No students have joined your handled classes yet</span>
+                    <span>{{ studentRosterView === 'advisory' ? 'No advisory-section students have joined your classes yet' : 'No students from other sections have joined your handled classes yet' }}</span>
                   </div>
                 </td>
               </tr>
             </tbody>
 
             <tbody v-else>
-              <tr v-for="student in students" :key="student.id">
+              <tr v-for="student in visibleRosterStudents" :key="student.id">
                 <td>
                   <div class="student-identity">
                     <img :src="student.avatar" :alt="student.name" class="student-avatar" />
@@ -840,6 +839,7 @@ const {
 const subjects = ref([])
 const students = ref([])
 const enrollmentRequests = ref([])
+const subjectActionsMenuId = ref('')
 const isCreateClassModalOpen = ref(false)
 const isCreatingClass = ref(false)
 const isEditClassModalOpen = ref(false)
@@ -935,6 +935,7 @@ const studentInviteForm = reactive({
   contactNumber: '',
 })
 const isLoading = ref(false)
+const studentRosterView = ref('advisory')
 const tourSteps = [
   {
     key: 'invite-student',
@@ -1006,6 +1007,10 @@ const syncMobileMenuBodyState = () => {
 
 const handleEscape = (event) => {
   if (event.key !== 'Escape') return
+  if (subjectActionsMenuId.value) {
+    subjectActionsMenuId.value = ''
+    return
+  }
   if (isTourActive.value) {
     skipTour()
     return
@@ -1035,6 +1040,11 @@ const toggleAccountMenu = () => {
   isAccountMenuOpen.value = !isAccountMenuOpen.value
 }
 
+const toggleSubjectActionsMenu = (subjectId) => {
+  const normalizedSubjectId = String(subjectId || '').trim()
+  subjectActionsMenuId.value = subjectActionsMenuId.value === normalizedSubjectId ? '' : normalizedSubjectId
+}
+
 const goToProfile = () => {
   isAccountMenuOpen.value = false
   router.push('/teacher/profile')
@@ -1047,6 +1057,7 @@ const goToSettings = () => {
 
 const handleAccountMenuClickOutside = (event) => {
   const target = event?.target
+  subjectActionsMenuId.value = ''
   if (notificationMenuRef.value && target instanceof Node && notificationMenuRef.value.contains(target)) return
   if (accountMenuRef.value && target instanceof Node && accountMenuRef.value.contains(target)) return
   closeNotificationsPanel()
@@ -1058,6 +1069,27 @@ const averageProgress = computed(() => {
   const total = students.value.reduce((sum, student) => sum + Number(student.progress || 0), 0)
   return Math.round(total / students.value.length)
 })
+
+const normalizeRosterSectionName = (value) => String(value || '').trim().toLowerCase()
+
+const advisoryStudents = computed(() => {
+  const advisoryName = normalizeRosterSectionName(teacherAdvisorySectionName.value)
+  if (!advisoryName) return []
+  return students.value.filter(
+    (student) => normalizeRosterSectionName(student.sectionName) === advisoryName
+  )
+})
+
+const handledClassStudents = computed(() => {
+  const advisoryStudentIds = new Set(advisoryStudents.value.map((student) => student.id))
+  return students.value.filter((student) => !advisoryStudentIds.has(student.id))
+})
+
+const visibleRosterStudents = computed(() => (
+  studentRosterView.value === 'advisory'
+    ? advisoryStudents.value
+    : handledClassStudents.value
+))
 
 const normalizeStatus = (status) => {
   const normalized = String(status || '').trim().toLowerCase()
@@ -2499,15 +2531,25 @@ onBeforeUnmount(() => {
   font-size: 0.82rem;
 }
 
-.subject-remove-student-btn {
-  border-color: rgba(239, 68, 68, 0.28);
-  color: #b91c1c;
-  background: #fff1f2;
+button.subject-remove-student-btn.btn-outline {
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+  background: #dc2626 !important;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.2);
+  transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.subject-remove-student-btn:hover {
-  border-color: rgba(220, 38, 38, 0.4);
-  background: #ffe4e6;
+button.subject-remove-student-btn.btn-outline i[class*="fa-"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #b91c1c !important;
+  background: #b91c1c !important;
+  color: #ffffff !important;
+  box-shadow: 0 11px 22px rgba(185, 28, 28, 0.28);
 }
 
 .modal-close-btn {
@@ -3018,6 +3060,1016 @@ onBeforeUnmount(() => {
   .class-requests-pagination-actions {
     width: 100%;
     justify-content: space-between;
+  }
+}
+
+/* Premium student management dashboard */
+.student-dashboard-header {
+  position: relative;
+  overflow: visible;
+  margin-bottom: 1rem;
+  padding: clamp(1rem, 1.5vw, 1.35rem);
+  border: 1px solid #dfe7dc;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(187, 255, 89, 0.2), transparent 28%),
+    linear-gradient(135deg, #ffffff 0%, #f7fbf4 100%);
+  box-shadow: 0 14px 36px rgba(30, 67, 7, 0.08);
+}
+
+.student-dashboard-header .header-content {
+  min-height: auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.student-dashboard-header .header-left {
+  min-width: 0;
+  align-items: center;
+}
+
+.student-header-copy {
+  min-width: 0;
+}
+
+.student-page-eyebrow,
+.dashboard-panel-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  color: #4b741e;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.student-header-copy h1 {
+  margin: 0;
+  color: #132a08;
+  font-size: clamp(1.55rem, 2.1vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.student-dashboard-header .header-subtitle {
+  max-width: 680px;
+  margin: 0.25rem 0 0;
+  color: #607052;
+  font-size: 0.86rem;
+}
+
+.student-dashboard-header .header-actions,
+.student-primary-actions,
+.student-dashboard-header .header-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.student-primary-actions .btn {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding-inline: 0.9rem;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.student-primary-actions .btn-primary {
+  border-color: #1e4307;
+  background: #1e4307;
+  box-shadow: 0 9px 20px rgba(30, 67, 7, 0.18);
+}
+
+.student-primary-actions .btn-primary:hover:not(:disabled) {
+  background: #2d5d10;
+  transform: translateY(-1px);
+}
+
+.student-header-context {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #dcebd3;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.student-header-context.is-unassigned {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.student-context-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #e7f5dd;
+  color: #1e4307;
+}
+
+.student-context-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.08rem;
+}
+
+.student-context-copy strong {
+  color: #24391a;
+  font-size: 0.78rem;
+}
+
+.student-context-copy span {
+  overflow: hidden;
+  color: #718067;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-context-subject {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.6rem;
+  border-radius: 999px;
+  background: #eef6e9;
+  color: #345b18;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.student-kpi-card {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  overflow: hidden;
+  border: 1px solid #e2e8df;
+  border-radius: 17px;
+  background: #ffffff;
+  box-shadow: 0 9px 24px rgba(15, 23, 42, 0.055);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.student-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #c9dfbb;
+  box-shadow: 0 15px 30px rgba(30, 67, 7, 0.1);
+}
+
+.student-kpi-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: #edf7e7;
+  color: #2f6810;
+  font-size: 1rem;
+}
+
+.kpi-pending .student-kpi-icon {
+  background: #fff7d6;
+  color: #8a6500;
+}
+
+.kpi-progress .student-kpi-icon {
+  background: #eaf8e6;
+  color: #31720d;
+}
+
+.student-kpi-card > div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0.05rem 0.45rem;
+}
+
+.student-kpi-card span:not(.student-kpi-icon) {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-kpi-card strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: #18330b;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  letter-spacing: -0.04em;
+}
+
+.student-kpi-card small {
+  color: #94a3b8;
+  font-size: 0.66rem;
+}
+
+.student-management-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.dashboard-panel,
+.student-list-panel {
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #e1e8de;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dashboard-panel-header,
+.student-list-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.dashboard-panel-header .section-title,
+.student-list-header .section-title {
+  margin: 0;
+  color: #172b0e;
+  font-size: 1.08rem;
+  letter-spacing: -0.015em;
+}
+
+.dashboard-panel-header .class-list-subtitle,
+.student-list-header .class-list-subtitle {
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+}
+
+.dashboard-panel .subject-management-grid,
+.enrollment-request-list {
+  min-height: 0;
+  max-height: 470px;
+  padding: 0.1rem 0.25rem 0.25rem 0.1rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd9c4 transparent;
+}
+
+.dashboard-panel .subject-management-grid {
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.dashboard-panel .subject-management-card {
+  padding: 0.9rem;
+  border-color: #e0e8dc;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fbf6 100%);
+  box-shadow: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-panel .subject-management-card:hover {
+  transform: translateY(-2px);
+  border-color: #bdd5ae;
+  box-shadow: 0 13px 26px rgba(30, 67, 7, 0.09);
+}
+
+.dashboard-panel .subject-management-card.menu-open {
+  z-index: 20;
+}
+
+.subject-management-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4b741e;
+}
+
+.dashboard-panel .subject-management-head h4 {
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+
+.dashboard-panel .subject-management-code {
+  border: 1px solid #cfe4c2;
+  background: #eaf6e3;
+  color: #1e4307;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dashboard-panel .subject-management-copy {
+  display: -webkit-box;
+  margin-top: 0.6rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.dashboard-panel .subject-management-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+}
+
+.dashboard-panel .subject-metric-chip {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.45rem 0.35rem;
+  border: 1px solid #e4eadf;
+  border-radius: 10px;
+  background: #f7faf5;
+  color: #66745d;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.dashboard-panel .subject-metric-chip i,
+.dashboard-panel .subject-metric-chip strong {
+  color: #315f15;
+}
+
+.dashboard-panel .subject-metric-chip.is-pending {
+  grid-column: 1 / -1;
+  background: #fffbeb;
+  color: #8a6500;
+}
+
+.dashboard-panel .subject-management-actions {
+  display: grid;
+  grid-template-columns: minmax(145px, 1.4fr) repeat(3, minmax(80px, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.dashboard-panel .record-link-button {
+  min-width: 0;
+  justify-content: center;
+  padding: 0.48rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.subject-management-menu-wrap {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto 34px;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.subject-menu-trigger {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #d9e3d4;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.subject-menu-trigger:hover,
+.subject-menu-trigger[aria-expanded="true"] {
+  transform: translateY(-1px);
+  border-color: #aec99f;
+  background: #eff7eb;
+  color: #1e4307;
+}
+
+.subject-menu-trigger:focus {
+  outline: none;
+}
+
+.subject-menu-trigger:focus-visible {
+  border-color: #6f9f52;
+  box-shadow: 0 0 0 3px rgba(111, 159, 82, 0.2);
+}
+
+.subject-menu-trigger i[class*="fa-"] {
+  color: currentColor !important;
+}
+
+.dashboard-panel .subject-management-actions.subject-actions-menu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 30;
+  width: 210px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.45rem;
+  border: 1px solid #dfe7db;
+  border-radius: 13px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+  animation: subject-menu-in 0.16s ease-out;
+}
+
+.class-management-panel.has-open-class-menu,
+.class-management-panel.has-open-class-menu .subject-management-grid {
+  overflow: visible;
+}
+
+.dashboard-panel .subject-actions-menu .record-link-button {
+  width: 100%;
+  min-height: 38px;
+  justify-content: flex-start;
+  padding-inline: 0.7rem;
+}
+
+@keyframes subject-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dashboard-empty-state {
+  min-height: 250px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1.25rem;
+  border: 1px dashed #cfdcc8;
+  border-radius: 16px;
+  background: #fafcf9;
+  color: #65745d;
+  text-align: center;
+}
+
+.dashboard-empty-state > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.dashboard-empty-state strong {
+  color: #29451a;
+  font-size: 0.92rem;
+}
+
+.dashboard-empty-state p {
+  max-width: 280px;
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.dashboard-empty-icon {
+  width: 54px;
+  height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 17px;
+  background: #edf6e7;
+  color: #3c741b;
+  font-size: 1.25rem;
+}
+
+.enrollment-request-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.enrollment-request-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid #e2e8df;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #ffffff, #fafcf9);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.enrollment-request-card:hover {
+  transform: translateY(-1px);
+  border-color: #c7d9bc;
+  box-shadow: 0 10px 22px rgba(30, 67, 7, 0.08);
+}
+
+.request-student-row,
+.request-class-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.request-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #94a3b8;
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.request-class-row {
+  padding: 0.45rem 0.55rem;
+  border-radius: 10px;
+  background: #f1f6ee;
+  color: #55664b;
+  font-size: 0.72rem;
+}
+
+.request-class-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.request-class-row strong {
+  color: #1e4307;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.enrollment-request-card .request-actions {
+  justify-content: flex-end;
+}
+
+.enrollment-request-card .request-actions .btn {
+  min-width: 88px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.student-list-panel {
+  margin-bottom: 1rem;
+}
+
+.student-invite-icon-btn {
+  width: 100%;
+}
+
+.class-management-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+}
+
+.class-management-controls .tour-button-anchor,
+.class-management-controls .create-class-btn {
+  width: 100%;
+}
+
+.class-management-controls .create-class-btn {
+  min-height: 38px;
+  border-color: #69aa47 !important;
+  background: #69aa47 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 22px rgba(105, 170, 71, 0.22);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.class-management-controls .create-class-btn i[class*="fa-"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.class-management-controls .create-class-btn:hover:not(:disabled) {
+  border-color: #5b9b3c !important;
+  background: #5b9b3c !important;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px rgba(91, 155, 60, 0.27);
+}
+
+.class-management-controls .create-class-btn:disabled {
+  border-color: #b7d3a8 !important;
+  background: #b7d3a8 !important;
+  box-shadow: none;
+}
+
+.student-invite-icon-btn i[class*="fa-"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.student-invite-icon-btn:focus-visible {
+  outline: 3px solid rgba(126, 203, 32, 0.35);
+  outline-offset: 2px;
+}
+
+.student-invite-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  box-shadow: none;
+}
+
+.student-roster-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+  padding: 0.45rem;
+  border: 1px solid #e2e8df;
+  border-radius: 14px;
+  background: #f8faf7;
+}
+
+.student-roster-tab {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.student-roster-tab:hover:not(.active) {
+  border-color: #cbdac3;
+  background: #ffffff;
+  color: #365923;
+  transform: translateY(-1px);
+}
+
+.student-roster-tab:focus-visible {
+  outline: 3px solid rgba(126, 203, 32, 0.3);
+  outline-offset: 2px;
+}
+
+.student-roster-tab i[class*="fa-"] {
+  color: currentColor !important;
+}
+
+.student-roster-tab strong {
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.68rem;
+}
+
+.student-roster-tab.active {
+  border-color: #1e4307;
+  background: #1e4307;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(30, 67, 7, 0.18);
+}
+
+.student-roster-tab.active strong {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.student-roster-context {
+  margin: 0 0 0 auto;
+  color: #718067;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.student-list-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(155px, 0.35fr) minmax(155px, 0.35fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem;
+  border: 1px solid #e5ebe2;
+  border-radius: 14px;
+  background: #f8faf7;
+}
+
+.student-search-field,
+.student-toolbar-select {
+  min-width: 0;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.7rem;
+  border: 1px solid #dce5d8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #78906a;
+}
+
+.student-search-field:focus-within,
+.student-toolbar-select:focus-within {
+  border-color: #76a958;
+  box-shadow: 0 0 0 3px rgba(91, 145, 55, 0.12);
+}
+
+.student-search-field input,
+.student-toolbar-select select {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #334155;
+  font: inherit;
+  font-size: 0.76rem;
+}
+
+.student-toolbar-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.toolbar-icon-btn {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #dce5d8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #365923;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.toolbar-icon-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #a8c598;
+  background: #f0f7ec;
+}
+
+.toolbar-icon-btn:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.student-list-panel .class-list-table-wrap {
+  max-height: min(55vh, 570px);
+  overflow: auto;
+  border-radius: 14px;
+}
+
+.student-list-panel .class-list-table tbody td {
+  padding-block: 0.72rem;
+}
+
+@media (max-width: 1280px) {
+  .student-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-management-grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(330px, 0.9fr);
+  }
+
+  .dashboard-panel .subject-management-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-list-toolbar {
+    grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(145px, 0.45fr));
+  }
+
+  .student-toolbar-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 980px) {
+  .student-dashboard-header .header-content,
+  .student-dashboard-header .header-actions {
+    align-items: flex-start;
+  }
+
+  .student-dashboard-header .header-content {
+    flex-direction: column;
+  }
+
+  .student-dashboard-header .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .student-management-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-panel {
+    min-height: 0;
+  }
+
+  .dashboard-panel .subject-management-grid,
+  .enrollment-request-list {
+    max-height: 440px;
+  }
+}
+
+@media (max-width: 680px) {
+  .student-dashboard-header {
+    padding: 0.9rem;
+    border-radius: 18px;
+  }
+
+  .student-dashboard-header .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .student-primary-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-primary-actions .tour-button-anchor,
+  .student-primary-actions .btn {
+    width: 100%;
+  }
+
+  .student-dashboard-header .header-right-controls {
+    justify-content: flex-end;
+  }
+
+  .student-header-context {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .student-context-copy span {
+    white-space: normal;
+  }
+
+  .student-context-subject {
+    grid-column: 1 / -1;
+    justify-self: flex-start;
+  }
+
+  .student-kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .student-kpi-card {
+    padding: 0.75rem;
+  }
+
+  .dashboard-panel,
+  .student-list-panel {
+    padding: 0.8rem;
+    border-radius: 16px;
+  }
+
+  .dashboard-panel-header,
+  .student-list-header {
+    flex-direction: column;
+  }
+
+  .class-management-controls,
+  .class-management-controls .btn {
+    width: 100%;
+  }
+
+  .dashboard-panel .subject-management-head {
+    flex-direction: column;
+  }
+
+  .dashboard-panel .subject-management-meta,
+  .dashboard-panel .subject-management-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-panel .subject-metric-chip.is-pending {
+    grid-column: auto;
+  }
+
+  .student-roster-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .student-roster-tab {
+    width: 100%;
+    padding-inline: 0.5rem;
+  }
+
+  .student-roster-context {
+    grid-column: 1 / -1;
+    margin: 0;
+    text-align: center;
+  }
+
+  .student-list-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-toolbar-actions {
+    grid-column: auto;
+  }
+
+  .student-toolbar-actions .toolbar-icon-btn {
+    flex: 1;
+  }
+
+  .request-student-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .enrollment-request-card .request-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .class-requests-pagination-actions {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-kpi-card,
+  .dashboard-panel .subject-management-card,
+  .enrollment-request-card,
+  .toolbar-icon-btn {
+    transition: none;
+  }
+}
+
+@media print {
+  .teacher-sidebar,
+  .student-dashboard-header,
+  .student-kpi-grid,
+  .student-management-grid,
+  .student-list-toolbar {
+    display: none !important;
+  }
+
+  .teacher-main,
+  .student-list-panel,
+  .student-list-panel .class-list-table-wrap {
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
   }
 }
 </style>

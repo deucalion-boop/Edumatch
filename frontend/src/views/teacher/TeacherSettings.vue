@@ -13,7 +13,7 @@
             <div class="header-right-controls">
             <button
               type="button"
-              class="btn btn-outline"
+              class="header-tour-btn dashboard-home-btn"
               aria-label="Home Dashboard"
               title="Home Dashboard"
               @click="router.push('/teacher/dashboard')"
@@ -79,14 +79,6 @@
         </div>
       </header>
       <div>
-        <section class="settings-hero">
-          <div class="settings-hero-icon"><i class="fas fa-cogs"></i></div>
-          <div>
-            <h2>Teacher Settings</h2>
-            <p>Manage account details, security, communication preferences, and system behavior from one place.</p>
-          </div>
-        </section>
-
         <section v-if="toast.show" class="settings-toast" :class="`toast-${toast.type}`">
           <i class="fas" :class="toast.type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'"></i>
           <span>{{ toast.message }}</span>
@@ -96,7 +88,6 @@
           <section class="settings-panel teacher-security-panel" data-tour="settings-security-section">
             <div class="panel-header teacher-security-panel-header">
               <div class="teacher-security-panel-copy">
-                <span class="teacher-security-eyebrow">Teacher account protection</span>
                 <h3>Account Security</h3>
                 <p>Update your password and protect your account with stronger security controls.</p>
               </div>
@@ -838,9 +829,15 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border: 1px solid #dbe2ea;
+  transition: all 0.2s ease;
 }
 
-.settings-hero,
+.header-tour-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
 .settings-panel,
 .settings-toast {
   background: #ffffff;
@@ -857,38 +854,6 @@ onBeforeUnmount(() => {
   margin-left: 0 !important;
   width: 100%;
   max-width: none;
-}
-
-.settings-hero {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1.2rem 1.25rem;
-  margin-bottom: 1rem;
-}
-
-.settings-hero-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #ecfeff;
-  color: #0f766e;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.settings-hero h2 {
-  margin: 0;
-  font-size: 1.28rem;
-  color: #0f172a;
-}
-
-.settings-hero p {
-  margin: 0.35rem 0 0;
-  color: #64748b;
-  font-size: 0.88rem;
 }
 
 .settings-toast {
@@ -952,18 +917,6 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.teacher-security-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-bottom: 0.4rem;
-  color: #1d4ed8;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
 .teacher-security-pills {
   display: flex;
   flex-wrap: wrap;
@@ -977,8 +930,8 @@ onBeforeUnmount(() => {
   gap: 0.45rem;
   padding: 0.55rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid #dbe7f3;
-  background: #f8fbff;
+  border: 1px solid #d6e8cc;
+  background: #f7fbf4;
   color: #334155;
   font-size: 0.78rem;
   font-weight: 600;
@@ -991,9 +944,9 @@ onBeforeUnmount(() => {
 
 .teacher-security-pill-shield,
 .teacher-security-pill-strong {
-  border-color: #bfdbfe;
-  background: #eff6ff;
-  color: #1d4ed8;
+  border-color: #b9dca7;
+  background: #eef8e9;
+  color: #4f8f2f;
 }
 
 .teacher-security-pill-medium {
@@ -1009,15 +962,15 @@ onBeforeUnmount(() => {
 }
 
 .teacher-security-pill-idle {
-  border-color: #dbe7f3;
-  background: #f8fbff;
+  border-color: #d6e8cc;
+  background: #f7fbf4;
   color: #475569;
 }
 
 .teacher-security-card {
-  border: 1px solid #d8e3ef;
+  border: 1px solid #d6e8cc;
   border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbf4 100%);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
   padding: 1rem 1.05rem 1.05rem;
   position: relative;
@@ -1032,7 +985,7 @@ onBeforeUnmount(() => {
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(191, 219, 254, 0.55) 0%, rgba(191, 219, 254, 0) 72%);
+  background: radial-gradient(circle, rgba(201, 230, 184, 0.58) 0%, rgba(201, 230, 184, 0) 72%);
   pointer-events: none;
 }
 
@@ -1056,21 +1009,21 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   gap: 0.8rem;
   padding: 0.9rem 1rem;
-  border: 1px solid #dbe7f3;
+  border: 1px solid #cfe5c3;
   border-radius: 16px;
-  background: linear-gradient(135deg, #eff6ff 0%, #f8fbff 100%);
+  background: linear-gradient(135deg, #eef8e9 0%, #f9fcf7 100%);
 }
 
 .teacher-security-banner-icon {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #1d4ed8 0%, #0f172a 100%);
+  background: linear-gradient(135deg, #82bf5b 0%, #5ca03c 100%);
   color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 24px rgba(29, 78, 216, 0.24);
+  box-shadow: 0 12px 24px rgba(92, 160, 60, 0.24);
   flex: 0 0 auto;
 }
 
@@ -1111,9 +1064,9 @@ onBeforeUnmount(() => {
 }
 
 .teacher-security-field-label small {
-  border: 1px solid #dbe7f3;
+  border: 1px solid #d6e8cc;
   border-radius: 999px;
-  background: #f8fbff;
+  background: #f7fbf4;
   color: #64748b;
   font-size: 0.67rem;
   font-weight: 700;
@@ -1136,7 +1089,7 @@ onBeforeUnmount(() => {
 .teacher-security-actions {
   margin-top: 0.1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e7eef6;
+  border-top: 1px solid #e1edda;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1159,17 +1112,29 @@ onBeforeUnmount(() => {
   min-width: 180px;
   min-height: 44px;
   border-radius: 12px;
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+  background: #69aa47 !important;
+  border-color: #69aa47 !important;
+  color: #ffffff !important;
+  background-image: none !important;
+  box-shadow: 0 12px 24px rgba(105, 170, 71, 0.22);
+}
+
+.teacher-security-submit:hover:not(:disabled) {
+  background: #5b9b3c !important;
+  border-color: #5b9b3c !important;
+  transform: translateY(-1px);
 }
 
 .teacher-security-submit:disabled {
+  background: #a9c99a !important;
+  border-color: #a9c99a !important;
   box-shadow: none;
 }
 
 .teacher-security-side {
-  border: 1px solid #dbe7f3;
+  border: 1px solid #d6e8cc;
   border-radius: 16px;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #f7fbf4 0%, #ffffff 100%);
   padding: 1rem;
   display: grid;
   gap: 0.85rem;
@@ -1185,7 +1150,7 @@ onBeforeUnmount(() => {
 
 .teacher-security-side-eyebrow {
   display: inline-flex;
-  color: #1d4ed8;
+  color: #5b9b3c;
   font-size: 0.69rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1206,8 +1171,8 @@ onBeforeUnmount(() => {
   height: 34px;
   padding: 0 0.7rem;
   border-radius: 999px;
-  background: #e0f2fe;
-  color: #0f172a;
+  background: #e7f4df;
+  color: #4a7f31;
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -1220,7 +1185,7 @@ onBeforeUnmount(() => {
 }
 
 .teacher-security-strength-card.strength-card-idle {
-  border-color: #dbe7f3;
+  border-color: #d6e8cc;
 }
 
 .teacher-security-strength-card.strength-card-weak {
@@ -1251,8 +1216,8 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 0.24rem 0.55rem;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #eef8e9;
+  color: #4f8f2f;
   font-size: 0.74rem;
   font-weight: 700;
 }
@@ -1354,10 +1319,10 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   gap: 0.55rem;
   padding: 0.7rem 0.75rem;
-  border: 1px solid #bfdbfe;
+  border: 1px solid #b9dca7;
   border-radius: 12px;
-  background: #eff6ff;
-  color: #1e40af;
+  background: #eef8e9;
+  color: #4a7f31;
   font-size: 0.77rem;
   line-height: 1.5;
 }
@@ -1429,16 +1394,16 @@ onBeforeUnmount(() => {
 
 .teacher-security-form .settings-input {
   min-height: 48px;
-  border: 1px solid #d7e2ee;
+  border: 1px solid #d5e5cd;
   border-radius: 12px;
   padding: 0.78rem 0.86rem;
-  background: #fcfdff;
+  background: #fcfefb;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .teacher-security-form .settings-input:focus-visible {
-  border-color: #93c5fd;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  border-color: #8fbd76;
+  box-shadow: 0 0 0 4px rgba(105, 170, 71, 0.14);
   background: #ffffff;
 }
 
@@ -1484,16 +1449,16 @@ onBeforeUnmount(() => {
   right: 0.6rem;
   width: 34px;
   height: 34px;
-  border: 1px solid #d9e3ef;
+  border: 1px solid #d6e8cc;
   border-radius: 10px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbf4 100%);
   transition: all 0.2s ease;
 }
 
 .teacher-security-form .password-toggle:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  background: #eef8e9;
+  border-color: #8fbd76;
+  color: #4f8f2f;
 }
 
 .password-rules {
