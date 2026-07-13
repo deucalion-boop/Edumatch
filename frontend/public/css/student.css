@@ -7080,3 +7080,123 @@ body.student-dashboard .profile-card .profile-actions .btn-outline:hover:not(:di
         justify-content: center;
     }
 }
+
+/* Keep the desktop dashboard overview within the viewport without making it cramped. */
+@media (min-width: 1181px) {
+    body.student-dashboard .student-dashboard-page {
+        gap: 10px;
+    }
+
+    body.student-dashboard .student-dashboard-page > .hero {
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 18px;
+    }
+
+    body.student-dashboard .student-dashboard-page .hero-copy,
+    body.student-dashboard .student-dashboard-page .panel,
+    body.student-dashboard .student-dashboard-page .summary-card,
+    body.student-dashboard .student-dashboard-page .course-card {
+        gap: 8px;
+    }
+
+    body.student-dashboard .student-dashboard-page .chip-row {
+        gap: 6px 10px;
+    }
+
+    body.student-dashboard .student-dashboard-page .chip {
+        min-height: 28px;
+        padding: 4px 10px;
+    }
+
+    body.student-dashboard .student-dashboard-page .summary-grid,
+    body.student-dashboard .student-dashboard-page .dashboard-grid {
+        gap: 10px;
+    }
+
+    body.student-dashboard .student-dashboard-page .summary-card {
+        padding: 10px 12px;
+        border-radius: 18px;
+    }
+
+    body.student-dashboard .student-dashboard-page .summary-grid .icon-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+    }
+
+    body.student-dashboard .student-dashboard-page .summary-value {
+        font-size: 1.65rem;
+    }
+
+    body.student-dashboard .student-dashboard-page .summary-note {
+        font-size: 0.78rem;
+        line-height: 1.35;
+    }
+
+    body.student-dashboard .student-dashboard-page .panel.classwork-panel,
+    body.student-dashboard .student-dashboard-page .panel.course-directory-panel {
+        gap: 10px;
+        padding: 12px;
+        border-radius: 18px;
+    }
+
+    body.student-dashboard .student-dashboard-page .panel-heading,
+    body.student-dashboard .student-dashboard-page .classwork-panel-heading,
+    body.student-dashboard .student-dashboard-page .course-directory-heading {
+        gap: 4px;
+    }
+
+    body.student-dashboard .student-dashboard-page .panel-subtitle {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    body.student-dashboard .student-dashboard-page .panel-link {
+        min-height: 34px;
+        padding: 7px 11px;
+        border-radius: 11px;
+        font-size: 0.78rem;
+    }
+
+    body.student-dashboard .student-dashboard-page .classwork-empty-state {
+        min-height: 165px;
+        gap: 8px;
+        padding: 14px;
+    }
+
+    body.student-dashboard .student-dashboard-page .classwork-empty-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 17px;
+        font-size: 1.1rem;
+    }
+
+    body.student-dashboard .student-dashboard-page .classwork-empty-copy p {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    body.student-dashboard .student-dashboard-page .course-card.course-directory-card {
+        gap: 8px;
+        padding: 11px;
+        border-radius: 17px;
+    }
+
+    body.student-dashboard .student-dashboard-page .course-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 13px;
+    }
+
+    body.student-dashboard .student-dashboard-page .course-teacher-row {
+        min-height: 28px;
+        padding: 4px 9px;
+    }
+
+    body.student-dashboard .student-dashboard-page .course-metric-card,
+    body.student-dashboard .student-dashboard-page .course-progress-block {
+        padding: 8px 10px;
+        border-radius: 13px;
+    }
+}

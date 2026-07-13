@@ -818,7 +818,9 @@
                       >
                         <td class="attendance-roster-cell attendance-roster-cell-student">
                           <div class="attendance-student-main">
-                            <div class="attendance-student-avatar">{{ getNameInitials(student.name) }}</div>
+                            <div class="attendance-student-avatar" aria-hidden="true">
+                              <i class="fas fa-user"></i>
+                            </div>
                             <div class="attendance-student-copy">
                               <strong>{{ student.name }}</strong>
                               <small class="attendance-student-email">
@@ -863,7 +865,7 @@
               </div>
             </article>
 
-            <details class="attendance-panel attendance-history-panel" open>
+            <details class="attendance-panel attendance-history-panel">
               <summary class="attendance-history-summary">
                 <div class="attendance-panel-head">
                 <div>
@@ -5108,18 +5110,23 @@ onBeforeUnmount(() => {
 }
 
 .attendance-student-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
-  color: #ffffff;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  background: #f8fafc;
+  color: #1e4307;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.84rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.16);
+  box-shadow: none;
+}
+
+.attendance-student-avatar > .fa-user {
+  color: #111111 !important;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .attendance-student-copy {
@@ -6059,7 +6066,6 @@ onBeforeUnmount(() => {
   color: #111111 !important;
 }
 
-.attendance-student-avatar,
 .attendance-history-item.active .attendance-history-date-badge {
   background: linear-gradient(135deg, #1e4307 0%, #ffd542 100%);
   box-shadow: 0 8px 16px rgba(30, 67, 7, 0.16);
@@ -6262,8 +6268,8 @@ onBeforeUnmount(() => {
   gap: clamp(0.75rem, 1.2vw, 1.25rem);
 }
 
-.teacher-avatar > .fa-user {
-  color: #1e4307 !important;
+:global(body.teacher-dashboard) .teacher-sidebar .sidebar-footer .teacher-avatar > i.fa-user {
+  color: #111111 !important;
   font-size: 1rem;
   line-height: 1;
 }
@@ -6823,6 +6829,152 @@ onBeforeUnmount(() => {
 
   .attendance-summary-card:last-child {
     grid-column: auto;
+  }
+}
+
+/* Compact attendance workspace without nested scrolling. */
+.attendance-section {
+  gap: 0.55rem;
+}
+
+.attendance-section > .section-header {
+  margin-bottom: 0;
+}
+
+.attendance-shell {
+  gap: 0.45rem;
+}
+
+.attendance-hero-card,
+.attendance-toolbar-card,
+.attendance-panel {
+  padding: 0.65rem;
+  border-radius: 14px;
+}
+
+.attendance-summary-grid {
+  gap: 0.4rem;
+}
+
+.attendance-summary-card {
+  min-height: 58px;
+  padding: 0.45rem 0.6rem;
+  column-gap: 0.4rem;
+}
+
+.attendance-summary-icon {
+  width: 26px;
+  height: 26px;
+  font-size: 0.78rem;
+}
+
+.attendance-summary-card strong {
+  font-size: 1.15rem;
+}
+
+.attendance-toolbar-card {
+  column-gap: 0.55rem;
+  row-gap: 0.5rem;
+}
+
+.attendance-scope-panel,
+.attendance-toolbar-field-card {
+  gap: 0.3rem;
+}
+
+.attendance-scope-btn,
+.attendance-toolbar-field-card .filter-field select,
+.attendance-date-input-wrap,
+.attendance-date-input-wrap input,
+.attendance-toolbar-actions .pagination-btn {
+  min-height: 38px;
+}
+
+.attendance-scope-btn {
+  padding: 0.4rem 0.6rem;
+}
+
+.attendance-toolbar-actions .pagination-btn {
+  padding-block: 0.4rem;
+}
+
+.attendance-legend-pill {
+  min-height: 28px;
+  padding: 0.25rem 0.5rem;
+}
+
+.attendance-layout {
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+
+.attendance-panel-head {
+  margin-bottom: 0.45rem;
+}
+
+.attendance-roster-toolbar {
+  padding: 0.5rem;
+  border-radius: 12px;
+}
+
+.attendance-search-input-wrap,
+.attendance-search-input-wrap input,
+.attendance-filter-field select,
+.attendance-status-select {
+  min-height: 38px;
+}
+
+.attendance-roster-results {
+  margin-block: 0.45rem;
+}
+
+.attendance-roster-table-wrap {
+  max-height: none;
+  overflow: visible;
+}
+
+.attendance-roster-table thead th {
+  position: static;
+}
+
+.attendance-roster-cell-student {
+  position: static;
+}
+
+.attendance-roster-cell {
+  padding-block: 0.55rem;
+}
+
+.attendance-status-select {
+  min-height: 38px;
+}
+
+.attendance-history-panel {
+  position: static;
+  max-height: none;
+  overflow: visible;
+}
+
+.attendance-history-content {
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+@media (max-width: 576px) {
+  .attendance-hero-card,
+  .attendance-toolbar-card,
+  .attendance-panel {
+    padding: 0.6rem;
+    border-radius: 13px;
+  }
+
+  .attendance-toolbar-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .attendance-toolbar-actions .pagination-btn {
+    min-height: 40px;
+    padding-inline: 0.35rem;
   }
 }
 </style>

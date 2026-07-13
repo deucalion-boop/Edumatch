@@ -317,7 +317,9 @@
           <article v-for="request in paginatedEnrollmentRequests" :key="request.id" class="enrollment-request-card">
             <div class="request-student-row">
               <div class="student-identity">
-                <img :src="request.avatar" :alt="request.name" class="student-avatar" />
+                <span class="student-avatar student-avatar-icon" aria-hidden="true">
+                  <i class="fas fa-user"></i>
+                </span>
                 <div class="student-details"><strong>{{ request.name }}</strong><small>{{ request.email }}</small></div>
               </div>
               <span class="request-time"><i class="fas fa-clock"></i>{{ formatDateTime(request.requestedAt) }}</span>
@@ -464,7 +466,9 @@
               <tr v-for="student in visibleRosterStudents" :key="student.id">
                 <td>
                   <div class="student-identity">
-                    <img :src="student.avatar" :alt="student.name" class="student-avatar" />
+                    <span class="student-avatar student-avatar-icon" aria-hidden="true">
+                      <i class="fas fa-user"></i>
+                    </span>
                     <div class="student-details">
                       <strong>{{ student.name }}</strong>
                       <small>{{ student.sectionName || 'No section' }}</small>
@@ -676,7 +680,9 @@
             <div v-else class="subject-students-list">
               <article v-for="student in subjectStudents" :key="student.id" class="subject-student-card">
                 <div class="student-identity">
-                  <img :src="student.avatar" :alt="student.name" class="student-avatar" />
+                  <span class="student-avatar student-avatar-icon" aria-hidden="true">
+                    <i class="fas fa-user"></i>
+                  </span>
                   <div class="student-details">
                     <strong>{{ student.name }}</strong>
                     <small>{{ student.sectionName || 'No section' }}</small>
@@ -2880,10 +2886,19 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
   max-width: 30px !important;
   max-height: 30px !important;
   flex: 0 0 30px !important;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  object-fit: cover;
   border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #111111;
+}
+
+.student-avatar-icon > .fa-user {
+  color: #111111 !important;
+  font-size: 0.78rem;
+  line-height: 1;
 }
 
 .student-email {
@@ -4043,6 +4058,237 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
   .class-requests-pagination-actions {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
+  }
+}
+
+/* Compact desktop dashboard designed to fit the default view without nested scrolling. */
+@media (min-width: 981px) {
+  .teacher-main .student-dashboard-header {
+    margin-bottom: 1.15rem !important;
+    padding: 0.6rem 0.75rem;
+    border-radius: 16px;
+  }
+
+  .student-dashboard-header .header-content {
+    gap: 0.6rem;
+  }
+
+  .student-page-eyebrow {
+    margin-bottom: 0.05rem;
+    font-size: 0.6rem;
+  }
+
+  .student-header-copy h1 {
+    font-size: 1.35rem;
+  }
+
+  .student-header-context {
+    margin-top: 0.45rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 11px;
+  }
+
+  .student-context-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
+  .student-context-copy span {
+    display: none;
+  }
+
+  .student-context-subject {
+    padding: 0.28rem 0.5rem;
+  }
+
+  .student-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .student-kpi-card {
+    gap: 0.5rem;
+    padding: 0.4rem 0.55rem;
+    border-radius: 12px;
+  }
+
+  .student-kpi-icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 9px;
+    font-size: 0.78rem;
+  }
+
+  .student-kpi-card strong {
+    font-size: 1.1rem;
+  }
+
+  .student-kpi-card small {
+    display: none;
+  }
+
+  .student-management-grid {
+    gap: 0.55rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .dashboard-panel,
+  .student-list-panel {
+    padding: 0.6rem;
+    border-radius: 14px;
+  }
+
+  .dashboard-panel-header,
+  .student-list-header {
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+
+  .dashboard-panel-eyebrow {
+    margin-bottom: 0.05rem;
+    font-size: 0.58rem;
+  }
+
+  .dashboard-panel-header .section-title,
+  .student-list-header .section-title {
+    font-size: 0.95rem;
+  }
+
+  .dashboard-panel-header .class-list-subtitle,
+  .student-list-header .class-list-subtitle {
+    display: none;
+  }
+
+  .class-management-controls .create-class-btn {
+    min-height: 34px;
+    padding-inline: 0.65rem;
+  }
+
+  .dashboard-panel .subject-management-grid,
+  .enrollment-request-list {
+    max-height: none;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .dashboard-panel .subject-management-card {
+    padding: 0.55rem;
+    border-radius: 12px;
+  }
+
+  .dashboard-panel .subject-management-head h4 {
+    font-size: 0.92rem;
+  }
+
+  .subject-management-title-block p {
+    margin-top: 0.1rem;
+  }
+
+  .dashboard-panel .subject-management-meta {
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+  }
+
+  .dashboard-panel .subject-metric-chip {
+    padding: 0.28rem;
+    font-size: 0.62rem;
+  }
+
+  .dashboard-empty-state {
+    min-height: 68px;
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 12px;
+    text-align: left;
+  }
+
+  .dashboard-empty-icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+  }
+
+  .dashboard-empty-state strong {
+    font-size: 0.8rem;
+  }
+
+  .dashboard-empty-state p {
+    font-size: 0.67rem;
+  }
+
+  .student-list-panel {
+    margin-bottom: 0;
+  }
+
+  .student-roster-tabs {
+    gap: 0.3rem;
+    margin-bottom: 0.35rem;
+    padding: 0.25rem;
+    border-radius: 10px;
+  }
+
+  .student-roster-tab {
+    min-height: 31px;
+    padding: 0.25rem 0.55rem;
+    border-radius: 8px;
+    font-size: 0.69rem;
+  }
+
+  .student-roster-tab strong {
+    min-width: 19px;
+    height: 19px;
+  }
+
+  .student-roster-context {
+    font-size: 0.66rem;
+  }
+
+  .student-list-toolbar {
+    grid-template-columns: minmax(200px, 1fr) repeat(2, minmax(140px, 0.38fr)) auto;
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+    padding: 0.3rem;
+    border-radius: 10px;
+  }
+
+  .student-search-field,
+  .student-toolbar-select {
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  .student-toolbar-actions {
+    grid-column: auto;
+  }
+
+  .toolbar-icon-btn {
+    min-height: 34px;
+    padding: 0.3rem 0.55rem;
+    border-radius: 8px;
+  }
+
+  .student-list-panel .class-list-table-wrap {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .student-list-panel .class-list-table thead th {
+    padding-block: 0.45rem;
+  }
+
+  .student-list-panel .class-list-table tbody td {
+    padding-block: 0.45rem;
+  }
+
+  .student-list-panel .student-avatar {
+    width: 32px;
+    height: 32px;
   }
 }
 

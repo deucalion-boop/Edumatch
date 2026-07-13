@@ -1342,6 +1342,216 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
+/* Compact desktop profile designed to fit without nested scrolling. */
+@media (min-width: 1101px) {
+  :global(body.teacher-dashboard) .teacher-main > .top-header[data-tour="profile-header"] {
+    margin-bottom: 1rem !important;
+    padding: 0.85rem 1rem !important;
+  }
+
+  :global(body.teacher-dashboard) .teacher-main > .teacher-profile-page > .profile-content {
+    grid-template-columns: minmax(330px, 380px) minmax(0, 1fr) !important;
+    gap: 1rem !important;
+    padding: 0 !important;
+  }
+
+  .profile-sidebar {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .teacher-dashboard .teacher-profile-page .profile-card,
+  .teacher-dashboard .teacher-profile-page .profile-details-card {
+    padding: 1rem;
+    border-radius: 16px !important;
+  }
+
+  .teacher-dashboard .teacher-profile-page .profile-header {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    padding: 0 0 0.72rem;
+    margin-bottom: 0.72rem;
+    text-align: center;
+  }
+
+  .profile-avatar {
+    width: 84px;
+    height: 84px;
+    flex: 0 0 84px;
+    margin: 0;
+  }
+
+  .profile-avatar-placeholder i {
+    font-size: 1.8rem;
+  }
+
+  .avatar-action-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .profile-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    width: 100%;
+  }
+
+  .profile-info h2 {
+    max-width: 100%;
+    overflow: hidden;
+    margin: 0;
+    font-size: 1.2rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .profile-role,
+  .profile-status {
+    margin: 0;
+    font-size: 0.84rem;
+  }
+
+  .profile-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .profile-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .profile-actions .btn-primary,
+  .profile-actions .btn-outline {
+    min-height: 42px;
+    padding: 0.6rem 0.72rem;
+    font-size: 0.82rem;
+  }
+
+  .teacher-dashboard .teacher-profile-page .profile-details-card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    column-gap: 0.85rem;
+  }
+
+  .details-title {
+    grid-column: 1 / -1;
+    margin-bottom: 0.55rem;
+    font-size: 1rem;
+  }
+
+  .profile-details-card .detail-item {
+    gap: 0.6rem;
+    min-width: 0;
+    padding: 0.5rem 0;
+  }
+
+  .profile-details-card .detail-icon {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border-radius: 9px;
+    font-size: 0.78rem;
+  }
+
+  .profile-details-card .detail-label {
+    font-size: 0.66rem;
+  }
+
+  .profile-details-card .detail-value {
+    overflow: hidden;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .teacher-dashboard .teacher-profile-page .profile-tab-content {
+    border-radius: 16px !important;
+  }
+
+  .tab-pane {
+    padding: 1rem;
+  }
+
+  .tab-header {
+    margin-bottom: 0.8rem;
+  }
+
+  .tab-header h3 {
+    margin: 0 0 0.15rem;
+    font-size: 1.12rem;
+  }
+
+  .tab-header p {
+    font-size: 0.82rem;
+  }
+
+  .profile-form {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+    align-items: start;
+    gap: 0.8rem;
+  }
+
+  .teacher-dashboard .teacher-profile-page .profile-form-section {
+    margin: 0;
+    padding: 0.85rem;
+    border-radius: 14px;
+  }
+
+  .profile-form-section:first-child {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .profile-form-section:first-child .form-section-title {
+    grid-column: 1 / -1;
+  }
+
+  .profile-form-section:first-child .form-row {
+    display: contents;
+  }
+
+  .form-section-title {
+    margin-bottom: 0.55rem;
+    font-size: 0.9rem;
+  }
+
+  .profile-form-section:first-child .form-group,
+  .profile-form-section .form-row,
+  .profile-form-section .form-group {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    margin-bottom: 0.4rem;
+    font-size: 0.72rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.68rem 0.78rem;
+    font-size: 0.9rem;
+  }
+
+  .form-actions {
+    grid-column: 1 / -1;
+    margin-top: 0;
+    padding-top: 0.7rem;
+  }
+}
+
 @media (max-width: 1100px) {
   .profile-content {
     grid-template-columns: 1fr;

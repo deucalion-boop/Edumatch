@@ -1598,7 +1598,7 @@ export default {
   padding: 1rem;
   border: 1px solid rgba(169, 213, 95, 0.52);
   border-radius: 16px;
-  background: linear-gradient(180deg, #fbfce9 0%, #fbfce9 100%);
+  background: #ffffff;
   min-height: 124px;
   box-shadow: 0 14px 28px rgba(30, 67, 7, 0.06);
 }
@@ -1613,20 +1613,12 @@ export default {
   font-size: 1rem;
 }
 
-.kpi-icon.students {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.kpi-icon.lessons {
-  background: #ecfeff;
-  color: #0f766e;
-}
-
+.kpi-icon.students,
+.kpi-icon.lessons,
 .kpi-icon.classes,
 .kpi-icon.assessments {
-  background: #eef2ff;
-  color: #4338ca;
+  background: #edf7e7;
+  color: #2f6810;
 }
 
 .kpi-content {
@@ -2740,6 +2732,154 @@ export default {
 
   .teacher-tour-tooltip p {
     font-size: 0.8rem;
+  }
+}
+
+/* Compact desktop overview designed to fit without page-level scrolling. */
+@media (min-width: 900px) {
+  .teacher-main > .top-header {
+    margin-bottom: 1.15rem !important;
+    padding: 0.75rem 0.9rem !important;
+  }
+
+  .teacher-main > .top-header .header-left h1 {
+    font-size: 1.4rem;
+  }
+
+  .teacher-main > .top-header .header-subtitle {
+    display: none;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .dashboard-kpi-grid {
+    margin-bottom: 0.6rem;
+  }
+
+  .kpi-card {
+    min-height: 64px;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 12px;
+  }
+
+  .kpi-icon {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+  }
+
+  .kpi-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+  }
+
+  .kpi-label {
+    overflow: hidden;
+    font-size: 0.74rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kpi-value {
+    font-size: 1.12rem;
+  }
+
+  .kpi-note {
+    display: none;
+  }
+
+  .dashboard-layout {
+    margin-top: 0;
+  }
+
+  .calendar-card {
+    margin-bottom: 0;
+    padding: 0.7rem 0.8rem;
+    border-radius: 14px;
+  }
+
+  .calendar-header {
+    margin-bottom: 0.4rem;
+  }
+
+  .calendar-kicker {
+    font-size: 0.66rem;
+  }
+
+  .calendar-title {
+    margin-top: 0.05rem;
+    font-size: 1.12rem;
+  }
+
+  .calendar-nav-btn,
+  .calendar-today-btn {
+    height: 30px;
+    min-width: 30px;
+    padding-inline: 0.5rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+  }
+
+  .calendar-filters {
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .calendar-filter-btn {
+    min-height: 30px;
+    padding-inline: 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  .calendar-weekdays {
+    gap: 0.3rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .calendar-weekdays span {
+    font-size: 0.66rem;
+  }
+
+  .calendar-grid {
+    gap: 0.3rem;
+  }
+
+  .calendar-day {
+    min-height: 70px;
+    padding: 0.4rem;
+    border-radius: 10px;
+  }
+
+  .day-number {
+    font-size: 0.78rem;
+  }
+
+  .day-events {
+    left: 0.3rem;
+    right: 0.3rem;
+    bottom: 0.25rem;
+    gap: 0.12rem;
+  }
+
+  .day-event-pill {
+    padding: 0.1rem 0.25rem;
+    border-radius: 6px;
+    font-size: 0.56rem;
+  }
+
+  .calendar-legend {
+    display: none;
   }
 }
 

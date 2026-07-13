@@ -2419,8 +2419,8 @@ onBeforeUnmount(() => {
 .builder-workspace {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .builder-main,
@@ -2433,32 +2433,35 @@ onBeforeUnmount(() => {
 
 .builder-main {
   border: 1px solid var(--border-color);
-  padding: var(--spacing-lg);
+  padding: 0.75rem;
 }
 
 .builder-main {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 0.65rem;
+  overflow: visible;
 }
 
 .builder-panel {
   box-shadow: none;
   border: 1px solid var(--border-color);
-  padding: var(--spacing-lg);
+  padding: 0.85rem;
 }
 
 .panel-header {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 0.65rem;
 }
 
 .panel-header h2 {
-  margin-bottom: 6px;
+  margin: 0 0 0.2rem;
+  font-size: 1.15rem;
 }
 
 .panel-header p {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
 }
 
 .panel-header-modern {
@@ -2498,26 +2501,26 @@ onBeforeUnmount(() => {
 .builder-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: 0.65rem;
 }
 
 .builder-form-assessment {
-  gap: 1rem;
+  gap: 0.65rem;
 }
 
 .lesson-form-modern {
-  gap: 1rem;
+  gap: 0.65rem;
 }
 
 .lesson-form-section {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: #ffffff;
-  padding: 0.95rem;
+  padding: 0.7rem;
 }
 
 .lesson-form-section-head {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.55rem;
 }
 
 .lesson-form-section-head h3 {
@@ -2535,7 +2538,12 @@ onBeforeUnmount(() => {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-md);
+  gap: 0.7rem;
+}
+
+.lesson-form-modern .lesson-form-section .form-grid,
+.builder-form-assessment .wizard-step-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .form-section-break {
@@ -2544,14 +2552,14 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.9rem;
-  padding: 1rem 1rem 0.9rem;
+  padding: 0.65rem 0.75rem;
   border: 1px solid #d3e7c8;
-  border-radius: 18px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #ffffff 0%, #f7fbf4 100%);
 }
 
 .form-section-break h3 {
-  margin: 0.18rem 0 0.25rem;
+  margin: 0.1rem 0 0.18rem;
   color: #0f172a;
   font-size: 1rem;
 }
@@ -2559,15 +2567,15 @@ onBeforeUnmount(() => {
 .form-section-break p {
   margin: 0;
   color: #475569;
-  font-size: 0.84rem;
-  line-height: 1.5;
+  font-size: 0.77rem;
+  line-height: 1.35;
 }
 
 .builder-section-step {
   display: inline-flex;
   align-items: center;
-  min-height: 26px;
-  padding: 0.2rem 0.6rem;
+  min-height: 22px;
+  padding: 0.12rem 0.5rem;
   border-radius: 999px;
   background: #dcfce7;
   color: #4f8f2f;
@@ -2604,7 +2612,7 @@ onBeforeUnmount(() => {
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.3rem;
 }
 
 .form-group.full {
@@ -2628,7 +2636,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-md);
   background: var(--surface-color);
   color: var(--text-primary);
-  padding: 0.75rem 0.85rem;
+  padding: 0.62rem 0.72rem;
   font: inherit;
   transition: border-color var(--transition-speed) var(--transition-easing),
     box-shadow var(--transition-speed) var(--transition-easing);
@@ -2636,14 +2644,14 @@ onBeforeUnmount(() => {
 
 .form-group textarea {
   resize: vertical;
-  min-height: 110px;
+  min-height: 90px;
 }
 
 .lesson-upload-box {
   border: 1px dashed #9bc783;
   background: #f7fbf4;
   border-radius: var(--radius-md);
-  min-height: 160px;
+  min-height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2758,7 +2766,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: var(--spacing-sm);
   border-top: 1px solid var(--border-color);
-  padding-top: var(--spacing-md);
+  padding-top: 0.6rem;
 }
 
 .builder-form-assessment .form-actions {
@@ -3067,7 +3075,7 @@ onBeforeUnmount(() => {
 
 .wizard-progress {
   position: relative;
-  padding: 0.8rem 0.35rem 1rem;
+  padding: 0.25rem 0.35rem 0.55rem;
 }
 
 .wizard-progress ol {
@@ -3087,7 +3095,7 @@ onBeforeUnmount(() => {
 
 .wizard-progress-track {
   position: absolute;
-  top: 1.85rem;
+  top: 1.2rem;
   left: calc(12.5% + 0.35rem);
   right: calc(12.5% + 0.35rem);
   height: 3px;
@@ -3114,7 +3122,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.25rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -3130,8 +3138,8 @@ onBeforeUnmount(() => {
 }
 
 .wizard-step-marker {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3141,7 +3149,7 @@ onBeforeUnmount(() => {
   color: #64748b;
   font-size: 0.8rem;
   font-weight: 800;
-  box-shadow: 0 0 0 5px #ffffff;
+  box-shadow: 0 0 0 4px #ffffff;
   transition: transform 0.22s ease, border-color 0.22s ease, background-color 0.22s ease, color 0.22s ease;
 }
 
@@ -3154,7 +3162,7 @@ onBeforeUnmount(() => {
 
 .wizard-progress li.active .wizard-step-marker {
   transform: scale(1.08);
-  box-shadow: 0 0 0 5px #dcfce7;
+  box-shadow: 0 0 0 4px #dcfce7;
 }
 
 .wizard-step-copy {
@@ -3164,7 +3172,7 @@ onBeforeUnmount(() => {
 
 .wizard-step-copy strong {
   color: #334155;
-  font-size: 0.78rem;
+  font-size: 0.73rem;
 }
 
 .wizard-progress li.active .wizard-step-copy strong,
@@ -3193,7 +3201,7 @@ onBeforeUnmount(() => {
 
 .wizard-step-copy small {
   color: #94a3b8;
-  font-size: 0.68rem;
+  font-size: 0.62rem;
 }
 
 .wizard-step-panel,
@@ -3203,7 +3211,7 @@ onBeforeUnmount(() => {
 
 .wizard-step-panel {
   display: grid;
-  gap: 1rem;
+  gap: 0.65rem;
 }
 
 .wizard-step-grid {
@@ -3259,16 +3267,16 @@ onBeforeUnmount(() => {
 }
 
 .wizard-review-card {
-  padding: 1rem;
+  padding: 0.75rem;
   border: 1px solid #bbf7d0;
-  border-radius: 18px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
 }
 
 .wizard-review-card dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
+  gap: 0.55rem;
   margin: 0;
 }
 
@@ -3276,7 +3284,7 @@ onBeforeUnmount(() => {
   min-width: 0;
   display: grid;
   gap: 0.2rem;
-  padding: 0.75rem;
+  padding: 0.55rem;
   border: 1px solid #dcfce7;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.85);
@@ -3312,7 +3320,7 @@ onBeforeUnmount(() => {
 }
 
 .wizard-actions {
-  min-height: 62px;
+  min-height: 44px;
 }
 
 .wizard-actions .btn {
@@ -3344,9 +3352,12 @@ onBeforeUnmount(() => {
 
 /* Mobile layout */
 @media (max-width: 768px) {
-  .builder-main,
+  .builder-main {
+    padding: 0.45rem;
+  }
+
   .builder-panel {
-    padding: var(--spacing-md);
+    padding: 0.7rem;
   }
 
   .lessons-table {
@@ -3358,11 +3369,15 @@ onBeforeUnmount(() => {
     gap: var(--spacing-sm);
   }
 
+  .lesson-form-modern .lesson-form-section .form-grid,
+  .builder-form-assessment .wizard-step-grid {
+    grid-template-columns: 1fr;
+  }
+
   .lesson-form-section {
     padding: 0.8rem;
   }
 
-  .panel-header-modern,
   .form-section-break,
   .preview-toolbar {
     flex-direction: column;
@@ -3386,21 +3401,49 @@ onBeforeUnmount(() => {
   }
 
   .wizard-progress {
-    overflow-x: auto;
+    overflow: visible;
     padding-inline: 0;
   }
 
   .wizard-progress ol {
-    min-width: 520px;
+    min-width: 0;
+    gap: 0.2rem;
   }
 
   .lesson-form-modern .wizard-progress ol {
-    min-width: 400px;
+    min-width: 0;
   }
 
   .wizard-progress-track {
-    left: 65px;
-    right: 65px;
+    left: calc(12.5% + 0.2rem);
+    right: calc(12.5% + 0.2rem);
+  }
+
+  .lesson-form-modern .wizard-progress-track {
+    left: calc(16.666% + 0.2rem);
+    right: calc(16.666% + 0.2rem);
+  }
+
+  .wizard-step-marker {
+    width: 28px;
+    height: 28px;
+  }
+
+  .wizard-step-copy strong {
+    font-size: 0.68rem;
+  }
+
+  .wizard-step-copy small {
+    display: none;
+  }
+
+  .wizard-actions {
+    flex-flow: row wrap;
+  }
+
+  .wizard-actions .btn {
+    width: auto;
+    flex: 1 1 120px;
   }
 
   .wizard-review-card dl {
