@@ -14246,32 +14246,74 @@ body.admin-dashboard .analytics-section.section-card {
         linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
 }
 
-/* Final KPI grid sizing: keep every card inside its track and preserve a
-   clearly visible gutter after all earlier dashboard overrides. */
+/* Keep the KPI cards in one horizontal row. */
 body.admin-dashboard .admin-main .analytics-section .analytics-grid {
-    display: grid !important;
-    column-gap: 24px !important;
-    row-gap: 24px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 16px !important;
+    overflow-x: auto !important;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
 }
 
 body.admin-dashboard .admin-main .analytics-section .analytics-grid > .analytics-card {
     box-sizing: border-box !important;
-    inline-size: auto !important;
-    width: auto !important;
-    min-width: 0 !important;
-    max-width: none !important;
+    flex: 0 0 170px !important;
+    inline-size: 170px !important;
+    width: 170px !important;
+    min-width: 170px !important;
+    max-width: 170px !important;
+    block-size: 170px !important;
+    height: 170px !important;
+    min-height: 170px !important;
+    max-height: 170px !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 10px !important;
+    background: #ffffff !important;
     margin: 0 !important;
-    justify-self: stretch !important;
+}
+
+body.admin-dashboard .admin-main .analytics-section .analytics-card .analytics-card-header {
+    margin-bottom: 5px !important;
+}
+
+body.admin-dashboard .admin-main .analytics-section .analytics-card .analytics-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 8px !important;
+    font-size: 0.7rem !important;
+}
+
+body.admin-dashboard .admin-main .analytics-section .analytics-card .trend-pill {
+    padding: 3px 6px !important;
+    font-size: 0.58rem !important;
+}
+
+body.admin-dashboard .admin-main .analytics-section .analytics-card .analytics-value {
+    font-size: 1.25rem !important;
+}
+
+body.admin-dashboard .admin-main .analytics-section .analytics-card .analytics-label {
+    font-size: 0.55rem !important;
+    line-height: 1.15 !important;
+}
+
+body.admin-dashboard .admin-main .analytics-section .analytics-card .analytics-footer {
+    margin-top: 4px !important;
+    padding-top: 4px !important;
+    font-size: 0.55rem !important;
+    line-height: 1.2 !important;
 }
 
 @media (max-width: 768px) {
     body.admin-dashboard .admin-main .analytics-section .analytics-grid {
-        gap: 16px !important;
+        gap: 14px !important;
     }
 }
 
 @media (max-width: 480px) {
     body.admin-dashboard .admin-main .analytics-section .analytics-grid {
-        gap: 14px !important;
+        gap: 12px !important;
     }
 }

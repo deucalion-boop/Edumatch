@@ -1436,7 +1436,7 @@ export default {
 
 .analytics-board-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   margin: 1rem 0;
 }
@@ -1575,6 +1575,20 @@ export default {
 
 .insight-block + .insight-block {
   margin-top: 1.25rem;
+}
+
+.insight-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.5rem;
+}
+
+.insight-panel .panel-header {
+  grid-column: 1 / -1;
+}
+
+.insight-panel .insight-block + .insight-block {
+  margin-top: 0;
 }
 
 .insight-title {
@@ -1947,6 +1961,14 @@ export default {
 
   .analytics-board-grid {
     grid-template-columns: 1fr;
+  }
+
+  .insight-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .insight-panel .insight-block + .insight-block {
+    margin-top: 1.25rem;
   }
 
   .analytics-section {
