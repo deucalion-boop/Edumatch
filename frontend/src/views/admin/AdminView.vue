@@ -167,9 +167,6 @@
                 <span class="analytics-value">{{ formatNumber(metrics.totalStudents) }}</span>
                 <span class="analytics-label">total students</span>
               </div>
-              <div class="analytics-footer">
-                <span><i class="fas fa-calendar"></i> {{ formatNumber(metrics.newStudents) }} net active change in the last 30 days</span>
-              </div>
             </div>
 
             <div
@@ -191,9 +188,6 @@
               <div class="analytics-main">
                 <span class="analytics-value">{{ formatNumber(metrics.totalTeachers) }}</span>
                 <span class="analytics-label">total teachers</span>
-              </div>
-              <div class="analytics-footer">
-                <span><i class="fas fa-user-clock"></i> {{ formatNumber(metrics.pendingApplications) }} pending account approvals</span>
               </div>
             </div>
 
@@ -217,9 +211,6 @@
                 <span class="analytics-value">{{ formatNumber(metrics.totalHeadTeachers) }}</span>
                 <span class="analytics-label">total head teachers</span>
               </div>
-              <div class="analytics-footer">
-                <span><i class="fas fa-building-columns"></i> department supervisors on platform</span>
-              </div>
             </div>
 
             <div
@@ -242,9 +233,6 @@
                 <span class="analytics-value">{{ formatNumber(metrics.totalSecretaries) }}</span>
                 <span class="analytics-label">total secretaries</span>
               </div>
-              <div class="analytics-footer">
-                <span><i class="fas fa-briefcase"></i> administrative support accounts</span>
-              </div>
             </div>
 
             <div
@@ -265,9 +253,6 @@
               <div class="analytics-main">
                 <span class="analytics-value">{{ formatNumber(metrics.totalCourses) }}</span>
                 <span class="analytics-label">lessons published</span>
-              </div>
-              <div class="analytics-footer">
-                <span><i class="fas fa-book-open"></i> {{ formatNumber(metrics.totalSubjects) }} active subjects across {{ formatNumber(metrics.totalTracks) }} tracks</span>
               </div>
             </div>
 
@@ -291,15 +276,15 @@
                 <span class="analytics-value">{{ formatNumber(metrics.totalActivities) }}</span>
                 <span class="analytics-label">assessments published</span>
               </div>
-              <div class="analytics-footer">
-                <span><i class="fas fa-clipboard-check"></i> {{ formatPercent(metrics.courseCompletion) }} submission coverage from assessments</span>
-              </div>
             </div>
           </div>
         </section>
 
         <section class="analytics-board-grid">
-          <article class="section-card chart-panel">
+          <article
+            class="section-card chart-panel role-growth-panel"
+            style="border: 1px solid transparent !important; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) padding-box, linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;"
+          >
             <div class="panel-header">
               <div>
                 <h3 class="section-title">Role Growth Trends</h3>
@@ -317,7 +302,10 @@
             </div>
           </article>
 
-          <article class="section-card chart-panel">
+          <article
+            class="section-card chart-panel learning-funnel-panel"
+            style="border: 1px solid transparent !important; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) padding-box, linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;"
+          >
             <div class="panel-header">
               <div>
                 <h3 class="section-title">Learning Completion Funnel</h3>
@@ -343,7 +331,7 @@
             </div>
           </article>
 
-          <article class="section-card insight-panel">
+          <article class="section-card insight-panel" style="border-color: #69aa47 !important;">
             <div class="panel-header">
               <div>
                 <h3 class="section-title">Top Performance Signals</h3>
@@ -383,7 +371,7 @@
           </article>
         </section>
 
-        <section class="ai-analytics-section section-card">
+        <section class="ai-analytics-section section-card" style="border-color: #69aa47 !important;">
           <div class="section-header analytics-section-header">
             <div class="analytics-section-heading">
               <h3 class="section-title">
@@ -451,7 +439,7 @@
           </div>
         </section>
 
-        <section class="section-card risk-section">
+        <section class="section-card risk-section" style="border-color: #69aa47 !important;">
           <div class="panel-header">
             <div>
               <h3 class="section-title">At-Risk Engagement</h3>
@@ -583,7 +571,6 @@ export default {
       activityGrowth: 0,
       pendingCourses: 0,
       avgSession: '0m 0s',
-      courseCompletion: 0,
       weeklyCompletionGrowth: 0,
       approvalWorkload: {
         pendingApplications: 0,
@@ -813,7 +800,6 @@ export default {
         activityGrowth: payload.activityGrowth ?? 0,
         pendingCourses: payload.pendingCourses ?? 0,
         avgSession: payload.avgSession ?? 'N/A',
-        courseCompletion: payload.courseCompletion ?? 0,
         weeklyCompletionGrowth: payload.weeklyCompletionGrowth ?? 0,
         approvalWorkload: {
           pendingApplications: payload.approvalWorkload?.pendingApplications ?? payload.pendingApplications ?? 0,
@@ -1378,28 +1364,6 @@ export default {
   letter-spacing: 0.07em !important;
   font-size: clamp(0.59rem, 0.65vw, 0.64rem) !important;
   line-height: 1.25 !important;
-}
-
-.analytics-footer {
-  margin-top: clamp(0.4rem, 0.7vw, 0.55rem) !important;
-  padding-top: clamp(0.4rem, 0.7vw, 0.55rem) !important;
-  font-size: clamp(0.61rem, 0.7vw, 0.67rem) !important;
-  line-height: 1.3 !important;
-}
-
-.analytics-footer--split {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.analytics-footer span {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 0.35rem;
-}
-
-.analytics-footer i {
-  margin-top: 0.1rem;
 }
 
 .analytics-icon {
@@ -2036,17 +2000,6 @@ export default {
   .analytics-label {
     font-size: 0.64rem !important;
     line-height: 1.25 !important;
-  }
-
-  .analytics-footer {
-    margin-top: 0.55rem !important;
-    padding-top: 0.55rem !important;
-    font-size: 0.64rem !important;
-    line-height: 1.3 !important;
-  }
-
-  .analytics-footer span {
-    gap: 0.35rem;
   }
 
   .funnel-metrics {
