@@ -133,7 +133,7 @@
         </div>
 
         <!-- User Filters -->
-        <section class="user-filters section-card fade-in" style="animation-delay: 0.2s">
+        <section class="user-filters section-card fade-in" style="animation-delay: 0.2s; border-color: #69aa47 !important;">
           <div class="filter-row">
             <div class="filter-group">
               <label for="roleFilter"><i class="fas fa-user-tag"></i> Role</label>
@@ -187,7 +187,7 @@
         </section>
 
         <!-- Users Table -->
-        <section class="users-table-section section-card fade-in" style="animation-delay: 0.3s">
+        <section class="users-table-section section-card fade-in" style="animation-delay: 0.3s; border-color: #69aa47 !important;">
           <div class="table-header">
             <div class="table-info">
               <h3>Users List</h3>
