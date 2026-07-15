@@ -1148,18 +1148,23 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 40px;
   padding: 10px 16px;
-  background: #111111 !important;
-  border: 1px solid #111111 !important;
+  background: #1e4307 !important;
+  border: 1px solid #1e4307 !important;
   border-radius: 11px;
   color: #ffffff !important;
   background-image: none !important;
-  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 2px 5px rgba(30, 67, 7, 0.22);
 }
 
 .profile-actions .btn-primary:hover {
-  background: #1f2937 !important;
-  border-color: #1f2937 !important;
-  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.2);
+  background: #173405 !important;
+  border-color: #173405 !important;
+  box-shadow: 0 4px 8px rgba(23, 52, 5, 0.24);
+}
+
+.profile-actions .btn-primary .student-profile-edit-icon {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .profile-actions .btn-outline {

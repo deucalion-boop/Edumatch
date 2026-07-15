@@ -2432,7 +2432,9 @@ onBeforeUnmount(() => {
 }
 
 .builder-main {
-  border: 1px solid var(--border-color);
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
   padding: 0.75rem;
 }
 
@@ -2447,6 +2449,13 @@ onBeforeUnmount(() => {
   box-shadow: none;
   border: 1px solid var(--border-color);
   padding: 0.85rem;
+}
+
+#lessonPanel,
+#challengePanel {
+  border-color: transparent;
+  background: linear-gradient(rgb(255, 255, 255) 0%, rgb(255, 255, 255) 100%) padding-box,
+    linear-gradient(135deg, rgb(139, 198, 106) 0%, rgb(216, 237, 204) 48%, rgb(169, 213, 143) 100%) border-box !important;
 }
 
 .panel-header {
@@ -3155,9 +3164,14 @@ onBeforeUnmount(() => {
 
 .wizard-progress li.active .wizard-step-marker,
 .wizard-progress li.completed .wizard-step-marker {
-  border-color: #69aa47;
-  background: #69aa47;
+  border-color: #1e4307;
+  background: #1e4307;
   color: #ffffff;
+}
+
+.wizard-progress li.completed .wizard-step-marker i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .wizard-progress li.active .wizard-step-marker {
@@ -3181,16 +3195,21 @@ onBeforeUnmount(() => {
 }
 
 .builder-main .btn-primary {
-  border-color: #69aa47 !important;
-  background: #69aa47 !important;
+  border-color: #1e4307 !important;
+  background: #1e4307 !important;
   background-image: none !important;
   color: #ffffff !important;
 }
 
 .builder-main .btn-primary:hover:not(:disabled) {
-  border-color: #5b9b3c !important;
-  background: #5b9b3c !important;
+  border-color: #173405 !important;
+  background: #173405 !important;
   transform: translateY(-1px);
+}
+
+.builder-main .btn-primary i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .builder-main .btn-primary:disabled {

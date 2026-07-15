@@ -3238,16 +3238,17 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
   gap: 0.75rem;
   padding: 0.9rem;
   overflow: hidden;
-  border: 1px solid #e2e8df;
+  border: 1px solid transparent;
   border-radius: 17px;
-  background: #ffffff;
+  background: linear-gradient(rgb(255, 255, 255) 0%, rgb(255, 255, 255) 100%) padding-box,
+    linear-gradient(135deg, rgb(139, 198, 106) 0%, rgb(216, 237, 204) 48%, rgb(169, 213, 143) 100%) border-box;
   box-shadow: 0 9px 24px rgba(15, 23, 42, 0.055);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .student-kpi-card:hover {
   transform: translateY(-2px);
-  border-color: #c9dfbb;
+  border-color: transparent;
   box-shadow: 0 15px 30px rgba(30, 67, 7, 0.1);
 }
 
@@ -3327,6 +3328,13 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.student-management-grid > .dashboard-panel,
+.section-card.student-list-panel {
+  border-color: transparent !important;
+  background: linear-gradient(rgb(255, 255, 255) 0%, rgb(255, 255, 255) 100%) padding-box,
+    linear-gradient(135deg, rgb(139, 198, 106) 0%, rgb(216, 237, 204) 48%, rgb(169, 213, 143) 100%) border-box !important;
 }
 
 .dashboard-panel-header,
@@ -3682,11 +3690,11 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
 
 .class-management-controls .create-class-btn {
   min-height: 38px;
-  border-color: #69aa47 !important;
-  background: #69aa47 !important;
+  border-color: #1e4307 !important;
+  background: #1e4307 !important;
   background-image: none !important;
   color: #ffffff !important;
-  box-shadow: 0 10px 22px rgba(105, 170, 71, 0.22);
+  box-shadow: 0 10px 22px rgba(30, 67, 7, 0.22);
   transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -3696,10 +3704,10 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
 }
 
 .class-management-controls .create-class-btn:hover:not(:disabled) {
-  border-color: #5b9b3c !important;
-  background: #5b9b3c !important;
+  border-color: #173405 !important;
+  background: #173405 !important;
   transform: translateY(-2px);
-  box-shadow: 0 14px 26px rgba(91, 155, 60, 0.27);
+  box-shadow: 0 14px 26px rgba(23, 52, 5, 0.27);
 }
 
 .class-management-controls .create-class-btn:disabled {
@@ -4104,30 +4112,32 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
 
   .student-kpi-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    gap: 0.7rem;
+    margin-bottom: 0.75rem;
   }
 
   .student-kpi-card {
-    gap: 0.5rem;
-    padding: 0.4rem 0.55rem;
-    border-radius: 12px;
+    min-height: 78px;
+    gap: 0.7rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 15px;
   }
 
   .student-kpi-icon {
-    width: 30px;
-    height: 30px;
-    flex-basis: 30px;
-    border-radius: 9px;
-    font-size: 0.78rem;
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+    border-radius: 11px;
+    font-size: 0.9rem;
   }
 
   .student-kpi-card strong {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
   }
 
   .student-kpi-card small {
-    display: none;
+    display: block;
+    font-size: 0.62rem;
   }
 
   .student-management-grid {

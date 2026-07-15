@@ -701,6 +701,8 @@
             v-if="attendanceMessage"
             class="attendance-feedback"
             :class="attendanceMessageType === 'error' ? 'attendance-feedback-error' : 'attendance-feedback-success'"
+            role="alert"
+            aria-live="polite"
           >
             {{ attendanceMessage }}
           </p>
@@ -2978,6 +2980,12 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 44px rgba(15, 23, 42, 0.05);
 }
 
+#teacherRecordsAttendancePanel {
+  border-color: transparent !important;
+  background: linear-gradient(rgb(255, 255, 255) 0%, rgb(255, 255, 255) 100%) padding-box,
+    linear-gradient(135deg, rgb(139, 198, 106) 0%, rgb(216, 237, 204) 48%, rgb(169, 213, 143) 100%) border-box !important;
+}
+
 .records-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -4830,11 +4838,21 @@ onBeforeUnmount(() => {
 }
 
 .attendance-feedback {
-  margin: 0 0 1.1rem;
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  z-index: 1400;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  margin: 0;
   padding: 0.85rem 1rem;
   border-radius: 14px;
   font-size: 0.88rem;
   font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.2);
+  transform: translateX(-50%);
 }
 
 .attendance-feedback-success {
@@ -5995,14 +6013,24 @@ onBeforeUnmount(() => {
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
 }
 
-.attendance-scope-btn.active,
+.attendance-scope-btn.active {
+  background: #1e4307;
+  border-color: #1e4307;
+  color: #ffffff;
+}
+
+.attendance-scope-btn.active i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 .attendance-date-chip.active {
   background: rgba(187, 255, 89, 0.22);
   border-color: #bbff59;
   color: #1e4307;
 }
 
-.attendance-scope-btn:hover:not(:disabled),
+.attendance-scope-btn:hover:not(:disabled):not(.active),
 .attendance-date-chip:hover,
 .attendance-bulk-btn:hover:not(:disabled),
 .attendance-clear-filters-btn:hover {
@@ -6018,9 +6046,10 @@ onBeforeUnmount(() => {
 }
 
 .attendance-save-btn {
-  background: #111111;
-  border-color: #111111;
+  background: #1e4307;
+  border-color: #1e4307;
   color: #ffffff;
+  box-shadow: 0 10px 22px rgba(30, 67, 7, 0.22);
 }
 
 .attendance-lock-btn {
@@ -6041,8 +6070,9 @@ onBeforeUnmount(() => {
 }
 
 .attendance-toolbar-actions .attendance-save-btn:not(:disabled):hover {
-  background: #ffffff;
-  color: #111111;
+  background: #173405;
+  border-color: #173405;
+  color: #ffffff;
 }
 
 .attendance-toolbar-actions .pagination-btn:focus-visible {
@@ -6058,11 +6088,11 @@ onBeforeUnmount(() => {
 .attendance-toolbar-actions .attendance-load-btn:not(:disabled):hover i,
 .attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover i {
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .attendance-toolbar-actions .attendance-load-btn i,
-.attendance-toolbar-actions .attendance-lock-btn i,
-.attendance-toolbar-actions .attendance-save-btn:not(:disabled):hover i {
+.attendance-toolbar-actions .attendance-lock-btn i {
   color: #111111 !important;
 }
 
