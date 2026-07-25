@@ -1,10 +1,17 @@
-require('dotenv').config({ path: ['.env.local', '.env'] });
+const path = require('path');
+
+require('dotenv').config({
+  path: [
+    path.resolve(__dirname, '.env'),
+    path.resolve(__dirname, '.env.local'),
+  ],
+  quiet: true,
+});
 
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 const fs = require('fs');
 const { connectDatabase } = require('./config/database');
 const User = require('./models/User');
