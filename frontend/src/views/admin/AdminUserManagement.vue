@@ -689,12 +689,15 @@
           <form id="editUserForm" class="edit-form" @submit.prevent="saveUserEdit">
             <input type="hidden" id="editUserId" v-model="editUserData.id">
 
-            <div class="form-section">
-              <div class="form-section-title">
-                <i class="fas fa-info-circle"></i>
-                Basic Information
+            <div class="form-section form-section--identity">
+              <div class="form-section-heading">
+                <span class="form-section-icon"><i class="fas fa-id-card" aria-hidden="true"></i></span>
+                <div>
+                  <div class="form-section-title">Basic information</div>
+                  <p>Update the user’s identity and contact details.</p>
+                </div>
               </div>
-              <div class="form-group">
+              <div class="form-group form-group--avatar">
                 <label for="editProfileImage">Profile Picture</label>
                 <div class="edit-avatar-field">
                   <div class="edit-avatar-preview">
@@ -718,58 +721,65 @@
                   </div>
                 </div>
               </div>
-              <div class="form-group">
-                <label for="editFullName">Full Name</label>
-                <input type="text" id="editFullName" v-model="editUserData.fullName" required>
-              </div>
-              <div class="form-group">
-                <label for="editEmail">Email Address</label>
-                <input type="email" id="editEmail" v-model="editUserData.email" required>
-              </div>
-              <div class="form-group">
-                <label for="editUsername">Username</label>
-                <input type="text" id="editUsername" v-model="editUserData.username">
-              </div>
-              <div class="form-group">
-                <label for="editContactNumber">Contact Number</label>
-                <input
-                  type="tel"
-                  id="editContactNumber"
-                  v-model.trim="editUserData.contactNumber"
-                  placeholder="+63 912 345 6789"
-                >
+              <div class="form-fields-grid">
+                <div class="form-group">
+                  <label for="editFullName">Full Name</label>
+                  <input type="text" id="editFullName" v-model="editUserData.fullName" required>
+                </div>
+                <div class="form-group">
+                  <label for="editEmail">Email Address</label>
+                  <input type="email" id="editEmail" v-model="editUserData.email" required>
+                </div>
+                <div class="form-group">
+                  <label for="editUsername">Username</label>
+                  <input type="text" id="editUsername" v-model="editUserData.username">
+                </div>
+                <div class="form-group">
+                  <label for="editContactNumber">Contact Number</label>
+                  <input
+                    type="tel"
+                    id="editContactNumber"
+                    v-model.trim="editUserData.contactNumber"
+                    placeholder="+63 912 345 6789"
+                  >
+                </div>
               </div>
             </div>
 
-            <div class="form-section">
-              <div class="form-section-title">
-                <i class="fas fa-shield-alt"></i>
-                Account Settings
+            <div class="form-section form-section--account">
+              <div class="form-section-heading">
+                <span class="form-section-icon"><i class="fas fa-shield-alt" aria-hidden="true"></i></span>
+                <div>
+                  <div class="form-section-title">Account settings</div>
+                  <p>Control access, assignment, and account availability.</p>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="editRole">User Role</label>
-                <select id="editRole" v-model="editUserData.role" @change="onEditRoleChange">
-                  <option value="secretary">Secretary</option>
-                  <option value="headteacher">HeadTeacher</option>
-                </select>
-              </div>
-              <div v-if="editUserData.role === 'headteacher'" class="form-group">
-                <label for="editDepartment">Department</label>
-                <select id="editDepartment" v-model="editUserData.department">
-                  <option value="" disabled>Select Department</option>
-                  <option v-for="department in departmentOptions" :key="department" :value="department">
-                    {{ department }}
-                  </option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="editStatus">Account Status</label>
-                <select id="editStatus" v-model="editUserData.status">
-                  <option value="pending">Pending</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="suspended">Suspended</option>
-                </select>
+              <div class="form-fields-grid">
+                <div class="form-group">
+                  <label for="editRole">User Role</label>
+                  <select id="editRole" v-model="editUserData.role" @change="onEditRoleChange">
+                    <option value="secretary">Secretary</option>
+                    <option value="headteacher">Headteacher</option>
+                  </select>
+                </div>
+                <div v-if="editUserData.role === 'headteacher'" class="form-group">
+                  <label for="editDepartment">Department</label>
+                  <select id="editDepartment" v-model="editUserData.department">
+                    <option value="" disabled>Select Department</option>
+                    <option v-for="department in departmentOptions" :key="department" :value="department">
+                      {{ department }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="editStatus">Account Status</label>
+                  <select id="editStatus" v-model="editUserData.status">
+                    <option value="pending">Pending</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
               </div>
             </div>
           </form>
@@ -807,6 +817,10 @@
                 </div>
                 <div class="profile-title">
                   <h2 class="profile-name">{{ selectedUser.name }}</h2>
+                  <p class="profile-email">
+                    <i class="fas fa-envelope" aria-hidden="true"></i>
+                    <span>{{ selectedUser.email || 'No email provided' }}</span>
+                  </p>
                   <div class="profile-meta-line">
                     <span class="profile-meta-strand">
                       {{ selectedUser.role === 'teacher' ? (selectedUser.subject || selectedUser.strand || 'TEACHER') : capitalize(selectedUser.role) }}
@@ -821,77 +835,77 @@
               
               <div class="profile-info-grid">
                 <div class="info-section">
-                  <h4>User Information</h4>
-                  <div class="info-item">
-                    <span class="info-label">Full Name:</span>
-                    <span class="info-value">{{ selectedUser.name || 'N/A' }}</span>
-                  </div>
-                  <div class="info-item">
-                    <span class="info-label">Email:</span>
+                  <h4>
+                    <span class="info-section-icon"><i class="fas fa-address-card" aria-hidden="true"></i></span>
+                    Contact information
+                  </h4>
+                  <div class="info-item info-item--wide">
+                    <span class="info-label">Email address</span>
                     <span class="info-value">{{ selectedUser.email || 'N/A' }}</span>
                   </div>
                   <div v-if="['teacher', 'headteacher', 'secretary'].includes(selectedUser.role)" class="info-item">
-                    <span class="info-label">Username:</span>
+                    <span class="info-label">Username</span>
                     <span class="info-value">{{ selectedUser.username || 'N/A' }}</span>
                   </div>
                   <div class="info-item">
-                    <span class="info-label">Role:</span>
-                    <span class="info-value">{{ capitalize(selectedUser.role) || 'N/A' }}</span>
-                  </div>
-                  <div class="info-item">
-                    <span class="info-label">Contact Number:</span>
+                    <span class="info-label">Contact number</span>
                     <span class="info-value">{{ selectedUser.contactNumber || 'N/A' }}</span>
                   </div>
                 </div>
                 
                 <div class="info-section">
-                  <h4>Account Details</h4>
-                  <div v-if="selectedUser.role === 'headteacher'" class="info-item">
-                    <span class="info-label">Department:</span>
+                  <h4>
+                    <span class="info-section-icon"><i class="fas fa-user-clock" aria-hidden="true"></i></span>
+                    Account activity
+                  </h4>
+                  <div v-if="selectedUser.role === 'headteacher'" class="info-item info-item--wide">
+                    <span class="info-label">Department</span>
                     <span class="info-value">{{ selectedUser.department || 'N/A' }}</span>
                   </div>
-                  <div v-if="selectedUser.role === 'teacher'" class="info-item">
-                    <span class="info-label">Subject:</span>
+                  <div v-if="selectedUser.role === 'teacher'" class="info-item info-item--wide">
+                    <span class="info-label">Subject</span>
                     <span class="info-value">{{ selectedUser.subject || 'N/A' }}</span>
                   </div>
                   <div class="info-item">
-                    <span class="info-label">Status:</span>
-                    <span class="status-badge" :class="selectedUser.status">{{ capitalize(selectedUser.status) }}</span>
-                  </div>
-                  <div class="info-item">
-                    <span class="info-label">Joined:</span>
+                    <span class="info-label">Joined</span>
                     <span class="info-value">{{ formatDate(selectedUser.createdAt) }}</span>
                   </div>
                   <div class="info-item">
-                    <span class="info-label">Last Active:</span>
+                    <span class="info-label">Last active</span>
                     <span class="info-value">{{ getLastActive(selectedUser.lastActive) }}</span>
                   </div>
                 </div>
                 
                 <div v-if="selectedUser.role === 'student'" class="info-section">
-                  <h4>Learning Stats</h4>
-                  <div class="info-item">
-                    <span class="info-label">Enrolled Track:</span>
+                  <h4>
+                    <span class="info-section-icon"><i class="fas fa-graduation-cap" aria-hidden="true"></i></span>
+                    Learning summary
+                  </h4>
+                  <div class="info-item info-item--wide">
+                    <span class="info-label">Enrolled track</span>
                     <span class="info-value">{{ selectedUser.enrolledTrack || 'N/A' }}</span>
                   </div>
                   <div class="info-item">
-                    <span class="info-label">Completed:</span>
+                    <span class="info-label">Completed</span>
                     <span class="info-value">{{ selectedUser.coursesCompleted || 0 }}</span>
                   </div>
                   <div class="info-item">
-                    <span class="info-label">Completion Rate:</span>
+                    <span class="info-label">Completion rate</span>
                     <span class="info-value">{{ selectedUser.completionRate || 0 }}%</span>
                   </div>
                 </div>
                 
                 <div v-if="selectedUser.role === 'teacher'" class="info-section">
-                  <h4>Teaching Stats</h4>
+                  <h4>
+                    <span class="info-section-icon"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
+                    Teaching summary
+                  </h4>
                   <div class="info-item">
-                    <span class="info-label">Lessons Created:</span>
+                    <span class="info-label">Lessons created</span>
                     <span class="info-value">{{ selectedUser.lessonsCreated || 0 }}</span>
                   </div>
                   <div class="info-item">
-                    <span class="info-label">Students:</span>
+                    <span class="info-label">Students</span>
                     <span class="info-value">{{ selectedUser.students || 0 }}</span>
                   </div>
                 </div>
@@ -1210,7 +1224,7 @@
     </div>
 
     <!-- Send Message Modal -->
-    <div class="modal" :class="{ active: modals.sendMessage }">
+    <div class="modal message-modal" :class="{ active: modals.sendMessage }">
       <div class="modal-overlay" @click="closeSendMessageModal"></div>
       <div class="modal-content">
         <div class="modal-header">
@@ -1223,38 +1237,63 @@
           <form id="messageForm" class="message-form" @submit.prevent="sendMessageToUser">
             <input type="hidden" id="messageUserId" v-model="messageData.userId">
             <div class="message-recipient">
-              <span style="font-weight: 600; color: #1e293b;">To:</span>
-              <span id="recipientName">{{ selectedUser ? selectedUser.name : '' }}</span>
+              <div class="message-recipient-avatar">
+                <img
+                  v-if="selectedUser?.avatar"
+                  :src="selectedUser.avatar"
+                  :alt="selectedUser.name"
+                >
+                <div v-else class="avatar-placeholder" :class="selectedUser?.role || 'student'">
+                  {{ getInitials(selectedUser?.name || 'User') }}
+                </div>
+              </div>
+              <div class="message-recipient-copy">
+                <span class="message-recipient-label">Sending to</span>
+                <strong id="recipientName">{{ selectedUser ? selectedUser.name : '' }}</strong>
+                <span>{{ selectedUser?.email || 'In-app user' }}</span>
+              </div>
+              <span class="message-recipient-check" aria-label="Recipient selected">
+                <i class="fas fa-check" aria-hidden="true"></i>
+              </span>
             </div>
-            <div class="form-group">
-              <label for="messageSubject">Subject</label>
-              <input 
-                type="text" 
-                id="messageSubject" 
-                v-model="messageData.subject"
-                placeholder="Enter message subject" 
-                required
-              >
-            </div>
-            <div class="form-group">
-              <label for="messageContent">Message</label>
-              <textarea 
-                id="messageContent" 
-                v-model="messageData.content"
-                placeholder="Type your message here..." 
-                required
-              ></textarea>
+            <div class="message-compose-card">
+              <div class="form-group">
+                <label for="messageSubject">Subject</label>
+                <input 
+                  type="text" 
+                  id="messageSubject" 
+                  v-model="messageData.subject"
+                  placeholder="Enter message subject" 
+                  required
+                >
+              </div>
+              <div class="form-group">
+                <label for="messageContent">Message</label>
+                <textarea 
+                  id="messageContent" 
+                  v-model="messageData.content"
+                  placeholder="Write a clear message..."
+                  required
+                ></textarea>
+              </div>
             </div>
             <div class="message-options">
-              <label class="checkbox-label">
+              <span class="message-options-title">Delivery options</span>
+              <label class="checkbox-label message-option-card">
                 <input type="checkbox" v-model="messageData.sendEmail">
                 <span class="checkmark"></span>
-                Send as email too
+                <span class="message-option-copy">
+                  <strong>Send as email too</strong>
+                  <small>Deliver a copy to the user’s email address.</small>
+                </span>
               </label>
-              <label class="checkbox-label">
+              <label class="checkbox-label message-option-card">
                 <input type="checkbox" v-model="messageData.urgent">
                 <span class="checkmark"></span>
-                Mark as urgent
+                <span class="message-option-copy">
+                  <strong>Mark as urgent</strong>
+                  <small>Highlight this message for faster attention.</small>
+                </span>
               </label>
             </div>
           </form>
@@ -4859,24 +4898,301 @@ body.admin-dashboard .users-table-section .pagination {
   padding: 0.75rem 1.1rem 0.95rem;
 }
 
-.edit-user-btn,
-.edit-user-btn:hover,
-.edit-user-btn:focus,
-.edit-user-btn:active {
-  background: #000000 !important;
+body.admin-dashboard .btn.btn-primary.edit-user-btn {
+  background: #4f8a35 !important;
   background-image: none !important;
-  border-color: #000000 !important;
+  border-color: #4f8a35 !important;
   color: #ffffff !important;
-  box-shadow: none !important;
+  box-shadow: 0 6px 14px rgba(79, 138, 53, 0.2) !important;
 }
 
-.edit-user-btn i {
+body.admin-dashboard .btn.btn-primary.edit-user-btn:hover,
+body.admin-dashboard .btn.btn-primary.edit-user-btn:focus {
+  background: #477d30 !important;
+  background-image: none !important;
+  border-color: #477d30 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(79, 138, 53, 0.26) !important;
+}
+
+body.admin-dashboard .btn.btn-primary.edit-user-btn:active {
+  background: #3f702a !important;
+  background-image: none !important;
+  border-color: #3f702a !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 8px rgba(79, 138, 53, 0.22) !important;
+}
+
+body.admin-dashboard .btn.btn-primary.edit-user-btn i {
   color: #ffffff !important;
 }
 
-.send-message-btn,
-.send-message-btn i {
-  color: #000000 !important;
+.modal.message-modal .modal-content {
+  width: min(680px, 94vw);
+  max-width: 680px;
+  max-height: min(92vh, 820px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal.message-modal .modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 1.1rem;
+}
+
+.modal.message-modal .message-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.modal.message-modal .message-recipient {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.85rem;
+  border: 1px solid #d8e7d1;
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 92% 20%, rgba(105, 170, 71, 0.14), transparent 32%),
+    #f7faf5;
+}
+
+.modal.message-modal .message-recipient-avatar {
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #e8f0e4;
+  box-shadow: 0 5px 12px rgba(49, 95, 35, 0.14);
+}
+
+.modal.message-modal .message-recipient-avatar img,
+.modal.message-modal .message-recipient-avatar .avatar-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  border-radius: 50% !important;
+  object-fit: cover;
+}
+
+.modal.message-modal .message-recipient-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.modal.message-modal .message-recipient-label {
+  color: #5d7960;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.modal.message-modal .message-recipient-copy strong {
+  overflow: hidden;
+  color: #172033;
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal.message-modal .message-recipient-copy > span:last-child {
+  overflow: hidden;
+  color: #718096;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal.message-modal .message-recipient-check {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: #4f8a35;
+  color: #ffffff;
+  font-size: 0.7rem;
+}
+
+.modal.message-modal .message-compose-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid #e1e8ee;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.04);
+}
+
+.modal.message-modal .form-group {
+  margin: 0;
+}
+
+.modal.message-modal .form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.modal.message-modal .form-group input,
+.modal.message-modal .form-group textarea {
+  width: 100%;
+  border: 1px solid #dce3ea;
+  border-radius: 11px;
+  background: #f9fafb;
+  color: #172033;
+  font-size: 0.88rem;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.modal.message-modal .form-group input {
+  min-height: 44px;
+  padding: 0.7rem 0.85rem;
+}
+
+.modal.message-modal .form-group textarea {
+  min-height: 170px;
+  max-height: 320px;
+  padding: 0.8rem 0.85rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.modal.message-modal .form-group input:focus,
+.modal.message-modal .form-group textarea:focus {
+  border-color: #69aa47;
+  outline: none;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(105, 170, 71, 0.14);
+}
+
+.modal.message-modal .message-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.modal.message-modal .message-options-title {
+  grid-column: 1 / -1;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.modal.message-modal .message-option-card {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 0.65rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid #e1e8ee;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #334155;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.modal.message-modal .message-option-card:hover {
+  border-color: #bdd6b1;
+  background: #f7faf5;
+}
+
+.modal.message-modal .message-option-card .checkmark {
+  margin-top: 0.1rem;
+  border-color: #a8b5c3;
+  border-radius: 6px;
+}
+
+.modal.message-modal .message-option-card input:checked + .checkmark {
+  border-color: #4f8a35;
+  background: #edf7e9;
+}
+
+.modal.message-modal .message-option-card .checkmark::after {
+  background: #4f8a35;
+}
+
+.modal.message-modal .message-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+
+.modal.message-modal .message-option-copy strong {
+  color: #334155;
+  font-size: 0.78rem;
+}
+
+.modal.message-modal .message-option-copy small {
+  color: #7b8797;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.modal.message-modal .modal-actions {
+  justify-content: flex-end;
+  padding: 0.8rem 1.1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+body.admin-dashboard .modal.message-modal .btn.btn-primary.send-message-btn {
+  min-width: 150px;
+  background: #4f8a35 !important;
+  background-image: none !important;
+  border-color: #4f8a35 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 14px rgba(79, 138, 53, 0.22) !important;
+}
+
+body.admin-dashboard .modal.message-modal .btn.btn-primary.send-message-btn:hover,
+body.admin-dashboard .modal.message-modal .btn.btn-primary.send-message-btn:focus {
+  background: #477d30 !important;
+  border-color: #477d30 !important;
+  color: #ffffff !important;
+}
+
+body.admin-dashboard .modal.message-modal .send-message-btn i {
+  color: #ffffff !important;
+}
+
+@media (max-width: 600px) {
+  .modal.message-modal .modal-content {
+    width: 96vw;
+    max-height: 92vh;
+  }
+
+  .modal.message-modal .modal-body {
+    padding: 0.85rem;
+  }
+
+  .modal.message-modal .message-options {
+    grid-template-columns: 1fr;
+  }
+
+  .modal.message-modal .message-option-card {
+    grid-column: 1;
+  }
+
+  .modal.message-modal .modal-actions {
+    padding: 0.7rem 0.85rem;
+  }
 }
 
 .modal.new-user-modal .modal-content {
@@ -5039,8 +5355,8 @@ body.admin-dashboard .users-table-section .pagination {
 }
 
 .modal.edit-user-modal .modal-content {
-  width: min(900px, 94vw);
-  max-width: 900px;
+  width: min(980px, 94vw);
+  max-width: 980px;
   height: min(94vh, 860px);
   max-height: min(94vh, 860px);
   display: flex;
@@ -5050,59 +5366,122 @@ body.admin-dashboard .users-table-section .pagination {
 
 .modal.edit-user-modal .modal-body {
   flex: 1 1 auto;
-  overflow: hidden;
-  padding: 0.9rem 1.1rem 0.6rem;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 1.1rem;
 }
 
 .modal.edit-user-modal .edit-form {
-  height: 100%;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem 0.95rem;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.75fr);
+  gap: 1rem;
   align-content: start;
 }
 
 .modal.edit-user-modal .form-section {
+  min-width: 0;
   margin: 0;
-  padding: 0.8rem 0.85rem;
+  padding: 1rem;
+  border: 1px solid #e1e8ee;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.045);
+}
+
+.modal.edit-user-modal .form-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.modal.edit-user-modal .form-section-icon {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: #edf7e9;
+  color: #477d30;
+  font-size: 0.82rem;
 }
 
 .modal.edit-user-modal .form-section-title {
-  margin-bottom: 0.55rem;
+  margin: 0;
+  color: #172033;
+  font-size: 0.95rem;
+  font-weight: 750 !important;
+  line-height: 1.3;
+}
+
+.modal.edit-user-modal .form-section-heading p {
+  margin: 0.2rem 0 0;
+  color: #718096;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.modal.edit-user-modal .form-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.modal.edit-user-modal .form-section--account .form-fields-grid {
+  grid-template-columns: 1fr;
 }
 
 .modal.edit-user-modal .form-group {
-  margin-bottom: 0.55rem;
+  min-width: 0;
+  margin: 0;
 }
 
-.modal.edit-user-modal .form-group:last-child {
-  margin-bottom: 0;
+.modal.edit-user-modal .form-group label {
+  margin-bottom: 0.4rem;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.modal.edit-user-modal .form-group--avatar {
+  margin-bottom: 1rem;
 }
 
 .modal.edit-user-modal .edit-avatar-field {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px dashed #cbd8c5;
+  border-radius: 14px;
+  background: #f7faf5;
 }
 
 .modal.edit-user-modal .edit-avatar-preview {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
   overflow: hidden;
-  border: 1px solid #dbe2ea;
-  background: #f8fafc;
-  flex: 0 0 40px;
+  border: 3px solid #ffffff;
+  background: #edf2ea;
+  box-shadow: 0 6px 16px rgba(49, 95, 35, 0.16);
+  flex: 0 0 68px;
 }
 
 .modal.edit-user-modal .edit-avatar-preview img,
 .modal.edit-user-modal .edit-avatar-preview .avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  min-width: 100%;
-  min-height: 100%;
-  max-width: 100%;
-  max-height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  border-radius: 50% !important;
 }
 
 .modal.edit-user-modal .edit-avatar-preview img {
@@ -5114,59 +5493,111 @@ body.admin-dashboard .users-table-section .pagination {
 .modal.edit-user-modal .edit-avatar-controls {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .modal.edit-user-modal .edit-avatar-controls input[type="file"] {
-  font-size: 0.78rem;
+  width: 100%;
+  min-height: auto;
+  padding: 0.3rem;
+  border: 1px solid #dce5d7;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.modal.edit-user-modal .edit-avatar-controls input[type="file"]::file-selector-button {
+  margin-right: 0.65rem;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: 8px;
+  background: #4f8a35;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .modal.edit-user-modal .edit-avatar-controls small {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: #64748b;
+  line-height: 1.4;
 }
 
 .modal.edit-user-modal .form-group input,
 .modal.edit-user-modal .form-group select {
-  min-height: 40px;
+  min-height: 44px;
+  border: 1px solid #dce3ea;
+  border-radius: 11px;
+  background: #f9fafb;
+  color: #172033;
+  font-size: 0.86rem;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.modal.edit-user-modal .form-group input:focus,
+.modal.edit-user-modal .form-group select:focus {
+  border-color: #69aa47;
+  outline: none;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(105, 170, 71, 0.14);
 }
 
 .modal.edit-user-modal .modal-actions {
   margin-top: auto;
-  padding: 0.75rem 1.1rem 0.95rem;
+  justify-content: flex-end;
+  padding: 0.8rem 1.1rem;
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
 }
 
+body.admin-dashboard .modal.edit-user-modal .modal-actions .btn-success {
+  min-width: 150px;
+  background: #4f8a35 !important;
+  background-image: none !important;
+  border-color: #4f8a35 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 14px rgba(79, 138, 53, 0.22) !important;
+}
+
+body.admin-dashboard .modal.edit-user-modal .modal-actions .btn-success:hover,
+body.admin-dashboard .modal.edit-user-modal .modal-actions .btn-success:focus {
+  background: #477d30 !important;
+  border-color: #477d30 !important;
+}
+
 #profileContent .profile-details--refined {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  gap: 1.1rem;
 }
 
 #profileContent .profile-details--refined .profile-header {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-columns: 76px minmax(0, 1fr);
   align-items: center;
-  gap: 0.9rem;
-  padding: 1rem 1.05rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 65%, #f1f5f9 100%);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  gap: 1rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid #dce9d6;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 15%, rgba(105, 170, 71, 0.16), transparent 34%),
+    linear-gradient(145deg, #ffffff 0%, #f6faf3 100%);
+  box-shadow: 0 10px 28px rgba(49, 95, 35, 0.08);
   width: 100%;
   max-width: 100%;
 }
 
 #profileContent .profile-details--refined .profile-header .profile-avatar.large {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
-  border-radius: 999px;
-  border: 1px solid #ffffff;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+  width: 68px;
+  height: 68px;
+  min-width: 68px;
+  min-height: 68px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow: 0 8px 18px rgba(49, 95, 35, 0.18);
   overflow: hidden;
 }
 
@@ -5182,10 +5613,18 @@ body.admin-dashboard .users-table-section .pagination {
 }
 
 #profileContent .profile-details--refined .profile-header .profile-avatar.large .avatar-placeholder.large {
-  background: linear-gradient(145deg, #334155, #1e293b);
-  color: #f8fafc;
-  font-size: 1rem;
-  font-weight: 500;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 1 / 1;
+  border-radius: 50% !important;
+  background: linear-gradient(145deg, #5b9840, #3f742c);
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 750;
   display: grid;
   place-items: center;
 }
@@ -5198,16 +5637,37 @@ body.admin-dashboard .users-table-section .pagination {
 
 #profileContent .profile-details--refined .profile-name {
   margin: 0;
-  font-size: 1.35rem;
-  font-weight: 500;
+  font-size: 1.45rem;
+  font-weight: 750;
   line-height: 1.2;
   color: #0f172a;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
   text-align: left;
 }
 
+#profileContent .profile-details--refined .profile-email {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+#profileContent .profile-details--refined .profile-email i {
+  flex: 0 0 auto;
+  color: #5b9840;
+  font-size: 0.75rem;
+}
+
+#profileContent .profile-details--refined .profile-email span {
+  overflow-wrap: anywhere;
+}
+
 #profileContent .profile-details--refined .profile-meta-line {
-  margin-top: 0.3rem;
+  margin-top: 0.65rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -5218,12 +5678,12 @@ body.admin-dashboard .users-table-section .pagination {
 }
 
 #profileContent .profile-details--refined .profile-meta-strand {
-  color: #1e293b;
-  font-weight: 500;
+  color: #315f23;
+  font-weight: 750;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  background: #eef2ff;
-  border: 1px solid #dbe4ff;
+  background: #edf7e9;
+  border: 1px solid #cce2c2;
   border-radius: 999px;
   padding: 0.3rem 0.6rem;
 }
@@ -5303,54 +5763,79 @@ body.admin-dashboard .users-table-section .pagination {
 #profileContent .profile-details--refined .profile-info-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.95rem;
+  align-items: start;
+  gap: 1rem;
 }
 
 #profileContent .profile-details--refined .info-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  border-radius: 16px;
   background: #ffffff;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.045);
 }
 
 #profileContent .profile-details--refined .info-section h4 {
-  margin: 0 0 0.8rem;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.2rem;
   color: #0f172a;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 750;
   letter-spacing: 0.01em;
-  padding-bottom: 0.45rem;
-  border-bottom: 1px solid #edf2f7;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #edf1f5;
+}
+
+#profileContent .profile-details--refined .info-section-icon {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border-radius: 9px;
+  background: #edf7e9;
+  color: #477d30;
+  font-size: 0.78rem;
 }
 
 #profileContent .profile-details--refined .info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px dashed #e2e8f0;
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  min-width: 0;
+  min-height: 72px;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid #e7ecf1;
+  border-radius: 12px;
+  background: #f8fafc;
 }
 
-#profileContent .profile-details--refined .info-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+#profileContent .profile-details--refined .info-item--wide {
+  grid-column: 1 / -1;
 }
 
 #profileContent .profile-details--refined .info-label {
-  color: #64748b;
-  font-weight: 500;
-  font-size: 0.84rem;
+  color: #8491a3;
+  font-weight: 750;
+  font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.07em;
 }
 
 #profileContent .profile-details--refined .info-value {
   color: #0f172a;
-  font-weight: 500;
-  font-size: 0.95rem;
-  text-align: right;
+  min-width: 0;
+  font-weight: 650;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .modal.profile-modal .modal-header h3 {
@@ -5463,28 +5948,42 @@ body.admin-dashboard .users-table-section .pagination {
     padding: 0.75rem 0.8rem;
   }
 
+  .modal.edit-user-modal .form-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal.edit-user-modal .edit-avatar-field {
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+
   .modal.edit-user-modal .modal-actions {
     padding: 0.65rem 0.85rem 0.8rem;
   }
 
   #profileContent .profile-details--refined .profile-header {
-    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-columns: 56px minmax(0, 1fr);
     align-items: center;
     max-width: 100%;
     width: 100%;
-    padding: 0.8rem 0.85rem;
-    gap: 0.75rem;
+    padding: 0.95rem;
+    gap: 0.8rem;
   }
 
   #profileContent .profile-details--refined .profile-header .profile-avatar.large {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    min-height: 54px;
+    border-radius: 50%;
   }
 
   #profileContent .profile-details--refined .profile-name {
-    font-size: 1.1rem;
+    font-size: 1.18rem;
+  }
+
+  #profileContent .profile-details--refined .profile-email {
+    font-size: 0.78rem;
   }
 
   #profileContent .profile-details--refined .profile-meta-line {
@@ -5492,14 +5991,15 @@ body.admin-dashboard .users-table-section .pagination {
     font-size: 0.8rem;
   }
 
-  #profileContent .profile-details--refined .info-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
+  #profileContent .profile-details--refined .info-section {
+    grid-template-columns: 1fr;
+    padding: 0.85rem;
   }
 
-  #profileContent .profile-details--refined .info-value {
-    text-align: left;
+  #profileContent .profile-details--refined .info-item,
+  #profileContent .profile-details--refined .info-item--wide {
+    grid-column: 1;
+    min-height: 66px;
   }
 }
 

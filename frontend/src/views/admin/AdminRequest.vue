@@ -106,10 +106,11 @@
       ></button>
 
       <main class="admin-main">
-        <div class="page-header fade-in">
+        <div class="page-header request-hero fade-in">
           <div class="header-left">
-            <h2>Requests</h2>
-            <p>Review request flows that are currently routed to admins. Right now this includes archived student record PDF export approvals submitted by secretaries.</p>
+            <span class="request-hero-eyebrow">Approval center</span>
+            <h2>Admin requests</h2>
+            <p>Review and manage archived student-record PDF export requests submitted by secretaries.</p>
             <div class="request-live-status">
               <span class="request-live-pill" :class="{ 'request-live-pill--syncing': isAutoRefreshing }">
                 <i :class="isAutoRefreshing ? 'fas fa-satellite-dish fa-spin' : 'fas fa-circle'"></i>
@@ -118,66 +119,63 @@
               <span class="request-live-caption">{{ lastUpdatedLabel }}</span>
             </div>
           </div>
+          <button type="button" class="btn request-refresh-btn" :disabled="loading" @click="fetchRequests()">
+            <i class="fas" :class="loading ? 'fa-spinner fa-spin' : 'fa-arrows-rotate'"></i>
+            {{ loading ? 'Refreshing' : 'Refresh' }}
+          </button>
         </div>
 
         <section class="request-summary-grid">
           <article class="section-card request-summary-card">
-            <span class="request-summary-label">Visible Requests</span>
-            <strong>{{ formatNumber(filteredRequests.length) }}</strong>
+            <div class="request-summary-top">
+              <span class="request-summary-icon"><i class="fas fa-inbox"></i></span>
+              <span class="request-summary-label">Visible</span>
+            </div>
+            <div class="request-summary-value">
+              <strong>{{ formatNumber(filteredRequests.length) }}</strong>
+              <span>requests</span>
+            </div>
             <p>{{ filteredSummaryLabel }}</p>
           </article>
           <article class="section-card request-summary-card request-summary-card--pending">
-            <span class="request-summary-label">Pending Review</span>
-            <strong>{{ formatNumber(pendingFilteredCount) }}</strong>
-            <p>Requests waiting for an admin decision right now.</p>
+            <div class="request-summary-top">
+              <span class="request-summary-icon"><i class="fas fa-hourglass-half"></i></span>
+              <span class="request-summary-label">Pending review</span>
+            </div>
+            <div class="request-summary-value">
+              <strong>{{ formatNumber(pendingFilteredCount) }}</strong>
+              <span>waiting</span>
+            </div>
+            <p>Requires an admin decision.</p>
           </article>
           <article class="section-card request-summary-card request-summary-card--approved">
-            <span class="request-summary-label">Approved</span>
-            <strong>{{ formatNumber(approvedFilteredCount) }}</strong>
-            <p>Requests that are ready to be used by the requester.</p>
-          </article>
-          <article class="section-card request-summary-card">
-            <span class="request-summary-label">Closed Requests</span>
-            <strong>{{ formatNumber(closedFilteredCount) }}</strong>
-            <p>Rejected, expired, or already-used requests in the current view.</p>
-          </article>
-        </section>
-
-        <section class="user-filters section-card fade-in">
-          <form class="filter-row request-filter-row" @submit.prevent="applyFiltersAndRefresh">
-            <div class="filter-group request-filter-group request-filter-group--search">
-              <label for="requestSearch"><i class="fas fa-search"></i> Search</label>
-              <input
-                id="requestSearch"
-                v-model.trim="filters.search"
-                type="text"
-                class="form-control request-search"
-                placeholder="Search requester, request type, filters, or review note"
-              />
+            <div class="request-summary-top">
+              <span class="request-summary-icon"><i class="fas fa-circle-check"></i></span>
+              <span class="request-summary-label">Approved</span>
             </div>
-
-            <div class="filter-group">
-              <label for="requestStatus"><i class="fas fa-circle-check"></i> Status</label>
-              <select id="requestStatus" v-model="filters.status" class="filter-select">
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="fulfilled">Used</option>
-                <option value="expired">Expired</option>
-              </select>
+            <div class="request-summary-value">
+              <strong>{{ formatNumber(approvedFilteredCount) }}</strong>
+              <span>ready</span>
             </div>
-
-            <button type="submit" class="btn btn-outline" :disabled="loading">
-              <i class="fas fa-filter"></i>
-              Apply
-            </button>
-          </form>
+            <p>Available to the requester.</p>
+          </article>
+          <article class="section-card request-summary-card request-summary-card--closed">
+            <div class="request-summary-top">
+              <span class="request-summary-icon"><i class="fas fa-box-archive"></i></span>
+              <span class="request-summary-label">Closed</span>
+            </div>
+            <div class="request-summary-value">
+              <strong>{{ formatNumber(closedFilteredCount) }}</strong>
+              <span>finished</span>
+            </div>
+            <p>Rejected, expired, or used.</p>
+          </article>
         </section>
 
         <section class="request-board section-card fade-in">
           <div class="request-board-header">
             <div class="table-info">
+              <span class="request-board-eyebrow">Request queue</span>
               <h3>Archived PDF Export Requests</h3>
               <p>Showing the latest {{ REQUEST_FETCH_LIMIT }} request records available to admins.</p>
             </div>
@@ -186,19 +184,76 @@
             </span>
           </div>
 
+          <form class="request-toolbar" @submit.prevent="applyFiltersAndRefresh">
+            <div class="request-search-field">
+              <label for="requestSearch">Search requests</label>
+              <div class="request-search-control">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input
+                  id="requestSearch"
+                  v-model.trim="filters.search"
+                  type="search"
+                  class="request-search"
+                  placeholder="Search requester, type, filters, or note"
+                />
+              </div>
+            </div>
+
+            <div class="request-status-field">
+              <label for="requestStatus">Status</label>
+              <select id="requestStatus" v-model="filters.status" class="filter-select">
+                <option value="all">All statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="fulfilled">Used</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
+
+            <div class="request-toolbar-actions">
+              <button
+                v-if="filters.search || filters.status !== 'all'"
+                type="button"
+                class="btn request-reset-btn"
+                :disabled="loading"
+                @click="resetFilters"
+              >
+                Reset
+              </button>
+              <button type="submit" class="btn request-apply-btn" :disabled="loading">
+                <i class="fas fa-filter"></i>
+                Apply filters
+              </button>
+            </div>
+          </form>
+
           <div v-if="feedbackMessage" class="request-feedback" :class="`request-feedback--${feedbackTone}`">
             <i :class="feedbackTone === 'error' ? 'fas fa-circle-exclamation' : 'fas fa-circle-check'"></i>
             <span>{{ feedbackMessage }}</span>
           </div>
 
           <div v-if="loading" class="request-empty-state">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Loading requests...</span>
+            <span class="request-empty-icon"><i class="fas fa-spinner fa-spin"></i></span>
+            <strong>Loading requests</strong>
+            <p>Checking for the latest approval activity.</p>
           </div>
 
           <div v-else-if="filteredRequests.length === 0" class="request-empty-state">
-            <i class="fas fa-folder-open"></i>
-            <span>No requests match the current filters yet.</span>
+            <span class="request-empty-icon"><i class="fas fa-folder-open"></i></span>
+            <strong>No requests found</strong>
+            <p v-if="activeFilters.search || activeFilters.status !== 'all'">
+              No requests match the current search and status filters.
+            </p>
+            <p v-else>New approval requests will appear here automatically.</p>
+            <button
+              v-if="activeFilters.search || activeFilters.status !== 'all'"
+              type="button"
+              class="btn request-reset-btn"
+              @click="resetFilters"
+            >
+              Clear filters
+            </button>
           </div>
 
           <div v-else class="export-request-list">
@@ -674,117 +729,330 @@ onBeforeUnmount(() => {
 @import url('/css/admin.css');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
+.request-hero {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1.5rem !important;
+  margin-bottom: 1rem !important;
+  padding: 1.4rem 1.5rem !important;
+  border: 1px solid #d7e7d0 !important;
+  border-radius: 20px !important;
+  background:
+    radial-gradient(circle at 92% 18%, rgba(105, 170, 71, 0.18), transparent 28%),
+    linear-gradient(140deg, #ffffff 0%, #f6faf3 100%) !important;
+  box-shadow: 0 10px 28px rgba(49, 95, 35, 0.07) !important;
+}
+
+.request-hero .header-left {
+  max-width: 760px;
+}
+
+.request-hero-eyebrow {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #4f8a35;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.request-hero h2 {
+  margin: 0 !important;
+  color: #172033 !important;
+  font-size: clamp(1.55rem, 3vw, 2rem) !important;
+  font-weight: 760 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.request-hero .header-left > p {
+  max-width: 680px;
+  margin: 0.45rem 0 0 !important;
+  color: #64748b !important;
+  font-size: 0.9rem !important;
+  line-height: 1.6 !important;
+}
+
+.request-refresh-btn {
+  min-width: 112px;
+  min-height: 44px;
+  flex: 0 0 auto;
+  border: 1px solid #4f8a35 !important;
+  border-radius: 12px !important;
+  background: #4f8a35 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 14px rgba(79, 138, 53, 0.2) !important;
+}
+
+.request-refresh-btn:hover:not(:disabled) {
+  border-color: #477d30 !important;
+  background: #477d30 !important;
+  transform: translateY(-1px);
+}
+
 .request-live-status {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.6rem;
   flex-wrap: wrap;
-  margin-top: 0.85rem;
+  margin-top: 0.8rem;
 }
 
 .request-live-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  min-height: 34px;
-  padding: 0.45rem 0.8rem;
+  min-height: 28px;
+  padding: 0.35rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid #fca5a5;
-  background: #fef2f2;
-  color: #dc2626;
-  font-size: 0.82rem;
-  font-weight: 700;
+  border: 1px solid #b7d7a9;
+  background: #edf7e9;
+  color: #397127;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
 }
 
 .request-live-pill--syncing {
-  border-color: #f87171;
-  background: #fee2e2;
+  border-color: #96c582;
+  background: #e2f2db;
 }
 
 .request-live-caption {
   color: #64748b;
-  font-size: 0.84rem;
+  font-size: 0.76rem;
   line-height: 1.5;
 }
 
 .request-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.85rem;
   margin-bottom: 1rem;
 }
 
 .request-summary-card {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 1rem !important;
+  border: 1px solid #69aa47 !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.04) !important;
+}
+
+.admin-dashboard.admin-request-page .request-summary-grid > .request-summary-card {
+  border-color: #69aa47 !important;
+}
+
+.request-summary-top {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.request-summary-icon {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border-radius: 9px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.75rem;
 }
 
 .request-summary-label {
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  overflow: hidden;
+  color: #59677a;
+  font-size: 0.76rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.request-summary-card strong {
+.request-summary-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.request-summary-value strong {
   color: #0f172a;
-  font-size: 1.7rem;
+  font-size: 1.65rem;
+  line-height: 1;
   letter-spacing: -0.04em;
+}
+
+.request-summary-value span {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 650;
 }
 
 .request-summary-card p {
   margin: 0;
-  color: #64748b;
-  font-size: 0.88rem;
-  line-height: 1.5;
+  color: #7b8797;
+  font-size: 0.72rem;
+  line-height: 1.4;
 }
 
 .request-summary-card--pending {
-  border-color: #fdba74 !important;
-  background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%) !important;
+  border-color: #69aa47 !important;
+  background: linear-gradient(145deg, #ffffff 0%, #fff9f0 100%) !important;
+}
+
+.request-summary-card--pending .request-summary-icon {
+  background: #fff0d9;
+  color: #b45309;
 }
 
 .request-summary-card--approved {
-  border-color: #86efac !important;
-  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%) !important;
+  border-color: #69aa47 !important;
+  background: linear-gradient(145deg, #ffffff 0%, #f2fbef 100%) !important;
 }
 
-.request-filter-row {
-  align-items: end;
+.request-summary-card--approved .request-summary-icon {
+  background: #e2f5dc;
+  color: #397127;
 }
 
-.request-filter-group--search {
-  min-width: min(360px, 100%);
-  flex: 1 1 360px;
-}
-
-.request-search {
-  min-height: 44px;
+.request-summary-card--closed .request-summary-icon {
+  background: #eef2f6;
+  color: #59677a;
 }
 
 .request-board {
   display: grid;
   gap: 1rem;
+  padding: 1.15rem !important;
+  border-radius: 18px !important;
 }
 
 .request-board-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
 }
 
+.request-board-eyebrow {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #4f8a35;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.request-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(170px, 220px) auto;
+  align-items: end;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid #e1e8ee;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.request-search-field,
+.request-status-field {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+.request-search-field label,
+.request-status-field label {
+  color: #59677a;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.request-search-control {
+  position: relative;
+}
+
+.request-search-control i {
+  position: absolute;
+  top: 50%;
+  left: 0.85rem;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+.request-search,
+.request-status-field .filter-select {
+  width: 100%;
+  min-height: 42px !important;
+  border: 1px solid #dce3ea !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #172033 !important;
+  font-size: 0.8rem !important;
+}
+
+.request-search {
+  padding: 0.65rem 0.8rem 0.65rem 2.35rem;
+}
+
+.request-search:focus,
+.request-status-field .filter-select:focus {
+  border-color: #69aa47 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(105, 170, 71, 0.13) !important;
+}
+
+.request-toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.request-apply-btn,
+.request-reset-btn {
+  min-height: 42px;
+  border-radius: 10px !important;
+  white-space: nowrap;
+}
+
+.request-apply-btn {
+  border: 1px solid #4f8a35 !important;
+  background: #4f8a35 !important;
+  color: #ffffff !important;
+}
+
+.request-apply-btn:hover:not(:disabled) {
+  border-color: #477d30 !important;
+  background: #477d30 !important;
+}
+
+.request-reset-btn {
+  border: 1px solid #d4dde6 !important;
+  background: #ffffff !important;
+  color: #59677a !important;
+}
+
 .request-board-header h3 {
   margin: 0;
+  color: #172033;
   font-size: 1.1rem;
+  font-weight: 750;
 }
 
 .request-board-header p {
-  margin: 0.35rem 0 0;
+  margin: 0.25rem 0 0;
   color: #64748b;
-  font-size: 0.88rem;
+  font-size: 0.78rem;
   line-height: 1.5;
 }
 
@@ -792,14 +1060,14 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 0.55rem 0.95rem;
+  min-height: 34px;
+  padding: 0.45rem 0.75rem;
   border-radius: 999px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
   color: #475569;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 750;
 }
 
 .request-count-pill.has-pending {
@@ -831,30 +1099,62 @@ onBeforeUnmount(() => {
 }
 
 .request-empty-state {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 1rem 1.1rem;
+  display: grid;
+  min-height: 240px;
+  padding: 2rem 1rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.5rem;
   border: 1px dashed #cbd5e1;
   border-radius: 16px;
   color: #64748b;
   background: #f8fafc;
-  font-size: 0.9rem;
+  text-align: center;
+}
+
+.request-empty-icon {
+  display: inline-grid;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 0.25rem;
+  place-items: center;
+  border-radius: 17px;
+  background: #edf7e9;
+  color: #4f8a35;
+  font-size: 1.3rem;
+}
+
+.request-empty-state strong {
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.request-empty-state p {
+  max-width: 420px;
+  margin: 0;
+  color: #7b8797;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.request-empty-state .request-reset-btn {
+  margin-top: 0.45rem;
 }
 
 .export-request-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1rem;
 }
 
 .export-request-card {
   display: grid;
   gap: 0.8rem;
-  padding: 1rem;
-  border-radius: 18px;
+  padding: 1.05rem;
+  border-radius: 16px;
   border: 1px solid #e2e8f0;
   background: #ffffff;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, 0.04);
 }
 
 .export-request-card.is-pending {
@@ -989,22 +1289,78 @@ onBeforeUnmount(() => {
   .request-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .request-toolbar {
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 210px);
+  }
+
+  .request-toolbar-actions {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 768px) {
-  .request-live-status,
+  .request-hero {
+    align-items: stretch !important;
+    flex-direction: column;
+    padding: 1.1rem !important;
+  }
+
+  .request-refresh-btn {
+    width: fit-content;
+  }
+
   .request-board-header {
     align-items: stretch;
+  }
+
+  .request-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .request-toolbar-actions {
+    grid-column: 1;
+    justify-content: stretch;
+  }
+
+  .request-toolbar-actions .btn {
+    flex: 1 1 auto;
   }
 }
 
 @media (max-width: 640px) {
   .request-summary-grid {
-    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .request-summary-card {
+    padding: 0.85rem !important;
+  }
+
+  .request-board {
+    padding: 0.9rem !important;
   }
 
   .export-request-list {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .request-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .request-refresh-btn {
+    width: 100%;
+  }
+
+  .request-board-header {
+    flex-direction: column;
+  }
+
+  .request-count-pill {
+    width: fit-content;
   }
 }
 </style>
