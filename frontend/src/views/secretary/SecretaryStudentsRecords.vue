@@ -809,30 +809,42 @@ onBeforeUnmount(() => {
 
 .secretary-userlist-panel {
   margin-bottom: 1rem;
+  padding: 1.35rem;
+  border: 1px solid #dbeafe;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(30, 64, 175, 0.08);
 }
 
 .secretary-school-year-panel {
   display: grid;
-  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) auto;
-  gap: 0.9rem;
-  align-items: end;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid #dbe4ec;
-  border-radius: 18px;
+  grid-template-columns: minmax(190px, 230px) minmax(280px, 1fr) auto;
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1.1rem 1.2rem;
+  margin-bottom: 1.2rem;
+  border: 1px solid #c7d2fe;
+  border-radius: 20px;
   background:
-    radial-gradient(circle at top right, rgba(167, 139, 250, 0.14), transparent 36%),
-    linear-gradient(180deg, #ffffff, #faf7ff);
+    radial-gradient(circle at top right, rgba(129, 140, 248, 0.22), transparent 38%),
+    linear-gradient(135deg, #eef2ff 0%, #f8faff 58%, #ffffff 100%);
 }
 
 .secretary-school-year-panel input {
   width: 100%;
   min-height: 44px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #a5b4fc;
   border-radius: 12px;
   padding: 0.68rem 0.78rem;
   background: #ffffff;
   color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.secretary-school-year-panel input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
 }
 
 .secretary-school-year-meta {
@@ -841,12 +853,13 @@ onBeforeUnmount(() => {
 }
 
 .secretary-school-year-meta strong {
-  color: #0f172a;
-  font-size: 1.1rem;
+  color: #3730a3;
+  font-size: 1.45rem;
+  line-height: 1;
 }
 
 .secretary-school-year-meta span {
-  color: #475569;
+  color: #312e81;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -864,18 +877,29 @@ onBeforeUnmount(() => {
   gap: 0.55rem;
   min-height: 46px;
   padding: 0.8rem 1.05rem;
-  border: 1px solid #8b5cf6;
+  border: 1px solid #4338ca;
   border-radius: 14px;
-  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  background: linear-gradient(135deg, #4f46e5, #3730a3);
   color: #ffffff;
   font-size: 0.86rem;
   font-weight: 800;
   white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(67, 56, 202, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.secretary-archive-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(67, 56, 202, 0.28);
 }
 
 .secretary-archive-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.6;
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: none;
 }
 
 .modal-shell {
@@ -933,7 +957,11 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.85rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
+  padding: 1rem;
+  border: 1px solid #e0e7ff;
+  border-radius: 18px 18px 0 0;
+  background: #f8faff;
 }
 
 .secretary-search-field {
@@ -942,9 +970,16 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.65rem;
   padding: 0.85rem 1rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #c7d2fe;
   border-radius: 14px;
   background: #fff;
+  color: #4f46e5;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.secretary-search-field:focus-within {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
 .secretary-search-field input {
@@ -967,18 +1002,18 @@ onBeforeUnmount(() => {
   gap: 0.45rem;
   min-height: 46px;
   padding: 0.75rem 1rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #c7d2fe;
   border-radius: 14px;
   background: #ffffff;
-  color: #0f172a;
+  color: #3730a3;
   font-size: 0.86rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .secretary-export-btn:hover {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: #818cf8;
+  background: #eef2ff;
 }
 
 .secretary-export-btn-excel {
@@ -997,11 +1032,17 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e7ff;
 }
 
 .secretary-summary-meta {
-  color: #64748b;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -1009,11 +1050,17 @@ onBeforeUnmount(() => {
 .secretary-filter-bar {
   display: grid;
   gap: 0.85rem;
-  margin-bottom: 1rem;
+  margin-top: -0.85rem;
+  margin-bottom: 1.2rem;
+  padding: 0 1rem 1rem;
+  border: 1px solid #e0e7ff;
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: #f8faff;
 }
 
 .secretary-student-filter-bar {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .secretary-filter-group {
@@ -1022,7 +1069,7 @@ onBeforeUnmount(() => {
 }
 
 .secretary-filter-group span {
-  color: #64748b;
+  color: #4338ca;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -1032,21 +1079,27 @@ onBeforeUnmount(() => {
 .secretary-filter-group select {
   width: 100%;
   min-height: 44px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #c7d2fe;
   border-radius: 12px;
   padding: 0.68rem 0.78rem;
   background: #ffffff;
   color: #0f172a;
+  outline: none;
+}
+
+.secretary-filter-group select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
 .secretary-table-wrap {
   width: 100%;
   overflow-x: auto;
   overflow-y: visible;
-  border: 1px solid #dbe4ec;
+  border: 1px solid #c7d2fe;
   border-radius: 20px;
-  background: linear-gradient(180deg, #ffffff, #f8fbfb);
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+  background: #ffffff;
+  box-shadow: 0 14px 32px rgba(30, 64, 175, 0.07);
   scrollbar-width: thin;
   scrollbar-color: #94a3b8 transparent;
 }
@@ -1078,9 +1131,9 @@ onBeforeUnmount(() => {
 .secretary-table thead th {
   padding: 0.75rem;
   text-align: left;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
-  border-bottom: 1px solid #dbe4ec;
-  color: #64748b;
+  background: linear-gradient(180deg, #eef2ff, #e0e7ff);
+  border-bottom: 1px solid #c7d2fe;
+  color: #3730a3;
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -1101,7 +1154,7 @@ onBeforeUnmount(() => {
 }
 
 .secretary-table tbody tr:hover td {
-  background: #f8fbff;
+  background: #f5f7ff;
 }
 
 .secretary-person-cell {

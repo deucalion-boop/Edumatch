@@ -114,22 +114,6 @@
             <h2>User Management</h2>
             <p>Manage students and teachers across the platform</p>
           </div>
-          <div class="header-actions">
-            <button
-              class="btn new-user-trigger"
-              :class="{ 'btn-primary active': modals.addUser, 'btn-outline': !modals.addUser }"
-              style="background: #000000 !important; background-image: none !important; border-color: #000000 !important; color: #ffffff !important; box-shadow: none !important;"
-              @click="openAddUserModal"
-              :aria-pressed="modals.addUser ? 'true' : 'false'"
-            >
-              <i class="fas fa-user-plus"></i>
-              Add New User
-            </button>
-            <button class="btn btn-outline" @click="exportUsers">
-              <i class="fas fa-download"></i>
-              Export CSV
-            </button>
-          </div>
         </div>
 
         <!-- User Filters -->
@@ -197,6 +181,16 @@
               </span>
             </div>
             <div class="table-actions">
+              <button
+                type="button"
+                class="btn new-user-trigger user-list-add-btn"
+                :class="{ active: modals.addUser }"
+                @click="openAddUserModal"
+                :aria-pressed="modals.addUser ? 'true' : 'false'"
+              >
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <span>Add New User</span>
+              </button>
               <div class="table-search">
                 <label for="tableUserSearch" class="sr-only">Search users</label>
                 <i class="fas fa-search" aria-hidden="true"></i>
@@ -4136,6 +4130,49 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   margin-left: auto;
 }
 
+.users-table-section .user-list-add-btn {
+  min-height: 42px;
+  padding: 0.7rem 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  flex: 0 0 auto;
+  border: 1px solid #3f7f2a;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #5c9f3d 0%, #3f7f2a 100%);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(63, 127, 42, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.users-table-section .user-list-add-btn:hover {
+  background: linear-gradient(135deg, #559638 0%, #356d24 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(63, 127, 42, 0.26);
+}
+
+.users-table-section .user-list-add-btn:focus-visible {
+  outline: 3px solid rgba(105, 170, 71, 0.3);
+  outline-offset: 2px;
+}
+
+.users-table-section .user-list-add-btn:active,
+.users-table-section .user-list-add-btn.active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(63, 127, 42, 0.22);
+}
+
+.users-table-section .user-list-add-btn i,
+.users-table-section .user-list-add-btn.active i {
+  color: #ffffff;
+  fill: #ffffff;
+}
+
 .users-table-section .table-search {
   position: relative;
   min-width: 280px;
@@ -4233,6 +4270,17 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   .users-table-section .table-search {
     flex-basis: 100%;
     max-width: none;
+  }
+
+  .users-table-section .user-list-add-btn {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .users-table-section .user-list-add-btn {
+    width: 100%;
+    margin-left: 0;
   }
 }
 
@@ -4395,6 +4443,14 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   flex: 0 0 auto;
 }
 
+.modal.new-user-modal .form-tab.active {
+  color: #3f7f2a;
+}
+
+.modal.new-user-modal .form-tab.active::after {
+  background: #69aa47 !important;
+}
+
 .modal.new-user-modal .tab-content {
   display: none;
 }
@@ -4407,6 +4463,25 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   overflow-x: hidden;
   padding-right: 0.2rem;
   padding-bottom: 0.75rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.55) transparent;
+}
+
+.modal.new-user-modal .tab-content.active::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal.new-user-modal .tab-content.active::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal.new-user-modal .tab-content.active::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.55);
+  border-radius: 999px;
+}
+
+.modal.new-user-modal .tab-content.active::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 .modal.new-user-modal .form-actions {
@@ -4418,6 +4493,36 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   background: #ffffff;
   border-top: 1px solid #e5e7eb;
   padding-top: 0.75rem;
+}
+
+.modal.new-user-modal .action-right .next-tab.btn-primary {
+  background: #69aa47 !important;
+  border-color: #69aa47 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(105, 170, 71, 0.22) !important;
+}
+
+.modal.new-user-modal .action-right .next-tab.btn-primary:hover {
+  background: #558f38 !important;
+  border-color: #558f38 !important;
+  box-shadow: 0 6px 14px rgba(105, 170, 71, 0.3) !important;
+}
+
+.modal.new-user-modal .action-right .submit-form.btn-success {
+  background: #69aa47 !important;
+  border-color: #69aa47 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(105, 170, 71, 0.22) !important;
+}
+
+.modal.new-user-modal .action-right .submit-form.btn-success:hover {
+  background: #558f38 !important;
+  border-color: #558f38 !important;
+  box-shadow: 0 6px 14px rgba(105, 170, 71, 0.3) !important;
+}
+
+.modal.new-user-modal .action-right .submit-form.btn-success i {
+  color: #ffffff !important;
 }
 
 .new-user-trigger i {
@@ -4433,9 +4538,30 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
 
 .new-user-modal .role-option .role-icon,
 .new-user-modal .role-option .role-icon i {
-  color: #374151;
-  fill: #374151;
+  color: #69aa47;
+  fill: #69aa47;
   transition: color 0.2s ease, fill 0.2s ease, background-color 0.2s ease;
+}
+
+.new-user-modal .role-option:hover {
+  border-color: #69aa47 !important;
+  background: rgba(105, 170, 71, 0.08) !important;
+}
+
+.new-user-modal .role-option.selected {
+  border-color: #69aa47 !important;
+  background: rgba(105, 170, 71, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(105, 170, 71, 0.12);
+}
+
+.new-user-modal .role-option.selected .role-icon,
+.new-user-modal .role-option.selected .role-check {
+  background: #69aa47 !important;
+  border-color: #69aa47 !important;
+}
+
+.new-user-modal .role-option.selected .role-info h4 {
+  color: #3f7f2a;
 }
 
 .new-user-modal .role-option.selected .role-icon,

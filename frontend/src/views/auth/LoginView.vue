@@ -720,7 +720,7 @@ export default {
 
 .login-page .auth-form-section-label {
   margin-bottom: 0;
-  color: #6b7280;
+  color: #3f7f2a;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -732,6 +732,11 @@ export default {
   color: #111111;
   font-size: 0.74rem;
   margin-bottom: 0.22rem;
+}
+
+.login-page .auth-form-label i,
+.login-page .auth-form-icon {
+  color: #69aa47;
 }
 
 .login-page .auth-form-group-heading {
@@ -757,10 +762,10 @@ export default {
 }
 
 .login-page .auth-form-input:focus {
-  border-color: #6a8f1b !important;
-  box-shadow: 0 0 0 4px rgba(187, 255, 89, 0.18);
-  background: #fbfff4 !important;
-  caret-color: #1e4307;
+  border-color: #69aa47 !important;
+  box-shadow: 0 0 0 4px rgba(105, 170, 71, 0.16);
+  background: #fbfff8 !important;
+  caret-color: #3f7f2a;
 }
 
 .login-page .auth-form-input::placeholder {
@@ -768,15 +773,15 @@ export default {
 }
 
 .login-page .password-toggle:hover {
-  color: #ff5252;
-  background: rgba(255, 82, 82, 0.08);
+  color: #3f7f2a;
+  background: rgba(105, 170, 71, 0.1);
 }
 
 .login-page .captcha-group {
   padding: 0.56rem;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.34);
-  border: 1px solid rgba(17, 17, 17, 0.07);
+  border: 1px solid rgba(105, 170, 71, 0.22);
 }
 
 .login-page .auth-options {
@@ -784,7 +789,11 @@ export default {
   padding: 0.5rem 0.7rem;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.32);
-  border: 1px solid rgba(17, 17, 17, 0.07);
+  border: 1px solid rgba(105, 170, 71, 0.22);
+}
+
+.login-page .remember-me input[type="checkbox"] {
+  accent-color: #69aa47;
 }
 
 .login-page .remember-me span,
@@ -799,22 +808,24 @@ export default {
 }
 
 .login-page .forgot-password:hover {
-  color: #1e4307 !important;
+  color: #3f7f2a !important;
 }
 
 .login-page .forgot-password::after {
-  background: linear-gradient(90deg, #1e4307, #ffd542, #bbff59);
+  background: #69aa47;
 }
 
 .login-page .auth-submit-btn {
   min-height: 40px;
-background: linear-gradient(135deg, #111111 0%, #2d2d2d 100%) !important;  border: none !important;
-  box-shadow: 0 16px 32px rgba(15, 81, 50, 0.22);
+  background: linear-gradient(135deg, #69aa47 0%, #3f7f2a 100%) !important;
+  border: none !important;
+  box-shadow: 0 16px 32px rgba(63, 127, 42, 0.22);
   font-size: 0.82rem;
 }
 
 .login-page .auth-submit-btn:hover {
-background: linear-gradient(135deg, #252525 0%, #111111 100%) !important;  box-shadow: 0 18px 36px rgba(15, 81, 50, 0.28);
+  background: linear-gradient(135deg, #5c9f3d 0%, #356d24 100%) !important;
+  box-shadow: 0 18px 36px rgba(63, 127, 42, 0.3);
 }
 
 .login-page .auth-footer {

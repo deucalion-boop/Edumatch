@@ -120,25 +120,9 @@
               </span>
             </div>
           </div>
-          <div class="header-actions">
-            <button type="button" class="btn btn-outline" @click="resetFilters" :disabled="loading">
-              <i class="fas fa-rotate-left"></i>
-              Reset
-            </button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              style="background: #000000 !important; background-image: none !important; border-color: #000000 !important; color: #ffffff !important; box-shadow: none !important;"
-              @click="applyFiltersAndFetch"
-              :disabled="loading"
-            >
-              <i :class="loading ? 'fas fa-spinner fa-spin' : 'fas fa-rotate-right'"></i>
-              {{ loading ? 'Refreshing...' : 'Refresh' }}
-            </button>
-          </div>
         </div>
 
-        <section class="user-filters section-card fade-in">
+        <section class="user-filters section-card fade-in" style="border-color: rgb(105, 170, 71) !important;">
           <form class="filter-row login-attempts-filter-row" @submit.prevent="applyFiltersAndFetch">
             <div class="filter-group login-attempts-filter-group login-attempts-filter-group--search">
               <label for="loginAttemptSearch"><i class="fas fa-search"></i> Search</label>
@@ -179,7 +163,7 @@
           </form>
         </section>
 
-        <section class="users-table-section section-card">
+        <section class="users-table-section section-card" style="border-color: rgb(105, 170, 71) !important;">
           <div class="table-header">
             <div class="table-info">
               <h3>Only Recent Log-In Activity</h3>

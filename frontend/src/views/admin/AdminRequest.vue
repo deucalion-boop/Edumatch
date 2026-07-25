@@ -118,22 +118,6 @@
               <span class="request-live-caption">{{ lastUpdatedLabel }}</span>
             </div>
           </div>
-          <div class="header-actions">
-            <button type="button" class="btn btn-outline" @click="resetFilters" :disabled="loading">
-              <i class="fas fa-rotate-left"></i>
-              Reset
-            </button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              style="background: #000000 !important; background-image: none !important; border-color: #000000 !important; color: #ffffff !important; box-shadow: none !important;"
-              @click="applyFiltersAndRefresh"
-              :disabled="loading"
-            >
-              <i :class="loading ? 'fas fa-spinner fa-spin' : 'fas fa-rotate-right'"></i>
-              {{ loading ? 'Refreshing...' : 'Refresh' }}
-            </button>
-          </div>
         </div>
 
         <section class="request-summary-grid">

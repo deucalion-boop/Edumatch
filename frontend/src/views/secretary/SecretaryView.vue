@@ -79,14 +79,16 @@
           </div>
 
           <div class="secretary-header-tools">
-            <button type="button" class="secretary-export-btn" @click="exportDashboardCsv">
-              <i class="fas fa-file-csv"></i>
-              <span>Export CSV</span>
-            </button>
-            <button type="button" class="secretary-export-btn secretary-export-btn-excel" @click="exportDashboardExcel">
-              <i class="fas fa-file-excel"></i>
-              <span>Export Excel</span>
-            </button>
+            <div class="secretary-export-group" aria-label="Dashboard export options">
+              <button type="button" class="secretary-export-btn" aria-label="Export dashboard as CSV" title="Export CSV" @click="exportDashboardCsv">
+                <i class="fas fa-file-csv"></i>
+                <span>CSV</span>
+              </button>
+              <button type="button" class="secretary-export-btn secretary-export-btn-excel" aria-label="Export dashboard as Excel" title="Export Excel" @click="exportDashboardExcel">
+                <i class="fas fa-file-excel"></i>
+                <span>Excel</span>
+              </button>
+            </div>
             <div ref="accountMenuRef" class="account-menu secretary-account-menu">
               <button
                 type="button"
@@ -116,7 +118,19 @@
         </div>
       </header>
 
-      <section class="section-card dashboard-panel secretary-stat-section">
+      <nav class="secretary-dashboard-nav" aria-label="Dashboard sections">
+        <button type="button" :class="{ active: activeDashboardSection === 'analytics' }" @click="navigateDashboard('analytics')">
+          <i class="fas fa-chart-line"></i><span>Analytics</span>
+        </button>
+        <button type="button" :class="{ active: activeDashboardSection === 'departments' }" @click="navigateDashboard('departments')">
+          <i class="fas fa-building-columns"></i><span>Departments</span>
+        </button>
+        <button type="button" :class="{ active: activeDashboardSection === 'assignments' }" @click="navigateDashboard('assignments')">
+          <i class="fas fa-user-shield"></i><span>Assignments</span>
+        </button>
+      </nav>
+
+      <section id="dashboard-statistics" class="section-card dashboard-panel secretary-stat-section">
         <div class="secretary-stat-grid stat-cards">
           <article class="secretary-stat-card">
             <div class="secretary-stat-icon role-headteacher">
@@ -164,7 +178,7 @@
         </div>
       </section>
 
-      <section class="section-card dashboard-panel secretary-analytics-panel">
+      <section v-show="activeDashboardSection === 'analytics'" id="dashboard-analytics" class="section-card dashboard-panel secretary-analytics-panel">
         <div class="secretary-section-head">
           <div>
             <h2 class="section-title">Student Analytics Overview</h2>
@@ -172,40 +186,38 @@
           </div>
         </div>
 
-        <div class="secretary-analytics-grid">
-          <article class="secretary-analytics-card success">
-            <span>Top Student Across Departments</span>
-            <strong>{{ studentAnalytics.topStudent.name }}</strong>
-            <small>{{ studentAnalytics.topStudent.department }} - {{ studentAnalytics.topStudent.value }}% mastery</small>
-          </article>
-          <article class="secretary-analytics-card">
-            <span>Average Mastery Progress</span>
-            <strong>{{ studentAnalytics.averageMastery }}%</strong>
-            <small>Overall learning progress</small>
-          </article>
-          <article class="secretary-analytics-card warning">
-            <span>At-Risk Students</span>
-            <strong>{{ studentAnalytics.atRiskStudents }}</strong>
-            <small>Below 60% mastery or score</small>
-          </article>
-          <article class="secretary-analytics-card success">
-            <span>Top Performing Department</span>
-            <strong>{{ studentAnalytics.topDepartment.name }}</strong>
-            <small>{{ studentAnalytics.topDepartment.value }}% average mastery</small>
-          </article>
-          <article class="secretary-analytics-card">
-            <span>Total Students Monitored</span>
-            <strong>{{ studentAnalytics.totalStudents }}</strong>
-            <small>Student records currently tracked</small>
-          </article>
-          <article class="secretary-analytics-card warning">
-            <span>Lowest Performing Department</span>
-            <strong>{{ studentAnalytics.lowestDepartment.name }}</strong>
-            <small>{{ studentAnalytics.lowestDepartment.value }}% average mastery</small>
-          </article>
-        </div>
+        <div class="secretary-analytics-workspace">
+          <div class="secretary-analytics-grid">
+            <article class="secretary-analytics-card success">
+              <span>Top Student</span>
+              <strong>{{ studentAnalytics.topStudent.name }}</strong>
+              <small>{{ studentAnalytics.topStudent.department }} · {{ studentAnalytics.topStudent.value }}% mastery</small>
+            </article>
+            <article class="secretary-analytics-card">
+              <span>Learning Progress</span>
+              <strong>{{ studentAnalytics.averageMastery }}%</strong>
+              <small>{{ studentAnalytics.totalStudents }} students monitored</small>
+            </article>
+            <article class="secretary-analytics-card warning">
+              <span>Needs Attention</span>
+              <strong>{{ studentAnalytics.atRiskStudents }}</strong>
+              <small>Students below 60%</small>
+            </article>
+            <article class="secretary-analytics-card department-performance-card">
+              <span>Department Performance</span>
+              <div class="secretary-performance-row success-text">
+                <small>Top</small>
+                <strong>{{ studentAnalytics.topDepartment.name }}</strong>
+                <b>{{ studentAnalytics.topDepartment.value }}%</b>
+              </div>
+              <div class="secretary-performance-row warning-text">
+                <small>Lowest</small>
+                <strong>{{ studentAnalytics.lowestDepartment.name }}</strong>
+                <b>{{ studentAnalytics.lowestDepartment.value }}%</b>
+              </div>
+            </article>
+          </div>
 
-        <div class="secretary-chart-grid">
           <article class="secretary-chart-card">
             <div class="secretary-chart-head">
               <div>
@@ -220,7 +232,7 @@
         </div>
       </section>
 
-      <section class="section-card dashboard-panel secretary-summary-section">
+      <section v-show="activeDashboardSection === 'departments'" id="dashboard-directory" class="section-card dashboard-panel secretary-summary-section">
         <div class="secretary-section-head">
           <div>
             <h2 class="section-title">Department Summary</h2>
@@ -241,7 +253,9 @@
             </div>
             <div class="secretary-card-topline">
               <h3>{{ department.name }}</h3>
-              <p>{{ department.headTeacherCount > 0 ? 'Department has assigned leadership.' : 'Department currently has no assigned leadership.' }}</p>
+              <span class="secretary-leadership-badge" :class="{ assigned: department.headTeacherCount > 0 }">
+                {{ department.headTeacherCount > 0 ? 'Leadership assigned' : 'Leadership needed' }}
+              </span>
             </div>
             <div class="secretary-department-total">
               <span>Total Faculty</span>
@@ -264,7 +278,7 @@
         </div>
       </section>
 
-      <section class="secretary-monitor-grid secretary-monitor-grid-single">
+      <section v-show="activeDashboardSection === 'assignments'" id="dashboard-assignments" class="secretary-monitor-grid secretary-monitor-grid-single">
         <article class="section-card dashboard-panel secretary-surface-card">
           <div class="secretary-section-head">
             <div>
@@ -285,7 +299,6 @@
                   </span>
                   <div>
                     <h3>{{ assignment.department }}</h3>
-                    <p>{{ assignment.isAssigned ? 'Leadership assigned' : 'Needs head teacher assignment' }}</p>
                   </div>
                 </div>
                 <span class="secretary-assignment-status" :class="{ assigned: assignment.isAssigned, unassigned: !assignment.isAssigned }">
@@ -294,7 +307,7 @@
               </div>
 
               <div class="secretary-assignment-body">
-                <span class="secretary-assignment-label">Assigned Head Teacher</span>
+                <span class="secretary-assignment-label">Head Teacher</span>
                 <strong :class="{ 'is-empty': !assignment.isAssigned }">{{ assignment.headTeacherName }}</strong>
               </div>
             </article>
@@ -331,11 +344,20 @@ const CORE_DEPARTMENTS = [
 const isLoading = ref(false)
 const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
+const activeDashboardSection = ref('analytics')
 const users = ref([])
 const students = ref([])
 const accountMenuRef = ref(null)
 const departmentChartCanvas = ref(null)
 let departmentChart = null
+
+const navigateDashboard = (section) => {
+  activeDashboardSection.value = section
+
+  window.requestAnimationFrame(() => {
+    if (section === 'analytics') departmentChart?.resize()
+  })
+}
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
 
@@ -762,11 +784,11 @@ watch(students, () => {
 
 <style scoped>
 .secretary-top-header {
-  padding: 0.9rem 1rem !important;
-  border-radius: 18px !important;
-  border: 1px solid transparent !important;
-  background: linear-gradient(#ffffff, #ffffff) padding-box,
-    linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
+  padding: 1.1rem 1.25rem !important;
+  border-radius: 20px !important;
+  border: 1px solid #bbf7d0 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+  box-shadow: 0 12px 30px rgba(21, 128, 61, 0.08);
 }
 
 .secretary-header-content {
@@ -836,18 +858,18 @@ watch(students, () => {
   gap: 0.45rem;
   min-height: 40px;
   padding: 0.65rem 0.9rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #bbf7d0;
   border-radius: 12px;
   background: #ffffff;
-  color: #0f172a;
+  color: #166534;
   font-size: 0.82rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .secretary-export-btn:hover {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: #4ade80;
+  background: #f0fdf4;
 }
 
 .secretary-export-btn-excel {
@@ -865,10 +887,85 @@ watch(students, () => {
 .secretary-summary-section,
 .secretary-monitor-grid .section-card {
   margin-bottom: 1.15rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
 }
 
 .secretary-analytics-panel {
   margin-bottom: 1.15rem;
+  padding: 1.25rem;
+  border: 1px solid #d1fae5;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfffc 100%);
+  box-shadow: 0 12px 32px rgba(21, 128, 61, 0.06);
+}
+
+.secretary-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.secretary-stat-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  min-height: 138px;
+  padding: 1.1rem;
+  overflow: hidden;
+  border: 1px solid #dcfce7;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #ffffff, #f7fef9);
+  box-shadow: 0 8px 22px rgba(21, 128, 61, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.secretary-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(21, 128, 61, 0.11);
+}
+
+.secretary-stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.secretary-stat-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.secretary-stat-label {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.secretary-stat-value {
+  margin: 0.25rem 0;
+  color: #14532d;
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.secretary-stat-note {
+  margin-top: auto;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
 
 .secretary-analytics-grid {
@@ -879,10 +976,11 @@ watch(students, () => {
 }
 
 .secretary-analytics-card {
-  padding: 1rem;
+  min-height: 132px;
+  padding: 1.1rem;
   border-radius: 18px;
   border: 1px solid #dbe4ec;
-  background: linear-gradient(180deg, #ffffff, #f8fbfb);
+  background: #ffffff;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
@@ -939,10 +1037,10 @@ watch(students, () => {
 }
 
 .secretary-chart-card {
-  padding: 1rem;
+  padding: 1.2rem;
   border-radius: 20px;
-  border: 1px solid #dbe4ec;
-  background: linear-gradient(180deg, #ffffff, #f8fbfb);
+  border: 1px solid #d1fae5;
+  background: #ffffff;
 }
 
 .secretary-chart-head h3 {
@@ -986,12 +1084,18 @@ watch(students, () => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .secretary-summary-meta,
 .secretary-directory-head-meta {
-  color: #64748b;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  background: #f0fdf4;
+  color: #166534;
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -1006,9 +1110,10 @@ watch(students, () => {
   padding: 1.1rem;
   position: relative;
   overflow: hidden;
+  border-color: #d1fae5;
   background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 34%),
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.1), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f7fef9 100%);
 }
 
 .secretary-department-card-header {
@@ -1026,9 +1131,9 @@ watch(students, () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
-  color: #1d4ed8;
-  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.08);
+  background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+  color: #15803d;
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12);
 }
 
 .secretary-card-topline {
@@ -1057,8 +1162,8 @@ watch(students, () => {
   justify-content: center;
   padding: 0.36rem 0.65rem;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.1);
-  color: #1e40af;
+  background: #dcfce7;
+  color: #166534;
   font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
@@ -1099,7 +1204,7 @@ watch(students, () => {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+  background: linear-gradient(90deg, #16a34a 0%, #4ade80 100%);
 }
 
 .secretary-department-stats {
@@ -1152,7 +1257,7 @@ watch(students, () => {
   border: 1px solid #dbe4ec;
   border-radius: 20px;
   padding: 1rem;
-  background: linear-gradient(180deg, #ffffff, #f8fbfb);
+  background: linear-gradient(180deg, #ffffff, #f7fef9);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
@@ -1216,8 +1321,8 @@ watch(students, () => {
 }
 
 .secretary-assignment-status.unassigned {
-  background: #ecfdf5;
-  color: #0f766e;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .secretary-assignment-body {
@@ -1243,10 +1348,14 @@ watch(students, () => {
 }
 
 .secretary-assignment-body strong.is-empty {
-  color: #0f766e;
+  color: #92400e;
 }
 
 @media (max-width: 1200px) {
+  .secretary-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .secretary-department-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1265,9 +1374,8 @@ watch(students, () => {
     grid-template-columns: 1fr;
   }
 
-  .secretary-analytics-grid,
-  .secretary-chart-grid {
-    grid-template-columns: 1fr;
+  .secretary-analytics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1312,7 +1420,7 @@ watch(students, () => {
     align-items: center !important;
     justify-content: flex-end !important;
     gap: 0.75rem !important;
-    grid-column: 3;
+    grid-column: 2 / 4;
     margin-left: 0 !important;
     flex: 0 0 auto !important;
     min-width: 0;
@@ -1336,6 +1444,47 @@ watch(students, () => {
     margin-left: auto !important;
   }
 
+  .secretary-header-tools > .secretary-export-btn {
+    width: 38px;
+    min-height: 38px;
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .secretary-header-tools > .secretary-export-btn span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .secretary-stat-section,
+  .secretary-summary-section,
+  .secretary-analytics-panel,
+  .secretary-monitor-grid .section-card {
+    padding: 1rem;
+    border-radius: 18px;
+  }
+
+  .secretary-stat-grid,
+  .secretary-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .secretary-stat-card {
+    min-height: 116px;
+  }
+
+  .secretary-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .secretary-department-grid {
     grid-template-columns: 1fr;
   }
@@ -1344,5 +1493,297 @@ watch(students, () => {
     flex-direction: column;
   }
 
+}
+
+/* Compact dashboard layout */
+.secretary-dashboard-nav {
+  position: sticky;
+  top: 0.45rem;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  width: min(100%, 620px);
+  margin: 0 auto 0.7rem;
+  padding: 0.28rem;
+  border: 1px solid rgba(187, 247, 208, 0.9);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09);
+  backdrop-filter: blur(14px);
+}
+
+.secretary-dashboard-nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 34px;
+  padding: 0.4rem 0.55rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.secretary-dashboard-nav button:hover {
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.secretary-dashboard-nav button.active {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #ffffff;
+  box-shadow: 0 5px 12px rgba(21, 128, 61, 0.2);
+}
+
+.secretary-dashboard-nav button:active { transform: scale(0.98); }
+
+#dashboard-statistics,
+#dashboard-analytics,
+#dashboard-directory,
+#dashboard-assignments { scroll-margin-top: 4.2rem; }
+
+.secretary-top-header {
+  padding: 0.7rem 0.9rem !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 22px rgba(21, 128, 61, 0.07);
+}
+
+.secretary-header-copy h1 { font-size: 1.2rem; }
+.secretary-header-copy .header-subtitle { font-size: 0.78rem; }
+.secretary-header-tools { gap: 0.4rem; }
+
+.secretary-export-group {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border: 1px solid #dcfce7;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.secretary-export-btn {
+  min-height: 32px;
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.74rem;
+}
+
+.secretary-header-tools .account-menu-trigger {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+}
+
+.secretary-stat-section,
+.secretary-summary-section,
+.secretary-analytics-panel,
+.secretary-monitor-grid .section-card {
+  margin-bottom: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 17px;
+}
+
+.secretary-stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.secretary-stat-section {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.secretary-stat-card {
+  position: relative;
+  display: block;
+  min-height: 112px;
+  padding: 0.85rem 3.5rem 0.8rem 0.9rem;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: 0 7px 20px rgba(15, 23, 42, 0.055);
+}
+
+.secretary-stat-card::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: #22c55e;
+  opacity: 0.8;
+}
+
+.secretary-stat-icon {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  font-size: 0.85rem;
+}
+
+.secretary-stat-copy { min-height: 92px; }
+.secretary-stat-label { max-width: 130px; font-size: 0.66rem; }
+.secretary-stat-value { order: -1; margin: 0 0 0.28rem; font-size: 1.75rem; }
+.secretary-stat-note { margin-top: auto; font-size: 0.66rem; line-height: 1.3; }
+
+.secretary-stat-card:nth-child(1) .secretary-stat-icon { background: #ede9fe; color: #6d28d9; }
+.secretary-stat-card:nth-child(1)::after { background: #8b5cf6; }
+.secretary-stat-card:nth-child(2) .secretary-stat-icon { background: #dbeafe; color: #1d4ed8; }
+.secretary-stat-card:nth-child(2)::after { background: #3b82f6; }
+.secretary-stat-card:nth-child(3) .secretary-stat-icon { background: #dcfce7; color: #15803d; }
+.secretary-stat-card:nth-child(3)::after { background: #22c55e; }
+.secretary-stat-card:nth-child(4) .secretary-stat-icon { background: #fef3c7; color: #b45309; }
+.secretary-stat-card:nth-child(4)::after { background: #f59e0b; }
+
+.secretary-section-head {
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.55rem;
+}
+
+.secretary-section-head .section-title { font-size: 1rem; }
+.secretary-section-head .toolbar-subtitle { margin-top: 0.15rem; font-size: 0.75rem; }
+.secretary-summary-meta { padding: 0.3rem 0.6rem; font-size: 0.72rem; }
+
+.secretary-analytics-workspace {
+  display: grid;
+  grid-template-columns: minmax(330px, 0.9fr) minmax(420px, 1.35fr);
+  gap: 0.7rem;
+  align-items: stretch;
+}
+
+.secretary-analytics-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.secretary-analytics-card {
+  min-height: 96px;
+  padding: 0.7rem;
+  border-radius: 12px;
+}
+
+.secretary-analytics-card span { font-size: 0.64rem; }
+.secretary-analytics-card strong { margin-top: 0.22rem; font-size: 1.1rem; }
+.secretary-analytics-card small { margin-top: 0.2rem; font-size: 0.7rem; }
+
+.department-performance-card { display: grid; gap: 0.25rem; }
+.secretary-performance-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+}
+.secretary-performance-row small,
+.secretary-performance-row strong {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.secretary-performance-row b { font-size: 0.7rem; }
+.success-text b { color: #15803d; }
+.warning-text b { color: #b91c1c; }
+
+.secretary-chart-card { padding: 0.72rem; border-radius: 12px; }
+.secretary-chart-head h3 { font-size: 0.86rem; }
+.secretary-chart-head p { font-size: 0.72rem; }
+.secretary-chart-shell { height: 205px; min-height: 205px; margin-top: 0.4rem; }
+
+.secretary-department-grid,
+.secretary-assignment-board {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.secretary-department-card,
+.secretary-assignment-card { padding: 0.65rem; border-radius: 12px; }
+.secretary-department-card-header { margin-bottom: 0.45rem; }
+.secretary-department-icon,
+.secretary-assignment-icon { width: 30px; height: 30px; border-radius: 8px; font-size: 0.72rem; }
+.secretary-card-topline { gap: 0.3rem; margin-bottom: 0.45rem; }
+.secretary-card-topline h3,
+.secretary-assignment-department h3 { font-size: 0.78rem; line-height: 1.25; }
+.secretary-inline-badge { padding: 0.2rem 0.4rem; font-size: 0.6rem; }
+
+.secretary-leadership-badge {
+  width: fit-content;
+  padding: 0.17rem 0.38rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+.secretary-leadership-badge.assigned { background: #dcfce7; color: #166534; }
+
+.secretary-department-total { margin-bottom: 0.35rem; }
+.secretary-department-total span { font-size: 0.62rem; }
+.secretary-department-total strong { font-size: 1.05rem; }
+.secretary-department-progress { height: 4px; margin-bottom: 0.45rem; }
+.secretary-department-stats { gap: 0.35rem; }
+.secretary-department-stats div { padding: 0.38rem 0.45rem; border-radius: 8px; }
+.secretary-department-stats span { font-size: 0.6rem; }
+.secretary-department-stats strong { font-size: 0.78rem; }
+
+.secretary-assignment-board { margin-top: 0.55rem; }
+.secretary-assignment-topline { gap: 0.4rem; }
+.secretary-assignment-department { gap: 0.45rem; }
+.secretary-assignment-status { padding: 0.18rem 0.35rem; font-size: 0.54rem; }
+.secretary-assignment-body { margin-top: 0.45rem; padding-top: 0.4rem; }
+.secretary-assignment-label { margin-bottom: 0.12rem; font-size: 0.58rem; }
+.secretary-assignment-body strong { font-size: 0.72rem; }
+
+@media (max-width: 1200px) {
+  .secretary-stat-grid,
+  .secretary-department-grid,
+  .secretary-assignment-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .secretary-analytics-workspace { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .secretary-dashboard-nav {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .secretary-dashboard-nav::-webkit-scrollbar { display: none; }
+  .secretary-dashboard-nav button { padding-inline: 0.35rem; }
+  .secretary-dashboard-nav button span { display: none; }
+  .secretary-export-group { margin-left: auto; }
+  .secretary-export-group .secretary-export-btn { width: 34px; min-height: 32px; padding: 0; }
+  .secretary-export-group .secretary-export-btn span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .secretary-stat-grid,
+  .secretary-analytics-grid,
+  .secretary-department-grid,
+  .secretary-assignment-board { grid-template-columns: 1fr; }
+  .secretary-stat-note { margin-top: 0.15rem; }
+  .secretary-chart-shell { height: 190px; min-height: 190px; }
 }
 </style>
