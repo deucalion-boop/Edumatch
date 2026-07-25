@@ -428,6 +428,11 @@ onBeforeUnmount(() => {
 
 .secretary-userlist-panel {
   margin-bottom: 1rem;
+  padding: 1.35rem;
+  border: 1px solid #82b38f;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #f7faf7 0%, #edf5ef 100%);
+  box-shadow: 0 18px 45px rgba(47, 111, 67, 0.12);
 }
 
 .secretary-search-row {
@@ -435,7 +440,11 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.85rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem;
+  padding: 1rem;
+  border: 1px solid #91b99b;
+  border-radius: 18px 18px 0 0;
+  background: #e4f0e7;
 }
 
 .secretary-search-field {
@@ -444,9 +453,16 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.65rem;
   padding: 0.85rem 1rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #7fac8a;
   border-radius: 14px;
   background: #fff;
+  color: #39794d;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.secretary-search-field:focus-within {
+  border-color: #47855a;
+  box-shadow: 0 0 0 3px rgba(71, 133, 90, 0.16);
 }
 
 .secretary-search-field input {
@@ -469,29 +485,29 @@ onBeforeUnmount(() => {
   gap: 0.45rem;
   min-height: 46px;
   padding: 0.75rem 1rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #78a985;
   border-radius: 14px;
   background: #ffffff;
-  color: #0f172a;
+  color: #356f48;
   font-size: 0.86rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .secretary-export-btn:hover {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: #589b6b;
+  background: #dcecdf;
 }
 
 .secretary-export-btn-excel {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-  color: #166534;
+  border-color: #5f996e;
+  background: #d7e9db;
+  color: #2f6f43;
 }
 
 .secretary-export-btn-excel:hover {
-  border-color: #86efac;
-  background: #dcfce7;
+  border-color: #47855a;
+  background: #c9dfce;
 }
 
 .secretary-filter-bar {
@@ -561,11 +577,17 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #91b99b;
 }
 
 .secretary-summary-meta {
-  color: #64748b;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #78a985;
+  border-radius: 999px;
+  background: #dcecdf;
+  color: #356f48;
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -574,6 +596,13 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
+  margin-top: -0.85rem;
+  margin-bottom: 1.2rem;
+  padding: 0 1rem 1rem;
+  border: 1px solid #91b99b;
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: #e4f0e7;
 }
 
 .secretary-filter-group {
@@ -582,7 +611,7 @@ onBeforeUnmount(() => {
 }
 
 .secretary-filter-group span {
-  color: #64748b;
+  color: #356f48;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -592,24 +621,30 @@ onBeforeUnmount(() => {
 .secretary-filter-group select {
   width: 100%;
   min-height: 44px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #7fac8a;
   border-radius: 12px;
   padding: 0.68rem 0.78rem;
   background: #ffffff;
   color: #0f172a;
+  outline: none;
+}
+
+.secretary-filter-group select:focus {
+  border-color: #47855a;
+  box-shadow: 0 0 0 3px rgba(71, 133, 90, 0.16);
 }
 
 .secretary-table-wrap {
   width: 100%;
   overflow-x: auto;
   overflow-y: visible;
-  border: 1px solid #dbe4ec;
+  border: 1px solid #78a985;
   border-radius: 20px;
-  background: linear-gradient(180deg, #ffffff, #f8fbfb);
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+  background: #ffffff;
+  box-shadow: 0 14px 32px rgba(47, 111, 67, 0.1);
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: rgba(15, 23, 42, 0.35) transparent;
+  scrollbar-color: #6f9c7a transparent;
 }
 
 .secretary-table-wrap::-webkit-scrollbar {
@@ -621,8 +656,12 @@ onBeforeUnmount(() => {
 }
 
 .secretary-table-wrap::-webkit-scrollbar-thumb {
-  background: rgba(15, 23, 42, 0.35);
+  background: #6f9c7a;
   border-radius: 999px;
+}
+
+.secretary-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #4f805d;
 }
 
 .secretary-table {
@@ -635,9 +674,9 @@ onBeforeUnmount(() => {
 .secretary-table thead th {
   padding: 1rem 1rem;
   text-align: left;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
-  border-bottom: 1px solid #dbe4ec;
-  color: #64748b;
+  background: #ffffff;
+  border-bottom: 1px solid #78a985;
+  color: #356f48;
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -658,7 +697,7 @@ onBeforeUnmount(() => {
 }
 
 .secretary-table tbody tr:hover td {
-  background: #f8fbff;
+  background: #edf5ef;
 }
 
 .secretary-person-cell {

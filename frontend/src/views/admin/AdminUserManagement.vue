@@ -174,23 +174,13 @@
         <section class="users-table-section section-card fade-in" style="animation-delay: 0.3s; border-color: #69aa47 !important;">
           <div class="table-header">
             <div class="table-info">
-              <h3>Users List</h3>
-              <span class="table-count">
-                Showing {{ paginatedUsers.length }} of 
-                {{ filteredUsers.length }} users
-              </span>
+              <span class="table-eyebrow">User directory</span>
+              <h3>Manage users</h3>
+              <p class="table-count">
+                {{ filteredUsers.length }} {{ filteredUsers.length === 1 ? 'user matches' : 'users match' }} the current view
+              </p>
             </div>
             <div class="table-actions">
-              <button
-                type="button"
-                class="btn new-user-trigger user-list-add-btn"
-                :class="{ active: modals.addUser }"
-                @click="openAddUserModal"
-                :aria-pressed="modals.addUser ? 'true' : 'false'"
-              >
-                <i class="fas fa-user-plus" aria-hidden="true"></i>
-                <span>Add New User</span>
-              </button>
               <div class="table-search">
                 <label for="tableUserSearch" class="sr-only">Search users</label>
                 <i class="fas fa-search" aria-hidden="true"></i>
@@ -202,12 +192,32 @@
                   placeholder="Search users by name, email, or username"
                   autocomplete="off"
                 >
+                <button
+                  v-if="searchQuery"
+                  type="button"
+                  class="table-search-clear"
+                  aria-label="Clear user search"
+                  @click="searchQuery = ''"
+                >
+                  <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
               </div>
+              <button
+                type="button"
+                class="btn new-user-trigger user-list-add-btn"
+                :class="{ active: modals.addUser }"
+                @click="openAddUserModal"
+                :aria-pressed="modals.addUser ? 'true' : 'false'"
+              >
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <span>Add user</span>
+              </button>
             </div>
           </div>
 
           <div class="table-responsive">
             <table class="users-table" id="usersTable">
+              <caption class="sr-only">Users, access details, learning activity, and account actions</caption>
               <thead>
                 <tr>
                   <th class="select-col">
@@ -217,17 +227,15 @@
                         id="selectAll" 
                         v-model="selectAll"
                         @change="toggleSelectAll"
+                        aria-label="Select all users on this page"
                       >
                     </div>
                   </th>
                   <th class="user-col">User</th>
-                  <th class="role-col">Role</th>
-                  <th class="status-col">Status</th>
-                  <th class="progress-col">Progress</th>
-                  <th class="courses-col">Lessons</th>
-                  <th class="joined-col">Joined</th>
-                  <th class="last-active-col">Last Active</th>
-                  <th class="actions-col">Actions</th>
+                  <th class="access-col">Access</th>
+                  <th class="learning-col">Learning</th>
+                  <th class="activity-col">Activity</th>
+                  <th class="actions-col"><span class="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody id="usersTableBody">
@@ -241,7 +249,7 @@
                     :data-role="user.role"
                     :data-status="user.status"
                   >
-                    <td class="select-col">
+                    <td class="select-col" data-label="Select">
                       <div class="checkbox-wrapper">
                         <input 
                           type="checkbox" 
@@ -249,10 +257,11 @@
                           :id="'user-' + user.id"
                           v-model="selectedUsers"
                           :value="user.id"
+                          :aria-label="'Select ' + user.name"
                         >
                       </div>
                     </td>
-                    <td class="user-col">
+                    <td class="user-col" data-label="User">
                       <div class="user-info">
                         <div class="user-avatar">
                           <img v-if="user.avatar" :src="user.avatar" :alt="user.name" class="avatar-img">
@@ -269,53 +278,49 @@
                         </div>
                       </div>
                     </td>
-                    <td class="role-col">
-                      <span class="role-badge" :class="user.role">
-                        <i :class="getRoleIcon(user.role)"></i>
-                        {{ capitalize(user.role) }}
-                      </span>
+                    <td class="access-col" data-label="Access">
+                      <div class="access-stack">
+                        <span class="role-badge" :class="user.role">
+                          <i :class="getRoleIcon(user.role)"></i>
+                          {{ capitalize(user.role) }}
+                        </span>
+                        <span class="status-badge" :class="user.status">
+                          <i class="fas fa-circle"></i>
+                          {{ capitalize(user.status) }}
+                        </span>
+                      </div>
                     </td>
-                    <td class="status-col">
-                      <span class="status-badge" :class="user.status">
-                        <i class="fas fa-circle"></i>
-                        {{ capitalize(user.status) }}
-                      </span>
-                    </td>
-                    <td class="progress-col">
+                    <td class="learning-col" data-label="Learning">
                       <template v-if="user.role === 'student'">
-                        <div class="progress-container">
+                        <div class="learning-summary">
+                          <div class="learning-summary-head">
+                            <span>{{ user.lessonsCompleted ?? user.coursesCompleted ?? 0 }} lessons</span>
+                            <strong>{{ user.completionRate || 0 }}%</strong>
+                          </div>
                           <div class="progress-bar">
                             <div class="progress-fill" :style="{ width: (user.completionRate || 0) + '%' }"></div>
                           </div>
                         </div>
                       </template>
                       <template v-else-if="user.role === 'teacher'">
-                        <span class="na-text">N/A</span>
-                      </template>
-                      <span v-else class="na-text">N/A</span>
-                    </td>
-                    <td class="courses-col">
-                      <template v-if="user.role === 'student'">
-                        <div class="course-count">
-                          <span class="count">{{ user.lessonsCompleted ?? user.coursesCompleted ?? 0 }}</span>
-                          <span class="label">lessons completed</span>
+                        <div class="learning-stat">
+                          <strong>{{ user.lessonsCreated ?? user.coursesCreated ?? 0 }}</strong>
+                          <span>lessons created</span>
                         </div>
                       </template>
-                      <template v-else-if="user.role === 'teacher'">
-                        <div class="course-count">
-                          <span class="count">{{ user.lessonsCreated ?? user.coursesCreated ?? 0 }}</span>
-                          <span class="label">lessons created</span>
-                        </div>
-                      </template>
-                      <span v-else class="na-text">N/A</span>
+                      <span v-else class="learning-empty">No learning data</span>
                     </td>
-                    <td class="joined-col">
-                      <span class="date-text">{{ formatDate(user.createdAt) }}</span>
+                    <td class="activity-col" data-label="Activity">
+                      <div class="activity-detail">
+                        <span class="activity-label">Last active</span>
+                        <strong class="time-text">{{ getLastActive(user.lastActive) }}</strong>
+                      </div>
+                      <div class="activity-detail activity-joined">
+                        <span class="activity-label">Joined</span>
+                        <span class="date-text">{{ formatDate(user.createdAt) }}</span>
+                      </div>
                     </td>
-                    <td class="last-active-col">
-                      <span class="time-text">{{ getLastActive(user.lastActive) }}</span>
-                    </td>
-                    <td class="actions-col">
+                    <td class="actions-col" data-label="Actions">
                       <div class="action-buttons">
                         <button 
                           type="button" 
@@ -331,20 +336,20 @@
                   </tr>
                 </template>
                 <tr v-else class="no-data-row">
-                  <td colspan="9">
+                  <td colspan="6">
                     <div class="no-data">
                       <div class="no-data-icon">
                         <i class="fas fa-user-slash"></i>
                       </div>
-                      <h4>No Users Found</h4>
-                      <p>Try adjusting your filters or add new users</p>
+                      <h4>No users found</h4>
+                      <p>Try a different search or reset the current filters.</p>
                       <button
-                        class="btn btn-primary"
-                        style="background: #000000 !important; background-image: none !important; border-color: #000000 !important; color: #ffffff !important; box-shadow: none !important;"
-                        @click="openAddUserModal"
+                        type="button"
+                        class="btn btn-outline"
+                        @click="clearFilters"
                       >
-                        <i class="fas fa-user-plus"></i>
-                        Add First User
+                        <i class="fas fa-undo"></i>
+                        Reset view
                       </button>
                     </div>
                   </td>
@@ -356,7 +361,9 @@
           <!-- Pagination -->
           <div v-if="filteredUsers.length > 0" class="pagination">
             <div class="pagination-info">
-              Showing {{ paginatedUsers.length }} of {{ filteredUsers.length }} users
+              Showing
+              <strong>{{ ((currentPage - 1) * pageSize) + 1 }}–{{ ((currentPage - 1) * pageSize) + paginatedUsers.length }}</strong>
+              of {{ filteredUsers.length }}
             </div>
             <div class="pagination-controls">
               <button 
@@ -4321,6 +4328,462 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
 
   body.admin-dashboard .pagination-number {
     flex: 0 0 auto;
+  }
+}
+
+/* User directory: grouped information on desktop, scan-friendly cards on smaller screens. */
+body.admin-dashboard .users-table-section {
+  background: #ffffff !important;
+}
+
+body.admin-dashboard .users-table-section .table-header {
+  align-items: center !important;
+  margin-bottom: 18px !important;
+  padding-bottom: 18px !important;
+}
+
+.users-table-section .table-info {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.users-table-section .table-eyebrow {
+  color: #4f8a35;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.users-table-section .table-info h3 {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  line-height: 1.25;
+}
+
+.users-table-section .table-count {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.users-table-section .table-search {
+  flex: 1 1 320px;
+  width: min(100%, 420px);
+}
+
+.users-table-section .table-search-input {
+  min-height: 44px;
+  padding-right: 2.75rem;
+  border-color: #dbe3ec;
+  background: #f8fafc;
+  font-weight: 500;
+}
+
+.users-table-section .table-search-input:focus {
+  border-color: #69aa47;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(105, 170, 71, 0.14);
+}
+
+.users-table-section .table-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.users-table-section .table-search-clear i {
+  position: static;
+  transform: none;
+  color: currentColor;
+}
+
+.users-table-section .table-search-clear:hover,
+.users-table-section .table-search-clear:focus-visible {
+  outline: none;
+  background: #e8eef4;
+  color: #172033;
+}
+
+body.admin-dashboard .users-table-section .table-responsive {
+  overflow-x: auto !important;
+  border: 1px solid #e4eaf0 !important;
+  border-radius: 16px !important;
+  background: #ffffff;
+}
+
+body.admin-dashboard .users-table-section .users-table {
+  min-width: 860px !important;
+  border-spacing: 0 !important;
+}
+
+body.admin-dashboard .users-table-section .users-table thead th {
+  position: static !important;
+  padding: 0.8rem 1rem !important;
+  border-bottom: 1px solid #dfe7ee !important;
+  background: #f6f8fa !important;
+  color: #667085 !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+}
+
+body.admin-dashboard .users-table-section .users-table tbody td {
+  padding: 1rem !important;
+  border-bottom: 1px solid #edf1f5 !important;
+  color: #334155;
+  vertical-align: middle !important;
+}
+
+body.admin-dashboard .users-table-section .users-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+body.admin-dashboard .users-table-section .users-table tbody tr.user-row {
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+body.admin-dashboard .users-table-section .users-table tbody tr.user-row:hover {
+  background: #f9fbf8 !important;
+}
+
+.users-table-section .select-col {
+  width: 48px;
+  text-align: center;
+}
+
+.users-table-section .user-col {
+  width: 30%;
+}
+
+.users-table-section .access-col {
+  width: 18%;
+}
+
+.users-table-section .learning-col {
+  width: 22%;
+}
+
+.users-table-section .activity-col {
+  width: 22%;
+}
+
+.users-table-section .actions-col {
+  width: 58px;
+  text-align: right;
+}
+
+.users-table-section .user-info {
+  min-width: 0;
+}
+
+.users-table-section .user-details {
+  min-width: 0;
+}
+
+.users-table-section .user-name {
+  color: #172033;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.users-table-section .user-email {
+  overflow: hidden;
+  margin-top: 0.2rem;
+  color: #718096;
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.users-table-section .access-stack {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  flex-direction: column;
+}
+
+.users-table-section .role-badge,
+.users-table-section .status-badge {
+  width: fit-content;
+}
+
+.users-table-section .learning-summary {
+  display: grid;
+  width: min(100%, 190px);
+  gap: 0.5rem;
+}
+
+.users-table-section .learning-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.users-table-section .learning-summary-head strong {
+  color: #315f23;
+  font-size: 0.78rem;
+}
+
+.users-table-section .learning-summary .progress-bar {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7ede4;
+}
+
+.users-table-section .learning-summary .progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #69aa47, #4f8a35);
+}
+
+.users-table-section .learning-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.users-table-section .learning-stat strong {
+  color: #315f23;
+  font-size: 1.05rem;
+}
+
+.users-table-section .learning-stat span,
+.users-table-section .learning-empty {
+  color: #718096;
+  font-size: 0.76rem;
+}
+
+.users-table-section .learning-empty {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.users-table-section .activity-col {
+  line-height: 1.25;
+}
+
+.users-table-section .activity-detail {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.users-table-section .activity-joined {
+  margin-top: 0.55rem;
+}
+
+.users-table-section .activity-label {
+  color: #94a3b8;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.users-table-section .activity-detail .time-text,
+.users-table-section .activity-detail .date-text {
+  color: #334155;
+  font-size: 0.76rem;
+}
+
+.users-table-section .activity-detail .time-text {
+  font-weight: 700;
+}
+
+body.admin-dashboard .users-table-section .action-btn {
+  width: 38px !important;
+  height: 38px !important;
+  border: 1px solid #dbe3ec !important;
+  border-radius: 11px !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+}
+
+body.admin-dashboard .users-table-section .action-btn:hover,
+body.admin-dashboard .users-table-section .action-btn:focus-visible {
+  border-color: #69aa47 !important;
+  outline: none;
+  background: #f1f8ed !important;
+  color: #315f23 !important;
+}
+
+body.admin-dashboard .users-table-section .pagination {
+  margin-top: 16px !important;
+  padding-top: 16px !important;
+}
+
+.users-table-section .pagination-info strong {
+  color: #172033;
+}
+
+@media (max-width: 900px) {
+  body.admin-dashboard .users-table-section .table-header {
+    align-items: stretch !important;
+  }
+
+  .users-table-section .table-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .users-table-section .table-search {
+    max-width: none;
+  }
+
+  body.admin-dashboard .users-table-section .table-responsive {
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent;
+  }
+
+  body.admin-dashboard .users-table-section .users-table {
+    min-width: 0 !important;
+  }
+
+  body.admin-dashboard .users-table-section .users-table thead {
+    display: none !important;
+  }
+
+  body.admin-dashboard .users-table-section .users-table tbody {
+    display: grid !important;
+    gap: 0.8rem;
+  }
+
+  body.admin-dashboard .users-table-section .users-table tbody tr.user-row {
+    display: grid !important;
+    grid-template-columns: 38px minmax(0, 1fr) 44px;
+    width: 100% !important;
+    overflow: hidden;
+    border: 1px solid #e1e8ee;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.045);
+  }
+
+  body.admin-dashboard .users-table-section .users-table tbody tr.user-row:hover {
+    border-color: #c9ddbd;
+    box-shadow: 0 8px 22px rgba(49, 95, 35, 0.08);
+  }
+
+  body.admin-dashboard .users-table-section .users-table tbody tr.user-row td {
+    display: block !important;
+    width: auto !important;
+    padding: 0.9rem !important;
+    border-bottom: 0 !important;
+  }
+
+  .users-table-section .user-row .select-col {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    padding-right: 0 !important;
+  }
+
+  .users-table-section .user-row .user-col {
+    grid-column: 2;
+    grid-row: 1;
+    padding-left: 0.35rem !important;
+  }
+
+  .users-table-section .user-row .actions-col {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    padding-left: 0 !important;
+  }
+
+  .users-table-section .user-row .access-col,
+  .users-table-section .user-row .learning-col,
+  .users-table-section .user-row .activity-col {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: 90px minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    border-top: 1px solid #edf1f5 !important;
+  }
+
+  .users-table-section .user-row .access-col::before,
+  .users-table-section .user-row .learning-col::before,
+  .users-table-section .user-row .activity-col::before {
+    content: attr(data-label);
+    align-self: start;
+    padding-top: 0.2rem;
+    color: #94a3b8;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .users-table-section .access-stack {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .users-table-section .learning-summary {
+    width: 100%;
+    max-width: 260px;
+  }
+
+  .users-table-section .activity-col {
+    grid-template-columns: 90px repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .users-table-section .activity-joined {
+    margin-top: 0;
+  }
+
+  body.admin-dashboard .users-table-section .no-data-row,
+  body.admin-dashboard .users-table-section .no-data-row td {
+    display: block !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .users-table-section .table-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .users-table-section .table-search,
+  .users-table-section .user-list-add-btn {
+    width: 100%;
+  }
+
+  .users-table-section .user-row .activity-col {
+    grid-template-columns: 90px minmax(0, 1fr) !important;
+  }
+
+  .users-table-section .activity-col::before {
+    grid-row: 1 / span 2;
   }
 }
 

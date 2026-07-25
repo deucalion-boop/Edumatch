@@ -810,10 +810,10 @@ onBeforeUnmount(() => {
 .secretary-userlist-panel {
   margin-bottom: 1rem;
   padding: 1.35rem;
-  border: 1px solid #dbeafe;
+  border: 1px solid #82b38f;
   border-radius: 24px;
-  background: #ffffff;
-  box-shadow: 0 18px 45px rgba(30, 64, 175, 0.08);
+  background: linear-gradient(180deg, #f7faf7 0%, #edf5ef 100%);
+  box-shadow: 0 18px 45px rgba(47, 111, 67, 0.12);
 }
 
 .secretary-school-year-panel {
@@ -823,17 +823,17 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 1.1rem 1.2rem;
   margin-bottom: 1.2rem;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #80ad8b;
   border-radius: 20px;
   background:
-    radial-gradient(circle at top right, rgba(129, 140, 248, 0.22), transparent 38%),
-    linear-gradient(135deg, #eef2ff 0%, #f8faff 58%, #ffffff 100%);
+    radial-gradient(circle at top right, rgba(82, 146, 99, 0.24), transparent 38%),
+    linear-gradient(135deg, #dcecdf 0%, #eaf4ec 58%, #f7faf7 100%);
 }
 
 .secretary-school-year-panel input {
   width: 100%;
   min-height: 44px;
-  border: 1px solid #a5b4fc;
+  border: 1px solid #78a985;
   border-radius: 12px;
   padding: 0.68rem 0.78rem;
   background: #ffffff;
@@ -843,8 +843,8 @@ onBeforeUnmount(() => {
 }
 
 .secretary-school-year-panel input:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+  border-color: #47855a;
+  box-shadow: 0 0 0 3px rgba(71, 133, 90, 0.18);
 }
 
 .secretary-school-year-meta {
@@ -853,13 +853,13 @@ onBeforeUnmount(() => {
 }
 
 .secretary-school-year-meta strong {
-  color: #3730a3;
+  color: #2f6f43;
   font-size: 1.45rem;
   line-height: 1;
 }
 
 .secretary-school-year-meta span {
-  color: #312e81;
+  color: #356f48;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -877,28 +877,28 @@ onBeforeUnmount(() => {
   gap: 0.55rem;
   min-height: 46px;
   padding: 0.8rem 1.05rem;
-  border: 1px solid #4338ca;
+  border: 1px solid #356f48;
   border-radius: 14px;
-  background: linear-gradient(135deg, #4f46e5, #3730a3);
+  background: linear-gradient(135deg, #589b6b, #39794d);
   color: #ffffff;
   font-size: 0.86rem;
   font-weight: 800;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 10px 22px rgba(67, 56, 202, 0.2);
+  box-shadow: 0 10px 22px rgba(53, 111, 72, 0.22);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .secretary-archive-btn:not(:disabled):hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(67, 56, 202, 0.28);
+  box-shadow: 0 14px 28px rgba(53, 111, 72, 0.3);
 }
 
 .secretary-archive-btn:disabled {
   cursor: not-allowed;
-  border-color: #cbd5e1;
-  background: #e2e8f0;
-  color: #94a3b8;
+  border-color: #9fbaa6;
+  background: #d8e5db;
+  color: #66816d;
   box-shadow: none;
 }
 
@@ -959,9 +959,9 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   margin-bottom: 0.85rem;
   padding: 1rem;
-  border: 1px solid #e0e7ff;
+  border: 1px solid #91b99b;
   border-radius: 18px 18px 0 0;
-  background: #f8faff;
+  background: #e4f0e7;
 }
 
 .secretary-search-field {
@@ -970,16 +970,16 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0.65rem;
   padding: 0.85rem 1rem;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #7fac8a;
   border-radius: 14px;
   background: #fff;
-  color: #4f46e5;
+  color: #39794d;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .secretary-search-field:focus-within {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  border-color: #47855a;
+  box-shadow: 0 0 0 3px rgba(71, 133, 90, 0.16);
 }
 
 .secretary-search-field input {
@@ -1002,29 +1002,29 @@ onBeforeUnmount(() => {
   gap: 0.45rem;
   min-height: 46px;
   padding: 0.75rem 1rem;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #78a985;
   border-radius: 14px;
   background: #ffffff;
-  color: #3730a3;
+  color: #356f48;
   font-size: 0.86rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .secretary-export-btn:hover {
-  border-color: #818cf8;
-  background: #eef2ff;
+  border-color: #589b6b;
+  background: #dcecdf;
 }
 
 .secretary-export-btn-excel {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-  color: #166534;
+  border-color: #5f996e;
+  background: #d7e9db;
+  color: #2f6f43;
 }
 
 .secretary-export-btn-excel:hover {
-  border-color: #86efac;
-  background: #dcfce7;
+  border-color: #47855a;
+  background: #c9dfce;
 }
 
 .secretary-section-head {
@@ -1034,15 +1034,15 @@ onBeforeUnmount(() => {
   gap: 1rem;
   margin-bottom: 1.25rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e7ff;
+  border-bottom: 1px solid #91b99b;
 }
 
 .secretary-summary-meta {
   padding: 0.45rem 0.8rem;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #78a985;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #4338ca;
+  background: #dcecdf;
+  color: #356f48;
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -1053,10 +1053,10 @@ onBeforeUnmount(() => {
   margin-top: -0.85rem;
   margin-bottom: 1.2rem;
   padding: 0 1rem 1rem;
-  border: 1px solid #e0e7ff;
+  border: 1px solid #91b99b;
   border-top: 0;
   border-radius: 0 0 18px 18px;
-  background: #f8faff;
+  background: #e4f0e7;
 }
 
 .secretary-student-filter-bar {
@@ -1069,7 +1069,7 @@ onBeforeUnmount(() => {
 }
 
 .secretary-filter-group span {
-  color: #4338ca;
+  color: #356f48;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -1079,7 +1079,7 @@ onBeforeUnmount(() => {
 .secretary-filter-group select {
   width: 100%;
   min-height: 44px;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #7fac8a;
   border-radius: 12px;
   padding: 0.68rem 0.78rem;
   background: #ffffff;
@@ -1088,20 +1088,20 @@ onBeforeUnmount(() => {
 }
 
 .secretary-filter-group select:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  border-color: #47855a;
+  box-shadow: 0 0 0 3px rgba(71, 133, 90, 0.16);
 }
 
 .secretary-table-wrap {
   width: 100%;
   overflow-x: auto;
   overflow-y: visible;
-  border: 1px solid #c7d2fe;
+  border: 1px solid #78a985;
   border-radius: 20px;
   background: #ffffff;
-  box-shadow: 0 14px 32px rgba(30, 64, 175, 0.07);
+  box-shadow: 0 14px 32px rgba(47, 111, 67, 0.1);
   scrollbar-width: thin;
-  scrollbar-color: #94a3b8 transparent;
+  scrollbar-color: #6f9c7a transparent;
 }
 
 .secretary-table-wrap::-webkit-scrollbar {
@@ -1113,12 +1113,12 @@ onBeforeUnmount(() => {
 }
 
 .secretary-table-wrap::-webkit-scrollbar-thumb {
-  background: #94a3b8;
+  background: #6f9c7a;
   border-radius: 999px;
 }
 
 .secretary-table-wrap::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #4f805d;
 }
 
 .secretary-table {
@@ -1131,9 +1131,9 @@ onBeforeUnmount(() => {
 .secretary-table thead th {
   padding: 0.75rem;
   text-align: left;
-  background: linear-gradient(180deg, #eef2ff, #e0e7ff);
-  border-bottom: 1px solid #c7d2fe;
-  color: #3730a3;
+  background: #ffffff;
+  border-bottom: 1px solid #78a985;
+  color: #356f48;
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -1154,7 +1154,7 @@ onBeforeUnmount(() => {
 }
 
 .secretary-table tbody tr:hover td {
-  background: #f5f7ff;
+  background: #edf5ef;
 }
 
 .secretary-person-cell {

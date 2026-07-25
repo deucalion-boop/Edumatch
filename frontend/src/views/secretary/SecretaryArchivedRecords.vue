@@ -787,7 +787,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .secretary-archived-page .secretary-table-wrap {
   scrollbar-width: thin;
-  scrollbar-color: #94a3b8 transparent;
+  scrollbar-color: #6f9c7a transparent;
 }
 
 .secretary-archived-page .secretary-table-wrap::-webkit-scrollbar {
@@ -799,12 +799,12 @@ onBeforeUnmount(() => {
 }
 
 .secretary-archived-page .secretary-table-wrap::-webkit-scrollbar-thumb {
-  background: #94a3b8;
+  background: #6f9c7a;
   border-radius: 999px;
 }
 
 .secretary-archived-page .secretary-table-wrap::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #4f805d;
 }
 
 .secretary-archived-page .secretary-student-table {
@@ -846,10 +846,57 @@ onBeforeUnmount(() => {
   color: #b91c1c;
 }
 .secretary-header-copy .mobile-menu-toggle, .secretary-header-tools .account-menu-trigger { width: 40px; height: 40px; min-width: 40px; border-radius: 12px; }
-.secretary-search-row { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.secretary-search-field { flex: 1 1 320px; display: flex; align-items: center; gap: 0.65rem; padding: 0.85rem 1rem; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; }
+.secretary-userlist-panel {
+  margin-bottom: 1rem;
+  padding: 1.35rem;
+  border: 1px solid #82b38f;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #f7faf7 0%, #edf5ef 100%);
+  box-shadow: 0 18px 45px rgba(47, 111, 67, 0.12);
+}
+.secretary-section-head {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #91b99b;
+}
+.secretary-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+  padding: 1rem;
+  border: 1px solid #91b99b;
+  border-radius: 18px 18px 0 0;
+  background: #e4f0e7;
+}
+.secretary-search-field {
+  flex: 1 1 320px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #7fac8a;
+  border-radius: 14px;
+  background: #fff;
+  color: #39794d;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.secretary-search-field:focus-within {
+  border-color: #47855a;
+  box-shadow: 0 0 0 3px rgba(71, 133, 90, 0.16);
+}
 .secretary-search-field input { width: 100%; border: none; outline: none; background: transparent; }
 .secretary-summary-meta { display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap; }
+.secretary-summary-meta > span:first-child {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #78a985;
+  border-radius: 999px;
+  background: #dcecdf;
+  color: #356f48;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
 .secretary-approval-pill {
   display: inline-flex;
   align-items: center;
@@ -885,15 +932,15 @@ onBeforeUnmount(() => {
   gap: 0.45rem;
   min-height: 46px;
   padding: 0.75rem 1rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #78a985;
   border-radius: 14px;
   background: #ffffff;
-  color: #0f172a;
+  color: #356f48;
   font-size: 0.86rem;
   font-weight: 700;
   white-space: nowrap;
 }
-.secretary-export-btn:hover { border-color: #94a3b8; background: #f8fafc; }
+.secretary-export-btn:hover { border-color: #589b6b; background: #dcecdf; }
 .secretary-export-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 .secretary-export-btn-pdf { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
 .secretary-export-btn-pdf:hover { border-color: #fca5a5; background: #fee2e2; }
@@ -923,13 +970,46 @@ onBeforeUnmount(() => {
   font-size: 0.78rem;
   line-height: 1.5;
 }
-.secretary-archive-filter-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.secretary-filter-bar {
+  margin-top: -0.85rem;
+  margin-bottom: 1.2rem;
+  padding: 0 1rem 1rem;
+  border: 1px solid #91b99b;
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: #e4f0e7;
+}
+.secretary-filter-group span {
+  color: #356f48;
+}
+.secretary-filter-group select {
+  border-color: #7fac8a;
+  outline: none;
+}
+.secretary-filter-group select:focus {
+  border-color: #47855a;
+  box-shadow: 0 0 0 3px rgba(71, 133, 90, 0.16);
+}
+.secretary-archive-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.secretary-table-wrap {
+  border-color: #78a985;
+  background: #ffffff;
+  box-shadow: 0 14px 32px rgba(47, 111, 67, 0.1);
+}
+.secretary-table thead th {
+  background: #ffffff;
+  border-bottom: 1px solid #78a985;
+  color: #356f48;
+}
+.secretary-table tbody tr:hover td {
+  background: #edf5ef;
+}
 .secretary-person-cell { display: flex; align-items: center; gap: 0.8rem; min-width: 240px; }
-.secretary-person-avatar { width: 42px; height: 42px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #6d28d9, #9333ea); color: #ffffff; font-size: 0.84rem; font-weight: 800; flex-shrink: 0; }
+.secretary-person-avatar { width: 42px; height: 42px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #589b6b, #39794d); color: #ffffff; font-size: 0.84rem; font-weight: 800; flex-shrink: 0; }
 .secretary-person-copy { display: grid; gap: 0.15rem; }
 .secretary-person-copy small, .secretary-adviser-cell small { color: #64748b; font-size: 0.78rem; }
 .secretary-adviser-cell { display: grid; gap: 0.2rem; min-width: 180px; }
-.archive-school-year-badge { background: #ede9fe; color: #6d28d9; border: 1px solid #d8b4fe; }
+.archive-school-year-badge { background: #dcecdf; color: #356f48; border: 1px solid #78a985; }
 
 @media (max-width: 768px) {
   .secretary-header-copy > div, .secretary-access-chip { display: none; }
