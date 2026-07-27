@@ -108,21 +108,9 @@
       <main class="admin-main">
         <div class="page-header request-hero fade-in">
           <div class="header-left">
-            <span class="request-hero-eyebrow">Approval center</span>
             <h2>Admin requests</h2>
             <p>Review and manage archived student-record PDF export requests submitted by secretaries.</p>
-            <div class="request-live-status">
-              <span class="request-live-pill" :class="{ 'request-live-pill--syncing': isAutoRefreshing }">
-                <i :class="isAutoRefreshing ? 'fas fa-satellite-dish fa-spin' : 'fas fa-circle'"></i>
-                {{ isAutoRefreshing ? 'LIVE SYNCING' : 'LIVE' }}
-              </span>
-              <span class="request-live-caption">{{ lastUpdatedLabel }}</span>
-            </div>
           </div>
-          <button type="button" class="btn request-refresh-btn" :disabled="loading" @click="fetchRequests()">
-            <i class="fas" :class="loading ? 'fa-spinner fa-spin' : 'fa-arrows-rotate'"></i>
-            {{ loading ? 'Refreshing' : 'Refresh' }}
-          </button>
         </div>
 
         <section class="request-summary-grid">
@@ -172,7 +160,10 @@
           </article>
         </section>
 
-        <section class="request-board section-card fade-in">
+        <section
+          class="request-board section-card fade-in"
+          style="border: 1px solid #69aa47 !important;"
+        >
           <div class="request-board-header">
             <div class="table-info">
               <span class="request-board-eyebrow">Request queue</span>
@@ -349,12 +340,10 @@ const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
 const loading = ref(false)
-const isAutoRefreshing = ref(false)
 const requests = ref([])
 const activeRequestActionId = ref('')
 const feedbackMessage = ref('')
 const feedbackTone = ref('success')
-const lastUpdatedAt = ref(null)
 
 const filters = reactive({
   search: '',
@@ -398,34 +387,6 @@ const formatDateTime = (value) => {
     minute: '2-digit',
   })
 }
-
-const formatRelativeTime = (value) => {
-  if (!value) return 'Waiting for first sync'
-  const timestamp = new Date(value)
-  if (Number.isNaN(timestamp.getTime())) return 'Waiting for first sync'
-
-  const diffMs = Date.now() - timestamp.getTime()
-  if (diffMs < 0) return 'Updated just now'
-
-  const minute = 60 * 1000
-  const hour = 60 * minute
-  const day = 24 * hour
-
-  if (diffMs < minute) return 'Updated just now'
-  if (diffMs < hour) {
-    const minutes = Math.floor(diffMs / minute)
-    return `Updated ${minutes} minute${minutes === 1 ? '' : 's'} ago`
-  }
-  if (diffMs < day) {
-    const hours = Math.floor(diffMs / hour)
-    return `Updated ${hours} hour${hours === 1 ? '' : 's'} ago`
-  }
-
-  const days = Math.floor(diffMs / day)
-  return `Updated ${days} day${days === 1 ? '' : 's'} ago`
-}
-
-const lastUpdatedLabel = computed(() => formatRelativeTime(lastUpdatedAt.value))
 
 const setFeedback = (message, tone = 'success') => {
   feedbackMessage.value = String(message || '').trim()
@@ -588,9 +549,7 @@ const handleDocumentKeydown = (event) => {
 }
 
 const fetchRequests = async ({ silent = false } = {}) => {
-  if (silent) {
-    isAutoRefreshing.value = true
-  } else {
+  if (!silent) {
     loading.value = true
   }
 
@@ -601,15 +560,12 @@ const fetchRequests = async ({ silent = false } = {}) => {
     })
 
     requests.value = Array.isArray(response.data?.requests) ? response.data.requests : []
-    lastUpdatedAt.value = new Date().toISOString()
   } catch (error) {
     if (!silent) {
       setFeedback(error.response?.data?.message || 'Failed to load requests.', 'error')
     }
   } finally {
-    if (silent) {
-      isAutoRefreshing.value = false
-    } else {
+    if (!silent) {
       loading.value = false
     }
   }
@@ -748,16 +704,6 @@ onBeforeUnmount(() => {
   max-width: 760px;
 }
 
-.request-hero-eyebrow {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: #4f8a35;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 .request-hero h2 {
   margin: 0 !important;
   color: #172033 !important;
@@ -772,57 +718,6 @@ onBeforeUnmount(() => {
   color: #64748b !important;
   font-size: 0.9rem !important;
   line-height: 1.6 !important;
-}
-
-.request-refresh-btn {
-  min-width: 112px;
-  min-height: 44px;
-  flex: 0 0 auto;
-  border: 1px solid #4f8a35 !important;
-  border-radius: 12px !important;
-  background: #4f8a35 !important;
-  color: #ffffff !important;
-  box-shadow: 0 6px 14px rgba(79, 138, 53, 0.2) !important;
-}
-
-.request-refresh-btn:hover:not(:disabled) {
-  border-color: #477d30 !important;
-  background: #477d30 !important;
-  transform: translateY(-1px);
-}
-
-.request-live-status {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin-top: 0.8rem;
-}
-
-.request-live-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 28px;
-  padding: 0.35rem 0.65rem;
-  border-radius: 999px;
-  border: 1px solid #b7d7a9;
-  background: #edf7e9;
-  color: #397127;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-}
-
-.request-live-pill--syncing {
-  border-color: #96c582;
-  background: #e2f2db;
-}
-
-.request-live-caption {
-  color: #64748b;
-  font-size: 0.76rem;
-  line-height: 1.5;
 }
 
 .request-summary-grid {
@@ -929,6 +824,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 1rem;
   padding: 1.15rem !important;
+  border-color: #69aa47 !important;
   border-radius: 18px !important;
 }
 
@@ -1306,10 +1202,6 @@ onBeforeUnmount(() => {
     padding: 1.1rem !important;
   }
 
-  .request-refresh-btn {
-    width: fit-content;
-  }
-
   .request-board-header {
     align-items: stretch;
   }
@@ -1349,10 +1241,6 @@ onBeforeUnmount(() => {
 @media (max-width: 480px) {
   .request-summary-grid {
     grid-template-columns: 1fr;
-  }
-
-  .request-refresh-btn {
-    width: 100%;
   }
 
   .request-board-header {

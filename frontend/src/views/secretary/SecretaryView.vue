@@ -66,7 +66,7 @@
     ></button>
 
     <main class="teacher-main secretary-main dashboard-container">
-      <header class="top-header secretary-top-header dashboard-header">
+      <header class="top-header secretary-top-header secretary-dashboard-header dashboard-header">
         <div class="header-content secretary-header-content dashboard-header-content">
           <div class="header-left secretary-header-copy dashboard-header-copy">
             <button type="button" class="mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
@@ -784,8 +784,8 @@ watch(students, () => {
 
 <style scoped>
 .secretary-top-header {
-  padding: 1.1rem 1.25rem !important;
-  border-radius: 20px !important;
+  padding: 0.9rem 1rem !important;
+  border-radius: 18px !important;
   border: 1px solid #bbf7d0 !important;
   background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
   box-shadow: 0 12px 30px rgba(21, 128, 61, 0.08);
@@ -795,13 +795,13 @@ watch(students, () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.85rem;
+  gap: 1rem;
 }
 
 .secretary-header-copy {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.9rem;
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -828,7 +828,6 @@ watch(students, () => {
   gap: 0.6rem;
   margin-left: auto;
   flex: 0 0 auto;
-  flex-wrap: wrap;
 }
 
 .secretary-access-chip {
@@ -1548,39 +1547,26 @@ watch(students, () => {
 #dashboard-directory,
 #dashboard-assignments { scroll-margin-top: 4.2rem; }
 
-.secretary-top-header {
-  padding: 0.7rem 0.9rem !important;
-  border-radius: 16px !important;
-  box-shadow: 0 8px 22px rgba(21, 128, 61, 0.07);
-}
-
-.secretary-header-copy h1 { font-size: 1.2rem; }
-.secretary-header-copy .header-subtitle { font-size: 0.78rem; }
-.secretary-header-tools { gap: 0.4rem; }
-
 .secretary-export-group {
   display: inline-flex;
+  align-items: center;
   gap: 0.2rem;
+  height: 40px;
   padding: 0.2rem;
   border: 1px solid #dcfce7;
   border-radius: 11px;
   background: rgba(255, 255, 255, 0.82);
+  box-sizing: border-box;
 }
 
 .secretary-export-btn {
+  height: 32px;
   min-height: 32px;
   padding: 0.4rem 0.6rem;
   border: 0;
   border-radius: 8px;
   background: transparent;
   font-size: 0.74rem;
-}
-
-.secretary-header-tools .account-menu-trigger {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border-radius: 10px;
 }
 
 .secretary-stat-section,
@@ -1766,8 +1752,11 @@ watch(students, () => {
   .secretary-dashboard-nav::-webkit-scrollbar { display: none; }
   .secretary-dashboard-nav button { padding-inline: 0.35rem; }
   .secretary-dashboard-nav button span { display: none; }
-  .secretary-export-group { margin-left: auto; }
-  .secretary-export-group .secretary-export-btn { width: 34px; min-height: 32px; padding: 0; }
+  .secretary-export-group {
+    height: 38px;
+    margin-left: auto;
+  }
+  .secretary-export-group .secretary-export-btn { width: 32px; height: 30px; min-height: 30px; padding: 0; }
   .secretary-export-group .secretary-export-btn span {
     position: absolute;
     width: 1px;

@@ -1,94 +1,94 @@
 <template>
-  <div class="teacher-dashboard headteacher-dashboard-page">
-    <aside id="headteacher-sidebar-drawer" class="teacher-sidebar" :class="{ active: isSidebarOpen }">
-      <div class="sidebar-header">
-        <div class="teacher-logo">
-          <div class="teacher-logo-icon">
-            <img src="/logo.png" alt="EduMatch" class="teacher-logo-img" />
+  <div class="headteacher-workspace headteacher-dashboard-page headteacher-content-page">
+    <aside id="headteacher-sidebar-drawer" class="headteacher-sidebar" :class="{ active: isSidebarOpen }">
+      <div class="headteacher-sidebar-header">
+        <div class="headteacher-brand">
+          <div class="headteacher-brand-icon">
+            <img src="/logo.png" alt="EduMatch" class="headteacher-brand-image" />
           </div>
-          <div class="teacher-logo-text">
+          <div class="headteacher-brand-copy">
             <h2>EduMatch</h2>
             <p>Head Teacher Portal</p>
           </div>
         </div>
-        <button type="button" class="sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
+        <button type="button" class="headteacher-sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
-      <nav class="sidebar-nav">
-        <div class="nav-section">
-          <h4 class="nav-section-title">Workspace</h4>
-          <router-link to="/headteacher/dashboard" class="nav-link" :class="{ active: route.path === '/headteacher/dashboard' }" @click="closeSidebar">
+      <nav class="headteacher-sidebar-nav">
+        <div class="headteacher-nav-section">
+          <h4 class="headteacher-nav-section-title">Workspace</h4>
+          <router-link to="/headteacher/dashboard" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/dashboard' }" @click="closeSidebar">
             <i class="fas fa-home"></i>
             <span>Dashboard</span>
           </router-link>
-          <router-link to="/headteacher/management" class="nav-link" :class="{ active: route.path === '/headteacher/management' }" @click="closeSidebar">
+          <router-link to="/headteacher/management" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/management' }" @click="closeSidebar">
             <i class="fas fa-users-cog"></i>
             <span>Teacher Management</span>
           </router-link>
-          <router-link to="/headteacher/lessons" class="nav-link" :class="{ active: route.path === '/headteacher/lessons' }" @click="closeSidebar">
+          <router-link to="/headteacher/lessons" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/lessons' }" @click="closeSidebar">
             <i class="fas fa-book-open"></i>
             <span>Lessons & Exams</span>
           </router-link>
         </div>
       </nav>
 
-      <div class="sidebar-footer">
-        <div class="teacher-profile">
-          <div class="teacher-avatar">
-            <img :src="avatarUrl" :alt="displayName" />
+      <div class="headteacher-sidebar-footer">
+        <div class="headteacher-sidebar-profile">
+          <div class="headteacher-sidebar-avatar">
+            <i class="fas fa-user" aria-hidden="true"></i>
           </div>
-          <div class="teacher-info">
+          <div class="headteacher-sidebar-info">
             <h5>{{ displayName }}</h5>
-            <p class="teacher-role">HeadTeacher</p>
-            <p class="teacher-strand">{{ departmentLabel }}</p>
-            <div class="teacher-status">
-              <span class="status-indicator active"></span>
-              <span>Department lead</span>
+            <div class="headteacher-sidebar-meta">
+              <p class="headteacher-sidebar-role">Head Teacher</p>
+              <div class="headteacher-sidebar-status">
+                <span class="headteacher-sidebar-status-indicator active"></span>
+                <span>active</span>
+              </div>
             </div>
-            <div class="headteacher-sidebar-chip">Lesson Access</div>
           </div>
         </div>
       </div>
     </aside>
 
-    <button v-if="isSidebarOpen" type="button" class="sidebar-backdrop" @click="closeSidebar" aria-label="Close sidebar"></button>
+    <button v-if="isSidebarOpen" type="button" class="headteacher-sidebar-backdrop" @click="closeSidebar" aria-label="Close sidebar"></button>
 
-    <main class="teacher-main headteacher-main dashboard-container">
-      <header class="top-header headteacher-top-header dashboard-header">
-        <div class="header-content headteacher-header-content dashboard-header-content">
-          <div class="header-left headteacher-header-copy dashboard-header-copy">
-            <button type="button" class="mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
+    <main class="headteacher-main headteacher-page-container">
+      <header class="headteacher-top-header headteacher-matched-page-header">
+        <div class="headteacher-header-content">
+          <div class="headteacher-header-copy">
+            <button type="button" class="headteacher-mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
               <i class="fas fa-bars"></i>
             </button>
-            <div>
+            <div class="headteacher-matched-header-copy">
               <h1>Lessons & Exams</h1>
-              <p class="header-subtitle">Create lesson materials, generate AI exams for managed teachers, and keep takeover-ready assessments organized in {{ departmentLabel }}.</p>
+              <p class="headteacher-header-subtitle">Create lessons, generate exams, and organize assessments for the {{ departmentLabel }} department.</p>
             </div>
           </div>
 
           <div class="headteacher-header-tools">
-            <div ref="accountMenuRef" class="account-menu">
+            <div ref="accountMenuRef" class="headteacher-account-menu">
               <button
                 type="button"
-                class="header-tour-btn account-menu-trigger"
+                class="headteacher-header-settings-button headteacher-account-menu-trigger"
                 aria-label="Settings menu"
                 title="Settings"
                 @click="toggleAccountMenu"
               >
                 <i class="fas fa-cog"></i>
               </button>
-              <div v-if="isAccountMenuOpen" class="account-menu-dropdown">
-                <button type="button" class="account-menu-item" @click="goToProfile">
+              <div v-if="isAccountMenuOpen" class="headteacher-account-menu-dropdown">
+                <button type="button" class="headteacher-account-menu-item" @click="goToProfile">
                   <i class="fas fa-user"></i>
                   <span>Profile</span>
                 </button>
-                <button type="button" class="account-menu-item" @click="goToSettings">
+                <button type="button" class="headteacher-account-menu-item" @click="goToSettings">
                   <i class="fas fa-cog"></i>
                   <span>Settings</span>
                 </button>
-                <button type="button" class="account-menu-item danger" @click="handleLogout">
+                <button type="button" class="headteacher-account-menu-item danger" @click="handleLogout">
                   <i class="fas fa-sign-out-alt"></i>
                   <span>Logout</span>
                 </button>
@@ -135,13 +135,13 @@
       </section>
 
       <div v-show="activeWorkspaceTab === 'lessons'" class="headteacher-workspace-panel">
-      <section class="section-card dashboard-panel headteacher-lessons-grid">
+      <section class="headteacher-section-card headteacher-panel headteacher-lessons-grid">
         <article class="headteacher-lessons-form-card">
           <div class="headteacher-section-head headteacher-lessons-hero-head">
             <div>
               <span class="headteacher-eyebrow">Lesson Assignment</span>
-              <h2 class="section-title">Create Lesson</h2>
-              <p class="toolbar-subtitle">Upload a lesson once and place it directly into the selected teacher's workspace.</p>
+              <h2 class="headteacher-section-title">Create Lesson</h2>
+              <p class="headteacher-section-subtitle">Upload a lesson once and place it directly into the selected teacher's workspace.</p>
             </div>
             <div class="headteacher-mini-badge">
               <i class="fas fa-diagram-project"></i>
@@ -222,9 +222,9 @@
               </label>
             </div>
 
-            <div class="modal-panel-actions headteacher-lessons-actions">
-              <button type="button" class="btn btn-outline" :disabled="isSubmitting" @click="resetForm">Clear</button>
-              <button type="submit" class="btn btn-primary" :disabled="isSubmitting || teachers.length === 0">
+            <div class="headteacher-modal-actions headteacher-lessons-actions">
+              <button type="button" class="headteacher-button headteacher-button-outline" :disabled="isSubmitting" @click="resetForm">Clear</button>
+              <button type="submit" class="headteacher-button headteacher-button-primary" :disabled="isSubmitting || teachers.length === 0">
                 <i class="fas" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-upload'"></i>
                 {{ isSubmitting ? 'Uploading...' : 'Create & Assign Lesson' }}
               </button>
@@ -236,8 +236,8 @@
           <div class="headteacher-section-head">
             <div>
               <span class="headteacher-eyebrow">Snapshot</span>
-              <h2 class="section-title">Overview</h2>
-              <p class="toolbar-subtitle">A quick look at lesson distribution across your faculty.</p>
+              <h2 class="headteacher-section-title">Overview</h2>
+              <p class="headteacher-section-subtitle">A quick look at lesson distribution across your faculty.</p>
             </div>
           </div>
 
@@ -261,20 +261,20 @@
         </article>
       </section>
 
-      <section class="section-card dashboard-panel">
+      <section class="headteacher-section-card headteacher-panel">
         <div class="headteacher-section-head">
           <div>
-            <h2 class="section-title">Recent Lesson Assignments</h2>
-            <p class="toolbar-subtitle">Recently created lessons assigned to teachers in your department.</p>
+            <h2 class="headteacher-section-title">Recent Lesson Assignments</h2>
+            <p class="headteacher-section-subtitle">Recently created lessons assigned to teachers in your department.</p>
           </div>
         </div>
 
-        <div v-if="isLoading" class="table-state">
+        <div v-if="isLoading" class="headteacher-table-state">
           <i class="fas fa-spinner fa-spin"></i>
           <span>Loading lessons...</span>
         </div>
 
-        <div v-else-if="lessons.length === 0" class="table-state">
+        <div v-else-if="lessons.length === 0" class="headteacher-table-state">
           <i class="fas fa-book-open"></i>
           <span>No lessons assigned yet.</span>
         </div>
@@ -306,12 +306,12 @@
       </div>
 
       <div v-show="activeWorkspaceTab === 'exams'" class="headteacher-workspace-panel">
-      <section class="section-card dashboard-panel headteacher-assessment-shell">
+      <section class="headteacher-section-card headteacher-panel headteacher-assessment-shell">
         <div class="headteacher-section-head">
           <div>
             <span class="headteacher-eyebrow">AI Takeover</span>
-            <h2 class="section-title">{{ isEditingAssessment ? 'Update Assessment' : 'Generate Assessment' }}</h2>
-            <p class="toolbar-subtitle">Create AI exams for an affected teacher, assign them to the handled class or advisory class, and edit the draft before publishing.</p>
+            <h2 class="headteacher-section-title">{{ isEditingAssessment ? 'Update Assessment' : 'Generate Assessment' }}</h2>
+            <p class="headteacher-section-subtitle">Create AI exams for an affected teacher, assign them to the handled class or advisory class, and edit the draft before publishing.</p>
           </div>
         </div>
 
@@ -490,12 +490,12 @@
                 <h3>Draft Questions</h3>
                 <p>{{ generatedQuestions.length > 0 ? 'Review and adjust the draft before publishing.' : 'Generate with AI or load a saved assessment to edit.' }}</p>
               </div>
-              <button v-if="generatedQuestions.length > 0" type="button" class="btn btn-outline" @click="toggleViewCorrectAnswers">
+              <button v-if="generatedQuestions.length > 0" type="button" class="headteacher-button headteacher-button-outline" @click="toggleViewCorrectAnswers">
                 {{ showCorrectAnswers ? 'Hide Correct Answers' : 'View Correct Answers' }}
               </button>
             </div>
 
-            <div v-if="generatedQuestions.length === 0" class="table-state">
+            <div v-if="generatedQuestions.length === 0" class="headteacher-table-state">
               <i class="fas fa-file-circle-plus"></i>
               <span>No draft questions yet.</span>
             </div>
@@ -519,35 +519,35 @@
             </div>
           </div>
 
-          <div class="modal-panel-actions headteacher-assessment-actions">
-            <button type="button" class="btn btn-outline" :disabled="isAssessmentGenerating || isAssessmentSaving" @click="resetAssessmentDraft">Clear Draft</button>
-            <button type="button" class="btn btn-outline" :disabled="!canGenerateAssessment || isAssessmentGenerating" :title="assessmentGenerateButtonTitle" @click="generateAssessmentWithAi">
+          <div class="headteacher-modal-actions headteacher-assessment-actions">
+            <button type="button" class="headteacher-button headteacher-button-outline" :disabled="isAssessmentGenerating || isAssessmentSaving" @click="resetAssessmentDraft">Clear Draft</button>
+            <button type="button" class="headteacher-button headteacher-button-outline" :disabled="!canGenerateAssessment || isAssessmentGenerating" :title="assessmentGenerateButtonTitle" @click="generateAssessmentWithAi">
               <i class="fas" :class="isAssessmentGenerating ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'"></i>
               {{ isAssessmentGenerating ? 'Generating...' : (isEditingAssessment ? 'Regenerate Draft' : 'Generate with AI') }}
             </button>
-            <button type="button" class="btn btn-primary" :disabled="generatedQuestions.length === 0 || isAssessmentSaving" @click="saveManagedAssessment">
+            <button type="button" class="headteacher-button headteacher-button-primary" :disabled="generatedQuestions.length === 0 || isAssessmentSaving" @click="saveManagedAssessment">
               <i class="fas" :class="isAssessmentSaving ? 'fa-spinner fa-spin' : 'fa-check-circle'"></i>
               {{ isAssessmentSaving ? 'Saving...' : (isEditingAssessment ? 'Update Assessment' : 'Publish Assessment') }}
             </button>
           </div>
-          <p v-if="!canGenerateAssessment && assessmentGenerationWarning" class="ai-config-warning">{{ assessmentGenerationWarning }}</p>
+          <p v-if="!canGenerateAssessment && assessmentGenerationWarning" class="headteacher-ai-config-warning">{{ assessmentGenerationWarning }}</p>
         </form>
       </section>
 
-      <section class="section-card dashboard-panel">
+      <section class="headteacher-section-card headteacher-panel">
         <div class="headteacher-section-head">
           <div>
-            <h2 class="section-title">Managed Assessments</h2>
-            <p class="toolbar-subtitle">Open any existing assessment when you need to substitute, adjust, or republish it for a managed teacher.</p>
+            <h2 class="headteacher-section-title">Managed Assessments</h2>
+            <p class="headteacher-section-subtitle">Open any existing assessment when you need to substitute, adjust, or republish it for a managed teacher.</p>
           </div>
         </div>
 
-        <div v-if="isAssessmentsLoading" class="table-state">
+        <div v-if="isAssessmentsLoading" class="headteacher-table-state">
           <i class="fas fa-spinner fa-spin"></i>
           <span>Loading managed assessments...</span>
         </div>
 
-        <div v-else-if="filteredManagedAssessments.length === 0" class="table-state">
+        <div v-else-if="filteredManagedAssessments.length === 0" class="headteacher-table-state">
           <i class="fas fa-file-pen"></i>
           <span>No managed assessments found for the selected teacher.</span>
         </div>
@@ -564,7 +564,7 @@
                 <h3>{{ assessment.title }}</h3>
                 <p>{{ assessment.lessonTitle || 'Unlinked lesson' }} · {{ assessment.subject || 'No subject' }}</p>
               </div>
-              <button type="button" class="btn btn-outline" @click="startEditingAssessment(assessment)">
+              <button type="button" class="headteacher-button headteacher-button-outline" @click="startEditingAssessment(assessment)">
                 <i class="fas fa-pen-to-square"></i>
                 Edit Exam
               </button>
@@ -654,11 +654,6 @@ const getAuthConfig = () => ({
 
 const displayName = computed(() => authStore.user?.name || 'HeadTeacher')
 const departmentLabel = computed(() => authStore.user?.department || 'Department')
-const avatarUrl = computed(() => {
-  const profileImage = String(authStore.user?.profileImage || '').trim()
-  if (profileImage) return profileImage
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName.value)}&background=334155&color=fff`
-})
 const selectedTeacher = computed(() => teachers.value.find((teacher) => teacher.id === form.teacherId) || null)
 const selectedAssessmentTeacher = computed(() => teachers.value.find((teacher) => teacher.id === assessmentForm.teacherId) || null)
 const selectedTeacherInitials = computed(() => {
@@ -1672,7 +1667,7 @@ small {
   margin-top: 1rem;
 }
 
-.ai-config-warning {
+.headteacher-ai-config-warning {
   margin-top: 0.85rem;
   color: #b91c1c;
   font-weight: 700;

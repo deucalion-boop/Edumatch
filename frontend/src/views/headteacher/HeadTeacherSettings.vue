@@ -1,45 +1,45 @@
 <template>
-  <div class="teacher-dashboard headteacher-dashboard-page">
-    <main class="teacher-main headteacher-main dashboard-container">
-      <header class="top-header headteacher-top-header dashboard-header">
-        <div class="header-content headteacher-header-content dashboard-header-content">
-          <div class="header-left headteacher-header-copy dashboard-header-copy">
+  <div class="headteacher-workspace headteacher-dashboard-page">
+    <main class="headteacher-main headteacher-page-container">
+      <header class="headteacher-top-header">
+        <div class="headteacher-header-content">
+          <div class="headteacher-header-copy">
             <div>
               <h1>Change Password</h1>
-              <p class="header-subtitle">Update your Head Teacher account password and keep your department access secure.</p>
+              <p class="headteacher-header-subtitle">Update your Head Teacher account password and keep your department access secure.</p>
             </div>
           </div>
 
           <div class="headteacher-header-tools">
             <button
               type="button"
-              class="header-tour-btn account-menu-trigger"
+              class="headteacher-header-settings-button headteacher-account-menu-trigger"
               aria-label="Home dashboard"
               title="Home Dashboard"
               @click="router.push('/headteacher/dashboard')"
             >
               <i class="fas fa-home"></i>
             </button>
-            <div ref="accountMenuRef" class="account-menu">
+            <div ref="accountMenuRef" class="headteacher-account-menu">
               <button
                 type="button"
-                class="header-tour-btn account-menu-trigger"
+                class="headteacher-header-settings-button headteacher-account-menu-trigger"
                 aria-label="Settings menu"
                 title="Settings"
                 @click="toggleAccountMenu"
               >
                 <i class="fas fa-cog"></i>
               </button>
-              <div v-if="isAccountMenuOpen" class="account-menu-dropdown">
-                <button type="button" class="account-menu-item" @click="goToProfile">
+              <div v-if="isAccountMenuOpen" class="headteacher-account-menu-dropdown">
+                <button type="button" class="headteacher-account-menu-item" @click="goToProfile">
                   <i class="fas fa-user"></i>
                   <span>Profile</span>
                 </button>
-                <button type="button" class="account-menu-item" @click="goToSettings">
+                <button type="button" class="headteacher-account-menu-item" @click="goToSettings">
                   <i class="fas fa-cog"></i>
                   <span>Settings</span>
                 </button>
-                <button type="button" class="account-menu-item danger" @click="handleLogout">
+                <button type="button" class="headteacher-account-menu-item danger" @click="handleLogout">
                   <i class="fas fa-sign-out-alt"></i>
                   <span>Logout</span>
                 </button>
@@ -54,7 +54,7 @@
         <span>{{ banner.message }}</span>
       </section>
 
-      <section class="section-card dashboard-panel headteacher-profile-hero">
+      <section class="headteacher-section-card headteacher-panel headteacher-profile-hero">
         <div class="headteacher-settings-icon">
           <i class="fas fa-key"></i>
         </div>
@@ -66,11 +66,11 @@
       </section>
 
       <section class="headteacher-profile-grid">
-        <article class="section-card dashboard-panel content-card">
+        <article class="headteacher-section-card headteacher-panel headteacher-content-card">
           <div class="headteacher-section-head">
             <div>
-              <h2 class="section-title">Account Security</h2>
-              <p class="toolbar-subtitle">Enter your current password, then choose a new one that meets the security rules below.</p>
+              <h2 class="headteacher-section-title">Account Security</h2>
+              <p class="headteacher-section-subtitle">Enter your current password, then choose a new one that meets the security rules below.</p>
             </div>
           </div>
 
@@ -154,8 +154,8 @@
               </ul>
             </div>
 
-            <div class="modal-panel-actions">
-              <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+            <div class="headteacher-modal-actions">
+              <button type="submit" class="headteacher-button headteacher-button-primary" :disabled="isSubmitting">
                 {{ isSubmitting ? 'Updating...' : 'Update Password' }}
               </button>
             </div>
@@ -303,7 +303,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .headteacher-main,
-.headteacher-main.dashboard-container {
+.headteacher-main.headteacher-page-container {
   width: 100%;
   max-width: none !important;
   margin: 0;
@@ -320,7 +320,7 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 1fr);
 }
 
-.content-card {
+.headteacher-content-card {
   width: 100%;
 }
 
@@ -386,7 +386,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .modal-panel-actions .btn {
+  .headteacher-modal-actions .headteacher-button {
     width: 100%;
   }
 }

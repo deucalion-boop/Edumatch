@@ -54,17 +54,6 @@
       <span>{{ banner.message }}</span>
     </section>
 
-    <section class="section-card dashboard-panel secretary-settings-hero secretary-surface-card">
-      <div class="secretary-settings-icon">
-        <i class="fas fa-key"></i>
-      </div>
-      <div>
-        <span class="secretary-eyebrow">Security</span>
-        <h2>Change Password</h2>
-        <p>Use a strong password with a mix of uppercase, lowercase, and numbers before saving.</p>
-      </div>
-    </section>
-
     <section class="secretary-settings-grid">
       <article class="section-card dashboard-panel secretary-settings-card secretary-surface-card">
         <div class="secretary-card-head">
@@ -140,7 +129,7 @@
           </div>
 
           <div class="secretary-form-actions">
-            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+            <button type="submit" class="btn btn-primary secretary-update-password-btn" :disabled="isSubmitting">
               {{ isSubmitting ? 'Updating...' : 'Update Password' }}
             </button>
           </div>
@@ -398,6 +387,17 @@ onBeforeUnmount(() => {
 .secretary-form-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.secretary-update-password-btn {
+  border-color: #245b13;
+  background: #245b13;
+  color: #ffffff;
+}
+
+.secretary-update-password-btn:hover:not(:disabled) {
+  border-color: #1b460e;
+  background: #1b460e;
 }
 
 @media (max-width: 768px) {

@@ -849,10 +849,12 @@ onBeforeUnmount(() => {
 .secretary-userlist-panel {
   margin-bottom: 1rem;
   padding: 1.35rem;
-  border: 1px solid #82b38f;
+  border: 1px solid transparent;
   border-radius: 24px;
-  background: linear-gradient(180deg, #f7faf7 0%, #edf5ef 100%);
-  box-shadow: 0 18px 45px rgba(47, 111, 67, 0.12);
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
+  box-shadow: none;
 }
 .secretary-section-head {
   margin-bottom: 1.25rem;
@@ -866,9 +868,9 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   margin-bottom: 0.85rem;
   padding: 1rem;
-  border: 1px solid #91b99b;
+  border: 1px solid #e5e7eb;
   border-radius: 18px 18px 0 0;
-  background: #e4f0e7;
+  background: #ffffff;
 }
 .secretary-search-field {
   flex: 1 1 320px;
@@ -974,10 +976,10 @@ onBeforeUnmount(() => {
   margin-top: -0.85rem;
   margin-bottom: 1.2rem;
   padding: 0 1rem 1rem;
-  border: 1px solid #91b99b;
+  border: 1px solid #e5e7eb;
   border-top: 0;
   border-radius: 0 0 18px 18px;
-  background: #e4f0e7;
+  background: #ffffff;
 }
 .secretary-filter-group span {
   color: #356f48;

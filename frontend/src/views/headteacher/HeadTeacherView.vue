@@ -1,94 +1,94 @@
 <template>
-  <div class="teacher-dashboard headteacher-dashboard-page">
-    <aside id="headteacher-sidebar-drawer" class="teacher-sidebar" :class="{ active: isSidebarOpen }">
-      <div class="sidebar-header">
-        <div class="teacher-logo">
-          <div class="teacher-logo-icon">
-            <img src="/logo.png" alt="EduMatch" class="teacher-logo-img">
+  <div class="headteacher-workspace headteacher-dashboard-page headteacher-overview-page">
+    <aside id="headteacher-sidebar-drawer" class="headteacher-sidebar" :class="{ active: isSidebarOpen }">
+      <div class="headteacher-sidebar-header">
+        <div class="headteacher-brand">
+          <div class="headteacher-brand-icon">
+            <img src="/logo.png" alt="EduMatch" class="headteacher-brand-image">
           </div>
-          <div class="teacher-logo-text">
+          <div class="headteacher-brand-copy">
             <h2>EduMatch</h2>
             <p>Head Teacher Portal</p>
           </div>
         </div>
-        <button type="button" class="sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
+        <button type="button" class="headteacher-sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
-      <nav class="sidebar-nav">
-        <div class="nav-section">
-          <h4 class="nav-section-title">Workspace</h4>
-          <router-link to="/headteacher/dashboard" class="nav-link" :class="{ active: route.path === '/headteacher/dashboard' }" @click="closeSidebar">
+      <nav class="headteacher-sidebar-nav">
+        <div class="headteacher-nav-section">
+          <h4 class="headteacher-nav-section-title">Workspace</h4>
+          <router-link to="/headteacher/dashboard" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/dashboard' }" @click="closeSidebar">
             <i class="fas fa-home"></i>
             <span>Dashboard</span>
           </router-link>
-          <router-link to="/headteacher/management" class="nav-link" :class="{ active: route.path === '/headteacher/management' }" @click="closeSidebar">
+          <router-link to="/headteacher/management" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/management' }" @click="closeSidebar">
             <i class="fas fa-users-cog"></i>
             <span>Teacher Management</span>
           </router-link>
-          <router-link to="/headteacher/lessons" class="nav-link" :class="{ active: route.path === '/headteacher/lessons' }" @click="closeSidebar">
+          <router-link to="/headteacher/lessons" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/lessons' }" @click="closeSidebar">
             <i class="fas fa-book-open"></i>
             <span>Lessons & Exams</span>
           </router-link>
         </div>
       </nav>
 
-      <div class="sidebar-footer">
-        <div class="teacher-profile">
-          <div class="teacher-avatar">
-            <img :src="avatarUrl" :alt="displayName" />
+      <div class="headteacher-sidebar-footer">
+        <div class="headteacher-sidebar-profile">
+          <div class="headteacher-sidebar-avatar">
+            <i class="fas fa-user" aria-hidden="true"></i>
           </div>
-          <div class="teacher-info">
+          <div class="headteacher-sidebar-info">
             <h5>{{ displayName }}</h5>
-            <p class="teacher-role">HeadTeacher</p>
-            <p class="teacher-strand">{{ departmentLabel }}</p>
-            <div class="teacher-status">
-              <span class="status-indicator active"></span>
-              <span>Department lead</span>
+            <div class="headteacher-sidebar-meta">
+              <p class="headteacher-sidebar-role">Head Teacher</p>
+              <div class="headteacher-sidebar-status">
+                <span class="headteacher-sidebar-status-indicator active"></span>
+                <span>active</span>
+              </div>
             </div>
-            <div class="headteacher-sidebar-chip">Management Access</div>
           </div>
         </div>
       </div>
     </aside>
 
-    <button v-if="isSidebarOpen" type="button" class="sidebar-backdrop" @click="closeSidebar" aria-label="Close sidebar"></button>
+    <button v-if="isSidebarOpen" type="button" class="headteacher-sidebar-backdrop" @click="closeSidebar" aria-label="Close sidebar"></button>
 
-    <main class="teacher-main headteacher-main dashboard-container">
-      <header class="top-header headteacher-top-header dashboard-header">
-        <div class="header-content headteacher-header-content dashboard-header-content">
-          <div class="header-left headteacher-header-copy dashboard-header-copy">
-            <button type="button" class="mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
+    <main class="headteacher-main headteacher-page-container">
+      <header class="headteacher-top-header headteacher-matched-page-header">
+        <div class="headteacher-header-content">
+          <div class="headteacher-header-copy">
+            <button type="button" class="headteacher-mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
               <i class="fas fa-bars"></i>
             </button>
-            <div class="headteacher-dashboard-header-copy">
+            <div class="headteacher-dashboard-header-copy headteacher-matched-header-copy">
               <h1>{{ departmentLabel }} Department</h1>
-              <p class="header-subtitle">Create, monitor, and manage teachers under your department with a unified administrative view.</p>
+              <p class="headteacher-header-subtitle">Create, monitor, and manage teachers under your department with a unified administrative view.</p>
             </div>
           </div>
 
           <div class="headteacher-header-tools">
-            <div ref="accountMenuRef" class="account-menu">
+            <div ref="accountMenuRef" class="headteacher-account-menu">
               <button
                 type="button"
-                class="header-tour-btn account-menu-trigger"
+                class="headteacher-header-settings-button headteacher-account-menu-trigger"
                 aria-label="Settings menu"
                 title="Settings"
                 @click="toggleAccountMenu"
               >
                 <i class="fas fa-cog"></i>
               </button>
-              <div v-if="isAccountMenuOpen" class="account-menu-dropdown">
-                <button type="button" class="account-menu-item" @click="goToProfile">
+              <div v-if="isAccountMenuOpen" class="headteacher-account-menu-dropdown">
+                <button type="button" class="headteacher-account-menu-item" @click="goToProfile">
                   <i class="fas fa-user"></i>
                   <span>Profile</span>
                 </button>
-                <button type="button" class="account-menu-item" @click="goToSettings">
+                <button type="button" class="headteacher-account-menu-item" @click="goToSettings">
                   <i class="fas fa-cog"></i>
                   <span>Settings</span>
                 </button>
-                <button type="button" class="account-menu-item danger" @click="handleLogout">
+                <button type="button" class="headteacher-account-menu-item danger" @click="handleLogout">
                   <i class="fas fa-sign-out-alt"></i>
                   <span>Logout</span>
                 </button>
@@ -98,8 +98,7 @@
         </div>
       </header>
 
-      <section class="section-card dashboard-panel headteacher-stat-section">
-        <div class="headteacher-stat-grid stat-cards">
+      <div class="headteacher-stat-grid">
           <article class="headteacher-stat-card">
             <div class="headteacher-stat-icon teachers">
               <i class="fas fa-chalkboard-teacher"></i>
@@ -143,109 +142,110 @@
               <small class="headteacher-stat-note">{{ summary.totalLessons }} lessons and {{ summary.totalAssessments }} assessments</small>
             </div>
           </article>
-        </div>
-      </section>
+      </div>
 
-      <section class="section-card dashboard-panel headteacher-radial-section">
-        <div class="headteacher-section-head">
-          <div>
-            <h2 class="section-title">Content Mix Overview</h2>
-            <p class="toolbar-subtitle">Visual share of lesson and activity or assessment creation in your department.</p>
+      <div class="headteacher-dashboard-overview">
+        <section class="headteacher-section-card headteacher-panel headteacher-radial-section">
+          <div class="headteacher-section-head">
+            <div>
+              <h2 class="headteacher-section-title">Content Mix Overview</h2>
+              <p class="headteacher-section-subtitle">Lesson and assessment share across your department.</p>
+            </div>
           </div>
-        </div>
 
-        <div class="headteacher-radial-grid">
-          <article class="headteacher-radial-card">
-            <div
-              class="headteacher-radial-chart lessons"
-              :style="{ '--progress-value': `${lessonAnalyticsPercent}%` }"
-              aria-label="Lesson share analytics"
-            >
-              <div class="headteacher-radial-center">
-                <strong>{{ lessonAnalyticsPercent }}%</strong>
-                <span>Lessons</span>
+          <div class="headteacher-radial-grid">
+            <article class="headteacher-radial-card">
+              <div
+                class="headteacher-radial-chart lessons"
+                :style="{ '--progress-value': `${lessonAnalyticsPercent}%` }"
+                aria-label="Lesson share analytics"
+              >
+                <div class="headteacher-radial-center">
+                  <strong>{{ lessonAnalyticsPercent }}%</strong>
+                  <span>Lessons</span>
+                </div>
+              </div>
+              <div class="headteacher-radial-copy">
+                <h3>Lesson Share</h3>
+                <p>{{ summary.totalLessons }} lesson{{ summary.totalLessons === 1 ? '' : 's' }} created by department teachers.</p>
+              </div>
+            </article>
+
+            <article class="headteacher-radial-card">
+              <div
+                class="headteacher-radial-chart assessments"
+                :style="{ '--progress-value': `${assessmentAnalyticsPercent}%` }"
+                aria-label="Assessment share analytics"
+              >
+                <div class="headteacher-radial-center">
+                  <strong>{{ assessmentAnalyticsPercent }}%</strong>
+                  <span>Assessments</span>
+                </div>
+              </div>
+              <div class="headteacher-radial-copy">
+                <h3>Assessment Share</h3>
+                <p>{{ summary.totalAssessments }} activit{{ summary.totalAssessments === 1 ? 'y' : 'ies' }} or assessments created.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="headteacher-section-card headteacher-panel headteacher-analytics-panel">
+          <div class="headteacher-section-head headteacher-analytics-head">
+            <div class="headteacher-analytics-copy">
+              <span class="headteacher-analytics-kicker">Performance Trend</span>
+              <h2 class="headteacher-section-title">Content Creation Analytics</h2>
+              <p class="headteacher-section-subtitle">Monthly lesson and assessment creation across your department.</p>
+              <div class="headteacher-analytics-highlights">
+                <div class="headteacher-highlight-pill">
+                  <span>Peak Period</span>
+                  <strong>{{ analyticsPeakPeriodLabel }}</strong>
+                </div>
+                <div class="headteacher-highlight-pill">
+                  <span>Assessments In Range</span>
+                  <strong>{{ analyticsAssessmentsInRange }}</strong>
+                </div>
               </div>
             </div>
-            <div class="headteacher-radial-copy">
-              <h3>Lesson Share</h3>
-              <p>{{ summary.totalLessons }} lesson{{ summary.totalLessons === 1 ? '' : 's' }} created by teachers in your department.</p>
-            </div>
-          </article>
-
-          <article class="headteacher-radial-card">
-            <div
-              class="headteacher-radial-chart assessments"
-              :style="{ '--progress-value': `${assessmentAnalyticsPercent}%` }"
-              aria-label="Assessment share analytics"
-            >
-              <div class="headteacher-radial-center">
-                <strong>{{ assessmentAnalyticsPercent }}%</strong>
-                <span>Assessments</span>
-              </div>
-            </div>
-            <div class="headteacher-radial-copy">
-              <h3>Activity / Assessment Share</h3>
-              <p>{{ summary.totalAssessments }} activit{{ summary.totalAssessments === 1 ? 'y' : 'ies' }} or assessments created by teachers in your department.</p>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="section-card dashboard-panel headteacher-analytics-panel">
-        <div class="headteacher-section-head headteacher-analytics-head">
-          <div class="headteacher-analytics-copy">
-            <span class="headteacher-analytics-kicker">Performance Trend</span>
-            <h2 class="section-title">Content Creation Analytics</h2>
-            <p class="toolbar-subtitle">Monthly creation trend for lessons and activities or assessments from teachers in your department.</p>
-            <div class="headteacher-analytics-highlights">
-              <div class="headteacher-highlight-pill">
-                <span>Peak Period</span>
-                <strong>{{ analyticsPeakPeriodLabel }}</strong>
-              </div>
-              <div class="headteacher-highlight-pill">
-                <span>Assessments In Range</span>
-                <strong>{{ analyticsAssessmentsInRange }}</strong>
-              </div>
+            <div class="headteacher-analytics-actions">
+              <label class="headteacher-analytics-filter">
+                <span>Range</span>
+                <select v-model="lessonAnalyticsFilter" @change="fetchTeachers">
+                  <option value="1">Today</option>
+                  <option value="3">Last 3 months</option>
+                  <option value="12">Last 12 months</option>
+                </select>
+              </label>
             </div>
           </div>
-          <div class="headteacher-analytics-actions">
-            <label class="headteacher-analytics-filter">
-              <span>Range</span>
-              <select v-model="lessonAnalyticsFilter" @change="fetchTeachers">
-                <option value="1">Today</option>
-                <option value="3">Last 3 months</option>
-                <option value="12">Last 12 months</option>
-              </select>
-            </label>
-          </div>
-        </div>
 
-        <div class="headteacher-chart-shell">
-          <canvas ref="lessonTrendCanvas" aria-label="Lesson creation analytics chart"></canvas>
-        </div>
-        <div class="headteacher-analytics-legend">
-          <div class="headteacher-legend-item">
-            <span class="headteacher-legend-swatch lessons"></span>
-            <strong>Lessons</strong>
-            <small>{{ analyticsLessonsInRange }} in range</small>
+          <div class="headteacher-chart-shell">
+            <canvas ref="lessonTrendCanvas" aria-label="Lesson creation analytics chart"></canvas>
           </div>
-          <div class="headteacher-legend-item">
-            <span class="headteacher-legend-swatch assessments"></span>
-            <strong>Activities/Assessments</strong>
-            <small>{{ analyticsAssessmentsInRange }} in range</small>
+          <div class="headteacher-analytics-legend">
+            <div class="headteacher-legend-item">
+              <span class="headteacher-legend-swatch lessons"></span>
+              <strong>Lessons</strong>
+              <small>{{ analyticsLessonsInRange }} in range</small>
+            </div>
+            <div class="headteacher-legend-item">
+              <span class="headteacher-legend-swatch assessments"></span>
+              <strong>Activities/Assessments</strong>
+              <small>{{ analyticsAssessmentsInRange }} in range</small>
+            </div>
           </div>
-        </div>
-        <p class="headteacher-chart-caption">{{ analyticsContentCaption }}</p>
-      </section>
+          <p class="headteacher-chart-caption">{{ analyticsContentCaption }}</p>
+        </section>
+      </div>
 
-      <div v-if="isCreateModalOpen" class="modal-shell" @click.self="closeModal">
-        <div class="modal-panel">
-          <div class="modal-panel-head">
+      <div v-if="isCreateModalOpen" class="headteacher-modal-shell" @click.self="closeModal">
+        <div class="headteacher-modal-panel">
+          <div class="headteacher-modal-head">
             <div>
               <h3>Create Teacher Account</h3>
               <p>Teachers created here are assigned to {{ departmentLabel }}.</p>
             </div>
-            <button type="button" class="modal-close-btn" @click="closeModal">
+            <button type="button" class="headteacher-modal-close" @click="closeModal">
               <i class="fas fa-times"></i>
             </button>
           </div>
@@ -276,9 +276,9 @@
 
             <p v-if="formMessage" class="headteacher-form-feedback" :class="formMessageType">{{ formMessage }}</p>
 
-            <div class="modal-panel-actions">
-              <button type="button" class="btn btn-outline" @click="closeModal">Cancel</button>
-              <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+            <div class="headteacher-modal-actions">
+              <button type="button" class="headteacher-button headteacher-button-outline" @click="closeModal">Cancel</button>
+              <button type="submit" class="headteacher-button headteacher-button-primary" :disabled="isSubmitting">
                 <i class="fas" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
                 {{ isSubmitting ? 'Saving...' : 'Create Teacher & Email Credentials' }}
               </button>
@@ -461,11 +461,6 @@ const getAuthConfig = () => ({
 
 const displayName = computed(() => authStore.user?.name || 'HeadTeacher')
 const departmentLabel = computed(() => authStore.user?.department || 'Department')
-const avatarUrl = computed(() => {
-  const profileImage = String(authStore.user?.profileImage || '').trim()
-  if (profileImage) return profileImage
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName.value)}&background=334155&color=fff`
-})
 
 const normalizeStatus = (status) => {
   const normalized = String(status || '').trim().toLowerCase()
@@ -810,7 +805,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.teacher-logo-img {
+.headteacher-brand-image {
   width: 100%;
   height: 100%;
   object-fit: contain;

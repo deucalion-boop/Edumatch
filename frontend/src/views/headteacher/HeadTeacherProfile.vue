@@ -1,45 +1,45 @@
 <template>
-  <div class="teacher-dashboard headteacher-dashboard-page">
-    <main class="teacher-main headteacher-main dashboard-container">
-      <header class="top-header headteacher-top-header dashboard-header">
-        <div class="header-content headteacher-header-content dashboard-header-content">
-          <div class="header-left headteacher-header-copy dashboard-header-copy">
+  <div class="headteacher-workspace headteacher-dashboard-page">
+    <main class="headteacher-main headteacher-page-container">
+      <header class="headteacher-top-header">
+        <div class="headteacher-header-content">
+          <div class="headteacher-header-copy">
             <div>
               <h1>HeadTeacher Profile</h1>
-              <p class="header-subtitle">Review your account identity and department leadership details.</p>
+              <p class="headteacher-header-subtitle">Review your account identity and department leadership details.</p>
             </div>
           </div>
 
           <div class="headteacher-header-tools">
             <button
               type="button"
-              class="header-tour-btn account-menu-trigger"
+              class="headteacher-header-settings-button headteacher-account-menu-trigger"
               aria-label="Home dashboard"
               title="Home Dashboard"
               @click="router.push('/headteacher/dashboard')"
             >
               <i class="fas fa-home"></i>
             </button>
-            <div ref="accountMenuRef" class="account-menu">
+            <div ref="accountMenuRef" class="headteacher-account-menu">
               <button
                 type="button"
-                class="header-tour-btn account-menu-trigger"
+                class="headteacher-header-settings-button headteacher-account-menu-trigger"
                 aria-label="Settings menu"
                 title="Settings"
                 @click="toggleAccountMenu"
               >
                 <i class="fas fa-cog"></i>
               </button>
-              <div v-if="isAccountMenuOpen" class="account-menu-dropdown">
-                <button type="button" class="account-menu-item" @click="goToProfile">
+              <div v-if="isAccountMenuOpen" class="headteacher-account-menu-dropdown">
+                <button type="button" class="headteacher-account-menu-item" @click="goToProfile">
                   <i class="fas fa-user"></i>
                   <span>Profile</span>
                 </button>
-                <button type="button" class="account-menu-item" @click="goToSettings">
+                <button type="button" class="headteacher-account-menu-item" @click="goToSettings">
                   <i class="fas fa-cog"></i>
                   <span>Settings</span>
                 </button>
-                <button type="button" class="account-menu-item danger" @click="handleLogout">
+                <button type="button" class="headteacher-account-menu-item danger" @click="handleLogout">
                   <i class="fas fa-sign-out-alt"></i>
                   <span>Logout</span>
                 </button>
@@ -55,11 +55,11 @@
       </section>
 
       <section class="headteacher-profile-grid">
-        <article class="section-card dashboard-panel content-card">
+        <article class="headteacher-section-card headteacher-panel headteacher-content-card">
           <div class="headteacher-section-head">
             <div>
-              <h2 class="section-title">Profile Summary</h2>
-              <p class="toolbar-subtitle">Core account details used throughout the HeadTeacher portal.</p>
+              <h2 class="headteacher-section-title">Profile Summary</h2>
+              <p class="headteacher-section-subtitle">Core account details used throughout the HeadTeacher portal.</p>
             </div>
           </div>
 
@@ -83,11 +83,11 @@
           </div>
         </article>
 
-        <article class="section-card dashboard-panel content-card">
+        <article class="headteacher-section-card headteacher-panel headteacher-content-card">
           <div class="headteacher-section-head">
             <div>
-              <h2 class="section-title">Edit Basic Information</h2>
-              <p class="toolbar-subtitle">Update local profile details displayed across your portal.</p>
+              <h2 class="headteacher-section-title">Edit Basic Information</h2>
+              <p class="headteacher-section-subtitle">Update local profile details displayed across your portal.</p>
             </div>
           </div>
 
@@ -109,9 +109,9 @@
               </label>
             </div>
 
-            <div class="modal-panel-actions">
-              <button type="button" class="btn btn-outline" @click="resetProfile">Reset</button>
-              <button type="submit" class="btn btn-primary" style="color: #ffffff !important;">Save Profile</button>
+            <div class="headteacher-modal-actions">
+              <button type="button" class="headteacher-button headteacher-button-outline" @click="resetProfile">Reset</button>
+              <button type="submit" class="headteacher-button headteacher-button-primary" style="color: #ffffff !important;">Save Profile</button>
             </div>
           </form>
         </article>
@@ -225,7 +225,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .headteacher-main,
-.headteacher-main.dashboard-container {
+.headteacher-main.headteacher-page-container {
   width: 100%;
   max-width: none !important;
   margin: 0;

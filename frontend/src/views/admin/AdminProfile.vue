@@ -129,12 +129,30 @@
 
             <div class="profile-summary">
               <div class="profile-avatar">
-                <img :src="avatarUrl" :alt="displayName" />
+                <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" />
+                <i v-else class="fas fa-user" style="color: #4f8a35 !important;" aria-hidden="true"></i>
               </div>
               <div class="profile-identity">
                 <h4>{{ displayName }}</h4>
                 <p>{{ profileForm.email || 'No email address provided' }}</p>
                 <span class="profile-chip">Administrator</span>
+                <div class="profile-photo-actions">
+                  <label class="profile-photo-control" for="adminProfilePhoto">
+                    <i class="fas fa-camera"></i>
+                    <span>Change profile photo</span>
+                    <input
+                      id="adminProfilePhoto"
+                      ref="profilePhotoInput"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      aria-describedby="adminProfilePhotoHelp"
+                      @change="handleProfilePhotoChange"
+                    />
+                  </label>
+                  <span id="adminProfilePhotoHelp" class="profile-photo-help">
+                    {{ selectedPhotoName ? `Selected: ${selectedPhotoName}` : 'PNG, JPG, or WebP · Maximum 2 MB' }}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -154,14 +172,6 @@
               <div class="profile-detail-item">
                 <span>Contact Number</span>
                 <strong>{{ profileForm.contactNumber || 'Not provided' }}</strong>
-              </div>
-              <div class="profile-detail-item">
-                <span>Department Scope</span>
-                <strong>All academic and system modules</strong>
-              </div>
-              <div class="profile-detail-item">
-                <span>Primary Workspace</span>
-                <strong>Dashboard, users, settings, and analytics</strong>
               </div>
             </div>
           </article>
@@ -188,6 +198,12 @@
                   <small v-if="errors.email" class="profile-field-error">{{ errors.email }}</small>
                 </label>
 
+                <label class="profile-field">
+                  <span>Username</span>
+                  <input v-model.trim="profileForm.username" type="text" placeholder="Enter username" />
+                  <small v-if="errors.username" class="profile-field-error">{{ errors.username }}</small>
+                </label>
+
                 <label class="profile-field profile-field--wide">
                   <span>Contact Number</span>
                   <input v-model.trim="profileForm.contactNumber" type="text" placeholder="Optional contact number" />
@@ -196,7 +212,7 @@
 
               <div class="profile-form-actions">
                 <button type="button" class="btn btn-outline" @click="resetProfile">Reset</button>
-                <button type="submit" class="btn btn-primary" style="background: #000000 !important; background-image: none !important; border-color: #000000 !important; color: #ffffff !important; box-shadow: none !important;">Save Profile</button>
+                <button type="submit" class="btn btn-primary" style="background: #4f8a35 !important; background-image: none !important; border-color: #4f8a35 !important; color: #ffffff !important; box-shadow: none !important;">Save Profile</button>
               </div>
             </form>
           </article>
@@ -219,23 +235,29 @@ const SIDEBAR_BREAKPOINT = 1024
 const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
+const profilePhotoInput = ref(null)
+const profileImageDraft = ref('')
+const selectedPhotoName = ref('')
 const banner = reactive({ type: 'success', message: '' })
 const profileForm = reactive({
   name: '',
   email: '',
+  username: '',
   contactNumber: '',
 })
 const errors = reactive({
   name: '',
   email: '',
+  username: '',
 })
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Admin').trim())
 const usernameLabel = computed(() => String(authStore.user?.username || 'Not provided').trim())
 const avatarUrl = computed(() => {
+  if (profileImageDraft.value) return profileImageDraft.value
   const profileImage = String(authStore.user?.profileImage || authStore.user?.avatar || '').trim()
   if (profileImage) return profileImage
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName.value)}&background=111827&color=ffffff`
+  return ''
 })
 
 const isActive = (path) => route.path === path
@@ -265,7 +287,48 @@ const syncMobileMenuBodyState = () => {
 const syncProfileForm = () => {
   profileForm.name = String(authStore.user?.name || authStore.user?.displayName || '').trim()
   profileForm.email = String(authStore.user?.email || '').trim()
+  profileForm.username = String(authStore.user?.username || '').trim()
   profileForm.contactNumber = String(authStore.user?.contactNumber || '').trim()
+  profileImageDraft.value = String(authStore.user?.profileImage || authStore.user?.avatar || '').trim()
+  selectedPhotoName.value = ''
+  if (profilePhotoInput.value) {
+    profilePhotoInput.value.value = ''
+  }
+}
+
+const handleProfilePhotoChange = (event) => {
+  clearBanner()
+  const file = event?.target?.files?.[0]
+  if (!file) return
+
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+    banner.type = 'error'
+    banner.message = 'Choose a PNG, JPG, or WebP profile photo.'
+    selectedPhotoName.value = ''
+    event.target.value = ''
+    return
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    banner.type = 'error'
+    banner.message = 'Profile photo must be 2 MB or smaller.'
+    selectedPhotoName.value = ''
+    event.target.value = ''
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    profileImageDraft.value = String(reader.result || '')
+    selectedPhotoName.value = file.name
+  }
+  reader.onerror = () => {
+    banner.type = 'error'
+    banner.message = 'The selected profile photo could not be read.'
+    selectedPhotoName.value = ''
+    event.target.value = ''
+  }
+  reader.readAsDataURL(file)
 }
 
 const clearBanner = () => {
@@ -303,6 +366,7 @@ const handleDocumentKeydown = (event) => {
 const validateProfile = () => {
   errors.name = ''
   errors.email = ''
+  errors.username = ''
 
   if (!String(profileForm.name || '').trim()) {
     errors.name = 'Display name is required.'
@@ -315,7 +379,11 @@ const validateProfile = () => {
     errors.email = 'Enter a valid email address.'
   }
 
-  return !errors.name && !errors.email
+  if (!String(profileForm.username || '').trim()) {
+    errors.username = 'Username is required.'
+  }
+
+  return !errors.name && !errors.email && !errors.username
 }
 
 const saveProfile = () => {
@@ -331,9 +399,15 @@ const saveProfile = () => {
     name: String(profileForm.name || '').trim(),
     displayName: String(profileForm.name || '').trim(),
     email: String(profileForm.email || '').trim(),
+    username: String(profileForm.username || '').trim(),
     contactNumber: String(profileForm.contactNumber || '').trim(),
+    profileImage: profileImageDraft.value,
   })
 
+  selectedPhotoName.value = ''
+  if (profilePhotoInput.value) {
+    profilePhotoInput.value.value = ''
+  }
   banner.type = 'success'
   banner.message = 'Admin profile updated successfully.'
 }
@@ -343,6 +417,7 @@ const resetProfile = () => {
   syncProfileForm()
   errors.name = ''
   errors.email = ''
+  errors.username = ''
 }
 
 watch(
@@ -478,34 +553,111 @@ onBeforeUnmount(() => {
 }
 
 .profile-summary {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  padding: 1rem;
+  gap: 1.15rem;
+  padding: 1.15rem;
   border-radius: 18px;
-  background: linear-gradient(135deg, #f8fafc, #eef2ff);
-  border: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f8fcf6 0%, #eef8ea 100%);
+  border: 1px solid #c9ddbd;
   margin-bottom: 1rem;
 }
 
+.profile-avatar {
+  display: grid;
+  width: 96px;
+  height: 96px;
+  place-items: center;
+  border: 1px solid #bdd6b1;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 24px rgba(49, 95, 35, 0.12);
+}
+
 .profile-avatar img {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
   object-fit: cover;
   border: 3px solid #ffffff;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+}
+
+.profile-avatar > i {
+  color: #245b13;
+  font-size: 2rem;
+}
+
+.profile-identity {
+  min-width: 0;
+}
+
+.profile-photo-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 36px;
+  padding: 0.48rem 0.8rem;
+  border: 1px solid #69aa47;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #315f23;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.profile-photo-control:hover {
+  border-color: #477d30;
+  background: #f3faef;
+  color: #315f23;
+  transform: translateY(-1px);
+}
+
+.profile-photo-control:focus-within {
+  outline: 3px solid rgba(105, 170, 71, 0.22);
+  outline-offset: 2px;
+}
+
+.profile-photo-control input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.profile-photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 0.85rem;
+}
+
+.profile-photo-help {
+  color: #64748b;
+  font-size: 0.75rem;
+  line-height: 1.45;
 }
 
 .profile-identity h4 {
   margin: 0;
   color: #111827;
-  font-size: 1.1rem;
+  font-size: 1.18rem;
+  line-height: 1.3;
 }
 
 .profile-identity p {
-  margin: 0.3rem 0 0.55rem;
+  overflow: hidden;
+  margin: 0.28rem 0 0.6rem;
   color: #6b7280;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-chip {
@@ -515,8 +667,8 @@ onBeforeUnmount(() => {
   padding: 0.38rem 0.7rem;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #1d4ed8;
-  background: rgba(29, 78, 216, 0.1);
+  color: #315f23;
+  background: rgba(105, 170, 71, 0.14);
 }
 
 .profile-detail-list {
@@ -578,7 +730,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1100px) {
-  .profile-grid,
+  .profile-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .profile-detail-list,
   .profile-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -593,8 +748,22 @@ onBeforeUnmount(() => {
   }
 
   .profile-summary {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .profile-identity {
+    width: 100%;
+  }
+
+  .profile-photo-actions {
+    justify-content: center;
+  }
+
+  .profile-identity p {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .profile-form-actions {
@@ -604,6 +773,43 @@ onBeforeUnmount(() => {
   .profile-form-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-card {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .profile-summary {
+    gap: 0.9rem;
+    padding: 0.9rem;
+    border-radius: 15px;
+  }
+
+  .profile-avatar {
+    width: 88px;
+    height: 88px;
+  }
+
+  .profile-avatar img {
+    width: 78px;
+    height: 78px;
+  }
+
+  .profile-photo-actions {
+    display: grid;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .profile-photo-control {
+    width: 100%;
+  }
+
+  .profile-photo-help {
+    overflow-wrap: anywhere;
   }
 }
 </style>
