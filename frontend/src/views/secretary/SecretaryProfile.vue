@@ -121,7 +121,7 @@
 
           <div class="secretary-form-actions">
             <button type="button" class="btn btn-outline" @click="resetProfile">Reset</button>
-            <button type="submit" class="btn btn-primary" style="color: #ffffff !important;">Save Profile</button>
+            <button type="submit" class="btn btn-primary secretary-save-profile-btn">Save Profile</button>
           </div>
         </form>
       </article>
@@ -257,5 +257,33 @@ onBeforeUnmount(() => {
 .secretary-profile-grid,
 .secretary-banner {
   width: 100%;
+}
+
+.secretary-form-actions {
+  gap: 0.6rem;
+}
+
+.secretary-form-actions .btn {
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.secretary-save-profile-btn {
+  border-color: #245b13;
+  background: #245b13;
+  background-image: none;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+
+.secretary-save-profile-btn:hover {
+  border-color: #1b460e;
+  background: #1b460e;
+  background-image: none;
 }
 </style>

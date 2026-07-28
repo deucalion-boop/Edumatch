@@ -119,72 +119,84 @@
           </div>
         </div>
 
-        <div class="secretary-search-row">
-          <label class="secretary-search-field">
-            <i class="fas fa-search"></i>
-            <input v-model.trim="searchTerm" type="search" placeholder="Search archived records" aria-label="Search archived student records">
-          </label>
-          <div class="secretary-export-actions">
-            <button
-              type="button"
-              class="secretary-export-btn"
-              :disabled="filteredStudents.length === 0"
-              @click="exportArchivedCsv"
-            >
-              <i class="fas fa-file-csv"></i>
-              <span>Export CSV</span>
-            </button>
-            <button
-              type="button"
-              class="secretary-export-btn secretary-export-btn-pdf"
-              :class="pdfApprovalToneClass"
-              :disabled="isPdfExportActionDisabled"
-              @click="handleArchivedPdfAction"
-            >
-              <i class="fas" :class="pdfExportButtonIcon"></i>
-              <span>{{ pdfExportButtonLabel }}</span>
-            </button>
-            <p class="secretary-export-note">{{ pdfExportHelperText }}</p>
+        <div class="secretary-directory-tools">
+          <div class="secretary-search-row">
+            <label class="secretary-search-field">
+              <i class="fas fa-search"></i>
+              <input v-model.trim="searchTerm" type="search" placeholder="Search archived records" aria-label="Search archived student records">
+            </label>
+            <div class="secretary-export-actions">
+              <button
+                type="button"
+                class="secretary-export-btn"
+                :disabled="filteredStudents.length === 0"
+                @click="exportArchivedCsv"
+              >
+                <i class="fas fa-file-csv"></i>
+                <span>Export CSV</span>
+              </button>
+              <button
+                type="button"
+                class="secretary-export-btn secretary-export-btn-pdf"
+                :class="pdfApprovalToneClass"
+                :disabled="isPdfExportActionDisabled"
+                @click="handleArchivedPdfAction"
+              >
+                <i class="fas" :class="pdfExportButtonIcon"></i>
+                <span>{{ pdfExportButtonLabel }}</span>
+              </button>
+              <p class="secretary-export-note">{{ pdfExportHelperText }}</p>
+            </div>
+          </div>
+
+          <div class="secretary-filter-bar secretary-archive-filter-bar">
+            <label class="secretary-filter-group">
+              <span>School Year</span>
+              <select v-model="filters.schoolYear">
+                <option value="all">All School Years</option>
+                <option v-for="schoolYear in schoolYearOptions" :key="schoolYear" :value="schoolYear">{{ schoolYear }}</option>
+              </select>
+            </label>
+
+            <label class="secretary-filter-group">
+              <span>Department</span>
+              <select v-model="filters.department">
+                <option value="all">All Departments</option>
+                <option v-for="department in departmentOptions" :key="department" :value="department">{{ department }}</option>
+              </select>
+            </label>
           </div>
         </div>
 
-        <div class="secretary-filter-bar secretary-archive-filter-bar">
-          <label class="secretary-filter-group">
-            <span>School Year</span>
-            <select v-model="filters.schoolYear">
-              <option value="all">All School Years</option>
-              <option v-for="schoolYear in schoolYearOptions" :key="schoolYear" :value="schoolYear">{{ schoolYear }}</option>
-            </select>
-          </label>
-
-          <label class="secretary-filter-group">
-            <span>Department</span>
-            <select v-model="filters.department">
-              <option value="all">All Departments</option>
-              <option v-for="department in departmentOptions" :key="department" :value="department">{{ department }}</option>
-            </select>
-          </label>
-        </div>
-
         <div class="secretary-table-wrap">
-          <table class="secretary-table secretary-student-table">
+          <table class="secretary-table secretary-student-table" aria-label="Archived student records">
+            <colgroup>
+              <col class="archive-col-student">
+              <col class="archive-col-year">
+              <col class="archive-col-date">
+              <col class="archive-col-section">
+              <col class="archive-col-grade">
+              <col class="archive-col-adviser">
+              <col class="archive-col-owner">
+            </colgroup>
             <thead>
               <tr>
-                <th>Student</th>
-                <th>School Year</th>
-                <th>Archived On</th>
-                <th>Section</th>
-                <th>Grade</th>
-                <th>Adviser / Teacher</th>
-                <th>Archived By</th>
+                <th scope="col">Student</th>
+                <th scope="col">School Year</th>
+                <th scope="col">Archived On</th>
+                <th scope="col">Section</th>
+                <th scope="col">Grade</th>
+                <th scope="col">Adviser / Teacher</th>
+                <th scope="col">Archived By</th>
               </tr>
             </thead>
             <tbody v-if="isLoading">
               <tr>
                 <td colspan="7">
-                  <div class="table-state">
+                  <div class="table-state" role="status">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <span>Loading archived student records...</span>
+                    <strong>Loading archived records</strong>
+                    <small>Please wait while the directory is updated.</small>
                   </div>
                 </td>
               </tr>
@@ -192,9 +204,10 @@
             <tbody v-else-if="filteredStudents.length === 0">
               <tr>
                 <td colspan="7">
-                  <div class="table-state">
-                    <i class="fas fa-folder-open"></i>
-                    <span>No archived student records found.</span>
+                  <div class="table-state" role="status">
+                    <span class="table-state-icon"><i class="fas fa-box-open"></i></span>
+                    <strong>No archived records found</strong>
+                    <small>Try changing your search or filters, or check again after a learner is archived.</small>
                   </div>
                 </td>
               </tr>
@@ -203,7 +216,9 @@
               <tr v-for="student in filteredStudents" :key="student.id">
                 <td>
                   <div class="secretary-person-cell">
-                    <span class="secretary-person-avatar">{{ getUserInitials(student.name) }}</span>
+                    <div class="secretary-person-avatar">
+                      <i class="fas fa-user" aria-hidden="true"></i>
+                    </div>
                     <div class="secretary-person-copy">
                       <strong>{{ student.name }}</strong>
                       <small>{{ student.email }}</small>
@@ -275,7 +290,6 @@ const resolveApiBaseUrl = () => {
   return `${configured}/api`
 }
 const getAuthConfig = () => ({ headers: { Authorization: `Bearer ${authStore.token}` } })
-const getUserInitials = (name) => String(name || '').trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('') || 'A'
 const setBanner = (type, message) => {
   banner.value = {
     type,
@@ -808,12 +822,12 @@ onBeforeUnmount(() => {
 }
 
 .secretary-archived-page .secretary-student-table {
-  min-width: 900px;
+  min-width: 1120px;
 }
 
 .secretary-archived-page .secretary-student-table th,
 .secretary-archived-page .secretary-student-table td {
-  padding: 0.75rem;
+  padding: 0.9rem 1rem;
 }
 
 .secretary-top-header { padding: 0.9rem 1rem !important; border-radius: 18px !important; }
@@ -848,32 +862,39 @@ onBeforeUnmount(() => {
 .secretary-header-copy .mobile-menu-toggle, .secretary-header-tools .account-menu-trigger { width: 40px; height: 40px; min-width: 40px; border-radius: 12px; }
 .secretary-userlist-panel {
   margin-bottom: 1rem;
-  padding: 1.35rem;
+  padding: 1.5rem;
   border: 1px solid transparent;
-  border-radius: 24px;
+  border-radius: 28px;
   background:
     linear-gradient(#ffffff, #ffffff) padding-box,
     linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
-  box-shadow: none;
+  box-shadow: 0 18px 42px rgba(47, 111, 67, 0.08);
 }
 .secretary-section-head {
   margin-bottom: 1.25rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid #91b99b;
 }
+.secretary-directory-tools {
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  border: 1px solid #dce7df;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7faf8 100%);
+}
 .secretary-search-row {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.85rem;
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px 18px 0 0;
-  background: #ffffff;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 0;
+  border-bottom: 1px solid #e5ede7;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.86);
 }
 .secretary-search-field {
-  flex: 1 1 320px;
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -926,7 +947,12 @@ onBeforeUnmount(() => {
   border-color: #fca5a5;
   color: #b91c1c;
 }
-.secretary-export-actions { display: flex; gap: 0.65rem; flex-wrap: wrap; }
+.secretary-export-actions {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 0.55rem 0.65rem;
+  align-items: start;
+}
 .secretary-export-btn {
   display: inline-flex;
   align-items: center;
@@ -966,20 +992,19 @@ onBeforeUnmount(() => {
   color: #b91c1c;
 }
 .secretary-export-note {
-  flex: 1 1 100%;
+  grid-column: 1 / -1;
+  max-width: 430px;
   margin: 0;
   color: #64748b;
   font-size: 0.78rem;
   line-height: 1.5;
 }
 .secretary-filter-bar {
-  margin-top: -0.85rem;
-  margin-bottom: 1.2rem;
-  padding: 0 1rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-top: 0;
-  border-radius: 0 0 18px 18px;
-  background: #ffffff;
+  margin: 0;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 .secretary-filter-group span {
   color: #356f48;
@@ -992,26 +1017,99 @@ onBeforeUnmount(() => {
   border-color: #47855a;
   box-shadow: 0 0 0 3px rgba(71, 133, 90, 0.16);
 }
-.secretary-archive-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.secretary-archive-filter-bar {
+  grid-template-columns: repeat(2, minmax(200px, 300px));
+  justify-content: start;
+}
 .secretary-table-wrap {
-  border-color: #78a985;
+  overflow-x: auto;
+  border: 1px solid #a9c5b0;
+  border-radius: 22px;
   background: #ffffff;
   box-shadow: 0 14px 32px rgba(47, 111, 67, 0.1);
 }
+.secretary-student-table {
+  table-layout: fixed;
+}
+.secretary-student-table .archive-col-student { width: 25%; }
+.secretary-student-table .archive-col-year { width: 11%; }
+.secretary-student-table .archive-col-date { width: 12%; }
+.secretary-student-table .archive-col-section { width: 11%; }
+.secretary-student-table .archive-col-grade { width: 9%; }
+.secretary-student-table .archive-col-adviser { width: 17%; }
+.secretary-student-table .archive-col-owner { width: 15%; }
 .secretary-table thead th {
-  background: #ffffff;
-  border-bottom: 1px solid #78a985;
+  background: linear-gradient(180deg, #f2f8f3 0%, #e9f3eb 100%);
+  border-bottom: 1px solid #a9c5b0;
   color: #356f48;
+  font-size: 0.72rem;
+  letter-spacing: 0.055em;
+}
+.secretary-table tbody td {
+  padding: 0.95rem 1rem;
+  line-height: 1.4;
+}
+.secretary-table tbody tr {
+  transition: background-color 0.18s ease;
 }
 .secretary-table tbody tr:hover td {
   background: #edf5ef;
 }
 .secretary-person-cell { display: flex; align-items: center; gap: 0.8rem; min-width: 240px; }
-.secretary-person-avatar { width: 42px; height: 42px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #589b6b, #39794d); color: #ffffff; font-size: 0.84rem; font-weight: 800; flex-shrink: 0; }
+.secretary-person-avatar { width: 42px; height: 42px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #ffffff; border: 1px solid #245b13; color: #245b13; font-size: 1.1rem; flex-shrink: 0; box-shadow: none; }
 .secretary-person-copy { display: grid; gap: 0.15rem; }
 .secretary-person-copy small, .secretary-adviser-cell small { color: #64748b; font-size: 0.78rem; }
 .secretary-adviser-cell { display: grid; gap: 0.2rem; min-width: 180px; }
 .archive-school-year-badge { background: #dcecdf; color: #356f48; border: 1px solid #78a985; }
+.table-state {
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 2rem;
+  color: #64748b;
+  text-align: center;
+}
+.table-state > .fa-spinner {
+  margin-bottom: 0.35rem;
+  color: #47855a;
+  font-size: 1.55rem;
+}
+.table-state-icon {
+  width: 58px;
+  height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.4rem;
+  border: 1px solid #bad0c0;
+  border-radius: 50%;
+  background: #edf5ef;
+  color: #39794d;
+  font-size: 1.25rem;
+}
+.table-state strong {
+  color: #274d32;
+  font-size: 1rem;
+}
+.table-state small {
+  max-width: 430px;
+  color: #718096;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 1100px) {
+  .secretary-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .secretary-export-actions {
+    grid-template-columns: repeat(2, minmax(0, max-content));
+  }
+}
 
 @media (max-width: 768px) {
   .secretary-header-copy > div, .secretary-access-chip { display: none; }
@@ -1019,8 +1117,14 @@ onBeforeUnmount(() => {
   .secretary-header-copy { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 0 !important; grid-column: 1; flex: 0 0 auto !important; min-width: 0; width: auto; }
   .secretary-header-tools { display: flex !important; align-items: center !important; justify-content: flex-end !important; gap: 0.75rem !important; grid-column: 3; margin-left: 0 !important; flex: 0 0 auto !important; min-width: 0; }
   .secretary-header-copy .mobile-menu-toggle, .secretary-header-tools .account-menu-trigger { width: 38px; height: 38px; min-width: 38px; border-radius: 12px; }
-  .secretary-export-actions { width: 100%; }
+  .secretary-userlist-panel { padding: 1rem; border-radius: 22px; }
+  .secretary-directory-tools, .secretary-table-wrap { border-radius: 18px; }
+  .secretary-search-row { padding: 0.85rem; }
+  .secretary-export-actions { width: 100%; grid-template-columns: 1fr; }
+  .secretary-export-actions .secretary-export-btn { width: 100%; }
+  .secretary-export-note { grid-column: 1; }
+  .secretary-filter-bar { padding: 0.85rem; }
   .secretary-archive-filter-bar { grid-template-columns: 1fr; }
-  .secretary-table { min-width: 920px; }
+  .secretary-table { min-width: 1120px; }
 }
 </style>

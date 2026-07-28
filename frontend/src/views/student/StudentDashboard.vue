@@ -1373,7 +1373,7 @@ export default {
 
 .summary-grid .summary-card {
   border-color: rgba(169, 213, 95, 0.52);
-  background: linear-gradient(180deg, #fbfce9 0%, #fbfce9 100%);
+  background: #ffffff;
   box-shadow: 0 14px 28px rgba(30, 67, 7, 0.06);
 }
 

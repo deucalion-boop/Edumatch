@@ -7025,11 +7025,11 @@ body.student-dashboard .profile-card .profile-actions .btn i {
 }
 
 body.student-dashboard .profile-card .profile-actions .btn-primary {
-    background: #111111 !important;
+    background: #1e4307 !important;
     background-image: none !important;
-    border: 1px solid #111111 !important;
+    border: 1px solid #1e4307 !important;
     color: #ffffff !important;
-    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.18) !important;
+    box-shadow: 0 2px 5px rgba(30, 67, 7, 0.24) !important;
 }
 
 body.student-dashboard .profile-card .profile-actions .btn-primary i {
@@ -7038,10 +7038,10 @@ body.student-dashboard .profile-card .profile-actions .btn-primary i {
 }
 
 body.student-dashboard .profile-card .profile-actions .btn-primary:hover:not(:disabled) {
-    background: #1f2937 !important;
-    border-color: #1f2937 !important;
+    background: #163205 !important;
+    border-color: #163205 !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.2) !important;
+    box-shadow: 0 4px 8px rgba(30, 67, 7, 0.28) !important;
     transform: translateY(-2px);
 }
 
@@ -7198,5 +7198,585 @@ body.student-dashboard .profile-card .profile-actions .btn-outline:hover:not(:di
     body.student-dashboard .student-dashboard-page .course-progress-block {
         padding: 8px 10px;
         border-radius: 13px;
+    }
+}
+
+/* Keep Student Profile visually aligned with Teacher Profile. */
+body.student-dashboard .student-dashboard-page > .profile-content {
+    display: grid;
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    gap: 28px;
+    padding: 4px 0 28px;
+    align-items: start;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content > .profile-sidebar,
+body.student-dashboard .student-dashboard-page > .profile-content > .profile-main {
+    min-width: 0;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-card,
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card,
+body.student-dashboard .student-dashboard-page > .profile-content .profile-tab-content {
+    border: 1px solid rgba(148, 163, 184, 0.22) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08) !important;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-card,
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card {
+    padding: 22px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-card {
+    margin-top: 1px;
+    border-radius: 24px !important;
+    background:
+        linear-gradient(180deg, #F9FAFB 0%, #F9FAFB 100%) padding-box,
+        linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-tab-content,
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card {
+    border-color: transparent !important;
+    background:
+        linear-gradient(180deg, #F9FAFB 0%, #F9FAFB 100%) padding-box,
+        linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-top: 6px;
+    padding-bottom: 18px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-avatar {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin: -6px auto 16px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 0.25px solid #111111 !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.16);
+    background: linear-gradient(135deg, #f9fafb, rgba(79, 70, 229, 0.15));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-avatar-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-avatar-placeholder i {
+    font-size: 2rem;
+    color: #111111;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .avatar-actions {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .avatar-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #111111;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(51, 65, 85, 0.3);
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .avatar-action-btn:hover {
+    background: #1f2937;
+    transform: scale(1.1);
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-info h2 {
+    font-size: 1.35rem;
+    line-height: 1.3;
+    margin: 0 0 4px;
+    color: #111111;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-role {
+    font-size: 0.88rem;
+    margin: 0 0 10px;
+    color: #374151;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-status {
+    margin-bottom: 12px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-actions {
+    display: grid;
+    gap: 8px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-primary,
+body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-outline {
+    width: 100%;
+    min-height: 40px !important;
+    padding: 10px 16px !important;
+    border-radius: 11px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-primary {
+    background: #1e4307 !important;
+    border: 1px solid #1e4307 !important;
+    color: #ffffff !important;
+    background-image: none !important;
+    box-shadow: 0 2px 5px rgba(30, 67, 7, 0.22) !important;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-primary:hover {
+    background: #173405 !important;
+    border-color: #173405 !important;
+    box-shadow: 0 4px 8px rgba(23, 52, 5, 0.24) !important;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-primary .student-profile-edit-icon {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-outline {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0;
+    color: #111827 !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-outline:hover {
+    background: transparent !important;
+    color: #111111 !important;
+    box-shadow: none !important;
+    transform: none;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .details-title {
+    font-size: 1.04rem;
+    margin: 0 0 18px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-item:last-child {
+    border-bottom: none;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #f8fafc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-value {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #111111;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-tab-content {
+    padding: 0;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .tab-pane {
+    display: none;
+    padding: 28px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .tab-pane.active {
+    display: block;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .tab-header {
+    margin-bottom: 24px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-form-section {
+    padding: 20px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    margin-bottom: 16px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .tab-header h3 {
+    font-size: 1.35rem;
+    margin-bottom: 6px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .tab-header p {
+    font-size: 0.9rem;
+    color: #374151;
+    margin: 0;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .profile-form {
+    max-width: 100%;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-section-title {
+    margin: 0 0 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111111;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-group {
+    margin-bottom: 14px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-group:last-child {
+    margin-bottom: 0;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-group label {
+    display: inline-block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-group input,
+body.student-dashboard .student-dashboard-page > .profile-content .form-group select,
+body.student-dashboard .student-dashboard-page > .profile-content .form-group textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    background: #ffffff;
+    color: #111111;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    padding: 0.72rem 0.8rem;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-group input:focus,
+body.student-dashboard .student-dashboard-page > .profile-content .form-group select:focus,
+body.student-dashboard .student-dashboard-page > .profile-content .form-group textarea:focus {
+    outline: none;
+    border-color: rgba(51, 65, 85, 0.45);
+    box-shadow: 0 0 0 3px rgba(51, 65, 85, 0.12);
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-group input:read-only,
+body.student-dashboard .student-dashboard-page > .profile-content .form-group textarea:read-only,
+body.student-dashboard .student-dashboard-page > .profile-content .form-group select:disabled {
+    background: #f9fafb;
+    color: #475569;
+    border-color: rgba(148, 163, 184, 0.25);
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-actions .btn {
+    min-width: 130px;
+    justify-content: center;
+}
+
+@media (min-width: 1101px) {
+    body.student-dashboard .student-main > .student-dashboard-page > .profile-content {
+        grid-template-columns: minmax(330px, 380px) minmax(0, 1fr) !important;
+        gap: 1rem !important;
+        padding: 0 !important;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content > .profile-sidebar {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-card,
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card {
+        padding: 1rem;
+        border-radius: 16px !important;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-header {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        padding: 0 0 0.72rem;
+        margin-bottom: 0.72rem;
+        text-align: center;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-avatar {
+        width: 84px;
+        height: 84px;
+        flex: 0 0 84px;
+        margin: 0;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-avatar-placeholder i {
+        font-size: 1.8rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .avatar-action-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-info {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        width: 100%;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-info h2 {
+        max-width: 100%;
+        overflow: hidden;
+        margin: 0;
+        font-size: 1.2rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-role,
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-status {
+        margin: 0;
+        font-size: 0.84rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-primary,
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-outline {
+        min-height: 42px !important;
+        padding: 0.6rem 0.72rem !important;
+        font-size: 0.82rem !important;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-content: start;
+        column-gap: 0.85rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .details-title {
+        grid-column: 1 / -1;
+        margin-bottom: 0.55rem;
+        font-size: 1rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-item {
+        gap: 0.6rem;
+        min-width: 0;
+        padding: 0.5rem 0;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-icon {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        border-radius: 9px;
+        font-size: 0.78rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-label {
+        font-size: 0.66rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-value {
+        overflow: hidden;
+        font-size: 0.86rem;
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-tab-content {
+        border-radius: 16px !important;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .tab-pane {
+        padding: 1rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .tab-header {
+        margin-bottom: 0.8rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .tab-header h3 {
+        margin: 0 0 0.15rem;
+        font-size: 1.12rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .tab-header p {
+        font-size: 0.82rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-form {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+        align-items: start;
+        gap: 0.8rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-form-section {
+        margin: 0;
+        padding: 0.85rem;
+        border-radius: 14px;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-form-section:first-child {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-form-section:first-child .form-section-title {
+        grid-column: 1 / -1;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-form-section:first-child .form-row {
+        display: contents;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .form-section-title {
+        margin-bottom: 0.55rem;
+        font-size: 0.9rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-form-section:first-child .form-group,
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-form-section .form-row,
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-form-section .form-group {
+        margin-bottom: 0;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .form-group label {
+        margin-bottom: 0.4rem;
+        font-size: 0.72rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .form-group input,
+    body.student-dashboard .student-dashboard-page > .profile-content .form-group select,
+    body.student-dashboard .student-dashboard-page > .profile-content .form-group textarea {
+        padding: 0.68rem 0.78rem;
+        font-size: 0.9rem;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .form-actions {
+        grid-column: 1 / -1;
+        margin-top: 0;
+        padding-top: 0.7rem;
+    }
+}
+
+@media (max-width: 1100px) {
+    body.student-dashboard .student-dashboard-page > .profile-content {
+        grid-template-columns: 1fr;
+        padding: 0 16px 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-card,
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card,
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-tab-content {
+        border-radius: 14px !important;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .tab-pane {
+        padding: 18px !important;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-card,
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card {
+        border-radius: 12px !important;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .tab-pane {
+        padding: 12px !important;
+    }
+
+    body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn {
+        font-size: 0.875rem !important;
     }
 }

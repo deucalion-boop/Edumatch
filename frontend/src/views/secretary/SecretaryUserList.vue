@@ -194,7 +194,9 @@
               <tr v-for="user in filteredUsers" :key="user.id">
                 <td>
                   <div class="secretary-person-cell">
-                    <span class="secretary-person-avatar">{{ getUserInitials(user.name) }}</span>
+                    <div class="secretary-person-avatar">
+                      <i class="fas fa-user" aria-hidden="true"></i>
+                    </div>
                     <div class="secretary-person-copy">
                       <strong>{{ user.name }}</strong>
                       <small>{{ roleLabel(user.role) }} record</small>
@@ -250,11 +252,6 @@ const getAuthConfig = () => ({ headers: { Authorization: `Bearer ${authStore.tok
 const normalizedStatus = (status) => String(status || '').trim().toLowerCase() === 'active' ? 'active' : 'inactive'
 const statusLabel = (status) => normalizedStatus(status) === 'active' ? 'Active' : 'Inactive'
 const roleLabel = (role) => role === 'headteacher' ? 'HeadTeacher' : (role === 'teacher' ? 'Teacher' : String(role || 'User'))
-const getUserInitials = (name) => {
-  const value = String(name || '').trim()
-  if (!value) return 'U'
-  return value.split(/\s+/).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('')
-}
 const formatDateTime = (value) => {
   if (!value) return 'N/A'
   const parsed = new Date(value)
@@ -712,16 +709,16 @@ onBeforeUnmount(() => {
 .secretary-person-avatar {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f766e, #14b8a6);
-  color: #ffffff;
-  font-size: 0.84rem;
-  font-weight: 800;
+  background: #ffffff;
+  border: 1px solid #245b13;
+  color: #245b13;
+  font-size: 1.1rem;
   flex-shrink: 0;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+  box-shadow: none;
 }
 
 .secretary-person-copy {

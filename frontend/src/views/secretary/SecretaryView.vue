@@ -786,8 +786,9 @@ watch(students, () => {
 .secretary-top-header {
   padding: 0.9rem 1rem !important;
   border-radius: 18px !important;
-  border: 1px solid #bbf7d0 !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+  border: 1px solid transparent !important;
+  background: linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
   box-shadow: 0 12px 30px rgba(21, 128, 61, 0.08);
 }
 
@@ -1535,9 +1536,14 @@ watch(students, () => {
 }
 
 .secretary-dashboard-nav button.active {
-  background: linear-gradient(135deg, #16a34a, #15803d);
+  background: #245b13;
   color: #ffffff;
   box-shadow: 0 5px 12px rgba(21, 128, 61, 0.2);
+}
+
+.secretary-dashboard-nav button::after {
+  content: none !important;
+  display: none !important;
 }
 
 .secretary-dashboard-nav button:active { transform: scale(0.98); }
@@ -1602,15 +1608,6 @@ watch(students, () => {
   box-shadow: 0 7px 20px rgba(15, 23, 42, 0.055);
 }
 
-.secretary-stat-card::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0;
-  height: 3px;
-  background: #22c55e;
-  opacity: 0.8;
-}
-
 .secretary-stat-icon {
   position: absolute;
   top: 0.8rem;
@@ -1627,13 +1624,9 @@ watch(students, () => {
 .secretary-stat-note { margin-top: auto; font-size: 0.66rem; line-height: 1.3; }
 
 .secretary-stat-card:nth-child(1) .secretary-stat-icon { background: #ede9fe; color: #6d28d9; }
-.secretary-stat-card:nth-child(1)::after { background: #8b5cf6; }
 .secretary-stat-card:nth-child(2) .secretary-stat-icon { background: #dbeafe; color: #1d4ed8; }
-.secretary-stat-card:nth-child(2)::after { background: #3b82f6; }
 .secretary-stat-card:nth-child(3) .secretary-stat-icon { background: #dcfce7; color: #15803d; }
-.secretary-stat-card:nth-child(3)::after { background: #22c55e; }
 .secretary-stat-card:nth-child(4) .secretary-stat-icon { background: #fef3c7; color: #b45309; }
-.secretary-stat-card:nth-child(4)::after { background: #f59e0b; }
 
 .secretary-section-head {
   margin-bottom: 0.7rem;

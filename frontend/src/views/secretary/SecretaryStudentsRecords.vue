@@ -216,7 +216,9 @@
               <tr v-for="student in filteredStudents" :key="student.id">
                 <td>
                   <div class="secretary-person-cell">
-                    <span class="secretary-person-avatar">{{ getUserInitials(student.name) }}</span>
+                    <div class="secretary-person-avatar">
+                      <i class="fas fa-user" aria-hidden="true"></i>
+                    </div>
                     <div class="secretary-person-copy">
                       <strong>{{ student.name }}</strong>
                       <small>{{ student.email }}</small>
@@ -421,12 +423,6 @@ const attendanceRecordTitle = (record) => String(
   || record?.subject?.name
   || 'Attendance'
 ).trim() || 'Attendance'
-const getUserInitials = (name) => {
-  const value = String(name || '').trim()
-  if (!value) return 'S'
-  return value.split(/\s+/).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('')
-}
-
 const departmentOptions = computed(() => {
   const merged = new Set(CORE_DEPARTMENTS)
   students.value.map((student) => String(student.department || '').trim()).filter(Boolean).forEach((department) => merged.add(department))
@@ -1169,15 +1165,16 @@ onBeforeUnmount(() => {
 .secretary-person-avatar {
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f766e, #14b8a6);
-  color: #ffffff;
-  font-size: 0.84rem;
-  font-weight: 800;
+  background: #ffffff;
+  border: 1px solid #245b13;
+  color: #245b13;
+  font-size: 1.1rem;
   flex-shrink: 0;
+  box-shadow: none;
 }
 
 .secretary-person-copy {
