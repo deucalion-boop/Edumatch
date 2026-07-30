@@ -7413,10 +7413,19 @@ body.student-dashboard .student-dashboard-page > .profile-content .profile-detai
     justify-content: center;
 }
 
+body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-icon i {
+    width: 24px;
+    margin-top: 0.25rem;
+    color: #111111 !important;
+    font-size: 1.25rem;
+    text-align: center;
+}
+
 body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-label {
     font-size: 0.68rem;
     letter-spacing: 0.08em;
-    color: #94a3b8;
+    color: #6b7280 !important;
+    font-weight: 400 !important;
     text-transform: uppercase;
 }
 
@@ -7424,6 +7433,7 @@ body.student-dashboard .student-dashboard-page > .profile-content .profile-detai
     font-size: 0.9rem;
     line-height: 1.45;
     color: #111111;
+    font-weight: 500;
 }
 
 body.student-dashboard .student-dashboard-page > .profile-content .profile-tab-content {
@@ -7471,6 +7481,18 @@ body.student-dashboard .student-dashboard-page > .profile-content .form-section-
     font-size: 0.95rem;
     font-weight: 600;
     color: #111111;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-section-title::before {
+    content: '';
+    width: 4px;
+    height: 16px;
+    flex: 0 0 4px;
+    border-radius: 2px;
+    background: var(--primary-color);
 }
 
 body.student-dashboard .student-dashboard-page > .profile-content .form-row {
@@ -7541,9 +7563,9 @@ body.student-dashboard .student-dashboard-page > .profile-content .form-actions 
 
 @media (min-width: 1101px) {
     body.student-dashboard .student-main > .student-dashboard-page > .profile-content {
-        grid-template-columns: minmax(330px, 380px) minmax(0, 1fr) !important;
-        gap: 1rem !important;
-        padding: 0 !important;
+        grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) !important;
+        gap: 24px !important;
+        padding: 0 0 24px !important;
     }
 
     body.student-dashboard .student-dashboard-page > .profile-content > .profile-sidebar {
@@ -7637,6 +7659,8 @@ body.student-dashboard .student-dashboard-page > .profile-content .form-actions 
         grid-column: 1 / -1;
         margin-bottom: 0.55rem;
         font-size: 1rem;
+        font-weight: 500 !important;
+        color: #1f2937 !important;
     }
 
     body.student-dashboard .student-dashboard-page > .profile-content .profile-details-card .detail-item {
