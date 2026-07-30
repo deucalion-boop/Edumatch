@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const fs = require('fs/promises');
 const path = require('path');
 const {
   downloadSupabaseFile,
@@ -221,6 +222,33 @@ async function toBuffer(data) {
   throw error;
 }
 
+async function readStoredFileBuffer(storedPath) {
+  const raw = String(storedPath || '').trim();
+  if (!raw) {
+    const error = new Error('Stored file path is missing');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (isRemoteFileUrl(raw)) {
+    const response = await fetch(raw);
+    if (!response.ok) {
+      const error = new Error(`Failed to download stored file (${response.status})`);
+      error.statusCode = response.status;
+      throw error;
+    }
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  if (isSupabaseStoredPath(raw)) {
+    const { data } = await downloadSupabaseFile(raw);
+    return toBuffer(data);
+  }
+
+  const absolutePath = path.resolve(__dirname, '..', raw);
+  return fs.readFile(absolutePath);
+}
+
 async function streamSupabaseFile(res, storedPath, { download = false, fileName = '' } = {}) {
   const { objectPath, data } = await downloadSupabaseFile(storedPath);
   const resolvedFileName = sanitizeDownloadName(fileName || path.basename(objectPath) || 'file');
@@ -257,6 +285,7 @@ module.exports = {
   buildStorageAccessToken,
   downloadOrRedirectStoredFile,
   isRemoteFileUrl,
+  readStoredFileBuffer,
   resolveStoredFileUrl,
   serveStoredFile,
   verifyStorageAccessToken,

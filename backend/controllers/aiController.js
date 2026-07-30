@@ -4,6 +4,7 @@ const Lesson = require('../models/Lesson');
 const Subject = require('../models/Subject');
 const User = require('../models/User');
 const { extractTextFromPdf } = require('../utils/pdfTextExtractor');
+const { readStoredFileBuffer } = require('../utils/fileStorage');
 const { sendSuccess } = require('../utils/responseHelper');
 const { getAiRuntimeConfigFromEnv } = require('../utils/aiRuntimeConfig');
 const { inferSubjectCategory, normalizeSubjectCategory } = require('../services/recommendationService');
@@ -583,8 +584,8 @@ const generateAssessmentWithAi = asyncHandler(async (req, res) => {
       error.statusCode = 400;
       throw error;
     }
-    const lessonFilePath = path.resolve(__dirname, '..', lessonPdfPath);
-    extractedText = await extractTextFromPdf(lessonFilePath);
+    const lessonFileBuffer = await readStoredFileBuffer(lessonPdfPath);
+    extractedText = await extractTextFromPdf(lessonFileBuffer);
 
     if (!extractedText || extractedText.trim().length < 50) {
       const error = new Error('Unable to extract enough text from the lesson PDF for AI generation');

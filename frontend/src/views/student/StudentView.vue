@@ -19,20 +19,21 @@
       <nav class="sidebar-nav" data-tour="navigation">
         <div class="nav-section">
           <h4 class="nav-section-title">Navigation</h4>
-          <div class="nav-group" :class="{ open: isDashboardMenuExpanded }">
+          <div class="nav-dropdown nav-dropdown-dashboard">
             <router-link
               to="/student/dashboard"
-              class="nav-link nav-link-group"
-              :class="{ active: isActiveRoute('/student/dashboard') }"
+              class="nav-link nav-link-dropdown"
+              :class="{ active: isActiveRoute('/student/dashboard'), 'is-expanded': isDashboardMenuExpanded }"
               @click="closeSidebar"
             >
               <span class="nav-link-main">
                 <i class="fas fa-home"></i>
-                <span>Dashboard</span>
+                <span class="nav-link-copy">
+                  <span class="nav-link-title">Dashboard</span>
+                </span>
               </span>
               <span
-                class="nav-group-toggle"
-                :class="{ active: isDashboardMenuExpanded }"
+                class="nav-link-caret"
                 :aria-expanded="isDashboardMenuExpanded ? 'true' : 'false'"
                 aria-controls="student-dashboard-submenu"
                 aria-label="Toggle dashboard menu"
@@ -42,15 +43,15 @@
                 @keydown.enter.stop.prevent="toggleDashboardMenu"
                 @keydown.space.stop.prevent="toggleDashboardMenu"
               >
-                <i class="fas fa-chevron-down"></i>
+                <i class="fas fa-chevron-down nav-link-caret-icon" aria-hidden="true"></i>
               </span>
             </router-link>
             <transition name="nav-submenu">
-              <div v-if="isDashboardMenuExpanded" id="student-dashboard-submenu" class="nav-submenu">
+              <div v-if="isDashboardMenuExpanded" id="student-dashboard-submenu" class="nav-sublinks">
                 <button type="button" class="nav-sublink" :class="{ active: isDashboardSectionActive('grades') }" @click="openDashboardSection('grades')">
                   <span class="nav-sublink-copy">
-                    <span class="nav-sublink-label">Grades</span>
-                    <small>Recent results</small>
+                    <span class="nav-sublink-title">Grades</span>
+                    <span class="nav-sublink-caption">Recent results</span>
                   </span>
                 </button>
                 <button
@@ -60,8 +61,8 @@
                   @click="openDashboardSection('recommendations')"
                 >
                   <span class="nav-sublink-copy">
-                    <span class="nav-sublink-label">Recommendations</span>
-                    <small>Recommendation progress</small>
+                    <span class="nav-sublink-title">Recommendations</span>
+                    <span class="nav-sublink-caption">Recommendation progress</span>
                   </span>
                 </button>
               </div>

@@ -205,11 +205,79 @@
           class="section-card animated-card records-section"
           data-tour="records-lessons-table"
         >
-          <div class="section-header">
-            <div class="records-section-heading">
-              <h3 class="section-title">Lessons</h3>
-              <p class="section-subtitle">Your uploaded lesson materials in a cleaner, classwork-style archive.</p>
+          <div class="lessons-hero">
+            <div class="lessons-hero-copy">
+              <span class="lessons-kicker">Teaching library</span>
+              <h3 class="section-title">Teacher Lessons</h3>
+              <p class="section-subtitle">Find, preview, and manage your uploaded learning materials in one organized workspace.</p>
             </div>
+            <div class="lessons-upload-summary" aria-label="Lesson upload summary">
+              <span class="lessons-summary-icon" aria-hidden="true">
+                <i class="fas fa-cloud-upload-alt"></i>
+              </span>
+              <span class="lessons-summary-copy">
+                <strong>{{ normalizedLessons.length }}</strong>
+                <span>lesson{{ normalizedLessons.length === 1 ? '' : 's' }}</span>
+              </span>
+              <span class="lessons-summary-divider" aria-hidden="true"></span>
+              <span class="lessons-summary-copy">
+                <strong>{{ lessonAttachmentTotal }}</strong>
+                <span>file{{ lessonAttachmentTotal === 1 ? '' : 's' }} uploaded</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="lessons-toolbar" aria-label="Lesson filters">
+            <label class="lessons-search">
+              <span class="sr-only">Search lessons</span>
+              <i class="fas fa-search" aria-hidden="true"></i>
+              <input
+                v-model.trim="lessonSearchQuery"
+                type="search"
+                placeholder="Search lessons or files"
+                aria-label="Search lessons or files"
+              />
+              <button
+                v-if="lessonSearchQuery"
+                type="button"
+                class="lessons-search-clear"
+                aria-label="Clear lesson search"
+                title="Clear search"
+                @click="lessonSearchQuery = ''"
+              >
+                <i class="fas fa-times" aria-hidden="true"></i>
+              </button>
+            </label>
+
+            <label class="lessons-select-field">
+              <i class="fas fa-book" aria-hidden="true"></i>
+              <span class="sr-only">Filter lessons by subject</span>
+              <select v-model="lessonSubjectFilter" aria-label="Filter lessons by subject">
+                <option value="all">All subjects</option>
+                <option v-for="subject in lessonSubjectOptions" :key="`lesson-filter-${subject}`" :value="subject">
+                  {{ subject }}
+                </option>
+              </select>
+              <i class="fas fa-chevron-down lessons-select-chevron" aria-hidden="true"></i>
+            </label>
+
+            <label class="lessons-select-field">
+              <i class="fas fa-sort-amount-down" aria-hidden="true"></i>
+              <span class="sr-only">Sort lessons</span>
+              <select v-model="lessonSortOrder" aria-label="Sort lessons">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="name">Name</option>
+              </select>
+              <i class="fas fa-chevron-down lessons-select-chevron" aria-hidden="true"></i>
+            </label>
+          </div>
+
+          <div v-if="lessonsHaveFilters" class="lessons-results-bar" aria-live="polite">
+            <span>Showing {{ filteredLessons.length }} of {{ normalizedLessons.length }} lessons</span>
+            <button type="button" @click="clearLessonFilters">
+              Clear filters
+            </button>
           </div>
 
           <div class="records-feed-wrap">
@@ -219,26 +287,44 @@
             </div>
 
             <div v-else-if="filteredLessons.length === 0" class="table-state">
-              <i class="fas fa-book-open"></i>
-              <span>No lessons yet.</span>
+              <span class="lessons-empty-icon"><i class="fas fa-folder-open"></i></span>
+              <span>{{ normalizedLessons.length ? 'No lessons match your current filters.' : 'No lessons uploaded yet.' }}</span>
+              <button v-if="lessonsHaveFilters" type="button" class="lessons-empty-action" @click="clearLessonFilters">
+                Reset filters
+              </button>
             </div>
 
             <div v-else class="records-feed records-feed-lessons">
-              <article v-for="lesson in paginatedLessons" :key="lesson.id" class="record-card">
+              <article
+                v-for="(lesson, lessonIndex) in paginatedLessons"
+                :key="lesson.id"
+                class="record-card lesson-document-card"
+                :style="{ '--lesson-index': lessonIndex }"
+              >
                 <header class="record-card-header">
                   <div class="record-card-title">
-                    <span class="record-type-label">Lesson Material</span>
+                    <span class="record-type-label">
+                      <i class="fas fa-file-alt" aria-hidden="true"></i>
+                      Lesson material
+                    </span>
                     <h4>{{ lesson.title }}</h4>
                   </div>
                   <div class="record-card-date-group">
-                    <span class="record-date-label">Published</span>
-                    <span class="record-card-date">{{ formatDate(lesson.createdAt) }}</span>
+                    <i class="far fa-calendar-alt" aria-hidden="true"></i>
+                    <span>
+                      <span class="record-date-label">Published</span>
+                      <span class="record-card-date">{{ formatDate(lesson.createdAt) }}</span>
+                    </span>
                   </div>
                 </header>
 
                 <div class="record-chip-row">
-                  <span class="record-chip chip-subject">{{ lesson.subject || 'N/A' }}</span>
+                  <span class="record-chip chip-subject">
+                    <i class="fas fa-book-open" aria-hidden="true"></i>
+                    {{ lesson.subject || 'N/A' }}
+                  </span>
                   <span class="record-chip chip-neutral">
+                    <i class="fas fa-paperclip" aria-hidden="true"></i>
                     {{ Array.isArray(lesson.attachments) && lesson.attachments.length > 0 ? `${lesson.attachments.length} attachment${lesson.attachments.length > 1 ? 's' : ''}` : '1 file' }}
                   </span>
                 </div>
@@ -246,12 +332,14 @@
                 <div class="record-card-body">
                   <template v-if="Array.isArray(lesson.attachments) && lesson.attachments.length > 0">
                     <div v-for="attachment in lesson.attachments" :key="attachment.id" class="attachment-row">
-                      <div class="attachment-icon" aria-hidden="true">
-                        <i class="fas fa-file-alt"></i>
+                      <div class="attachment-icon" :class="getLessonFileTypeClass(attachment.fileType, attachment.fileName)" aria-hidden="true">
+                        <i :class="getLessonFileIcon(attachment.fileType, attachment.fileName)"></i>
                       </div>
                       <div class="attachment-info">
                         <span class="file-name">{{ attachment.fileName || 'Attachment' }}</span>
-                        <span class="file-type">{{ attachment.fileType || 'application/octet-stream' }}</span>
+                        <span class="file-type" :class="getLessonFileTypeClass(attachment.fileType, attachment.fileName)">
+                          {{ getLessonFileTypeLabel(attachment.fileType, attachment.fileName) }}
+                        </span>
                       </div>
                       <div class="attachment-actions">
                         <button
@@ -259,25 +347,31 @@
                           type="button"
                           class="record-link record-link-button"
                           data-tour="records-download-action"
+                          aria-label="Download attachment"
+                          title="Download"
                           @click="downloadAttachment(attachment)"
                         >
-                          Download
+                          <i class="fas fa-download" aria-hidden="true"></i>
+                          <span class="sr-only">Download</span>
                         </button>
                         <a
                           v-if="attachment.canPreviewInline && attachment.url"
-                          class="record-link"
+                          class="record-link record-link-preview"
                           :href="attachment.url"
                           target="_blank"
                           rel="noopener noreferrer"
+                          aria-label="Preview attachment in a new tab"
+                          title="Preview"
                         >
-                          Preview
+                          <i class="far fa-eye" aria-hidden="true"></i>
+                          <span class="sr-only">Preview</span>
                         </a>
                       </div>
                     </div>
                   </template>
                   <template v-else>
                     <div class="attachment-row">
-                      <div class="attachment-icon" aria-hidden="true">
+                      <div class="attachment-icon file-pdf" aria-hidden="true">
                         <i class="fas fa-file-pdf"></i>
                       </div>
                       <div class="attachment-info">
@@ -290,9 +384,12 @@
                           type="button"
                           class="record-link record-link-button"
                           data-tour="records-download-action"
+                          aria-label="Download lesson file"
+                          title="Download"
                           @click="downloadLesson(lesson)"
                         >
-                          Download
+                          <i class="fas fa-download" aria-hidden="true"></i>
+                          <span class="sr-only">Download</span>
                         </button>
                       </div>
                     </div>
@@ -307,19 +404,36 @@
                 <button
                   type="button"
                   class="pagination-btn"
+                  aria-label="Go to previous lesson page"
                   :disabled="lessonPage === 1"
                   @click="changeLessonPage(-1)"
                 >
-                  Previous
+                  <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                  <span>Previous</span>
                 </button>
-                <span class="records-page-indicator">Page {{ lessonPage }} of {{ lessonTotalPages }}</span>
+                <div class="lessons-page-numbers" aria-label="Lesson pages">
+                  <button
+                    v-for="pageNumber in lessonPageNumbers"
+                    :key="`lesson-page-${pageNumber}`"
+                    type="button"
+                    class="lessons-page-btn"
+                    :class="{ active: lessonPage === pageNumber }"
+                    :aria-label="`Go to lesson page ${pageNumber}`"
+                    :aria-current="lessonPage === pageNumber ? 'page' : undefined"
+                    @click="lessonPage = pageNumber"
+                  >
+                    {{ pageNumber }}
+                  </button>
+                </div>
                 <button
                   type="button"
                   class="pagination-btn"
+                  aria-label="Go to next lesson page"
                   :disabled="lessonPage >= lessonTotalPages"
                   @click="changeLessonPage(1)"
                 >
-                  Next
+                  <span>Next</span>
+                  <i class="fas fa-chevron-right" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
@@ -332,11 +446,93 @@
           class="section-card animated-card records-section"
           data-tour="records-assessments-table"
         >
-          <div class="section-header">
-            <div class="records-section-heading">
-              <h3 class="section-title">Activities / Exams</h3>
-              <p class="section-subtitle">Assessment history with clearer scoring, deadlines, and submission details.</p>
+          <div class="assessments-hero">
+            <div class="assessments-hero-copy">
+              <span class="assessments-kicker">Assessment center</span>
+              <h3 class="section-title">Activities &amp; Exams</h3>
+              <p class="section-subtitle">Review assessment details, deadlines, submissions, and performance from one focused workspace.</p>
             </div>
+            <div class="assessments-summary" aria-label="Assessment summary">
+              <div class="assessments-summary-item">
+                <span class="assessments-summary-icon"><i class="fas fa-clipboard-check" aria-hidden="true"></i></span>
+                <span>
+                  <strong>{{ normalizedAssessments.length }}</strong>
+                  <small>assessment{{ normalizedAssessments.length === 1 ? '' : 's' }}</small>
+                </span>
+              </div>
+              <span class="assessments-summary-divider" aria-hidden="true"></span>
+              <div class="assessments-summary-item">
+                <span class="assessments-summary-icon submissions"><i class="fas fa-user-check" aria-hidden="true"></i></span>
+                <span>
+                  <strong>{{ assessmentSubmissionTotal }}</strong>
+                  <small>submission{{ assessmentSubmissionTotal === 1 ? '' : 's' }}</small>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="assessments-toolbar" aria-label="Assessment filters">
+            <label class="assessments-search">
+              <span class="sr-only">Search assessments</span>
+              <i class="fas fa-search" aria-hidden="true"></i>
+              <input
+                v-model.trim="assessmentSearchQuery"
+                type="search"
+                placeholder="Search assessments or lessons"
+                aria-label="Search assessments or lessons"
+              />
+              <button
+                v-if="assessmentSearchQuery"
+                type="button"
+                class="assessments-search-clear"
+                aria-label="Clear assessment search"
+                title="Clear search"
+                @click="assessmentSearchQuery = ''"
+              >
+                <i class="fas fa-times" aria-hidden="true"></i>
+              </button>
+            </label>
+
+            <label class="assessments-select-field">
+              <i class="fas fa-book" aria-hidden="true"></i>
+              <span class="sr-only">Filter assessments by subject</span>
+              <select v-model="assessmentSubjectFilter" aria-label="Filter assessments by subject">
+                <option value="all">All subjects</option>
+                <option v-for="subject in assessmentSubjectOptions" :key="`assessment-subject-${subject}`" :value="subject">
+                  {{ subject }}
+                </option>
+              </select>
+              <i class="fas fa-chevron-down assessments-select-chevron" aria-hidden="true"></i>
+            </label>
+
+            <label class="assessments-select-field">
+              <i class="fas fa-layer-group" aria-hidden="true"></i>
+              <span class="sr-only">Filter assessments by type</span>
+              <select v-model="assessmentTypeFilter" aria-label="Filter assessments by type">
+                <option value="all">All types</option>
+                <option value="exam">Exams</option>
+                <option value="quiz">Quizzes</option>
+                <option value="activity">Activities</option>
+              </select>
+              <i class="fas fa-chevron-down assessments-select-chevron" aria-hidden="true"></i>
+            </label>
+
+            <label class="assessments-select-field">
+              <i class="fas fa-sort-amount-down" aria-hidden="true"></i>
+              <span class="sr-only">Sort assessments</span>
+              <select v-model="assessmentSortOrder" aria-label="Sort assessments">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="name">Name</option>
+                <option value="deadline">Deadline</option>
+              </select>
+              <i class="fas fa-chevron-down assessments-select-chevron" aria-hidden="true"></i>
+            </label>
+          </div>
+
+          <div v-if="assessmentsHaveFilters" class="assessments-results-bar" aria-live="polite">
+            <span>Showing {{ filteredAssessments.length }} of {{ normalizedAssessments.length }} assessments</span>
+            <button type="button" @click="clearAssessmentFilters">Clear filters</button>
           </div>
 
           <div class="records-feed-wrap">
@@ -346,30 +542,44 @@
             </div>
 
             <div v-else-if="filteredAssessments.length === 0" class="table-state">
-              <i class="fas fa-tasks"></i>
-              <span>No assessments yet.</span>
+              <span class="assessments-empty-icon"><i class="fas fa-clipboard-list"></i></span>
+              <span>{{ normalizedAssessments.length ? 'No assessments match your current filters.' : 'No assessments created yet.' }}</span>
+              <button v-if="assessmentsHaveFilters" type="button" class="assessments-empty-action" @click="clearAssessmentFilters">
+                Reset filters
+              </button>
             </div>
 
             <div v-else class="records-feed records-feed-assessments">
-              <article v-for="assessment in paginatedAssessments" :key="assessment.id" class="record-card">
+              <article
+                v-for="(assessment, assessmentIndex) in paginatedAssessments"
+                :key="assessment.id"
+                class="record-card assessment-record-card"
+                :class="`assessment-kind-${getAssessmentTypeKey(assessment)}`"
+                :style="{ '--assessment-index': assessmentIndex }"
+              >
                 <header class="record-card-header">
+                  <span class="assessment-kind-icon" aria-hidden="true">
+                    <i :class="getAssessmentTypeIcon(assessment)"></i>
+                  </span>
                   <div class="record-card-title">
-                    <span class="record-type-label">Assessment Record</span>
+                    <span class="record-type-label">{{ getAssessmentTypeLabel(assessment) }}</span>
                     <h4>{{ assessment.title }}</h4>
-                    <p>{{ assessment.lessonTitle || 'Unlinked lesson' }}</p>
+                    <p><i class="fas fa-link" aria-hidden="true"></i>{{ assessment.lessonTitle || 'Unlinked lesson' }}</p>
                   </div>
                   <div class="record-card-date-group">
-                    <span class="record-date-label">Created</span>
-                    <span class="record-card-date">{{ formatDate(assessment.createdAt) }}</span>
+                    <i class="far fa-calendar-alt" aria-hidden="true"></i>
+                    <span>
+                      <span class="record-date-label">Created</span>
+                      <span class="record-card-date">{{ formatDate(assessment.createdAt) }}</span>
+                    </span>
                   </div>
                 </header>
 
                 <div class="record-chip-row">
-                  <span class="record-chip chip-subject">{{ assessment.subject || 'N/A' }}</span>
-                  <span class="record-chip chip-neutral">{{ assessment.assessmentMode === 'grading_assessment' ? 'Exam' : assessment.assessmentMode === 'quiz' ? 'Quiz' : 'Activity' }}</span>
-                  <span v-if="assessment.gradingPeriod" class="record-chip chip-neutral">{{ assessment.gradingPeriod }} Grading</span>
-                  <span v-if="assessment.countsTowardRecommendation" class="record-chip chip-success">Recommendation Basis</span>
-                  <span class="record-chip chip-type">{{ assessment.examType || 'Assessment' }}</span>
+                  <span class="record-chip chip-subject"><i class="fas fa-book-open" aria-hidden="true"></i>{{ assessment.subject || 'N/A' }}</span>
+                  <span v-if="assessment.gradingPeriod" class="record-chip chip-neutral"><i class="far fa-calendar" aria-hidden="true"></i>{{ assessment.gradingPeriod }} Grading</span>
+                  <span v-if="assessment.countsTowardRecommendation" class="record-chip chip-success"><i class="fas fa-star" aria-hidden="true"></i>Recommendation Basis</span>
+                  <span class="record-chip chip-type">{{ formatLabel(assessment.examType || 'Assessment') }}</span>
                   <span class="difficulty-pill" :class="`difficulty-${String(assessment.difficulty || '').toLowerCase()}`">
                     {{ formatLabel(assessment.difficulty || 'Medium') }}
                   </span>
@@ -380,30 +590,39 @@
                     <div class="meta-item-icon">
                       <i class="fas fa-list-ol"></i>
                     </div>
-                    <span>Items</span>
-                    <strong>{{ assessment.numberOfItems }}</strong>
+                    <div class="meta-item-copy">
+                      <span>Items</span>
+                      <strong>{{ assessment.numberOfItems }}</strong>
+                    </div>
                   </div>
                   <div class="meta-item">
                     <div class="meta-item-icon">
                       <i class="fas fa-calendar-alt"></i>
                     </div>
-                    <span>Deadline</span>
-                    <strong>{{ assessment.submissionDeadline ? formatDateTime(assessment.submissionDeadline) : 'No deadline' }}</strong>
+                    <div class="meta-item-copy">
+                      <span>Deadline</span>
+                      <strong>{{ assessment.submissionDeadline ? formatDateTime(assessment.submissionDeadline) : 'No deadline' }}</strong>
+                    </div>
                   </div>
                   <div class="meta-item">
                     <div class="meta-item-icon">
                       <i class="fas fa-user-check"></i>
                     </div>
-                    <span>Submissions</span>
-                    <strong>{{ assessment.submissionsCount }}</strong>
+                    <div class="meta-item-copy">
+                      <span>Submissions</span>
+                      <strong>{{ assessment.submissionsCount }}</strong>
+                    </div>
                   </div>
                 </div>
 
                 <div class="assessment-results-block">
                   <div class="assessment-results-header">
                     <div class="assessment-results-title">
+                      <span class="assessment-results-heading-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                      <div>
                       <span>{{ getAssessmentResultsSectionTitle(assessment) }}</span>
                       <p>{{ getAssessmentResultsSectionCopy(assessment) }}</p>
+                      </div>
                     </div>
                     <strong class="assessment-results-count">{{ getAssessmentResultsCountLabel(assessment) }}</strong>
                   </div>
@@ -466,11 +685,11 @@
                 </div>
 
                 <div class="record-card-actions">
-                  <button type="button" class="record-link record-link-button" @click="openDeadlineEditor(assessment)">
+                  <button type="button" class="record-link record-link-button assessment-action-secondary" @click="openDeadlineEditor(assessment)">
                     <i class="fas fa-calendar-pen"></i>
                     Edit Deadline
                   </button>
-                  <button v-if="!isActivityAssessment(assessment)" type="button" class="record-link record-link-button" @click="openAnswerKey(assessment)">
+                  <button v-if="!isActivityAssessment(assessment)" type="button" class="record-link record-link-button assessment-action-primary" @click="openAnswerKey(assessment)">
                     <i class="fas fa-key"></i>
                     View Correct Answers
                   </button>
@@ -484,19 +703,36 @@
                 <button
                   type="button"
                   class="pagination-btn"
+                  aria-label="Go to previous assessment page"
                   :disabled="assessmentPage === 1"
                   @click="changeAssessmentPage(-1)"
                 >
-                  Previous
+                  <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                  <span>Previous</span>
                 </button>
-                <span class="records-page-indicator">Page {{ assessmentPage }} of {{ assessmentTotalPages }}</span>
+                <div class="assessments-page-numbers" aria-label="Assessment pages">
+                  <button
+                    v-for="pageNumber in assessmentPageNumbers"
+                    :key="`assessment-page-${pageNumber}`"
+                    type="button"
+                    class="assessments-page-btn"
+                    :class="{ active: assessmentPage === pageNumber }"
+                    :aria-label="`Go to assessment page ${pageNumber}`"
+                    :aria-current="assessmentPage === pageNumber ? 'page' : undefined"
+                    @click="assessmentPage = pageNumber"
+                  >
+                    {{ pageNumber }}
+                  </button>
+                </div>
                 <button
                   type="button"
                   class="pagination-btn"
+                  aria-label="Go to next assessment page"
                   :disabled="assessmentPage >= assessmentTotalPages"
                   @click="changeAssessmentPage(1)"
                 >
-                  Next
+                  <span>Next</span>
+                  <i class="fas fa-chevron-right" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
@@ -508,125 +744,130 @@
           id="teacherRecordsAttendancePanel"
           class="section-card animated-card records-section attendance-section"
         >
-          <div class="section-header">
-            <div class="records-section-heading">
-              <h3 class="section-title">Attendance</h3>
+          <div class="attendance-workspace-hero">
+            <div class="attendance-workspace-heading">
+              <span class="attendance-workspace-icon" aria-hidden="true"><i class="fas fa-user-check"></i></span>
+              <div>
+                <span class="attendance-workspace-kicker">Classroom workspace</span>
+                <h3 class="section-title">Attendance</h3>
+                <p class="section-subtitle">Take daily attendance, manage student statuses, and review saved class records.</p>
+              </div>
+            </div>
+            <div class="attendance-workspace-context">
+              <span><i class="far fa-calendar-alt" aria-hidden="true"></i>{{ attendanceSelectedDateLabel }}</span>
+              <span><i class="fas fa-layer-group" aria-hidden="true"></i>{{ isAdvisoryAttendance ? 'Advisory section' : 'Handled class' }}</span>
+            </div>
+
+            <div class="attendance-summary-grid" aria-label="Attendance snapshot">
+              <article class="attendance-summary-card status-total">
+                <div class="attendance-summary-card-head">
+                  <i class="fas fa-users attendance-summary-icon" aria-hidden="true"></i>
+                  <span>Total Students</span>
+                </div>
+                <strong>{{ attendanceSnapshot.totalStudents }}</strong>
+                <small>Enrolled roster</small>
+              </article>
+              <article class="attendance-summary-card status-present">
+                <div class="attendance-summary-card-head">
+                  <i class="fas fa-user-check attendance-summary-icon" aria-hidden="true"></i>
+                  <span>Present</span>
+                </div>
+                <strong>{{ attendanceSnapshot.presentCount }}</strong>
+                <small>In class today</small>
+              </article>
+              <article class="attendance-summary-card status-late">
+                <div class="attendance-summary-card-head">
+                  <i class="fas fa-clock attendance-summary-icon" aria-hidden="true"></i>
+                  <span>Late</span>
+                </div>
+                <strong>{{ attendanceSnapshot.lateCount }}</strong>
+                <small>Arrived late</small>
+              </article>
+              <article class="attendance-summary-card status-absent">
+                <div class="attendance-summary-card-head">
+                  <i class="fas fa-user-times attendance-summary-icon" aria-hidden="true"></i>
+                  <span>Absent</span>
+                </div>
+                <strong>{{ attendanceSnapshot.absentCount }}</strong>
+                <small>Not in class</small>
+              </article>
+              <article class="attendance-summary-card status-excused">
+                <div class="attendance-summary-card-head">
+                  <i class="fas fa-file-alt attendance-summary-icon" aria-hidden="true"></i>
+                  <span>Excused</span>
+                </div>
+                <strong>{{ attendanceSnapshot.excusedCount }}</strong>
+                <small>With permission</small>
+              </article>
             </div>
           </div>
 
           <div class="attendance-shell">
-            <section class="attendance-hero-card">
-              <div class="attendance-summary-grid">
-                <article class="attendance-summary-card">
-                  <i class="fas fa-users attendance-summary-icon" aria-hidden="true"></i>
-                  <span>Total Students</span>
-                  <strong>{{ attendanceSnapshot.totalStudents }}</strong>
-                </article>
-                <article class="attendance-summary-card status-present">
-                  <i class="fas fa-user-check attendance-summary-icon" aria-hidden="true"></i>
-                  <span>Present</span>
-                  <strong>{{ attendanceSnapshot.presentCount }}</strong>
-                </article>
-                <article class="attendance-summary-card status-late">
-                  <i class="fas fa-clock attendance-summary-icon" aria-hidden="true"></i>
-                  <span>Late</span>
-                  <strong>{{ attendanceSnapshot.lateCount }}</strong>
-                </article>
-                <article class="attendance-summary-card status-absent">
-                  <i class="fas fa-user-times attendance-summary-icon" aria-hidden="true"></i>
-                  <span>Absent</span>
-                  <strong>{{ attendanceSnapshot.absentCount }}</strong>
-                </article>
-                <article class="attendance-summary-card status-excused">
-                  <i class="fas fa-file-alt attendance-summary-icon" aria-hidden="true"></i>
-                  <span>Excused</span>
-                  <strong>{{ attendanceSnapshot.excusedCount }}</strong>
-                </article>
-              </div>
-
-            </section>
-
             <section class="attendance-toolbar-card">
-              <div class="attendance-toolbar-header">
-                <div class="attendance-toolbar-header-copy">
-                  <span class="attendance-toolbar-kicker">Quick Setup</span>
-                  <h5>Choose the roster you want to take attendance for</h5>
-                  <p>
-                    {{ isAdvisoryAttendance
-                      ? 'Use your assigned advisory section roster for homeroom or advisory attendance.'
-                      : 'Use one of your handled subject classes for daily class attendance.' }}
-                  </p>
+              <div class="attendance-toolbar-title-row">
+                <div>
+                  <span class="attendance-toolbar-kicker"><i class="fas fa-sliders-h" aria-hidden="true"></i>Attendance controls</span>
+                  <h5>Choose a class and date to manage attendance</h5>
                 </div>
-                <p class="attendance-toolbar-note">{{ attendanceToolbarHint }}</p>
+                <span class="attendance-toolbar-note">{{ attendanceToolbarHint }}</span>
               </div>
 
-              <div class="attendance-scope-panel">
-                <div class="attendance-scope-panel-copy">
-                  <span class="attendance-step-badge">Step 1</span>
-                  <strong>Attendance Scope</strong>
-                  <small>Switch between handled-class attendance and your advisory section.</small>
+              <div class="attendance-primary-toolbar">
+                <div class="attendance-toolbar-control attendance-toolbar-scope-control">
+                  <span class="attendance-control-label">Scope</span>
+                  <div class="attendance-scope-switch" role="tablist" aria-label="Attendance scope">
+                    <button
+                      type="button"
+                      class="attendance-scope-btn"
+                      :class="{ active: attendanceScope === 'handled_class' }"
+                      @click="attendanceScope = 'handled_class'"
+                    >
+                      <i class="fas fa-chalkboard" aria-hidden="true"></i>
+                      <span>Classes</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="attendance-scope-btn"
+                      :class="{ active: attendanceScope === 'advisory_class' }"
+                      :disabled="!teacherAdvisorySection"
+                      @click="attendanceScope = 'advisory_class'"
+                    >
+                      <i class="fas fa-users" aria-hidden="true"></i>
+                      <span>Advisory</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div class="attendance-scope-switch" role="tablist" aria-label="Attendance scope">
-                  <button
-                    type="button"
-                    class="attendance-scope-btn"
-                    :class="{ active: attendanceScope === 'handled_class' }"
-                    @click="attendanceScope = 'handled_class'"
-                  >
-                    <i class="fas fa-chalkboard"></i>
-                    <span>Handled Classes</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="attendance-scope-btn"
-                    :class="{ active: attendanceScope === 'advisory_class' }"
-                    :disabled="!teacherAdvisorySection"
-                    @click="attendanceScope = 'advisory_class'"
-                  >
-                    <i class="fas fa-users"></i>
-                    <span>Advisory Section</span>
-                  </button>
-                </div>
-              </div>
-
-              <div class="attendance-toolbar-grid">
-                <div class="attendance-toolbar-field-card">
-                  <span class="attendance-step-badge">Step 2</span>
-                  <label v-if="!isAdvisoryAttendance" class="filter-field">
-                    <span>Handled Class</span>
-                    <select v-model="attendanceSubjectId">
-                      <option value="" disabled>Select class</option>
-                      <option v-for="subject in attendanceSubjectOptions" :key="`attendance-subject-${subject.id}`" :value="subject.id">
-                        {{ subject.label }}
-                      </option>
-                    </select>
+                <div class="attendance-toolbar-control attendance-toolbar-class-control">
+                  <label v-if="!isAdvisoryAttendance" class="attendance-control-field">
+                    <span class="attendance-control-label">Class</span>
+                    <span class="attendance-control-input">
+                      <i class="fas fa-book-open" aria-hidden="true"></i>
+                      <select v-model="attendanceSubjectId" aria-label="Select handled class">
+                        <option value="" disabled>Select class</option>
+                        <option v-for="subject in attendanceSubjectOptions" :key="`attendance-subject-${subject.id}`" :value="subject.id">
+                          {{ subject.label }}
+                        </option>
+                      </select>
+                      <i class="fas fa-chevron-down attendance-control-chevron" aria-hidden="true"></i>
+                    </span>
                   </label>
-
-                  <div v-else class="attendance-context-card">
-                    <span>Advisory Section</span>
-                    <strong>{{ teacherAdvisorySection?.name || 'No advisory section assigned' }}</strong>
-                    <small>{{ teacher.subject || teacherRole }}</small>
+                  <div v-else class="attendance-control-field">
+                    <span class="attendance-control-label">Advisory section</span>
+                    <span class="attendance-control-input attendance-control-readonly">
+                      <i class="fas fa-users" aria-hidden="true"></i>
+                      <strong>{{ teacherAdvisorySection?.name || 'No advisory section assigned' }}</strong>
+                    </span>
                   </div>
                 </div>
 
-                <div class="attendance-toolbar-field-card attendance-date-card">
-                  <span class="attendance-step-badge">Step 3</span>
-                  <div class="attendance-date-card-copy">
-                    <div class="attendance-date-card-icon" aria-hidden="true">
-                      <i class="fas fa-calendar-day"></i>
-                    </div>
-                    <div>
-                      <strong>Attendance Date</strong>
-                      <small>Choose the class day you want to review or update.</small>
-                    </div>
-                  </div>
-                  <label class="filter-field attendance-date-field">
-                    <span>Date</span>
-                    <div class="attendance-date-input-wrap">
+                <div class="attendance-toolbar-control attendance-toolbar-date-control">
+                  <label class="attendance-control-field">
+                    <span class="attendance-control-label">Date</span>
+                    <span class="attendance-control-input">
                       <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-                      <input v-model="attendanceDateKey" type="date" />
-                    </div>
+                      <input v-model="attendanceDateKey" type="date" aria-label="Attendance date" />
+                    </span>
                   </label>
                   <div class="attendance-date-quick-actions">
                     <button
@@ -646,11 +887,45 @@
                       Yesterday
                     </button>
                   </div>
-                  <small class="attendance-date-helper">{{ attendanceSelectedDateLabel }}</small>
                 </div>
 
-                <div class="attendance-toolbar-field-card attendance-toolbar-actions-card">
-                  <span class="attendance-step-badge">Step 4</span>
+                <div class="attendance-toolbar-control attendance-toolbar-search-control">
+                  <label class="attendance-control-field">
+                    <span class="attendance-control-label">Find student</span>
+                    <span class="attendance-control-input">
+                      <i class="fas fa-search" aria-hidden="true"></i>
+                      <input
+                        v-model="attendanceSearchQuery"
+                        type="search"
+                        placeholder="Name, email, grade, or section"
+                        aria-label="Search students in attendance roster"
+                      />
+                    </span>
+                  </label>
+                </div>
+
+                <div class="attendance-toolbar-control attendance-toolbar-status-control">
+                  <label class="attendance-control-field">
+                    <span class="attendance-control-label">Status</span>
+                    <span class="attendance-control-input">
+                      <i class="fas fa-filter" aria-hidden="true"></i>
+                      <select v-model="attendanceStatusFilter" aria-label="Filter roster by attendance status">
+                        <option value="all">All students</option>
+                        <option
+                          v-for="status in attendanceStatuses"
+                          :key="`attendance-filter-${status}`"
+                          :value="status.toLowerCase()"
+                        >
+                          {{ status }}
+                        </option>
+                      </select>
+                      <i class="fas fa-chevron-down attendance-control-chevron" aria-hidden="true"></i>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="attendance-toolbar-control attendance-toolbar-actions-control">
+                  <span class="attendance-control-label">Actions</span>
                   <div class="attendance-toolbar-actions">
                     <button
                       type="button"
@@ -680,20 +955,24 @@
                       {{ isAttendanceLocking ? 'Locking...' : 'Lock' }}
                     </button>
                   </div>
-                  <small class="attendance-actions-hint">Load the roster first, then save changes and lock the record once it is complete.</small>
                 </div>
               </div>
 
-              <div class="attendance-legend-block">
-                <span class="attendance-legend-title">Attendance Status Guide</span>
-                <div class="attendance-legend-row">
-                  <span class="attendance-legend-pill status-present">Present</span>
-                  <span class="attendance-legend-pill status-late">Late</span>
-                  <span class="attendance-legend-pill status-absent">Absent</span>
-                  <span class="attendance-legend-pill status-excused">Excused</span>
+              <div class="attendance-toolbar-footer">
+                <span class="attendance-toolbar-helper">
+                  <i class="fas fa-info-circle" aria-hidden="true"></i>
+                  Select a class and date, load the roster, then save or lock when complete.
+                </span>
+                <div class="attendance-legend-block">
+                  <span class="attendance-legend-title">Status guide</span>
+                  <div class="attendance-legend-row">
+                    <span class="attendance-legend-pill status-present">Present</span>
+                    <span class="attendance-legend-pill status-late">Late</span>
+                    <span class="attendance-legend-pill status-absent">Absent</span>
+                    <span class="attendance-legend-pill status-excused">Excused</span>
+                  </div>
                 </div>
               </div>
-
             </section>
           </div>
 
@@ -710,8 +989,12 @@
           <div class="attendance-layout">
             <article class="attendance-panel">
               <div class="attendance-panel-head">
-                <div>
+                <div class="attendance-panel-title">
+                  <span class="attendance-panel-title-icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+                  <div>
                   <span class="attendance-panel-kicker">Attendance Roster</span>
+                    <p>Search students and update their attendance status.</p>
+                  </div>
                 </div>
                 <div v-if="attendanceCurrentRecord" class="attendance-record-badges">
                   <span class="record-chip" :class="attendanceCurrentRecord.isLocked ? 'chip-success' : 'chip-neutral'">
@@ -735,40 +1018,10 @@
               </div>
 
               <div v-else class="attendance-roster-body">
-                <div class="attendance-roster-toolbar">
-                  <div class="attendance-roster-toolbar-fields">
-                    <label class="attendance-search-field">
-                      <span>Find Student</span>
-                      <div class="attendance-search-input-wrap">
-                        <i class="fas fa-search" aria-hidden="true"></i>
-                        <input
-                          v-model="attendanceSearchQuery"
-                          type="search"
-                          placeholder="Search by name, email, grade, or section"
-                          aria-label="Search students in attendance roster"
-                        />
-                      </div>
-                    </label>
-
-                    <label class="attendance-filter-field">
-                      <span>Status Filter</span>
-                      <select v-model="attendanceStatusFilter">
-                        <option value="all">All students</option>
-                        <option
-                          v-for="status in attendanceStatuses"
-                          :key="`attendance-filter-${status}`"
-                          :value="status.toLowerCase()"
-                        >
-                          {{ status }}
-                        </option>
-                      </select>
-                    </label>
-                  </div>
-
-                  <div class="attendance-roster-toolbar-actions">
-                    <div class="attendance-bulk-actions">
-                      <span>Quick mark visible students</span>
-                      <div class="attendance-bulk-action-row">
+                <div class="attendance-bulk-toolbar">
+                  <div class="attendance-bulk-actions">
+                    <span>Mark visible students</span>
+                    <div class="attendance-bulk-action-row" role="group" aria-label="Bulk attendance status">
                         <button
                           v-for="status in attendanceStatuses"
                           :key="`attendance-bulk-${status}`"
@@ -780,18 +1033,18 @@
                         >
                           {{ status }}
                         </button>
-                      </div>
                     </div>
-
-                    <button
-                      v-if="attendanceRosterHasFilters"
-                      type="button"
-                      class="attendance-clear-filters-btn"
-                      @click="clearAttendanceRosterFilters"
-                    >
-                      Clear filters
-                    </button>
                   </div>
+
+                  <button
+                    v-if="attendanceRosterHasFilters"
+                    type="button"
+                    class="attendance-clear-filters-btn"
+                    @click="clearAttendanceRosterFilters"
+                  >
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    Clear filters
+                  </button>
                 </div>
 
                 <p class="attendance-roster-results">{{ attendanceRosterResultsLabel }}</p>
@@ -870,8 +1123,12 @@
             <details class="attendance-panel attendance-history-panel">
               <summary class="attendance-history-summary">
                 <div class="attendance-panel-head">
-                <div>
+                  <div class="attendance-panel-title">
+                    <span class="attendance-panel-title-icon history" aria-hidden="true"><i class="fas fa-history"></i></span>
+                    <div>
                     <span class="attendance-panel-kicker">Attendance History</span>
+                      <p>Review recent saved and locked records.</p>
+                    </div>
                   </div>
                   <i class="fas fa-chevron-down attendance-history-chevron" aria-hidden="true"></i>
                 </div>
@@ -1309,7 +1566,14 @@ const assessments = ref([])
 const assessmentResults = ref([])
 const activeRecordsTab = ref('lessons')
 const lessonPage = ref(1)
+const lessonSearchQuery = ref('')
+const lessonSubjectFilter = ref('all')
+const lessonSortOrder = ref('newest')
 const assessmentPage = ref(1)
+const assessmentSearchQuery = ref('')
+const assessmentSubjectFilter = ref('all')
+const assessmentTypeFilter = ref('all')
+const assessmentSortOrder = ref('newest')
 const teacherSubjects = ref([])
 const teacherAdvisorySection = ref(null)
 const attendanceRecords = ref([])
@@ -1604,6 +1868,25 @@ const normalizedAssessments = computed(() => assessments.value.map((assessment) 
   subject: String(assessment?.subject || assessment?.lessonSubject || '').trim()
 })))
 
+const getAssessmentTypeKey = (assessment) => {
+  const mode = normalizeSearchText(assessment?.assessmentMode)
+  if (mode === 'grading_assessment') return 'exam'
+  if (mode === 'quiz') return 'quiz'
+  return 'activity'
+}
+
+const getAssessmentTypeLabel = (assessment) => ({
+  exam: 'Exam',
+  quiz: 'Quiz',
+  activity: 'Activity',
+}[getAssessmentTypeKey(assessment)])
+
+const getAssessmentTypeIcon = (assessment) => ({
+  exam: 'fas fa-file-signature',
+  quiz: 'fas fa-circle-question',
+  activity: 'fas fa-puzzle-piece',
+}[getAssessmentTypeKey(assessment)])
+
 const assessmentResultsByAssessmentId = computed(() => {
   const grouped = new Map()
 
@@ -1626,9 +1909,89 @@ const assessmentResultsByAssessmentId = computed(() => {
   return grouped
 })
 
-const filteredLessons = computed(() => normalizedLessons.value)
+const lessonSubjectOptions = computed(() => [...new Set(
+  normalizedLessons.value
+    .map((lesson) => lesson.subject)
+    .filter(Boolean)
+)].sort((left, right) => left.localeCompare(right)))
 
-const filteredAssessments = computed(() => normalizedAssessments.value)
+const lessonAttachmentTotal = computed(() => normalizedLessons.value.reduce((total, lesson) => {
+  const attachmentCount = Array.isArray(lesson.attachments) ? lesson.attachments.length : 0
+  return total + Math.max(1, attachmentCount)
+}, 0))
+
+const lessonsHaveFilters = computed(() => (
+  Boolean(lessonSearchQuery.value)
+  || lessonSubjectFilter.value !== 'all'
+  || lessonSortOrder.value !== 'newest'
+))
+
+const filteredLessons = computed(() => {
+  const query = normalizeSearchText(lessonSearchQuery.value)
+  const selectedSubject = lessonSubjectFilter.value
+  const matches = normalizedLessons.value.filter((lesson) => {
+    if (selectedSubject !== 'all' && lesson.subject !== selectedSubject) return false
+    if (!query) return true
+
+    const attachmentNames = Array.isArray(lesson.attachments)
+      ? lesson.attachments.map((attachment) => attachment?.fileName).join(' ')
+      : lesson.pdfOriginalName
+    return normalizeSearchText(`${lesson.title} ${lesson.subject} ${attachmentNames}`).includes(query)
+  })
+
+  return [...matches].sort((left, right) => {
+    if (lessonSortOrder.value === 'name') {
+      return String(left.title || '').localeCompare(String(right.title || ''), undefined, { sensitivity: 'base' })
+    }
+    const leftTime = new Date(left.createdAt || 0).getTime()
+    const rightTime = new Date(right.createdAt || 0).getTime()
+    return lessonSortOrder.value === 'oldest' ? leftTime - rightTime : rightTime - leftTime
+  })
+})
+
+const assessmentSubjectOptions = computed(() => [...new Set(
+  normalizedAssessments.value
+    .map((assessment) => assessment.subject)
+    .filter(Boolean)
+)].sort((left, right) => left.localeCompare(right)))
+
+const assessmentSubmissionTotal = computed(() => normalizedAssessments.value.reduce(
+  (total, assessment) => total + Number(assessment?.submissionsCount || 0),
+  0
+))
+
+const assessmentsHaveFilters = computed(() => (
+  Boolean(assessmentSearchQuery.value)
+  || assessmentSubjectFilter.value !== 'all'
+  || assessmentTypeFilter.value !== 'all'
+  || assessmentSortOrder.value !== 'newest'
+))
+
+const filteredAssessments = computed(() => {
+  const query = normalizeSearchText(assessmentSearchQuery.value)
+  const matches = normalizedAssessments.value.filter((assessment) => {
+    if (assessmentSubjectFilter.value !== 'all' && assessment.subject !== assessmentSubjectFilter.value) return false
+    if (assessmentTypeFilter.value !== 'all' && getAssessmentTypeKey(assessment) !== assessmentTypeFilter.value) return false
+    if (!query) return true
+    return normalizeSearchText(
+      `${assessment.title} ${assessment.lessonTitle} ${assessment.subject} ${assessment.examType} ${assessment.difficulty}`
+    ).includes(query)
+  })
+
+  return [...matches].sort((left, right) => {
+    if (assessmentSortOrder.value === 'name') {
+      return String(left.title || '').localeCompare(String(right.title || ''), undefined, { sensitivity: 'base' })
+    }
+    if (assessmentSortOrder.value === 'deadline') {
+      const leftDeadline = left.submissionDeadline ? new Date(left.submissionDeadline).getTime() : Number.MAX_SAFE_INTEGER
+      const rightDeadline = right.submissionDeadline ? new Date(right.submissionDeadline).getTime() : Number.MAX_SAFE_INTEGER
+      return leftDeadline - rightDeadline
+    }
+    const leftTime = new Date(left.createdAt || 0).getTime()
+    const rightTime = new Date(right.createdAt || 0).getTime()
+    return assessmentSortOrder.value === 'oldest' ? leftTime - rightTime : rightTime - leftTime
+  })
+})
 
 const attendanceSubjectOptions = computed(() => teacherSubjects.value.map((subject) => ({
   id: subject.id,
@@ -1824,9 +2187,23 @@ const paginatedLessons = computed(() => {
   return filteredLessons.value.slice(start, start + pageSize)
 })
 
+const lessonPageNumbers = computed(() => {
+  const total = lessonTotalPages.value
+  if (total <= 5) return Array.from({ length: total }, (_, index) => index + 1)
+  const start = Math.min(Math.max(lessonPage.value - 2, 1), total - 4)
+  return Array.from({ length: 5 }, (_, index) => start + index)
+})
+
 const paginatedAssessments = computed(() => {
   const start = (assessmentPage.value - 1) * pageSize
   return filteredAssessments.value.slice(start, start + pageSize)
+})
+
+const assessmentPageNumbers = computed(() => {
+  const total = assessmentTotalPages.value
+  if (total <= 5) return Array.from({ length: total }, (_, index) => index + 1)
+  const start = Math.min(Math.max(assessmentPage.value - 2, 1), total - 4)
+  return Array.from({ length: 5 }, (_, index) => start + index)
 })
 
 const getNameInitials = (value) => {
@@ -1846,6 +2223,61 @@ const attendanceStatusClass = (status) => {
   if (normalized === 'excused') return 'status-excused'
   if (normalized === 'absent') return 'status-absent'
   return 'status-neutral'
+}
+
+const getLessonFileExtension = (fileType, fileName) => {
+  const normalizedType = normalizeSearchText(fileType)
+  const extension = String(fileName || '').split('.').pop()?.toLowerCase()
+  if (normalizedType.includes('pdf') || extension === 'pdf') return 'pdf'
+  if (normalizedType.includes('word') || ['doc', 'docx'].includes(extension)) return 'word'
+  if (normalizedType.includes('presentation') || normalizedType.includes('powerpoint') || ['ppt', 'pptx'].includes(extension)) return 'slides'
+  if (normalizedType.includes('spreadsheet') || normalizedType.includes('excel') || ['xls', 'xlsx', 'csv'].includes(extension)) return 'sheet'
+  if (normalizedType.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image'
+  if (normalizedType.includes('video') || ['mp4', 'mov', 'avi', 'webm'].includes(extension)) return 'video'
+  return 'file'
+}
+
+const getLessonFileTypeClass = (fileType, fileName) => `file-${getLessonFileExtension(fileType, fileName)}`
+
+const getLessonFileTypeLabel = (fileType, fileName) => {
+  const labels = {
+    pdf: 'PDF',
+    word: 'DOC',
+    slides: 'SLIDES',
+    sheet: 'SHEET',
+    image: 'IMAGE',
+    video: 'VIDEO',
+    file: 'FILE',
+  }
+  return labels[getLessonFileExtension(fileType, fileName)]
+}
+
+const getLessonFileIcon = (fileType, fileName) => {
+  const icons = {
+    pdf: 'fas fa-file-pdf',
+    word: 'fas fa-file-word',
+    slides: 'fas fa-file-powerpoint',
+    sheet: 'fas fa-file-excel',
+    image: 'fas fa-file-image',
+    video: 'fas fa-file-video',
+    file: 'fas fa-file-alt',
+  }
+  return icons[getLessonFileExtension(fileType, fileName)]
+}
+
+const clearLessonFilters = () => {
+  lessonSearchQuery.value = ''
+  lessonSubjectFilter.value = 'all'
+  lessonSortOrder.value = 'newest'
+  lessonPage.value = 1
+}
+
+const clearAssessmentFilters = () => {
+  assessmentSearchQuery.value = ''
+  assessmentSubjectFilter.value = 'all'
+  assessmentTypeFilter.value = 'all'
+  assessmentSortOrder.value = 'newest'
+  assessmentPage.value = 1
 }
 
 const clearAttendanceRosterFilters = () => {
@@ -2743,8 +3175,9 @@ watch(
 )
 
 watch(
-  () => filteredLessons.value.length,
-  (length) => {
+  () => [filteredLessons.value.length, lessonSearchQuery.value, lessonSubjectFilter.value, lessonSortOrder.value],
+  ([length], previousValues) => {
+    if (previousValues) lessonPage.value = 1
     if (length === 0) {
       lessonPage.value = 1
       return
@@ -2754,8 +3187,15 @@ watch(
 )
 
 watch(
-  () => filteredAssessments.value.length,
-  (length) => {
+  () => [
+    filteredAssessments.value.length,
+    assessmentSearchQuery.value,
+    assessmentSubjectFilter.value,
+    assessmentTypeFilter.value,
+    assessmentSortOrder.value,
+  ],
+  ([length], previousValues) => {
+    if (previousValues) assessmentPage.value = 1
     if (length === 0) {
       assessmentPage.value = 1
       return
@@ -2970,6 +3410,18 @@ onBeforeUnmount(() => {
   border-color: #cbd5e1;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .records-section {
   padding: 1.25rem;
   border: 1px solid #dbe4ee;
@@ -2978,6 +3430,1301 @@ onBeforeUnmount(() => {
     radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 28%),
     linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   box-shadow: 0 18px 44px rgba(15, 23, 42, 0.05);
+}
+
+#teacherRecordsLessonsPanel {
+  --lesson-brand: #1e4307;
+  --lesson-green: #4f7d3a;
+  --lesson-green-soft: #6f9d58;
+  --lesson-mint: #dcead3;
+  --lesson-surface: #f7fbf4;
+  padding: 0;
+  overflow: hidden;
+  border-color: #d4e4ca;
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(30, 67, 7, 0.08);
+}
+
+#teacherRecordsLessonsPanel .lessons-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.55rem 1.65rem;
+  background:
+    radial-gradient(circle at 88% 15%, rgba(111, 157, 88, 0.2), transparent 30%),
+    linear-gradient(135deg, #f7fbf4 0%, #edf6e8 100%);
+  border-bottom: 1px solid #dcead3;
+}
+
+#teacherRecordsLessonsPanel .lessons-hero-copy {
+  min-width: 0;
+}
+
+#teacherRecordsLessonsPanel .lessons-kicker {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #4f7d3a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+#teacherRecordsLessonsPanel .section-title {
+  margin: 0;
+  color: #173706;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  letter-spacing: -0.025em;
+}
+
+#teacherRecordsLessonsPanel .section-subtitle {
+  max-width: 590px;
+  margin-top: 0.38rem;
+  color: #52634a;
+  font-size: 0.88rem;
+}
+
+#teacherRecordsLessonsPanel .lessons-upload-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 0 0 auto;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(79, 125, 58, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 24px rgba(30, 67, 7, 0.07);
+  backdrop-filter: blur(8px);
+}
+
+#teacherRecordsLessonsPanel .lessons-summary-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: #dcead3;
+  color: #1e4307;
+  font-size: 1rem;
+}
+
+#teacherRecordsLessonsPanel .lessons-summary-copy {
+  display: grid;
+  gap: 0.05rem;
+}
+
+#teacherRecordsLessonsPanel .lessons-summary-copy strong {
+  color: #1e4307;
+  font-size: 1.02rem;
+  line-height: 1.1;
+}
+
+#teacherRecordsLessonsPanel .lessons-summary-copy span {
+  color: #66745f;
+  font-size: 0.7rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+#teacherRecordsLessonsPanel .lessons-summary-divider {
+  width: 1px;
+  height: 32px;
+  background: #d4e4ca;
+}
+
+#teacherRecordsLessonsPanel .lessons-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(170px, 0.42fr) minmax(150px, 0.34fr);
+  gap: 0.7rem;
+  margin: 1.15rem 1.25rem 0;
+  padding: 0.72rem;
+  border: 1px solid #dce7d6;
+  border-radius: 18px;
+  background: #f7fbf4;
+}
+
+#teacherRecordsLessonsPanel .lessons-search,
+#teacherRecordsLessonsPanel .lessons-select-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid #cfddc7;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #6b7b63;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+#teacherRecordsLessonsPanel .lessons-search:focus-within,
+#teacherRecordsLessonsPanel .lessons-select-field:focus-within {
+  border-color: #6f9d58;
+  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.16);
+}
+
+#teacherRecordsLessonsPanel .lessons-search > i,
+#teacherRecordsLessonsPanel .lessons-select-field > i:first-of-type {
+  margin-left: 0.85rem;
+  color: #6f9d58;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+#teacherRecordsLessonsPanel .lessons-search input,
+#teacherRecordsLessonsPanel .lessons-select-field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0.6rem 2.25rem 0.6rem 0.65rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #24331e;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+#teacherRecordsLessonsPanel .lessons-search input::placeholder {
+  color: #8a9783;
+  font-weight: 500;
+}
+
+#teacherRecordsLessonsPanel .lessons-select-field select {
+  cursor: pointer;
+  appearance: none;
+}
+
+#teacherRecordsLessonsPanel .lessons-select-chevron {
+  position: absolute;
+  right: 0.85rem;
+  color: #71816a;
+  font-size: 0.68rem;
+  pointer-events: none;
+}
+
+#teacherRecordsLessonsPanel .lessons-search-clear {
+  position: absolute;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #6b7b63;
+  cursor: pointer;
+}
+
+#teacherRecordsLessonsPanel .lessons-search-clear:hover {
+  background: #edf5e8;
+  color: #1e4307;
+}
+
+#teacherRecordsLessonsPanel button:focus-visible,
+#teacherRecordsLessonsPanel a:focus-visible,
+#teacherRecordsLessonsPanel input:focus-visible,
+#teacherRecordsLessonsPanel select:focus-visible {
+  outline: 3px solid rgba(79, 125, 58, 0.35);
+  outline-offset: 2px;
+}
+
+#teacherRecordsLessonsPanel .lessons-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.65rem 1.4rem 0;
+  color: #687761;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+#teacherRecordsLessonsPanel .lessons-results-bar button,
+#teacherRecordsLessonsPanel .lessons-empty-action {
+  border: 0;
+  background: transparent;
+  color: #3f6f2a;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+#teacherRecordsLessonsPanel .records-feed-wrap {
+  margin: 0;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+#teacherRecordsLessonsPanel .records-feed {
+  gap: 0.9rem;
+}
+
+#teacherRecordsLessonsPanel .lesson-document-card {
+  position: relative;
+  gap: 0.78rem;
+  overflow: hidden;
+  padding: 1.15rem 1.2rem;
+  border-color: #dce7d6;
+  border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(30, 67, 7, 0.055);
+  animation: lesson-card-in 0.42s both;
+  animation-delay: calc(var(--lesson-index) * 55ms);
+}
+
+#teacherRecordsLessonsPanel .lesson-document-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #4f7d3a, #8cb879);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+#teacherRecordsLessonsPanel .lesson-document-card:hover {
+  transform: translateY(-3px);
+  border-color: #bfd5b2;
+  box-shadow: 0 16px 34px rgba(30, 67, 7, 0.11);
+}
+
+#teacherRecordsLessonsPanel .lesson-document-card:hover::before {
+  opacity: 1;
+}
+
+#teacherRecordsLessonsPanel .record-card-header {
+  align-items: center;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+#teacherRecordsLessonsPanel .record-card-title {
+  gap: 0.35rem;
+}
+
+#teacherRecordsLessonsPanel .record-type-label {
+  gap: 0.35rem;
+  padding: 0;
+  background: transparent;
+  color: #6f9d58;
+  font-size: 0.65rem;
+}
+
+#teacherRecordsLessonsPanel .record-card-title h4 {
+  color: #1d2b17;
+  font-size: 1.17rem;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+}
+
+#teacherRecordsLessonsPanel .record-card-date-group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.48rem 0.68rem;
+  border-radius: 11px;
+  background: #f7fbf4;
+  text-align: left;
+}
+
+#teacherRecordsLessonsPanel .record-card-date-group > i {
+  color: #6f9d58;
+  font-size: 0.85rem;
+}
+
+#teacherRecordsLessonsPanel .record-card-date-group > span {
+  display: grid;
+  gap: 0.05rem;
+}
+
+#teacherRecordsLessonsPanel .record-date-label {
+  color: #82907b;
+  font-size: 0.58rem;
+}
+
+#teacherRecordsLessonsPanel .record-card-date {
+  color: #43513d;
+  font-size: 0.72rem;
+}
+
+#teacherRecordsLessonsPanel .record-chip {
+  gap: 0.35rem;
+  padding: 0.3rem 0.68rem;
+}
+
+#teacherRecordsLessonsPanel .chip-subject {
+  border-color: #c6dcb9;
+  background: #edf6e8;
+  color: #315f1e;
+}
+
+#teacherRecordsLessonsPanel .chip-neutral {
+  border-color: #dfe6dc;
+  background: #fafcf9;
+  color: #687761;
+}
+
+#teacherRecordsLessonsPanel .record-card-body {
+  gap: 0.55rem;
+  padding-top: 0.12rem;
+}
+
+#teacherRecordsLessonsPanel .attachment-row {
+  gap: 0.85rem;
+  padding: 0.75rem 0.8rem;
+  border-color: #e0e9db;
+  border-radius: 14px;
+  background: #f9fcf7;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+#teacherRecordsLessonsPanel .attachment-row:hover {
+  border-color: #c9dcc0;
+  background: #f4f9f1;
+}
+
+#teacherRecordsLessonsPanel .attachment-row:last-child {
+  border-bottom-color: #e0e9db;
+}
+
+#teacherRecordsLessonsPanel .attachment-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #eef3eb;
+  color: #4f7d3a;
+}
+
+#teacherRecordsLessonsPanel .attachment-icon.file-pdf {
+  background: #fff0ee;
+  color: #c24132;
+}
+
+#teacherRecordsLessonsPanel .attachment-icon.file-word {
+  background: #eaf2ff;
+  color: #2f68b2;
+}
+
+#teacherRecordsLessonsPanel .attachment-icon.file-slides {
+  background: #fff3e5;
+  color: #bb6020;
+}
+
+#teacherRecordsLessonsPanel .attachment-icon.file-sheet {
+  background: #e9f6ed;
+  color: #2f7b46;
+}
+
+#teacherRecordsLessonsPanel .attachment-icon.file-image,
+#teacherRecordsLessonsPanel .attachment-icon.file-video {
+  background: #f2edff;
+  color: #7250a8;
+}
+
+#teacherRecordsLessonsPanel .file-name {
+  color: #263321;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+#teacherRecordsLessonsPanel .file-type {
+  width: fit-content;
+  padding: 0.12rem 0.38rem;
+  border-radius: 6px;
+  background: #e8efe4;
+  color: #55704a;
+  font-size: 0.58rem;
+  letter-spacing: 0.055em;
+}
+
+#teacherRecordsLessonsPanel .file-type.file-pdf {
+  background: #ffebe8;
+  color: #a83c30;
+}
+
+#teacherRecordsLessonsPanel .file-type.file-word {
+  background: #e4efff;
+  color: #285c9e;
+}
+
+#teacherRecordsLessonsPanel .file-type.file-slides {
+  background: #ffecd9;
+  color: #a85118;
+}
+
+#teacherRecordsLessonsPanel .file-type.file-sheet {
+  background: #e2f3e7;
+  color: #286c3c;
+}
+
+#teacherRecordsLessonsPanel .file-type.file-image,
+#teacherRecordsLessonsPanel .file-type.file-video {
+  background: #eee7ff;
+  color: #654594;
+}
+
+#teacherRecordsLessonsPanel .attachment-actions {
+  gap: 0.45rem;
+}
+
+#teacherRecordsLessonsPanel .record-link {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #cdddc5;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #4f7d3a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#teacherRecordsLessonsPanel .record-link:hover {
+  transform: translateY(-2px);
+  border-color: #6f9d58;
+  background: #edf6e8;
+  color: #1e4307;
+  text-decoration: none;
+  box-shadow: 0 6px 14px rgba(30, 67, 7, 0.12);
+}
+
+#teacherRecordsLessonsPanel .record-link-button {
+  border-color: #1e4307;
+  background: #1e4307;
+  color: #ffffff;
+}
+
+#teacherRecordsLessonsPanel .record-link-button:hover {
+  border-color: #315f1e;
+  background: #315f1e;
+  color: #ffffff;
+}
+
+#teacherRecordsLessonsPanel .record-link::after,
+#teacherRecordsLessonsPanel .pagination-btn::after,
+#teacherRecordsLessonsPanel .lessons-page-btn::after {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  border-radius: 50%;
+  background: rgba(111, 157, 88, 0.22);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+}
+
+#teacherRecordsLessonsPanel .record-link:active::after,
+#teacherRecordsLessonsPanel .pagination-btn:active::after,
+#teacherRecordsLessonsPanel .lessons-page-btn:active::after {
+  animation: lesson-ripple 0.42s ease-out;
+}
+
+#teacherRecordsLessonsPanel .table-state {
+  flex-direction: column;
+  min-height: 230px;
+  border-color: #cbdcc2;
+  border-radius: 18px;
+  background: #f7fbf4;
+  color: #66745f;
+  text-align: center;
+}
+
+#teacherRecordsLessonsPanel .lessons-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 17px;
+  background: #dcead3;
+  color: #4f7d3a;
+  font-size: 1.15rem;
+}
+
+#teacherRecordsLessonsPanel .records-pagination {
+  margin-top: 1.1rem;
+  padding: 0.9rem;
+  border: 1px solid #dce7d6;
+  border-radius: 16px;
+  background: #f7fbf4;
+}
+
+#teacherRecordsLessonsPanel .records-pagination-copy {
+  color: #66745f;
+}
+
+#teacherRecordsLessonsPanel .records-pagination-actions {
+  gap: 0.38rem;
+}
+
+#teacherRecordsLessonsPanel .pagination-btn,
+#teacherRecordsLessonsPanel .lessons-page-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  min-height: 38px;
+  overflow: hidden;
+  border: 1px solid #cbdcc2;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #35552a;
+  font-size: 0.74rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+#teacherRecordsLessonsPanel .pagination-btn:hover:not(:disabled),
+#teacherRecordsLessonsPanel .lessons-page-btn:hover {
+  transform: translateY(-1px);
+  border-color: #6f9d58;
+  background: #edf6e8;
+  color: #1e4307;
+}
+
+#teacherRecordsLessonsPanel .pagination-btn:disabled {
+  background: #f2f5f0;
+  color: #9aa596;
+  opacity: 1;
+}
+
+#teacherRecordsLessonsPanel .lessons-page-numbers {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+#teacherRecordsLessonsPanel .lessons-page-btn {
+  width: 38px;
+  padding: 0;
+}
+
+#teacherRecordsLessonsPanel .lessons-page-btn.active {
+  border-color: #1e4307;
+  background: #1e4307;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(30, 67, 7, 0.18);
+}
+
+@keyframes lesson-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lesson-ripple {
+  0% {
+    inset: 50%;
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    inset: -50%;
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+#teacherRecordsAssessmentsPanel {
+  --assessment-brand: #1e4307;
+  --assessment-green: #4f7d3a;
+  --assessment-green-soft: #6f9d58;
+  --assessment-mint: #dcead3;
+  --assessment-surface: #f7fbf4;
+  padding: 0;
+  overflow: hidden;
+  border-color: #d4e4ca;
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(30, 67, 7, 0.08);
+}
+
+#teacherRecordsAssessmentsPanel .assessments-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.55rem 1.65rem;
+  border-bottom: 1px solid #dcead3;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(111, 157, 88, 0.18), transparent 31%),
+    linear-gradient(135deg, #f7fbf4 0%, #eef6e9 100%);
+}
+
+#teacherRecordsAssessmentsPanel .assessments-hero-copy {
+  min-width: 0;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-kicker {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #4f7d3a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+#teacherRecordsAssessmentsPanel .section-title {
+  margin: 0;
+  color: #173706;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  letter-spacing: -0.025em;
+}
+
+#teacherRecordsAssessmentsPanel .section-subtitle {
+  max-width: 610px;
+  margin-top: 0.38rem;
+  color: #52634a;
+  font-size: 0.88rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex: 0 0 auto;
+  padding: 0.78rem 0.95rem;
+  border: 1px solid rgba(79, 125, 58, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 8px 24px rgba(30, 67, 7, 0.07);
+  backdrop-filter: blur(8px);
+}
+
+#teacherRecordsAssessmentsPanel .assessments-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 0.58rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-summary-item > span:last-child {
+  display: grid;
+  gap: 0.04rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-summary-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #dcead3;
+  color: #1e4307;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-summary-icon.submissions {
+  background: #e7f1e1;
+  color: #4f7d3a;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-summary-item strong {
+  color: #1e4307;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-summary-item small {
+  color: #687761;
+  font-size: 0.68rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-summary-divider {
+  width: 1px;
+  height: 34px;
+  background: #d4e4ca;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(135px, 0.42fr));
+  gap: 0.65rem;
+  margin: 1.15rem 1.25rem 0;
+  padding: 0.72rem;
+  border: 1px solid #dce7d6;
+  border-radius: 18px;
+  background: #f7fbf4;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-search,
+#teacherRecordsAssessmentsPanel .assessments-select-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid #cfddc7;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #6b7b63;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-search:focus-within,
+#teacherRecordsAssessmentsPanel .assessments-select-field:focus-within {
+  border-color: #6f9d58;
+  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.16);
+}
+
+#teacherRecordsAssessmentsPanel .assessments-search > i,
+#teacherRecordsAssessmentsPanel .assessments-select-field > i:first-of-type {
+  margin-left: 0.8rem;
+  color: #6f9d58;
+  font-size: 0.78rem;
+  pointer-events: none;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-search input,
+#teacherRecordsAssessmentsPanel .assessments-select-field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0.58rem 2rem 0.58rem 0.6rem;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  background: transparent;
+  color: #24331e;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-search input::placeholder {
+  color: #8a9783;
+  font-weight: 500;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-select-field select {
+  cursor: pointer;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-select-chevron {
+  position: absolute;
+  right: 0.75rem;
+  color: #71816a;
+  font-size: 0.65rem;
+  pointer-events: none;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-search-clear {
+  position: absolute;
+  right: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #687761;
+  cursor: pointer;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-search-clear:hover {
+  background: #edf5e8;
+  color: #1e4307;
+}
+
+#teacherRecordsAssessmentsPanel button:focus-visible,
+#teacherRecordsAssessmentsPanel input:focus-visible,
+#teacherRecordsAssessmentsPanel select:focus-visible {
+  outline: 3px solid rgba(79, 125, 58, 0.35);
+  outline-offset: 2px;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.65rem 1.4rem 0;
+  color: #687761;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-results-bar button,
+#teacherRecordsAssessmentsPanel .assessments-empty-action {
+  border: 0;
+  background: transparent;
+  color: #3f6f2a;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+#teacherRecordsAssessmentsPanel .records-feed-wrap {
+  margin: 0;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+#teacherRecordsAssessmentsPanel .records-feed {
+  gap: 1rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-record-card {
+  position: relative;
+  gap: 0.9rem;
+  overflow: hidden;
+  padding: 1.2rem;
+  border-color: #dce7d6;
+  border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(30, 67, 7, 0.055);
+  animation: assessment-card-in 0.42s both;
+  animation-delay: calc(var(--assessment-index) * 55ms);
+}
+
+#teacherRecordsAssessmentsPanel .assessment-record-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #4f7d3a;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-exam::before {
+  background: #4f7d3a;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-quiz::before {
+  background: #4f7d3a;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-activity::before {
+  background: #4f7d3a;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-record-card:hover {
+  transform: translateY(-3px);
+  border-color: #bfd5b2;
+  box-shadow: 0 16px 34px rgba(30, 67, 7, 0.11);
+}
+
+#teacherRecordsAssessmentsPanel .assessment-record-card:hover::before {
+  opacity: 1;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding-bottom: 0.85rem;
+  border-color: #e4ece0;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-kind-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #e8f2e2;
+  color: #4f7d3a;
+  font-size: 1rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-kind-quiz .assessment-kind-icon {
+  background: #eaf0f9;
+  color: #4e6c9b;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-kind-activity .assessment-kind-icon {
+  background: #fff4e4;
+  color: #9a6a2f;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-title {
+  min-width: 0;
+  gap: 0.24rem;
+}
+
+#teacherRecordsAssessmentsPanel .record-type-label {
+  padding: 0;
+  background: transparent;
+  color: #6f9d58;
+  font-size: 0.64rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-kind-quiz .record-type-label {
+  color: #5b79a8;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-kind-activity .record-type-label {
+  color: #9a6a2f;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-title h4 {
+  color: #1d2b17;
+  font-size: 1.15rem;
+  line-height: 1.32;
+  letter-spacing: -0.012em;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-title p {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #74806f;
+  font-size: 0.72rem;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-title p i {
+  color: #8da483;
+  font-size: 0.62rem;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-date-group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.68rem;
+  border-radius: 11px;
+  background: #f7fbf4;
+  text-align: left;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-date-group > i {
+  color: #6f9d58;
+  font-size: 0.84rem;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-date-group > span {
+  display: grid;
+  gap: 0.04rem;
+}
+
+#teacherRecordsAssessmentsPanel .record-date-label {
+  color: #82907b;
+  font-size: 0.58rem;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-date {
+  color: #43513d;
+  font-size: 0.72rem;
+}
+
+#teacherRecordsAssessmentsPanel .record-chip {
+  gap: 0.34rem;
+  padding: 0.3rem 0.66rem;
+}
+
+#teacherRecordsAssessmentsPanel .chip-subject {
+  border-color: #c6dcb9;
+  background: #edf6e8;
+  color: #315f1e;
+}
+
+#teacherRecordsAssessmentsPanel .chip-neutral {
+  border-color: #dfe6dc;
+  background: #fafcf9;
+  color: #687761;
+}
+
+#teacherRecordsAssessmentsPanel .chip-type {
+  border-color: #d8ddeb;
+  background: #f3f5fa;
+  color: #52627e;
+}
+
+#teacherRecordsAssessmentsPanel .chip-success {
+  border-color: #bde0c6;
+  background: #edf8f0;
+  color: #28673b;
+}
+
+#teacherRecordsAssessmentsPanel .difficulty-pill {
+  padding: 0.3rem 0.66rem;
+  font-size: 0.68rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-meta-grid {
+  gap: 0.65rem;
+}
+
+#teacherRecordsAssessmentsPanel .meta-item {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.78rem;
+  border-color: #e0e9db;
+  border-radius: 14px;
+  background: #f9fcf7;
+}
+
+#teacherRecordsAssessmentsPanel .meta-item-icon {
+  width: 38px;
+  height: 38px;
+  margin: 0;
+  border-radius: 11px;
+  background: #e4efe0;
+  color: #4f7d3a;
+}
+
+#teacherRecordsAssessmentsPanel .meta-item-copy {
+  min-width: 0;
+}
+
+#teacherRecordsAssessmentsPanel .meta-item-copy span {
+  display: block;
+  color: #7b8875;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+#teacherRecordsAssessmentsPanel .meta-item-copy strong {
+  display: block;
+  margin-top: 0.15rem;
+  overflow-wrap: anywhere;
+  color: #263321;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-results-block {
+  margin-top: 0.1rem;
+  padding: 0.9rem;
+  border-color: #dce7d6;
+  border-radius: 16px;
+  background: #fbfdf9;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-results-header {
+  margin-bottom: 0.75rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-results-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-results-heading-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: #e8f2e2;
+  color: #4f7d3a;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-results-title > div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-results-title > div > span {
+  color: #263321;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-results-title p {
+  color: #788473;
+  font-size: 0.72rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-results-count {
+  background: #e8f2e2;
+  color: #315f1e;
+}
+
+#teacherRecordsAssessmentsPanel .inline-empty-state {
+  border-color: #ceddc7;
+  background: #f7fbf4;
+}
+
+#teacherRecordsAssessmentsPanel .inline-empty-icon {
+  background: #e1edda;
+  color: #4f7d3a;
+}
+
+#teacherRecordsAssessmentsPanel .results-summary-item {
+  border-color: #dde8d8;
+  background: #ffffff;
+}
+
+#teacherRecordsAssessmentsPanel .results-summary-item span {
+  color: #74806f;
+}
+
+#teacherRecordsAssessmentsPanel .results-summary-item strong {
+  color: #263321;
+}
+
+#teacherRecordsAssessmentsPanel .record-card-actions {
+  gap: 0.55rem;
+  padding-top: 0.1rem;
+}
+
+#teacherRecordsAssessmentsPanel .record-link-button {
+  position: relative;
+  min-height: 40px;
+  padding: 0.52rem 0.82rem;
+  overflow: hidden;
+  border-color: #1e4307;
+  border-radius: 11px;
+  background: #1e4307;
+  color: #ffffff;
+  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.14);
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#teacherRecordsAssessmentsPanel .record-link-button:hover {
+  transform: translateY(-2px);
+  border-color: #315f1e;
+  background: #315f1e;
+  color: #ffffff;
+  text-decoration: none;
+  box-shadow: 0 10px 20px rgba(30, 67, 7, 0.18);
+}
+
+#teacherRecordsAssessmentsPanel .assessment-action-secondary {
+  border-color: #c7d8be;
+  background: #ffffff;
+  color: #3f6f2a;
+  box-shadow: none;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-action-secondary i {
+  color: #4f7d3a !important;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-action-secondary:hover {
+  border-color: #6f9d58;
+  background: #edf6e8;
+  color: #1e4307;
+  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.09);
+}
+
+#teacherRecordsAssessmentsPanel .table-state {
+  flex-direction: column;
+  min-height: 230px;
+  border-color: #cbdcc2;
+  border-radius: 18px;
+  background: #f7fbf4;
+  color: #66745f;
+  text-align: center;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 17px;
+  background: #dcead3;
+  color: #4f7d3a;
+  font-size: 1.15rem;
+}
+
+#teacherRecordsAssessmentsPanel .records-pagination {
+  margin-top: 1.1rem;
+  padding: 0.9rem;
+  border: 1px solid #dce7d6;
+  border-radius: 16px;
+  background: #f7fbf4;
+}
+
+#teacherRecordsAssessmentsPanel .records-pagination-copy {
+  color: #66745f;
+}
+
+#teacherRecordsAssessmentsPanel .records-pagination-actions {
+  gap: 0.38rem;
+}
+
+#teacherRecordsAssessmentsPanel .pagination-btn,
+#teacherRecordsAssessmentsPanel .assessments-page-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  min-height: 38px;
+  overflow: hidden;
+  border: 1px solid #cbdcc2;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #35552a;
+  font-size: 0.74rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+#teacherRecordsAssessmentsPanel .pagination-btn:hover:not(:disabled),
+#teacherRecordsAssessmentsPanel .assessments-page-btn:hover {
+  transform: translateY(-1px);
+  border-color: #6f9d58;
+  background: #edf6e8;
+  color: #1e4307;
+}
+
+#teacherRecordsAssessmentsPanel .pagination-btn:disabled {
+  background: #f2f5f0;
+  color: #9aa596;
+  opacity: 1;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-page-numbers {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-page-btn {
+  width: 38px;
+  padding: 0;
+}
+
+#teacherRecordsAssessmentsPanel .assessments-page-btn.active {
+  border-color: #1e4307;
+  background: #1e4307;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(30, 67, 7, 0.18);
+}
+
+@keyframes assessment-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 #teacherRecordsAttendancePanel {
@@ -4165,6 +5912,141 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  #teacherRecordsAssessmentsPanel .assessments-hero {
+    align-items: flex-start;
+    padding: 1.2rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-summary {
+    padding: 0.65rem 0.75rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-summary-icon,
+  #teacherRecordsAssessmentsPanel .assessments-summary-divider {
+    display: none;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-toolbar {
+    grid-template-columns: 1fr 1fr;
+    margin: 0.9rem 0.9rem 0;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-search {
+    grid-column: 1 / -1;
+  }
+
+  #teacherRecordsAssessmentsPanel .records-feed-wrap {
+    padding: 0.85rem 0.9rem 1rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-record-card {
+    padding: 0.9rem;
+    border-radius: 16px;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-header {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-date-group {
+    grid-column: 2;
+    width: fit-content;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #teacherRecordsAssessmentsPanel .meta-item {
+    padding: 0.68rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-results-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-actions {
+    justify-content: flex-end;
+  }
+
+  #teacherRecordsAssessmentsPanel .records-pagination {
+    align-items: center;
+  }
+
+  #teacherRecordsAssessmentsPanel .records-pagination-actions {
+    width: auto;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-hero {
+    align-items: flex-start;
+    padding: 1.2rem;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-upload-summary {
+    padding: 0.65rem 0.75rem;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-summary-icon,
+  #teacherRecordsLessonsPanel .lessons-summary-divider {
+    display: none;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-toolbar {
+    grid-template-columns: 1fr 1fr;
+    margin: 0.9rem 0.9rem 0;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-search {
+    grid-column: 1 / -1;
+  }
+
+  #teacherRecordsLessonsPanel .records-feed-wrap {
+    padding: 0.85rem 0.9rem 1rem;
+  }
+
+  #teacherRecordsLessonsPanel .lesson-document-card {
+    padding: 0.9rem;
+    border-radius: 16px;
+  }
+
+  #teacherRecordsLessonsPanel .record-card-header {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-bottom: 0;
+  }
+
+  #teacherRecordsLessonsPanel .record-card-title h4 {
+    font-size: 1rem;
+  }
+
+  #teacherRecordsLessonsPanel .record-card-date-group {
+    justify-items: initial;
+    flex: 0 0 auto;
+  }
+
+  #teacherRecordsLessonsPanel .attachment-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.68rem;
+  }
+
+  #teacherRecordsLessonsPanel .attachment-actions {
+    width: auto;
+    flex-wrap: nowrap;
+  }
+
+  #teacherRecordsLessonsPanel .records-pagination {
+    align-items: center;
+  }
+
+  #teacherRecordsLessonsPanel .records-pagination-actions {
+    width: auto;
+  }
+
   .records-section {
     padding: 0.85rem;
     border-radius: 16px;
@@ -4338,6 +6220,175 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 420px) {
+  #teacherRecordsAssessmentsPanel .assessments-hero {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-summary {
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-summary-divider {
+    display: block;
+    height: 28px;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-toolbar {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+    margin: 0.75rem 0.65rem 0;
+    padding: 0.55rem;
+    border-radius: 15px;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-search {
+    grid-column: auto;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-results-bar {
+    align-items: flex-start;
+    margin-inline: 0.85rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .records-feed-wrap {
+    padding: 0.72rem 0.65rem 0.8rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-kind-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-title h4 {
+    font-size: 0.98rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-date-group {
+    grid-column: 1 / -1;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-results-header {
+    align-items: flex-start;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-results-heading-icon {
+    display: none;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-actions .record-link-button {
+    width: 100%;
+  }
+
+  #teacherRecordsAssessmentsPanel .records-pagination {
+    padding: 0.75rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .records-pagination-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  #teacherRecordsAssessmentsPanel .pagination-btn {
+    min-width: 0;
+    padding-inline: 0.55rem;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessments-page-numbers {
+    display: none;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-hero {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-upload-summary {
+    width: 100%;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-summary-divider {
+    display: block;
+    height: 28px;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-toolbar {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+    margin: 0.75rem 0.65rem 0;
+    padding: 0.55rem;
+    border-radius: 15px;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-search {
+    grid-column: auto;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-results-bar {
+    align-items: flex-start;
+    margin-inline: 0.85rem;
+  }
+
+  #teacherRecordsLessonsPanel .records-feed-wrap {
+    padding: 0.72rem 0.65rem 0.8rem;
+  }
+
+  #teacherRecordsLessonsPanel .record-card-header {
+    flex-direction: column;
+  }
+
+  #teacherRecordsLessonsPanel .record-card-date-group {
+    width: fit-content;
+  }
+
+  #teacherRecordsLessonsPanel .attachment-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  #teacherRecordsLessonsPanel .attachment-actions {
+    grid-column: 2;
+  }
+
+  #teacherRecordsLessonsPanel .record-link {
+    width: 36px;
+    min-height: 36px;
+  }
+
+  #teacherRecordsLessonsPanel .records-pagination {
+    padding: 0.75rem;
+  }
+
+  #teacherRecordsLessonsPanel .records-pagination-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  #teacherRecordsLessonsPanel .pagination-btn {
+    min-width: 0;
+    padding-inline: 0.55rem;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-page-numbers {
+    display: none;
+  }
+
   .records-section {
     padding: 0.62rem;
   }
@@ -4374,6 +6425,30 @@ onBeforeUnmount(() => {
 
   .pagination-btn {
     flex: 1 1 calc(50% - 0.3rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #teacherRecordsAssessmentsPanel .assessment-record-card {
+    animation: none;
+    transition: none;
+  }
+
+  #teacherRecordsAssessmentsPanel .record-link-button,
+  #teacherRecordsAssessmentsPanel .pagination-btn,
+  #teacherRecordsAssessmentsPanel .assessments-page-btn {
+    transition: none;
+  }
+
+  #teacherRecordsLessonsPanel .lesson-document-card {
+    animation: none;
+    transition: none;
+  }
+
+  #teacherRecordsLessonsPanel .record-link,
+  #teacherRecordsLessonsPanel .pagination-btn,
+  #teacherRecordsLessonsPanel .lessons-page-btn {
+    transition: none;
   }
 }
 
@@ -7005,6 +9080,1543 @@ onBeforeUnmount(() => {
   .attendance-toolbar-actions .pagination-btn {
     min-height: 40px;
     padding-inline: 0.35rem;
+  }
+}
+
+/* Final scoped attendance workspace */
+#teacherRecordsAttendancePanel {
+  --attendance-brand: #1e4307;
+  --attendance-green: #4f7d3a;
+  --attendance-green-soft: #6f9d58;
+  --attendance-mint: #dcead3;
+  --attendance-surface: #f7fbf4;
+  position: relative;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #d4e4ca !important;
+  border-radius: 22px;
+  background: #ffffff !important;
+  box-shadow: 0 20px 50px rgba(30, 67, 7, 0.08);
+}
+
+#teacherRecordsAttendancePanel .attendance-workspace-hero {
+  display: grid;
+  gap: 1.2rem;
+  padding: 1.5rem 1.6rem;
+  border-bottom: 1px solid #dcead3;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(111, 157, 88, 0.2), transparent 30%),
+    linear-gradient(135deg, #f7fbf4 0%, #edf6e8 100%);
+}
+
+#teacherRecordsAttendancePanel .attendance-workspace-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-workspace-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 15px;
+  background: #1e4307;
+  color: #ffffff;
+  box-shadow: 0 9px 20px rgba(30, 67, 7, 0.18);
+}
+
+#teacherRecordsAttendancePanel .attendance-workspace-kicker {
+  display: block;
+  margin-bottom: 0.18rem;
+  color: #4f7d3a;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+#teacherRecordsAttendancePanel .section-title {
+  margin: 0;
+  color: #173706;
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  letter-spacing: -0.025em;
+}
+
+#teacherRecordsAttendancePanel .section-subtitle {
+  margin-top: 0.28rem;
+  color: #52634a;
+  font-size: 0.86rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-workspace-context {
+  position: absolute;
+  top: 1.55rem;
+  right: 1.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  max-width: 47%;
+}
+
+#teacherRecordsAttendancePanel .attendance-workspace-context span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 34px;
+  padding: 0.42rem 0.68rem;
+  border: 1px solid rgba(79, 125, 58, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #48633d;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+#teacherRecordsAttendancePanel .attendance-workspace-context i {
+  color: #6f9d58;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 0.24rem;
+  min-width: 0;
+  min-height: 108px;
+  padding: 0.85rem;
+  overflow: hidden;
+  border: 1px solid #dce7d6;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #263321;
+  box-shadow: 0 7px 18px rgba(30, 67, 7, 0.045);
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: #6f9d58;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card:hover {
+  transform: translateY(-2px);
+  border-color: #bfd5b2;
+  box-shadow: 0 11px 24px rgba(30, 67, 7, 0.09);
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card .attendance-summary-icon {
+  display: inline-flex;
+  grid-row: auto;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  background: #e5efe0;
+  color: #4f7d3a;
+  font-size: 0.74rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card span {
+  grid-column: auto;
+  grid-row: auto;
+  color: #687761;
+  font-size: 0.66rem;
+  line-height: 1.25;
+  letter-spacing: 0.045em;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card strong {
+  grid-column: auto;
+  grid-row: auto;
+  color: #203119;
+  font-size: 1.45rem;
+  line-height: 1.05;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card small {
+  color: #899583;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card.status-total::before {
+  background: #4f7d3a;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card.status-present::before {
+  background: #4d9b62;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card.status-late::before {
+  background: #d4a62a;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card.status-absent::before {
+  background: #cf5b58;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card.status-excused::before {
+  background: #6787ad;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card.status-present,
+#teacherRecordsAttendancePanel .attendance-summary-card.status-late,
+#teacherRecordsAttendancePanel .attendance-summary-card.status-absent,
+#teacherRecordsAttendancePanel .attendance-summary-card.status-excused {
+  background: rgba(255, 255, 255, 0.88);
+  color: #263321;
+}
+
+#teacherRecordsAttendancePanel .attendance-summary-card.status-present strong,
+#teacherRecordsAttendancePanel .attendance-summary-card.status-late strong,
+#teacherRecordsAttendancePanel .attendance-summary-card.status-absent strong,
+#teacherRecordsAttendancePanel .attendance-summary-card.status-excused strong {
+  color: #203119;
+}
+
+#teacherRecordsAttendancePanel .attendance-shell {
+  gap: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 0.9rem;
+  margin: 1rem 1.2rem 0;
+  padding: 1rem;
+  border: 1px solid #dce7d6;
+  border-radius: 18px;
+  background: #f7fbf4;
+  box-shadow: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-header-copy {
+  display: grid;
+  gap: 0.24rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-kicker {
+  gap: 0.35rem;
+  padding: 0;
+  background: transparent;
+  color: #4f7d3a;
+  font-size: 0.66rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-header-copy h5 {
+  color: #23331d;
+  font-size: 0.95rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-header-copy p {
+  color: #71806a;
+  font-size: 0.76rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-note {
+  border-color: #cfddc7;
+  background: #ffffff;
+  color: #4f6a43;
+  font-size: 0.72rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.6fr) minmax(300px, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem;
+  border: 1px solid #dfe9da;
+  border-radius: 15px;
+  background: #ffffff;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-panel-copy {
+  display: grid;
+  gap: 0.18rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-panel-copy .attendance-step-badge,
+#teacherRecordsAttendancePanel .attendance-toolbar-field-card > .attendance-step-badge {
+  display: inline-flex;
+}
+
+#teacherRecordsAttendancePanel .attendance-step-badge {
+  padding: 0.16rem 0.45rem;
+  background: #e8f2e2;
+  color: #4f7d3a;
+  font-size: 0.6rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-panel-copy strong {
+  color: #263321;
+  font-size: 0.84rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-panel-copy small {
+  display: block;
+  color: #7a8874;
+  font-size: 0.7rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-btn {
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border-color: #cfddc7;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #52634a;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-btn.active {
+  border-color: #1e4307;
+  background: #1e4307;
+  color: #ffffff;
+  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.16);
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(190px, 1fr) minmax(300px, 1.25fr);
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-field-card {
+  display: grid;
+  align-content: start;
+  gap: 0.58rem;
+  padding: 0.75rem;
+  border: 1px solid #dfe9da;
+  border-radius: 15px;
+  background: #ffffff;
+}
+
+#teacherRecordsAttendancePanel .attendance-date-card-copy,
+#teacherRecordsAttendancePanel .attendance-date-quick-actions,
+#teacherRecordsAttendancePanel .attendance-date-helper,
+#teacherRecordsAttendancePanel .attendance-actions-hint {
+  display: flex;
+}
+
+#teacherRecordsAttendancePanel .attendance-date-card-copy {
+  align-items: center;
+  gap: 0.55rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-date-card-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #e5efe0;
+  color: #4f7d3a;
+  box-shadow: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-date-card-copy strong {
+  color: #263321;
+  font-size: 0.82rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-date-card-copy small {
+  color: #82907b;
+  font-size: 0.68rem;
+}
+
+#teacherRecordsAttendancePanel .filter-field span {
+  color: #687761;
+  font-size: 0.65rem;
+}
+
+#teacherRecordsAttendancePanel .filter-field select,
+#teacherRecordsAttendancePanel .attendance-date-input-wrap {
+  min-height: 42px;
+  border-color: #cfddc7;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #263321;
+}
+
+#teacherRecordsAttendancePanel .attendance-date-input-wrap:focus-within,
+#teacherRecordsAttendancePanel .attendance-search-input-wrap:focus-within {
+  border-color: #6f9d58;
+  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.16);
+}
+
+#teacherRecordsAttendancePanel .attendance-date-chip {
+  padding: 0.32rem 0.62rem;
+  border-color: #cfddc7;
+  background: #ffffff;
+  color: #687761;
+  font-size: 0.7rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-date-chip.active {
+  border-color: #9fbe8f;
+  background: #e8f2e2;
+  color: #315f1e;
+}
+
+#teacherRecordsAttendancePanel .attendance-date-helper {
+  color: #71806a;
+  font-size: 0.68rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-actions .pagination-btn {
+  min-height: 42px;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-load-btn {
+  border-color: #9fbe8f;
+  background: #edf6e8;
+  color: #315f1e;
+}
+
+#teacherRecordsAttendancePanel .attendance-save-btn {
+  border-color: #1e4307;
+  background: #1e4307;
+  color: #ffffff;
+  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.16);
+}
+
+#teacherRecordsAttendancePanel .attendance-lock-btn {
+  border-color: #b8c9af;
+  background: #ffffff;
+  color: #52634a;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-load-btn:not(:disabled):hover,
+#teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover {
+  border-color: #4f7d3a;
+  background: #e5efe0;
+  color: #1e4307;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-save-btn:not(:disabled):hover {
+  border-color: #315f1e;
+  background: #315f1e;
+}
+
+#teacherRecordsAttendancePanel .attendance-actions-hint {
+  color: #7d8b77;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+#teacherRecordsAttendancePanel .attendance-legend-block {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-legend-title {
+  color: #71806a;
+  font-size: 0.64rem;
+  white-space: nowrap;
+}
+
+#teacherRecordsAttendancePanel .attendance-legend-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-legend-pill,
+#teacherRecordsAttendancePanel .attendance-breakdown-pill {
+  position: relative;
+  gap: 0.34rem;
+  min-height: 28px;
+  padding: 0.3rem 0.58rem;
+  font-size: 0.68rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-legend-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+#teacherRecordsAttendancePanel .attendance-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 310px);
+  align-items: start;
+  gap: 0.9rem;
+  margin: 1rem 1.2rem 1.2rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-panel {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #dce7d6;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(30, 67, 7, 0.05);
+}
+
+#teacherRecordsAttendancePanel .attendance-panel-head {
+  align-items: center;
+  margin: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-panel-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 11px;
+  background: #e5efe0;
+  color: #4f7d3a;
+}
+
+#teacherRecordsAttendancePanel .attendance-panel-title-icon.history {
+  background: #edf2e9;
+  color: #526f46;
+}
+
+#teacherRecordsAttendancePanel .attendance-panel-kicker {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: #263321;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+}
+
+#teacherRecordsAttendancePanel .attendance-panel-title p {
+  margin-top: 0.12rem;
+  color: #7b8875;
+  font-size: 0.7rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-record-badges {
+  gap: 0.35rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-record-badges .record-chip {
+  padding: 0.26rem 0.55rem;
+  font-size: 0.65rem;
+}
+
+#teacherRecordsAttendancePanel .table-state {
+  min-height: 180px;
+  border-color: #cfddc7;
+  border-radius: 15px;
+  background: #f7fbf4;
+  color: #687761;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-toolbar {
+  padding: 0.75rem;
+  border-color: #dfe9da;
+  border-radius: 15px;
+  background: #f7fbf4;
+}
+
+#teacherRecordsAttendancePanel .attendance-search-field > span,
+#teacherRecordsAttendancePanel .attendance-filter-field > span,
+#teacherRecordsAttendancePanel .attendance-bulk-actions > span {
+  color: #71806a;
+  font-size: 0.64rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-search-input-wrap,
+#teacherRecordsAttendancePanel .attendance-filter-field select {
+  min-height: 42px;
+  border-color: #cfddc7;
+  border-radius: 11px;
+  color: #263321;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-btn,
+#teacherRecordsAttendancePanel .attendance-clear-filters-btn {
+  min-height: 32px;
+  padding: 0.34rem 0.62rem;
+  font-size: 0.68rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-results {
+  color: #71806a;
+  font-size: 0.76rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-table-wrap {
+  max-height: 62vh;
+  overflow: auto;
+  border-color: #dce7d6;
+  border-radius: 15px;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  border-color: #dce7d6;
+  background: #edf5e9;
+  color: #52634a;
+  font-size: 0.66rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-row {
+  box-shadow: inset 3px 0 0 transparent;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-row.status-present {
+  box-shadow: inset 3px 0 0 #54a36a;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-row.status-late {
+  box-shadow: inset 3px 0 0 #d4a62a;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-row.status-absent {
+  box-shadow: inset 3px 0 0 #cf5b58;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-row.status-excused {
+  box-shadow: inset 3px 0 0 #6787ad;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-row:hover,
+#teacherRecordsAttendancePanel .attendance-roster-row:hover .attendance-roster-cell-student {
+  background: #f7fbf4;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-avatar {
+  border-color: #d4e4ca;
+  background: #e8f2e2;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-avatar > .fa-user {
+  color: #4f7d3a !important;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-copy strong {
+  color: #263321;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-email,
+#teacherRecordsAttendancePanel .attendance-roster-section {
+  color: #71806a;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-grade {
+  background: #e8f2e2;
+  color: #315f1e;
+}
+
+#teacherRecordsAttendancePanel .attendance-status-select {
+  min-height: 40px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-panel {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-summary::-webkit-details-marker {
+  display: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-chevron {
+  color: #6f9d58;
+  transition: transform 0.2s ease;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-panel[open] .attendance-history-chevron {
+  transform: rotate(180deg);
+}
+
+#teacherRecordsAttendancePanel .attendance-history-content {
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-stat {
+  padding: 0.65rem;
+  border-color: #dfe9da;
+  border-radius: 12px;
+  background: #f7fbf4;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-stat span {
+  color: #71806a;
+  font-size: 0.57rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-stat strong {
+  color: #263321;
+  font-size: 1rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-list {
+  gap: 0.55rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-item {
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.65rem;
+  border-color: #dfe9da;
+  border-radius: 13px;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-item:hover,
+#teacherRecordsAttendancePanel .attendance-history-item.active {
+  border-color: #6f9d58;
+  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.12);
+}
+
+#teacherRecordsAttendancePanel .attendance-history-date-badge,
+#teacherRecordsAttendancePanel .attendance-history-item.active .attendance-history-date-badge {
+  min-width: 0;
+  padding: 0.58rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1e4307, #4f7d3a);
+  box-shadow: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-copy strong {
+  color: #263321;
+  font-size: 0.76rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-copy small,
+#teacherRecordsAttendancePanel .attendance-history-count {
+  color: #71806a;
+  font-size: 0.65rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-meta {
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr auto;
+  justify-items: start;
+}
+
+@media (max-width: 1180px) {
+  #teacherRecordsAttendancePanel .attendance-workspace-context {
+    position: static;
+    max-width: none;
+    justify-content: flex-start;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions-card {
+    grid-column: 1 / -1;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-layout {
+    grid-template-columns: 1fr;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-history-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 820px) {
+  #teacherRecordsAttendancePanel .attendance-workspace-hero {
+    padding: 1.15rem;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-summary-grid {
+    grid-template-columns: repeat(5, minmax(130px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scroll-snap-type: x proximity;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-summary-card {
+    scroll-snap-align: start;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-card,
+  #teacherRecordsAttendancePanel .attendance-layout {
+    margin-inline: 0.85rem;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-scope-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  #teacherRecordsAttendancePanel {
+    border-radius: 16px;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-workspace-hero {
+    gap: 0.9rem;
+    padding: 1rem;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-workspace-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    border-radius: 13px;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-workspace-context {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-workspace-context span {
+    border-radius: 11px;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-summary-card {
+    min-height: 98px;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-summary-card.status-total {
+    grid-column: 1 / -1;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-card,
+  #teacherRecordsAttendancePanel .attendance-layout {
+    margin: 0.75rem 0.65rem 0;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-layout {
+    margin-bottom: 0.75rem;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-header {
+    display: grid;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-note {
+    width: 100%;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-scope-switch,
+  #teacherRecordsAttendancePanel .attendance-toolbar-grid,
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions {
+    grid-template-columns: 1fr;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions-card {
+    grid-column: auto;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-legend-block {
+    display: grid;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-legend-row {
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-panel {
+    padding: 0.75rem;
+    border-radius: 15px;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-panel-head {
+    align-items: flex-start;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-roster-table-wrap {
+    max-height: none;
+    overflow: visible;
+    border: 0;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-roster-row,
+  #teacherRecordsAttendancePanel .attendance-roster-row:nth-child(even) {
+    border-color: #dce7d6;
+    box-shadow: inset 3px 0 0 #6f9d58, 0 5px 14px rgba(30, 67, 7, 0.06);
+  }
+
+  #teacherRecordsAttendancePanel .attendance-roster-cell-student,
+  #teacherRecordsAttendancePanel .attendance-roster-row:nth-child(even) .attendance-roster-cell-student {
+    background: #f7fbf4;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-history-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #teacherRecordsAttendancePanel .attendance-summary-card {
+    transition: none;
+  }
+}
+
+/* Immediate-use attendance toolbar */
+#teacherRecordsAttendancePanel .attendance-toolbar-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-title-row > div {
+  display: grid;
+  gap: 0.22rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-title-row h5 {
+  margin: 0;
+  color: #263321;
+  font-size: 0.95rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-primary-toolbar {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.65rem;
+  align-items: end;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-control {
+  display: grid;
+  align-content: end;
+  gap: 0.38rem;
+  min-width: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-scope-control {
+  grid-column: span 3;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-class-control {
+  grid-column: span 3;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-date-control {
+  grid-column: span 3;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-actions-control {
+  grid-column: span 3;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-search-control {
+  grid-column: span 8;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-status-control {
+  grid-column: span 4;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-field {
+  display: grid;
+  gap: 0.38rem;
+  min-width: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-label {
+  color: #687761;
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.48rem;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 0.7rem;
+  border: 1px solid #cfddc7;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #263321;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-input:focus-within {
+  border-color: #6f9d58;
+  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.16);
+}
+
+#teacherRecordsAttendancePanel .attendance-control-input > i:first-child {
+  flex: 0 0 auto;
+  color: #6f9d58;
+  font-size: 0.76rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-input input,
+#teacherRecordsAttendancePanel .attendance-control-input select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0.45rem 1.2rem 0.45rem 0;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  background: transparent;
+  color: #263321;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-input input::placeholder {
+  color: #939f8e;
+  font-weight: 500;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-input input[type="date"] {
+  padding-right: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-chevron {
+  position: absolute;
+  right: 0.72rem;
+  color: #71806a;
+  font-size: 0.62rem;
+  pointer-events: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-readonly {
+  background: #f7fbf4;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-readonly strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #263321;
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-date-control {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-date-control .attendance-control-field {
+  min-width: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-date-control .attendance-date-quick-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+  padding-bottom: 0.1rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-date-control .attendance-date-chip {
+  min-height: 26px;
+  padding: 0.22rem 0.42rem;
+  font-size: 0.6rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-actions-control .attendance-toolbar-actions {
+  height: 42px;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #dfe9da;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-helper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  color: #71806a;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-helper i {
+  color: #6f9d58;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.68rem 0.75rem;
+  border: 1px solid #dfe9da;
+  border-radius: 14px;
+  background: #f7fbf4;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-actions {
+  gap: 0.36rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-action-row {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #cbd9c4;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-btn {
+  min-height: 34px;
+  margin: 0;
+  padding: 0.35rem 0.68rem;
+  border: 0;
+  border-right: 1px solid #d8e3d3;
+  border-radius: 0;
+  background: #ffffff;
+  box-shadow: none;
+  color: #52634a;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-btn:last-child {
+  border-right: 0;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-btn.status-present {
+  background: #edf8f0;
+  color: #26703c;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-btn.status-late {
+  background: #fff8e6;
+  color: #8a6518;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-btn.status-absent {
+  background: #fff0ef;
+  color: #a54643;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-btn.status-excused {
+  background: #eef4fa;
+  color: #4e6f95;
+}
+
+#teacherRecordsAttendancePanel .attendance-bulk-btn:hover:not(:disabled) {
+  position: relative;
+  z-index: 1;
+  transform: none;
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+#teacherRecordsAttendancePanel .attendance-clear-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  min-height: 34px;
+  border-color: #cbd9c4;
+  background: #ffffff;
+  color: #52634a;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-row:nth-child(even),
+#teacherRecordsAttendancePanel .attendance-roster-row:nth-child(even) .attendance-roster-cell-student {
+  background: #f9fcf7;
+}
+
+#teacherRecordsAttendancePanel .attendance-status-select {
+  appearance: none;
+  border-color: currentColor;
+  border-radius: 999px;
+  padding-inline: 0.8rem 1.7rem;
+  cursor: pointer;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-control-inline {
+  position: relative;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-control-inline::after {
+  content: "\f078";
+  position: absolute;
+  top: 50%;
+  right: 0.72rem;
+  color: currentColor;
+  font-family: "Font Awesome 5 Free";
+  font-size: 0.6rem;
+  font-weight: 900;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+#teacherRecordsAttendancePanel .attendance-history-summary {
+  padding: 0.1rem;
+  border-radius: 12px;
+  transition: background 0.18s ease;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-summary:hover {
+  background: #f7fbf4;
+}
+
+@media (max-width: 1180px) {
+  #teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-class-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-date-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions-control {
+    grid-column: span 6;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-search-control {
+    grid-column: span 8;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 820px) {
+  #teacherRecordsAttendancePanel .attendance-toolbar-title-row,
+  #teacherRecordsAttendancePanel .attendance-toolbar-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-class-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-date-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-search-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
+    grid-column: span 6;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-legend-block {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  #teacherRecordsAttendancePanel .attendance-primary-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-class-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-date-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-search-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
+    grid-column: auto;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-date-control {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-date-control .attendance-date-quick-actions {
+    align-items: center;
+    padding: 0;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions-control .attendance-toolbar-actions {
+    height: auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #teacherRecordsAttendancePanel .attendance-bulk-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-bulk-action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #teacherRecordsAttendancePanel .attendance-bulk-btn {
+    border-right: 0;
+    border-bottom: 1px solid #d8e3d3;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-bulk-btn:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  #teacherRecordsAttendancePanel .attendance-clear-filters-btn {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+/* Attendance layout stabilization */
+#teacherRecordsAttendancePanel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+#teacherRecordsAttendancePanel > *,
+#teacherRecordsAttendancePanel .attendance-shell,
+#teacherRecordsAttendancePanel .attendance-primary-toolbar,
+#teacherRecordsAttendancePanel .attendance-roster-body,
+#teacherRecordsAttendancePanel .attendance-history-content {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-card,
+#teacherRecordsAttendancePanel .attendance-layout {
+  width: auto;
+  max-width: none;
+}
+
+#teacherRecordsAttendancePanel .attendance-primary-toolbar {
+  width: 100%;
+  grid-template-columns: minmax(180px, 1.05fr) minmax(220px, 1.35fr) minmax(220px, 1.3fr) minmax(230px, 1.2fr);
+  grid-template-areas:
+    "scope class date actions"
+    "search search search status";
+  align-items: end;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-scope-control {
+  grid-area: scope;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-class-control {
+  grid-area: class;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-date-control {
+  grid-area: date;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-actions-control {
+  grid-area: actions;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-search-control {
+  grid-area: search;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-status-control {
+  grid-area: status;
+}
+
+#teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
+#teacherRecordsAttendancePanel .attendance-toolbar-class-control,
+#teacherRecordsAttendancePanel .attendance-toolbar-date-control,
+#teacherRecordsAttendancePanel .attendance-toolbar-actions-control,
+#teacherRecordsAttendancePanel .attendance-toolbar-search-control,
+#teacherRecordsAttendancePanel .attendance-toolbar-status-control {
+  grid-column: auto;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-label {
+  font-size: 0.68rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-control-input input,
+#teacherRecordsAttendancePanel .attendance-control-input select,
+#teacherRecordsAttendancePanel .attendance-control-readonly strong {
+  font-size: 0.82rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-scope-btn {
+  font-size: 0.78rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#teacherRecordsAttendancePanel .attendance-history-panel {
+  position: static;
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-summary .attendance-panel-head {
+  width: 100%;
+}
+
+#teacherRecordsAttendancePanel .attendance-panel-kicker {
+  font-size: 0.82rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-panel-title p,
+#teacherRecordsAttendancePanel .attendance-roster-results {
+  font-size: 0.76rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-table thead th {
+  padding: 0.78rem 0.9rem;
+  font-size: 0.7rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-roster-cell {
+  padding: 0.82rem 0.9rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-copy strong {
+  font-size: 0.9rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-student-copy small,
+#teacherRecordsAttendancePanel .attendance-roster-section {
+  font-size: 0.76rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-status-select {
+  min-height: 42px;
+  font-size: 0.78rem;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-content {
+  width: 100%;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#teacherRecordsAttendancePanel .attendance-history-item {
+  grid-template-columns: 100px minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+#teacherRecordsAttendancePanel .attendance-history-meta {
+  grid-column: auto;
+  justify-items: end;
+}
+
+@media (max-width: 1180px) {
+  #teacherRecordsAttendancePanel .attendance-primary-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "scope class"
+      "date actions"
+      "search status";
+  }
+
+  #teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-class-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-date-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-search-control,
+  #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  #teacherRecordsAttendancePanel .attendance-primary-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "scope"
+      "class"
+      "date"
+      "search"
+      "status"
+      "actions";
+  }
+
+  #teacherRecordsAttendancePanel .attendance-history-item {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  #teacherRecordsAttendancePanel .attendance-history-meta {
+    grid-column: 1 / -1;
+    justify-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  #teacherRecordsAttendancePanel .attendance-toolbar-actions-control .attendance-toolbar-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #teacherRecordsAttendancePanel .attendance-history-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 </style>

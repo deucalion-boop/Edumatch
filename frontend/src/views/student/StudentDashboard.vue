@@ -1,269 +1,359 @@
 <template>
-  <div class="student-dashboard-page">
-    <section v-if="!hasFocusedDashboardSection" class="hero">
-      <div class="hero-copy">
-        <p class="hero-subheader">Dashboard Overview</p>
-        <p class="hero-subtitle">
-          Review your deadlines, classes, grades, and announcements from one clear student workspace.
-        </p>
-        <div class="chip-row">
-          <span class="chip"><i class="fas fa-calendar-day"></i>{{ todayLabel }}</span>
-          <span class="chip"><i class="fas fa-users"></i>{{ sectionLabel }}</span>
-          <span class="chip"><i class="fas fa-user-tie"></i>{{ adviserLabel }}</span>
+  <main class="premium-dashboard">
+    <template v-if="!hasFocusedDashboardSection">
+      <section class="premium-hero" aria-labelledby="student-welcome-title">
+        <div class="premium-hero__content">
+          <span class="premium-eyebrow"><i class="fas fa-sparkles" aria-hidden="true"></i> My learning space</span>
+          <h1 id="student-welcome-title">Welcome back, {{ displayName }}!</h1>
+          <p>Everything you need for a focused and productive school day is right here.</p>
+          <div class="premium-identity" aria-label="Student information">
+            <span><i class="fas fa-calendar-day" aria-hidden="true"></i>{{ todayLabel }}</span>
+            <span><i class="fas fa-users" aria-hidden="true"></i>{{ sectionLabel }}</span>
+            <span><i class="fas fa-user-tie" aria-hidden="true"></i>{{ adviserLabel }}</span>
+          </div>
+          <p v-if="loadError" class="premium-alert" role="status">
+            <i class="fas fa-circle-exclamation" aria-hidden="true"></i>{{ loadError }}
+          </p>
         </div>
-        <p v-if="loadError" class="alert-copy">{{ loadError }}</p>
+        <div class="premium-hero__visual" aria-hidden="true">
+          <span class="visual-orbit visual-orbit--one"></span>
+          <span class="visual-orbit visual-orbit--two"></span>
+          <div class="visual-book"><i class="fas fa-book-open"></i></div>
+          <span class="visual-chip visual-chip--top"><i class="fas fa-check"></i> Stay curious</span>
+          <span class="visual-chip visual-chip--bottom"><i class="fas fa-bolt"></i> Keep growing</span>
+        </div>
+      </section>
+
+      <section class="premium-overview" data-tour="dashboard-overview" aria-labelledby="overview-title">
+        <div class="premium-section-heading premium-section-heading--compact">
+          <div>
+            <span class="premium-eyebrow">At a glance</span>
+            <h2 id="overview-title">Your academic overview</h2>
+          </div>
+          <p>A quick pulse check on your learning journey.</p>
+        </div>
+        <div v-if="isInitialLoading" class="premium-summary-grid" aria-label="Loading academic overview">
+          <article v-for="index in 4" :key="index" class="premium-summary-card premium-skeleton-card">
+            <span class="skeleton skeleton--icon"></span>
+            <span class="skeleton skeleton--short"></span>
+            <span class="skeleton skeleton--value"></span>
+            <span class="skeleton skeleton--line"></span>
+          </article>
+        </div>
+        <div v-else class="premium-summary-grid">
+          <article v-for="card in overviewCards" :key="card.label" class="premium-summary-card" :class="`premium-summary-card--${card.tone}`">
+            <span class="premium-summary-card__icon"><i class="fas" :class="card.icon" aria-hidden="true"></i></span>
+            <div class="premium-summary-card__copy">
+              <span>{{ card.label }}</span>
+              <strong class="premium-counter">{{ card.value }}</strong>
+              <p>{{ card.note }}</p>
+            </div>
+            <span class="premium-summary-card__arrow" aria-hidden="true"><i class="fas fa-arrow-trend-up"></i></span>
+          </article>
+        </div>
+      </section>
+
+      <div v-if="isInitialLoading" class="premium-content-grid" aria-label="Loading dashboard content">
+        <section class="premium-panel premium-panel--wide premium-skeleton-panel">
+          <span class="skeleton skeleton--heading"></span>
+          <span v-for="index in 3" :key="index" class="skeleton skeleton--task"></span>
+        </section>
+        <section class="premium-panel premium-skeleton-panel">
+          <span class="skeleton skeleton--heading"></span>
+          <span class="skeleton skeleton--illustration"></span>
+        </section>
+      </div>
+
+      <template v-else>
+        <div class="premium-content-grid">
+          <section class="premium-panel premium-panel--wide" aria-labelledby="upcoming-work-title">
+            <header class="premium-panel__header">
+              <div>
+                <span class="premium-eyebrow">Priority feed</span>
+                <h2 id="upcoming-work-title">Upcoming work</h2>
+                <p>Plan ahead and keep your most important tasks moving.</p>
+              </div>
+              <router-link to="/student/activities" class="premium-text-link">See all work <i class="fas fa-arrow-right" aria-hidden="true"></i></router-link>
+            </header>
+
+            <div v-if="assignmentPreview.length" class="premium-timeline">
+              <article v-for="item in assignmentPreview" :key="item.id" class="premium-task" :class="`premium-task--${item.dueTone}`">
+                <div class="premium-task__rail" aria-hidden="true">
+                  <span><i class="fas" :class="item.typeIcon"></i></span>
+                </div>
+                <div class="premium-task__body">
+                  <div class="premium-task__topline">
+                    <div>
+                      <span class="premium-subject-label">{{ item.context }}</span>
+                      <h3>{{ item.title }}</h3>
+                    </div>
+                    <span class="premium-due-badge" :class="`premium-due-badge--${item.dueTone}`">{{ item.dueLabel }}</span>
+                  </div>
+                  <div class="premium-task__chips">
+                    <span><i class="fas fa-layer-group" aria-hidden="true"></i>{{ item.typeLabel }}</span>
+                    <span :class="`premium-status--${item.stateTone}`"><i class="fas fa-circle" aria-hidden="true"></i>{{ item.stateLabel }}</span>
+                    <span><i class="fas fa-user" aria-hidden="true"></i>{{ item.teacherName || 'Teacher' }}</span>
+                    <span><i class="fas fa-calendar-alt" aria-hidden="true"></i>{{ item.deadlineText }}</span>
+                  </div>
+                  <div class="premium-task__progress">
+                    <span><span :style="{ width: `${taskProgress(item)}%` }"></span></span>
+                    <small>{{ taskProgress(item) }}% complete</small>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div v-else class="premium-empty-state">
+              <div class="premium-empty-state__art" aria-hidden="true">
+                <span class="empty-check"><i class="fas fa-check"></i></span>
+                <i class="fas fa-clipboard-list"></i>
+              </div>
+              <div>
+                <span class="premium-eyebrow">You’re all caught up</span>
+                <h3>No upcoming work right now</h3>
+                <p>Enjoy the breathing room or explore your lessons to get a head start on what’s next.</p>
+                <router-link to="/student/lessons" class="premium-button">Explore lessons <i class="fas fa-arrow-right" aria-hidden="true"></i></router-link>
+              </div>
+            </div>
+          </section>
+
+          <aside class="premium-panel premium-focus-card" aria-labelledby="focus-title">
+            <span class="premium-eyebrow">Learning pulse</span>
+            <h2 id="focus-title">Today’s focus</h2>
+            <div class="premium-focus-ring" :style="{ '--focus-progress': `${recommendationMeta.progress * 3.6}deg` }">
+              <div><strong>{{ recommendationMeta.progress }}%</strong><span>Path ready</span></div>
+            </div>
+            <p>{{ recommendationSupportCopy }}</p>
+            <div class="premium-focus-stats">
+              <div><span>Current average</span><strong>{{ formatPercent(summary.averageScore) }}</strong></div>
+              <div><span>Completed</span><strong>{{ summary.completedChallenges }}</strong></div>
+            </div>
+            <router-link :to="{ path: '/student/dashboard', query: { section: 'recommendations' } }" class="premium-button premium-button--soft">View progress <i class="fas fa-arrow-right" aria-hidden="true"></i></router-link>
+          </aside>
+        </div>
+
+        <section class="premium-panel premium-classes" aria-labelledby="my-classes-title">
+          <header class="premium-panel__header">
+            <div>
+              <span class="premium-eyebrow">Course spaces</span>
+              <h2 id="my-classes-title">My classes</h2>
+              <p>Jump back into lessons, assignments, and progress for every subject.</p>
+            </div>
+            <router-link to="/student/lessons" class="premium-text-link">View all classes <i class="fas fa-arrow-right" aria-hidden="true"></i></router-link>
+          </header>
+
+          <div v-if="subjects.length" class="premium-course-grid">
+            <article v-for="(subject, index) in subjects.slice(0, 4)" :key="subject.id || index" class="premium-course-card" :class="`premium-course-card--${(index % 4) + 1}`">
+              <div class="premium-course-card__banner">
+                <span class="premium-course-card__icon"><i class="fas fa-book-open" aria-hidden="true"></i></span>
+                <span class="premium-course-card__status"><i class="fas fa-circle" aria-hidden="true"></i>Active</span>
+              </div>
+              <div class="premium-course-card__body">
+                <span class="premium-subject-label">{{ subject.code || subject.track || 'Course' }}</span>
+                <h3>{{ subject.className || subject.name || 'Course' }}</h3>
+                <p class="premium-course-card__teacher"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>{{ subject.teacher?.name || 'Teacher' }}</p>
+                <p class="premium-course-card__schedule"><i class="fas fa-clock" aria-hidden="true"></i>{{ courseSchedule(subject) }}</p>
+                <div class="premium-course-card__metrics">
+                  <span><strong>{{ subject.lessonCount || 0 }}</strong> lessons</span>
+                  <span><strong>{{ subject.assessmentCount || 0 }}</strong> assignments</span>
+                </div>
+                <div class="premium-course-card__progress">
+                  <div><span>Lesson progress</span><strong>{{ formatWholePercent(subject.performance?.progress || 0) }}</strong></div>
+                  <span class="premium-progress-track" role="progressbar" :aria-valuenow="clamp(subject.performance?.progress || 0)" aria-valuemin="0" aria-valuemax="100">
+                    <span :style="{ width: `${clamp(subject.performance?.progress || 0)}%` }"></span>
+                  </span>
+                </div>
+                <div class="premium-course-card__actions">
+                  <router-link to="/student/lessons"><i class="fas fa-play" aria-hidden="true"></i>Lessons</router-link>
+                  <router-link to="/student/activities"><i class="fas fa-list-check" aria-hidden="true"></i>Activities</router-link>
+                </div>
+              </div>
+            </article>
+          </div>
+          <div v-else class="premium-empty-state premium-empty-state--classes">
+            <div class="premium-empty-state__art" aria-hidden="true"><i class="fas fa-graduation-cap"></i></div>
+            <div>
+              <span class="premium-eyebrow">Your classroom awaits</span>
+              <h3>No approved classes yet</h3>
+              <p>Visit Lessons to join a class and unlock course materials, activities, and progress tracking.</p>
+              <router-link to="/student/lessons" class="premium-button">Find your classes <i class="fas fa-arrow-right" aria-hidden="true"></i></router-link>
+            </div>
+          </div>
+          <div v-if="pendingSubjects.length" class="premium-pending-note" role="status">
+            <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+            <span>{{ pendingSubjects.length }} enrollment request{{ pendingSubjects.length === 1 ? '' : 's' }} waiting for approval.</span>
+          </div>
+        </section>
+      </template>
+    </template>
+
+    <section
+      v-if="showGradesPanel"
+      class="premium-panel premium-focus-panel premium-grades-panel"
+      data-dashboard-section="grades"
+      aria-labelledby="recent-results-title"
+    >
+      <header class="grades-premium-header">
+        <div class="grades-premium-header__copy">
+          <span class="premium-eyebrow"><i class="fas fa-chart-simple" aria-hidden="true"></i> Grades overview</span>
+          <h1 id="recent-results-title">Recent results</h1>
+          <p>Track your academic performance, celebrate your progress, and discover where to focus next.</p>
+        </div>
+        <router-link to="/student/dashboard" class="grades-back-button">
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
+          <span>Back to dashboard</span>
+        </router-link>
+      </header>
+      <div v-if="isInitialLoading" class="grades-stat-grid" aria-label="Loading grade statistics">
+        <article v-for="index in 4" :key="index" class="grades-stat-card grades-stat-card--skeleton">
+          <span class="skeleton skeleton--icon"></span>
+          <div><span class="skeleton skeleton--short"></span><span class="skeleton skeleton--value"></span></div>
+        </article>
+      </div>
+      <div v-else class="grades-stat-grid" aria-label="Grade statistics">
+        <article v-for="stat in gradeOverviewStats" :key="stat.label" class="grades-stat-card" :class="`grades-stat-card--${stat.tone}`">
+          <span class="grades-stat-card__icon" aria-hidden="true"><i class="fas" :class="stat.icon"></i></span>
+          <div>
+            <span>{{ stat.label }}</span>
+            <strong>{{ stat.value }}</strong>
+            <small>{{ stat.note }}</small>
+          </div>
+        </article>
+      </div>
+
+      <div v-if="isInitialLoading" class="grades-content-skeleton" aria-label="Loading recent results">
+        <span class="skeleton grades-content-skeleton__visual"></span>
+        <div>
+          <span class="skeleton skeleton--heading"></span>
+          <span class="skeleton skeleton--line"></span>
+          <span class="skeleton skeleton--line"></span>
+          <span class="skeleton grades-content-skeleton__button"></span>
+        </div>
+      </div>
+      <div v-else-if="hasGradesData" class="grades-results-dashboard">
+        <aside class="grades-performance-card">
+          <span class="grades-performance-card__eyebrow">Performance snapshot</span>
+          <strong>{{ formatPercent(summary.averageScore) }}</strong>
+          <p><i class="fas fa-arrow-trend-up" aria-hidden="true"></i>{{ summary.performanceTrend }}</p>
+          <div class="grades-performance-card__track" role="progressbar" :aria-valuenow="clamp(summary.averageScore)" aria-valuemin="0" aria-valuemax="100">
+            <span :style="{ width: `${clamp(summary.averageScore)}%` }"></span>
+          </div>
+          <small>Based on your published graded work</small>
+        </aside>
+        <div class="grades-results-feed">
+          <div class="grades-results-feed__heading">
+            <div><span class="premium-eyebrow">Latest activity</span><h2>Published scores</h2></div>
+            <span class="grades-result-count">{{ gradesBadgeText }}</span>
+          </div>
+          <div class="premium-results-list">
+          <article v-for="grade in recentGrades" :key="grade.key">
+            <span class="premium-results-list__icon"><i class="fas fa-award" aria-hidden="true"></i></span>
+            <div><h3>{{ grade.title }}</h3><p>{{ grade.context }} · {{ grade.time }}</p></div>
+            <strong>{{ grade.score }}</strong>
+          </article>
+          </div>
+        </div>
+      </div>
+      <div v-else class="grades-premium-empty">
+        <div class="grades-premium-empty__visual" aria-hidden="true">
+          <span class="grades-visual-orbit"></span>
+          <div class="grades-visual-sheet">
+            <i class="fas fa-chart-line"></i>
+            <span><b></b><b></b><b></b></span>
+          </div>
+          <span class="grades-visual-badge"><i class="fas fa-star"></i></span>
+        </div>
+        <div class="grades-premium-empty__copy">
+          <span class="premium-eyebrow">Your progress story starts here</span>
+          <h2>No scores posted yet</h2>
+          <p>Once your teachers publish graded quizzes, activities, or exams, your results and performance insights will appear here automatically.</p>
+          <div class="grades-empty-guidance">
+            <span><i class="fas fa-check-circle" aria-hidden="true"></i> Results update automatically</span>
+            <span><i class="fas fa-shield-heart" aria-hidden="true"></i> Your grades stay private</span>
+          </div>
+          <router-link to="/student/activities" class="grades-primary-button">
+            <span>Explore activities</span>
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+          </router-link>
+        </div>
       </div>
     </section>
 
-    <section v-if="!hasFocusedDashboardSection" class="overview-section" data-tour="dashboard-overview">
-      <div class="summary-grid">
-        <article v-for="card in overviewCards" :key="card.label" class="summary-card">
-          <span class="icon-badge" :class="card.tone"><i class="fas" :class="card.icon"></i></span>
-          <p class="summary-label">{{ card.label }}</p>
-          <h3 class="summary-value">{{ card.value }}</h3>
-          <p class="summary-note">{{ card.note }}</p>
+    <section
+      v-if="showRecommendationsPanel"
+      class="premium-panel premium-focus-panel premium-pathway-panel"
+      data-tour="dashboard-progress-insights"
+      data-dashboard-section="recommendations"
+      aria-labelledby="recommendation-title"
+    >
+      <header class="pathway-premium-header">
+        <div class="pathway-premium-header__copy">
+          <span class="premium-eyebrow"><i class="fas fa-compass" aria-hidden="true"></i> Personalized pathway</span>
+          <h1 id="recommendation-title">Recommendation progress</h1>
+          <p>Turn your assessment results into a clearer picture of the academic strand that fits your strengths.</p>
+        </div>
+        <router-link to="/student/dashboard" class="pathway-back-button">
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
+          <span>Back to dashboard</span>
+        </router-link>
+      </header>
+
+      <div v-if="isInitialLoading" class="pathway-loading" aria-label="Loading recommendation progress">
+        <div><span class="skeleton skeleton--short"></span><span class="skeleton skeleton--heading"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span></div>
+        <span class="skeleton pathway-loading__ring"></span>
+      </div>
+
+      <div v-else class="pathway-hero" data-tour="dashboard-strand-recommendation">
+        <div class="pathway-hero__copy">
+          <span class="pathway-status" :class="{ 'pathway-status--ready': recommendationMeta.ready }">
+            <i class="fas" :class="recommendationMeta.ready ? 'fa-circle-check' : 'fa-sparkles'" aria-hidden="true"></i>
+            {{ recommendationMeta.statusLabel }}
+          </span>
+          <h2>{{ recommendationHeadline }}</h2>
+          <p>{{ recommendationSupportCopy }}</p>
+          <div class="pathway-milestone">
+            <span class="pathway-milestone__icon"><i class="fas fa-lightbulb" aria-hidden="true"></i></span>
+            <div>
+              <strong>{{ recommendationMeta.ready ? 'Your suggested pathway is ready' : 'Build a stronger recommendation' }}</strong>
+              <p>{{ recommendationMeta.ready ? `Review why ${summary.recommendedStrand} matches your results.` : 'Complete more graded assessments to help EduMatch understand your strengths.' }}</p>
+            </div>
+          </div>
+          <router-link v-if="!recommendationMeta.ready" to="/student/activities" class="pathway-primary-button">
+            <span>Continue assessments</span>
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+          </router-link>
+        </div>
+
+        <div class="pathway-progress-card">
+          <span class="pathway-progress-card__label">{{ recommendationMeta.ready ? 'Recommendation ready' : 'Pathway completion' }}</span>
+          <div
+            class="pathway-progress-ring"
+            :style="{ '--pathway-progress': `${recommendationMeta.progress * 3.6}deg` }"
+            role="progressbar"
+            :aria-valuenow="recommendationMeta.progress"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <div><strong>{{ recommendationMeta.progress }}%</strong><span>Complete</span></div>
+          </div>
+          <strong class="pathway-progress-card__strand">{{ recommendationMeta.ready ? summary.recommendedStrand : 'Keep learning' }}</strong>
+          <p>{{ recommendationMeta.ready ? 'Suggested strand based on your results' : 'Every graded result adds detail to your pathway.' }}</p>
+        </div>
+      </div>
+
+      <div v-if="isInitialLoading" class="pathway-stat-grid" aria-label="Loading recommendation statistics">
+        <article v-for="index in 6" :key="index" class="pathway-stat-card pathway-stat-card--skeleton">
+          <span class="skeleton skeleton--icon"></span>
+          <div><span class="skeleton skeleton--short"></span><span class="skeleton skeleton--value"></span></div>
+        </article>
+      </div>
+      <div v-else class="pathway-stat-grid" aria-label="Recommendation statistics">
+        <article v-for="stat in recommendationOverviewStats" :key="stat.label" class="pathway-stat-card" :class="`pathway-stat-card--${stat.tone}`">
+          <span class="pathway-stat-card__icon" aria-hidden="true"><i class="fas" :class="stat.icon"></i></span>
+          <div><span>{{ stat.label }}</span><strong>{{ stat.value }}</strong><small>{{ stat.note }}</small></div>
         </article>
       </div>
     </section>
-
-    <div class="dashboard-grid" :class="{ 'dashboard-grid-focused': hasFocusedDashboardSection }">
-      <section v-if="!hasFocusedDashboardSection" class="panel panel-wide classwork-panel">
-        <div class="panel-head classwork-panel-head">
-          <div class="panel-heading classwork-panel-heading">
-            <p class="panel-subheader">Classwork Overview</p>
-            <div class="classwork-title-row">
-              <h3>Upcoming work</h3>
-            </div>
-            <p class="panel-subtitle">Review due work, submission status, and the tasks that need attention next.</p>
-          </div>
-          <router-link to="/student/activities" class="panel-link classwork-panel-link">
-            <span>Open classwork</span>
-            <i class="fas fa-arrow-right" aria-hidden="true"></i>
-          </router-link>
-        </div>
-        <div v-if="assignmentPreview.length" class="classwork-list">
-          <article
-            v-for="item in assignmentPreview"
-            :key="item.id"
-            class="item-card classwork-card"
-            :class="item.dueTone"
-          >
-            <div class="classwork-card-top">
-              <div class="classwork-card-top-main">
-                <span class="classwork-card-icon" :class="item.typeClass" aria-hidden="true">
-                  <i class="fas" :class="item.typeIcon"></i>
-                </span>
-                <div class="classwork-card-top-copy">
-                  <h4>{{ item.title }}</h4>
-                  <p>{{ item.context }}</p>
-                </div>
-              </div>
-              <span v-if="shouldShowClassworkDuePill(item)" class="pill classwork-due-pill" :class="item.dueTone">{{ item.dueLabel }}</span>
-            </div>
-            <div class="classwork-badge-row">
-              <span class="pill type" :class="item.typeClass">{{ item.typeLabel }}</span>
-              <span class="pill" :class="item.stateTone">{{ item.stateLabel }}</span>
-            </div>
-            <div class="classwork-meta-row">
-              <span class="classwork-meta-chip"><i class="fas fa-user"></i>{{ item.teacherName || 'Teacher' }}</span>
-              <span class="classwork-meta-chip"><i class="fas fa-calendar-alt"></i>{{ item.deadlineText }}</span>
-            </div>
-          </article>
-        </div>
-        <div v-else class="empty-state classwork-empty-state">
-          <span class="classwork-empty-icon" aria-hidden="true">
-            <i class="fas fa-clipboard-list"></i>
-          </span>
-          <div class="classwork-empty-copy">
-            <span class="classwork-empty-label">Nothing due right now</span>
-            <h4>No classwork has been posted yet</h4>
-            <p>New activities, quizzes, and exams will show up here automatically once your teachers publish them.</p>
-          </div>
-        </div>
-      </section>
-
-      <section
-        v-if="showGradesPanel"
-        class="panel panel-side"
-        :class="{ 'panel-focused grades-panel-focused': hasFocusedDashboardSection }"
-        data-dashboard-section="grades"
-      >
-        <div class="panel-head" :class="{ 'panel-head-focus': hasFocusedDashboardSection }">
-          <div class="panel-heading">
-            <p class="panel-subheader">Grades Overview</p>
-            <div class="grades-headline-row">
-              <h3>Recent results</h3>
-              <span
-                v-if="hasFocusedDashboardSection"
-                class="pill grades-focus-badge"
-                :class="hasGradesData ? 'info' : 'warning'"
-              >
-                {{ gradesBadgeText }}
-              </span>
-            </div>
-            <p class="panel-subtitle">
-              {{ hasGradesData
-                ? 'See your latest scored work and your standing in one clean view.'
-                : 'Scores will appear here once teachers publish graded quizzes, activities, or exams.' }}
-            </p>
-          </div>
-        </div>
-        <template v-if="hasGradesData">
-          <div v-if="hasFocusedDashboardSection" class="grades-focus-hero">
-            <div class="grades-focus-copy">
-              <p class="grades-focus-label">Current average</p>
-              <strong class="grades-focus-score">{{ formatPercent(summary.averageScore) }}</strong>
-              <span class="grades-focus-support">{{ summary.performanceTrend }}</span>
-            </div>
-            <div class="grades-focus-side">
-              <div class="grades-focus-side-item">
-                <span>Highest score</span>
-                <strong>{{ formatPercent(summary.highestScore) }}</strong>
-              </div>
-              <div class="grades-focus-side-item">
-                <span>Scored tasks</span>
-                <strong>{{ summary.completedChallenges }}</strong>
-              </div>
-            </div>
-          </div>
-          <div class="stack grades-results-list">
-            <article v-for="grade in recentGrades" :key="grade.key" class="simple-card">
-              <div><strong>{{ grade.title }}</strong><p>{{ grade.context }}</p></div>
-              <div class="score-meta"><span class="score-value">{{ grade.score }}</span><small>{{ grade.time }}</small></div>
-            </article>
-          </div>
-        </template>
-        <div v-else class="grades-empty-hero">
-          <div class="grades-empty-main">
-            <span class="grades-empty-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
-            <div class="grades-empty-copy">
-              <span class="grades-empty-label">No scores posted yet</span>
-              <h4>Your recent results will appear here</h4>
-              <p>Once a teacher publishes a graded quiz, activity, or exam, this page will update automatically and show the newest scores first.</p>
-            </div>
-          </div>
-          <div class="grades-empty-guides">
-            <article class="grades-empty-guide">
-              <span>Average</span>
-              <p>Appears after your first graded task.</p>
-            </article>
-            <article class="grades-empty-guide">
-              <span>Highest</span>
-              <p>Keeps track of your best posted result.</p>
-            </article>
-            <article class="grades-empty-guide">
-              <span>Recent results</span>
-              <p>Newly released scores will show up first.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section v-if="!hasFocusedDashboardSection" class="panel panel-wide course-directory-panel">
-        <div class="panel-head course-directory-head">
-          <div class="panel-heading course-directory-heading">
-            <p class="panel-subheader">Class Directory</p>
-            <div class="course-directory-title-row">
-              <h3>My classes</h3>
-            </div>
-            <p class="panel-subtitle">Each course card groups lessons, tasks, and progress into one organized learning view.</p>
-          </div>
-          <router-link to="/student/lessons" class="panel-link course-directory-link">
-            <span>View lessons</span>
-            <i class="fas fa-arrow-right" aria-hidden="true"></i>
-          </router-link>
-        </div>
-        <div v-if="subjects.length" class="course-grid">
-          <article v-for="subject in subjects.slice(0, 4)" :key="subject.id" class="course-card course-directory-card">
-            <div class="course-card-top">
-              <div class="course-card-heading">
-                <span class="course-card-icon" aria-hidden="true">
-                  <i class="fas fa-book-open"></i>
-                </span>
-                <div class="course-card-copy">
-                  <h4>{{ subject.className || subject.name || 'Course' }}</h4>
-                  <p>{{ subject.code || 'No code' }} &middot; {{ subject.track || 'General' }}</p>
-                </div>
-              </div>
-              <span class="pill success course-status-pill">Active</span>
-            </div>
-            <p class="teacher-copy course-teacher-row"><i class="fas fa-chalkboard-teacher"></i>{{ subject.teacher?.name || 'Teacher' }}</p>
-            <div class="course-metrics-grid">
-              <article class="course-metric-card">
-                <span>Lessons</span>
-                <strong>{{ subject.lessonCount || 0 }}</strong>
-              </article>
-              <article class="course-metric-card">
-                <span>Tasks</span>
-                <strong>{{ subject.assessmentCount || 0 }}</strong>
-              </article>
-              <article class="course-metric-card">
-                <span>Average</span>
-                <strong>{{ formatPercent(subject.performance?.averageScore || 0) }}</strong>
-              </article>
-            </div>
-            <div class="progress-block course-progress-block">
-              <div class="row spread">
-                <span>Course progress</span>
-                <strong>{{ formatWholePercent(subject.performance?.progress || 0) }}</strong>
-              </div>
-              <div class="progress-track course-progress-track" aria-hidden="true">
-                <span class="progress-fill" :style="{ width: `${clamp(subject.performance?.progress || 0)}%` }"></span>
-              </div>
-            </div>
-          </article>
-        </div>
-        <div v-else class="empty-state"><i class="fas fa-users"></i><div><h4>No approved classes yet</h4><p>Join a class from the Lessons page to unlock materials and assignments.</p></div></div>
-        <div v-if="pendingSubjects.length" class="pending-note"><i class="fas fa-hourglass-half"></i><span>{{ pendingSubjects.length }} enrollment request{{ pendingSubjects.length === 1 ? '' : 's' }} pending approval.</span></div>
-      </section>
-
-      <section
-        v-if="showRecommendationsPanel"
-        class="panel panel-side"
-        :class="{ 'panel-focused': hasFocusedDashboardSection }"
-        data-tour="dashboard-progress-insights"
-        data-dashboard-section="recommendations"
-      >
-        <div class="panel-head">
-          <div class="panel-heading">
-            <p class="panel-subheader">Progress Tracker</p>
-            <h3>Recommendation progress</h3>
-            <p class="panel-subtitle">Track recommendation progress and learning momentum through a clear, focused summary.</p>
-          </div>
-          <span class="pill recommendation-status-pill" :class="{ ready: recommendationMeta.ready, pending: !recommendationMeta.ready }">
-            {{ recommendationMeta.statusLabel }}
-          </span>
-        </div>
-        <div class="insight-hero" :class="{ pending: !recommendationMeta.ready }" data-tour="dashboard-strand-recommendation">
-          <div class="insight-copy">
-            <span class="insight-kicker">{{ recommendationMeta.ready ? 'Recommendation ready' : 'Recommendation in progress' }}</span>
-            <h4>{{ recommendationHeadline }}</h4>
-            <p>{{ recommendationSupportCopy }}</p>
-            <div v-if="!recommendationMeta.ready" class="insight-callout">
-              <i class="fas fa-clipboard-check" aria-hidden="true"></i>
-              <span>Finish more graded assessments to unlock your strand suggestion.</span>
-            </div>
-          </div>
-          <div class="progress-block light insight-progress">
-            <span class="insight-progress-label">{{ recommendationMeta.ready ? 'Suggested strand' : 'Completion status' }}</span>
-            <strong>{{ recommendationMeta.progress }}%</strong>
-            <small>{{ recommendationMeta.ready ? summary.recommendedStrand : recommendationMeta.statusLabel }}</small>
-            <div class="progress-track light" aria-hidden="true"><span class="progress-fill" :style="{ width: `${recommendationMeta.progress}%` }"></span></div>
-          </div>
-        </div>
-        <div class="mini-grid recommendation-mini-grid">
-          <article v-for="stat in recommendationAssessmentStats" :key="stat.label" class="mini-card">
-            <span>{{ stat.label }}</span>
-            <strong>{{ stat.value }}</strong>
-          </article>
-          <article class="mini-card"><span>Completed</span><strong>{{ summary.completedChallenges }}</strong></article>
-          <article class="mini-card"><span>Classes</span><strong>{{ subjects.length }}</strong></article>
-          <article class="mini-card"><span>Strand</span><strong>{{ summary.recommendedStrand }}</strong></article>
-        </div>
-      </section>
-
-    </div>
-  </div>
+  </main>
 </template>
 
 <script>
@@ -279,6 +369,7 @@ export default {
     return {
       authStore: null,
       nowMs: Date.now(),
+      isInitialLoading: true,
       loadError: '',
       scoredAverageScore: 0,
       lessons: [],
@@ -423,11 +514,65 @@ export default {
         { label: 'Classes', value: String(this.subjects.length), note: this.subjects.length ? 'Organized into clear course cards' : 'Join a class to get started', icon: 'fa-book', tone: 'success' }
       ]
     },
+    gradeOverviewStats() {
+      const gradedCount = this.summary.completedChallenges
+      const totalAssessments = this.assessments.length
+      const completionRate = totalAssessments
+        ? Math.min(100, Math.round((gradedCount / totalAssessments) * 100))
+        : null
+      return [
+        {
+          label: 'Current Average',
+          value: this.hasGradesData ? this.formatPercent(this.summary.averageScore) : '—',
+          note: this.hasGradesData ? this.summary.performanceTrend : 'Awaiting your first score',
+          icon: 'fa-chart-pie',
+          tone: 'forest'
+        },
+        {
+          label: 'Graded Activities',
+          value: this.hasGradesData ? String(gradedCount) : '—',
+          note: this.hasGradesData ? 'Published results' : 'No activities graded yet',
+          icon: 'fa-clipboard-check',
+          tone: 'sage'
+        },
+        {
+          label: 'Highest Score',
+          value: this.hasGradesData ? this.formatPercent(this.summary.highestScore) : '—',
+          note: this.hasGradesData ? 'Your personal best' : 'Ready for your best result',
+          icon: 'fa-trophy',
+          tone: 'gold'
+        },
+        {
+          label: 'Completion Rate',
+          value: completionRate === null ? '—' : `${completionRate}%`,
+          note: totalAssessments ? `${gradedCount} of ${totalAssessments} graded` : 'No assigned work yet',
+          icon: 'fa-circle-check',
+          tone: 'teal'
+        }
+      ]
+    },
     recommendationAssessmentStats() {
       return [
         { label: 'Quiz', value: this.formatWholePercent(this.averagePercentageForRows(this.finalizedSubmissions.filter((item) => String(item?.assessmentMode || '').trim().toLowerCase() === 'quiz'))) },
         { label: 'Exam', value: this.formatWholePercent(this.averagePercentageForRows(this.finalizedSubmissions.filter((item) => String(item?.assessmentMode || '').trim().toLowerCase() === 'grading_assessment'))) },
         { label: 'Activities', value: this.formatWholePercent(this.averagePercentageForRows(this.activitySubmissions)) }
+      ]
+    },
+    recommendationOverviewStats() {
+      const assessmentStats = this.recommendationAssessmentStats
+      return [
+        { ...assessmentStats[0], note: 'Quiz average', icon: 'fa-clipboard-question', tone: 'forest' },
+        { ...assessmentStats[1], note: 'Exam average', icon: 'fa-file-circle-check', tone: 'sage' },
+        { ...assessmentStats[2], note: 'Activity average', icon: 'fa-list-check', tone: 'teal' },
+        { label: 'Completed', value: String(this.summary.completedChallenges), note: 'Graded assessments', icon: 'fa-circle-check', tone: 'success' },
+        { label: 'Classes', value: String(this.subjects.length), note: 'Active learning spaces', icon: 'fa-book-open', tone: 'blue' },
+        {
+          label: 'Suggested Strand',
+          value: this.summary.recommendedStrand,
+          note: this.recommendationMeta.ready ? 'Recommendation ready' : 'Unlocks with progress',
+          icon: 'fa-graduation-cap',
+          tone: 'gold'
+        }
       ]
     }
   },
@@ -626,6 +771,25 @@ export default {
     priority(tone) {
       return { danger: 0, urgent: 1, warning: 2, info: 3, teal: 4, success: 5 }[tone] ?? 6
     },
+    taskProgress(item) {
+      const state = String(item?.stateLabel || '').trim().toLowerCase()
+      if (['graded', 'completed'].includes(state)) return 100
+      if (state === 'submitted') return 90
+      if (state === 'draft saved') return 55
+      if (state === 'missing') return 12
+      return 25
+    },
+    courseSchedule(subject) {
+      const schedule = subject?.schedule
+      if (typeof schedule === 'string' && schedule.trim()) return schedule.trim()
+      if (Array.isArray(schedule) && schedule.length) {
+        return schedule
+          .map((entry) => typeof entry === 'string' ? entry : [entry?.day, entry?.time].filter(Boolean).join(' · '))
+          .filter(Boolean)
+          .join(', ')
+      }
+      return String(subject?.scheduleText || subject?.classSchedule || 'Schedule to be announced')
+    },
     getGrade(item) {
       const total = Number(item?.totalPoints || 0)
       const score = Number(item?.score || 0)
@@ -697,6 +861,8 @@ export default {
       } catch (error) {
         console.error('Failed to fetch student dashboard data:', error)
         this.loadError = 'We could not refresh the latest dashboard data right now. Showing the most recent information available.'
+      } finally {
+        this.isInitialLoading = false
       }
     }
   }
@@ -2064,6 +2230,2468 @@ export default {
   .score-meta {
     min-width: 0;
     justify-items: start;
+  }
+}
+
+/* Premium Student Dashboard redesign — intentionally namespaced to this component. */
+.premium-dashboard {
+  --forest: #1e4307;
+  --leaf: #4f7d3a;
+  --sage: #6f9d58;
+  --mint: #dcead3;
+  --canvas: #f7fbf4;
+  --ink: #18320d;
+  --muted: #657361;
+  --line: #dfe9d9;
+  --white: #ffffff;
+  --shadow-sm: 0 4px 16px rgba(30, 67, 7, 0.06);
+  --shadow-md: 0 14px 36px rgba(30, 67, 7, 0.1);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  padding: clamp(1rem, 2.2vw, 2rem);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 3% 2%, rgba(220, 234, 211, 0.75), transparent 24rem),
+    linear-gradient(180deg, #fbfdf9 0%, var(--canvas) 100%);
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+.premium-dashboard *,
+.premium-dashboard *::before,
+.premium-dashboard *::after {
+  box-sizing: border-box;
+}
+
+.premium-dashboard h1,
+.premium-dashboard h2,
+.premium-dashboard h3,
+.premium-dashboard p {
+  margin: 0;
+}
+
+.premium-dashboard a {
+  text-decoration: none;
+}
+
+.premium-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(16rem, 0.55fr);
+  align-items: center;
+  min-height: 17rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  overflow: hidden;
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 78% 15%, rgba(180, 216, 158, 0.23), transparent 18rem),
+    linear-gradient(128deg, #173806 0%, var(--forest) 52%, #3f6e2c 100%);
+  box-shadow: 0 20px 48px rgba(30, 67, 7, 0.2);
+  isolation: isolate;
+}
+
+.premium-hero::before,
+.premium-hero::after {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  content: "";
+}
+
+.premium-hero::before {
+  right: -5rem;
+  bottom: -9rem;
+  width: 25rem;
+  height: 25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.premium-hero::after {
+  top: -8rem;
+  right: 14rem;
+  width: 17rem;
+  height: 17rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.premium-hero__content {
+  position: relative;
+  z-index: 2;
+  max-width: 48rem;
+  color: #ffffff;
+}
+
+.premium-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--leaf);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.premium-hero .premium-eyebrow {
+  color: #dcefd1;
+}
+
+.premium-dashboard .premium-hero h1 {
+  max-width: 45rem;
+  margin-top: 0.65rem;
+  color: #ffffff;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  font-weight: 760;
+  letter-spacing: -0.045em;
+  line-height: 1.06;
+}
+
+.premium-dashboard .premium-hero__content > p:not(.premium-alert) {
+  max-width: 42rem;
+  margin-top: 0.85rem;
+  color: #e4efde;
+  font-size: clamp(0.95rem, 1.5vw, 1.08rem);
+  line-height: 1.65;
+}
+
+.premium-identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.35rem;
+}
+
+.premium-dashboard .premium-identity span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  padding: 0.48rem 0.8rem;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-shadow: 0 1px 2px rgba(10, 35, 2, 0.25);
+}
+
+.premium-dashboard .premium-identity i {
+  color: #d8edcb;
+}
+
+/* Keep hero copy readable despite the legacy student stylesheet's important text overrides. */
+.premium-dashboard .premium-hero .premium-hero__content,
+.premium-dashboard .premium-hero .premium-hero__content h1,
+.premium-dashboard .premium-hero .premium-hero__content .premium-eyebrow,
+.premium-dashboard .premium-hero .premium-hero__content .premium-identity span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.premium-dashboard .premium-hero .premium-hero__content > p:not(.premium-alert) {
+  color: #e4efde !important;
+  -webkit-text-fill-color: #e4efde !important;
+}
+
+.premium-dashboard .premium-hero .premium-hero__content .premium-eyebrow i,
+.premium-dashboard .premium-hero .premium-hero__content .premium-identity i {
+  color: #d8edcb !important;
+  -webkit-text-fill-color: #d8edcb !important;
+}
+
+.premium-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: fit-content;
+  margin-top: 1rem !important;
+  padding: 0.65rem 0.8rem;
+  color: #fff4d2 !important;
+  border: 1px solid rgba(255, 235, 165, 0.24);
+  border-radius: 10px;
+  background: rgba(104, 66, 7, 0.28);
+  font-size: 0.78rem !important;
+}
+
+.premium-hero__visual {
+  position: relative;
+  min-height: 12rem;
+}
+
+.visual-book {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 7.5rem;
+  height: 7.5rem;
+  place-items: center;
+  color: var(--forest);
+  border: 8px solid rgba(255, 255, 255, 0.16);
+  border-radius: 28px;
+  background: linear-gradient(145deg, #ffffff, #dcead3);
+  box-shadow: 0 22px 42px rgba(7, 28, 2, 0.3);
+  font-size: 2.8rem;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  animation: premium-float 4.8s ease-in-out infinite;
+}
+
+.visual-chip {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.55rem 0.75rem;
+  color: var(--forest);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-md);
+  font-size: 0.72rem;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+
+.visual-chip i {
+  color: var(--leaf);
+}
+
+.visual-chip--top {
+  top: 0.25rem;
+  right: 0;
+}
+
+.visual-chip--bottom {
+  right: 1.5rem;
+  bottom: 0;
+}
+
+.visual-orbit {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.visual-orbit--one {
+  width: 12rem;
+  height: 12rem;
+}
+
+.visual-orbit--two {
+  width: 16rem;
+  height: 16rem;
+}
+
+.premium-dashboard a:focus-visible {
+  outline: 3px solid rgba(111, 157, 88, 0.42);
+  outline-offset: 3px;
+}
+
+.premium-overview {
+  margin: 1.5rem 0;
+}
+
+.premium-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.premium-section-heading h2,
+.premium-panel__header h2,
+.premium-focus-card h2 {
+  margin-top: 0.3rem;
+  color: var(--ink);
+  font-size: clamp(1.25rem, 2vw, 1.62rem);
+  font-weight: 760;
+  letter-spacing: -0.025em;
+}
+
+.premium-section-heading > p,
+.premium-panel__header p {
+  max-width: 37rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.premium-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.premium-summary-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  min-height: 9.5rem;
+  padding: 1.15rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.premium-summary-card::after {
+  position: absolute;
+  right: -2rem;
+  bottom: -3rem;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  background: var(--card-wash, rgba(220, 234, 211, 0.45));
+  content: "";
+}
+
+.premium-summary-card:hover {
+  border-color: #c9ddbd;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+.premium-summary-card--warning { --card-accent: #9a6810; --card-wash: rgba(248, 224, 172, 0.35); }
+.premium-summary-card--info { --card-accent: #32677f; --card-wash: rgba(191, 224, 233, 0.35); }
+.premium-summary-card--teal { --card-accent: #397467; --card-wash: rgba(190, 226, 214, 0.38); }
+.premium-summary-card--success { --card-accent: var(--leaf); --card-wash: rgba(220, 234, 211, 0.55); }
+
+.premium-summary-card__icon {
+  display: grid;
+  width: 3.15rem;
+  height: 3.15rem;
+  place-items: center;
+  color: var(--card-accent, var(--leaf));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--card-accent, var(--leaf)) 11%, white);
+  font-size: 1.22rem;
+}
+
+.premium-summary-card__copy {
+  min-width: 0;
+}
+
+.premium-summary-card__copy > span {
+  display: block;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 720;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.premium-summary-card__copy strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--ink);
+  font-size: clamp(1.65rem, 2.8vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  animation: premium-count-in 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.premium-summary-card__copy p {
+  margin-top: 0.55rem;
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.45;
+}
+
+.premium-summary-card__arrow {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.75rem;
+  z-index: 1;
+  color: var(--card-accent, var(--leaf));
+  opacity: 0.65;
+  font-size: 0.8rem;
+}
+
+.premium-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(16.5rem, 0.55fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.premium-panel {
+  min-width: 0;
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.premium-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.premium-panel__header h1,
+.premium-panel__header h2 {
+  margin: 0.28rem 0 0.3rem;
+  color: var(--ink);
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+  font-weight: 780;
+  letter-spacing: -0.03em;
+}
+
+.premium-text-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.8rem;
+  color: var(--leaf);
+  border-radius: 10px;
+  background: #f3f8ef;
+  font-size: 0.76rem;
+  font-weight: 780;
+  transition: gap 180ms ease, color 180ms ease, background 180ms ease;
+}
+
+.premium-text-link:hover {
+  gap: 0.7rem;
+  color: var(--forest);
+  background: var(--mint);
+}
+
+.premium-timeline {
+  position: relative;
+  display: grid;
+}
+
+.premium-task {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 0.9rem 0;
+}
+
+.premium-task:not(:last-child) {
+  border-bottom: 1px solid #edf2e9;
+}
+
+.premium-task__rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.premium-task__rail::after {
+  position: absolute;
+  top: 2.75rem;
+  bottom: -1rem;
+  width: 2px;
+  background: #e4edde;
+  content: "";
+}
+
+.premium-task:last-child .premium-task__rail::after {
+  display: none;
+}
+
+.premium-task__rail > span {
+  z-index: 1;
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  place-items: center;
+  color: var(--task-accent, var(--leaf));
+  border: 4px solid var(--white);
+  border-radius: 12px;
+  background: var(--task-bg, #eaf3e5);
+  box-shadow: 0 0 0 1px #dbe7d4;
+}
+
+.premium-task--danger { --task-accent: #a73d3d; --task-bg: #fce9e8; }
+.premium-task--urgent { --task-accent: #bb581e; --task-bg: #fff0e5; }
+.premium-task--warning { --task-accent: #93630b; --task-bg: #fff6dc; }
+.premium-task--info { --task-accent: #38708b; --task-bg: #e7f2f7; }
+.premium-task--success { --task-accent: var(--leaf); --task-bg: #eaf3e5; }
+
+.premium-task__body {
+  min-width: 0;
+}
+
+.premium-task__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.premium-subject-label {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--leaf);
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.premium-task h3 {
+  margin-top: 0.25rem;
+  color: #203a16;
+  font-size: 0.93rem;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.premium-due-badge {
+  flex: 0 0 auto;
+  padding: 0.36rem 0.56rem;
+  color: #366028;
+  border-radius: 999px;
+  background: #eaf3e5;
+  font-size: 0.64rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.premium-due-badge--danger { color: #993636; background: #fce8e7; }
+.premium-due-badge--urgent { color: #a94a14; background: #fff0e4; }
+.premium-due-badge--warning { color: #845809; background: #fff5d8; }
+.premium-due-badge--info { color: #32677f; background: #e5f1f5; }
+
+.premium-task__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-top: 0.65rem;
+}
+
+.premium-task__chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #6c7868;
+  font-size: 0.65rem;
+  font-weight: 650;
+}
+
+.premium-task__chips span:not(:last-child)::after {
+  margin-left: 0.15rem;
+  color: #c1cbbd;
+  content: "•";
+}
+
+.premium-task__chips i {
+  color: #8aa07f;
+  font-size: 0.55rem;
+}
+
+.premium-status--success { color: var(--leaf) !important; }
+.premium-status--danger { color: #a33c3c !important; }
+.premium-status--warning { color: #8d620e !important; }
+.premium-status--violet { color: #7252a3 !important; }
+.premium-status--info { color: #33718d !important; }
+
+.premium-task__progress {
+  display: grid;
+  grid-template-columns: minmax(4rem, 10rem) auto;
+  gap: 0.55rem;
+  align-items: center;
+  margin-top: 0.65rem;
+}
+
+.premium-task__progress > span {
+  height: 0.3rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf2ea;
+}
+
+.premium-task__progress > span > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--task-accent, var(--leaf));
+  transition: width 500ms ease;
+}
+
+.premium-task__progress small {
+  color: #879182;
+  font-size: 0.61rem;
+  font-weight: 650;
+}
+
+.premium-focus-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(220, 234, 211, 0.56), transparent 11rem),
+    var(--white);
+}
+
+.premium-focus-ring {
+  display: grid;
+  width: 9.5rem;
+  height: 9.5rem;
+  margin: 1.35rem auto 1rem;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--leaf) var(--focus-progress), #e5eee0 0deg);
+  box-shadow: inset 0 0 0 1px rgba(30, 67, 7, 0.04);
+}
+
+.premium-focus-ring::before {
+  grid-area: 1 / 1;
+  width: 7.4rem;
+  height: 7.4rem;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 6px 18px rgba(30, 67, 7, 0.08);
+  content: "";
+}
+
+.premium-focus-ring > div {
+  z-index: 1;
+  display: grid;
+  grid-area: 1 / 1;
+  gap: 0.1rem;
+}
+
+.premium-focus-ring strong {
+  color: var(--forest);
+  font-size: 1.9rem;
+  letter-spacing: -0.05em;
+}
+
+.premium-focus-ring span {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.premium-focus-card > p {
+  max-width: 18rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.premium-focus-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.premium-focus-stats div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  border: 1px solid #e3ebde;
+  border-radius: 12px;
+  background: #f8fbf6;
+}
+
+.premium-focus-stats span {
+  color: var(--muted);
+  font-size: 0.63rem;
+}
+
+.premium-focus-stats strong {
+  color: var(--forest);
+  font-size: 1rem;
+}
+
+.premium-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.7rem;
+  padding: 0.65rem 0.95rem;
+  color: var(--white);
+  border-radius: 11px;
+  background: var(--forest);
+  box-shadow: 0 8px 18px rgba(30, 67, 7, 0.14);
+  font-size: 0.75rem;
+  font-weight: 780;
+  transition: gap 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.premium-button:hover {
+  gap: 0.7rem;
+  background: #2b5c10;
+  transform: translateY(-2px);
+}
+
+.premium-button--soft {
+  width: 100%;
+  margin-top: auto;
+  color: var(--forest);
+  background: var(--mint);
+  box-shadow: none;
+}
+
+.premium-button--soft:hover {
+  color: var(--white);
+}
+
+.premium-classes {
+  margin-bottom: 1rem;
+}
+
+.premium-course-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.premium-course-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dde8d7;
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: 0 4px 12px rgba(30, 67, 7, 0.045);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.premium-course-card:hover {
+  border-color: #bed3b3;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-5px);
+}
+
+.premium-course-card__banner {
+  --course-accent: #4f7d3a;
+  --course-light: #e2eedb;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 5rem;
+  padding: 0.9rem;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(255, 255, 255, 0.4), transparent 3.5rem),
+    linear-gradient(135deg, var(--course-accent), color-mix(in srgb, var(--course-accent) 70%, #1e4307));
+}
+
+.premium-course-card--2 .premium-course-card__banner { --course-accent: #5e866c; }
+.premium-course-card--3 .premium-course-card__banner { --course-accent: #607f9c; }
+.premium-course-card--4 .premium-course-card__banner { --course-accent: #8d7444; }
+
+.premium-course-card__icon {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  place-items: center;
+  color: var(--course-accent);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 16px rgba(17, 42, 8, 0.17);
+}
+
+.premium-course-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.33rem 0.5rem;
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(16, 43, 7, 0.2);
+  font-size: 0.6rem;
+  font-weight: 750;
+}
+
+.premium-course-card__status i {
+  font-size: 0.35rem;
+}
+
+.premium-course-card__body {
+  padding: 1rem;
+}
+
+.premium-course-card h3 {
+  min-height: 2.5rem;
+  margin-top: 0.28rem;
+  color: var(--ink);
+  font-size: 0.98rem;
+  line-height: 1.3;
+}
+
+.premium-course-card__teacher,
+.premium-course-card__schedule {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.55rem !important;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.premium-course-card__teacher i,
+.premium-course-card__schedule i {
+  width: 0.8rem;
+  margin-top: 0.1rem;
+  color: var(--sage);
+}
+
+.premium-course-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.premium-course-card__metrics span {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem;
+  color: var(--muted);
+  border-radius: 9px;
+  background: #f7faf5;
+  font-size: 0.6rem;
+}
+
+.premium-course-card__metrics strong {
+  color: var(--forest);
+  font-size: 0.88rem;
+}
+
+.premium-course-card__progress {
+  margin-top: 0.8rem;
+}
+
+.premium-course-card__progress > div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.64rem;
+}
+
+.premium-course-card__progress strong {
+  color: var(--forest);
+}
+
+.premium-progress-track {
+  display: block;
+  height: 0.4rem;
+  margin-top: 0.42rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eee3;
+}
+
+.premium-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--leaf), var(--sage));
+  transition: width 600ms ease;
+}
+
+.premium-course-card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #edf2ea;
+}
+
+.premium-course-card__actions a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.52rem;
+  color: var(--leaf);
+  border: 1px solid #dce8d6;
+  border-radius: 9px;
+  font-size: 0.64rem;
+  font-weight: 760;
+  transition: color 180ms ease, background 180ms ease;
+}
+
+.premium-course-card__actions a:hover {
+  color: var(--white);
+  background: var(--forest);
+}
+
+.premium-empty-state {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: center;
+  min-height: 14rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px dashed #c7dabc;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 10% 50%, rgba(220, 234, 211, 0.6), transparent 12rem),
+    #f9fcf7;
+}
+
+.premium-empty-state__art {
+  position: relative;
+  display: grid;
+  width: 7rem;
+  height: 7rem;
+  place-items: center;
+  color: var(--leaf);
+  border-radius: 28px 28px 28px 8px;
+  background: linear-gradient(145deg, #e8f2e2, #d3e5c8);
+  box-shadow: 0 12px 26px rgba(30, 67, 7, 0.1);
+  font-size: 2.4rem;
+}
+
+.empty-check {
+  position: absolute;
+  top: -0.45rem;
+  right: -0.45rem;
+  display: grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  place-items: center;
+  color: var(--white);
+  border: 4px solid #f9fcf7;
+  border-radius: 50%;
+  background: var(--forest);
+  font-size: 0.65rem;
+}
+
+.premium-empty-state h3 {
+  margin: 0.35rem 0 0.45rem;
+  color: var(--ink);
+  font-size: 1.18rem;
+}
+
+.premium-empty-state p {
+  max-width: 38rem;
+  margin-bottom: 0.9rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.premium-empty-state--classes {
+  min-height: 12rem;
+}
+
+.premium-pending-note {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 0.75rem 0.9rem;
+  color: #795a15;
+  border: 1px solid #f1dfae;
+  border-radius: 11px;
+  background: #fff9e8;
+  font-size: 0.73rem;
+  font-weight: 680;
+}
+
+.premium-focus-panel {
+  min-height: calc(100vh - 9rem);
+  animation: premium-rise 350ms ease both;
+}
+
+.premium-grades-layout {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.65fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.premium-grade-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 15rem;
+  padding: 1.75rem;
+  color: var(--white);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.2), transparent 10rem),
+    linear-gradient(145deg, var(--forest), var(--leaf));
+}
+
+.premium-grade-hero > span {
+  color: #dcefd1;
+  font-size: 0.73rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.premium-grade-hero > strong {
+  margin-top: 0.3rem;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  letter-spacing: -0.06em;
+}
+
+.premium-grade-hero p {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 0.6rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.78rem;
+}
+
+.premium-grade-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.premium-grade-stats article,
+.premium-recommendation-grid article {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.15rem;
+  border: 1px solid #e1eadc;
+  border-radius: 15px;
+  background: #f9fcf7;
+}
+
+.premium-grade-stats span,
+.premium-recommendation-grid span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 680;
+}
+
+.premium-grade-stats strong,
+.premium-recommendation-grid strong {
+  color: var(--forest);
+  font-size: 1.35rem;
+}
+
+.premium-results-list {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 0.65rem;
+}
+
+.premium-results-list article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid #e4ece0;
+  border-radius: 13px;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.premium-results-list article:hover {
+  background: #f8fbf6;
+  transform: translateX(3px);
+}
+
+.premium-results-list__icon {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  place-items: center;
+  color: var(--leaf);
+  border-radius: 10px;
+  background: #e8f2e2;
+}
+
+.premium-results-list h3 {
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.premium-results-list p {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.67rem;
+}
+
+.premium-results-list article > strong {
+  color: var(--forest);
+  font-size: 0.88rem;
+}
+
+.premium-empty-state--large {
+  min-height: 24rem;
+}
+
+.premium-recommendation-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(14rem, 0.5fr);
+  gap: 1.5rem;
+  align-items: center;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  color: var(--white);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(220, 234, 211, 0.28), transparent 17rem),
+    linear-gradient(135deg, #173806, var(--leaf));
+}
+
+.premium-recommendation-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.58rem;
+  color: #dff1d5;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.premium-recommendation-hero h2 {
+  margin-top: 0.8rem;
+  color: var(--white);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  letter-spacing: -0.04em;
+}
+
+.premium-recommendation-hero p {
+  margin-top: 0.55rem;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.premium-recommendation-tip {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.7rem;
+  color: #e8f4e1;
+  border-left: 3px solid #a5cd8e;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+}
+
+.premium-dashboard .premium-recommendation-hero .premium-recommendation-status,
+.premium-dashboard .premium-recommendation-hero h2,
+.premium-dashboard .premium-recommendation-hero p,
+.premium-dashboard .premium-recommendation-hero .premium-recommendation-tip,
+.premium-dashboard .premium-recommendation-hero .premium-recommendation-status i,
+.premium-dashboard .premium-recommendation-hero .premium-recommendation-tip i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.premium-recommendation-progress {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.premium-recommendation-progress strong {
+  font-size: 2.3rem;
+}
+
+.premium-recommendation-progress > span {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.72rem;
+}
+
+.premium-dashboard .premium-recommendation-progress > strong,
+.premium-dashboard .premium-recommendation-progress > span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.premium-recommendation-progress .premium-progress-track {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.premium-recommendation-progress .premium-progress-track span {
+  background: #dcead3;
+}
+
+.premium-recommendation-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.premium-recommendation-grid article:last-child {
+  grid-column: span 1;
+}
+
+.premium-recommendation-grid strong {
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+}
+
+.premium-skeleton-card,
+.premium-skeleton-panel {
+  pointer-events: none;
+}
+
+.skeleton {
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e8eee5;
+}
+
+.skeleton::after {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  content: "";
+  transform: translateX(-100%);
+  animation: premium-shimmer 1.35s infinite;
+}
+
+.skeleton--icon { width: 3rem; height: 3rem; }
+.skeleton--short { width: 65%; height: 0.7rem; }
+.skeleton--value { width: 45%; height: 1.8rem; }
+.skeleton--line { grid-column: 1 / -1; width: 80%; height: 0.6rem; }
+.skeleton--heading { width: 10rem; height: 1.6rem; margin-bottom: 1.1rem; }
+.skeleton--task { width: 100%; height: 5.6rem; margin-top: 0.65rem; }
+.skeleton--illustration { width: 100%; height: 16rem; margin-top: 1rem; }
+
+.section-highlight {
+  animation: premium-highlight 1.8s ease both;
+}
+
+@keyframes premium-float {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-4deg); }
+  50% { transform: translate(-50%, calc(-50% - 8px)) rotate(2deg); }
+}
+
+@keyframes premium-count-in {
+  from { opacity: 0; transform: translateY(9px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes premium-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes premium-shimmer {
+  to { transform: translateX(100%); }
+}
+
+@keyframes premium-highlight {
+  0%, 100% { box-shadow: var(--shadow-sm); }
+  25%, 70% { box-shadow: 0 0 0 4px rgba(111, 157, 88, 0.24), 0 18px 42px rgba(30, 67, 7, 0.14); }
+}
+
+@media (max-width: 1180px) {
+  .premium-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .premium-course-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .premium-recommendation-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .premium-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .premium-hero__visual {
+    display: none;
+  }
+
+  .premium-content-grid,
+  .premium-grades-layout,
+  .premium-recommendation-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .premium-focus-card {
+    align-items: stretch;
+  }
+
+  .premium-focus-card .premium-eyebrow,
+  .premium-focus-card h2,
+  .premium-focus-card > p {
+    align-self: center;
+  }
+
+  .premium-recommendation-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .premium-dashboard {
+    padding: 0.75rem;
+  }
+
+  .premium-hero {
+    min-height: 15rem;
+    padding: 1.25rem;
+    border-radius: 18px;
+  }
+
+  .premium-hero h1 {
+    font-size: 2rem;
+  }
+
+  .premium-identity {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .premium-identity span {
+    width: fit-content;
+  }
+
+  .premium-section-heading,
+  .premium-panel__header,
+  .premium-task__topline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .premium-section-heading > p {
+    display: none;
+  }
+
+  .premium-summary-grid,
+  .premium-course-grid,
+  .premium-grade-stats,
+  .premium-recommendation-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .premium-summary-card {
+    min-height: 8.2rem;
+  }
+
+  .premium-panel {
+    padding: 1rem;
+    border-radius: 17px;
+  }
+
+  .premium-text-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .premium-task {
+    grid-template-columns: 2.45rem minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .premium-task__rail > span {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+  }
+
+  .premium-task__chips span:not(:last-child)::after {
+    display: none;
+  }
+
+  .premium-task__progress {
+    grid-template-columns: minmax(4rem, 1fr) auto;
+  }
+
+  .premium-empty-state {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+
+  .premium-empty-state__art {
+    width: 5.5rem;
+    height: 5.5rem;
+    margin: 0 auto;
+    font-size: 1.9rem;
+  }
+
+  .premium-empty-state .premium-eyebrow {
+    justify-content: center;
+  }
+
+  .premium-results-list article {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .premium-results-list article > strong {
+    grid-column: 2;
+  }
+}
+
+/* Focused Recent Results — isolated from the recommendation view. */
+.premium-dashboard .premium-grades-panel {
+  width: min(100%, 88rem);
+  min-height: auto;
+  margin: 0 auto;
+  padding: clamp(2rem, 4vw, 3rem);
+  overflow: hidden;
+  border: 1px solid rgba(79, 125, 58, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 96% 2%, rgba(220, 234, 211, 0.72), transparent 22rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 244, 0.96));
+  box-shadow: 0 24px 60px rgba(30, 67, 7, 0.11);
+  animation: grades-fade-up 420ms ease both;
+}
+
+.grades-premium-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid rgba(79, 125, 58, 0.13);
+}
+
+.grades-premium-header__copy {
+  max-width: 44rem;
+}
+
+.premium-dashboard .grades-premium-header h1 {
+  margin: 0.45rem 0 0.55rem;
+  color: #17350a;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.premium-dashboard .grades-premium-header p {
+  max-width: 42rem;
+  color: #667661;
+  font-size: clamp(0.9rem, 1.4vw, 1rem);
+  line-height: 1.7;
+}
+
+.grades-back-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  color: #365f25;
+  border: 1px solid rgba(79, 125, 58, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 5px 14px rgba(30, 67, 7, 0.05);
+  font-size: 0.78rem;
+  font-weight: 780;
+  backdrop-filter: blur(12px);
+  transition: gap 180ms ease, color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.grades-back-button:hover {
+  gap: 0.85rem;
+  color: #fff;
+  background: #1e4307;
+  box-shadow: 0 10px 24px rgba(30, 67, 7, 0.17);
+  transform: translateY(-2px);
+}
+
+.grades-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.grades-stat-card {
+  --grade-stat-accent: #4f7d3a;
+  --grade-stat-wash: #eef5e9;
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: flex-start;
+  min-height: 9.4rem;
+  padding: 1.2rem;
+  overflow: hidden;
+  border: 1px solid rgba(79, 125, 58, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 24px rgba(30, 67, 7, 0.06);
+  backdrop-filter: blur(10px);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.grades-stat-card::after {
+  position: absolute;
+  right: -2rem;
+  bottom: -2.8rem;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  background: var(--grade-stat-wash);
+  content: "";
+  opacity: 0.72;
+}
+
+.grades-stat-card:hover {
+  border-color: rgba(79, 125, 58, 0.3);
+  box-shadow: 0 16px 32px rgba(30, 67, 7, 0.1);
+  transform: translateY(-4px);
+}
+
+.grades-stat-card--forest { --grade-stat-accent: #1e4307; --grade-stat-wash: #dcead3; }
+.grades-stat-card--sage { --grade-stat-accent: #6f9d58; --grade-stat-wash: #e7f1e1; }
+.grades-stat-card--gold { --grade-stat-accent: #9b741f; --grade-stat-wash: #f8ebc9; }
+.grades-stat-card--teal { --grade-stat-accent: #3f7768; --grade-stat-wash: #dcefe8; }
+
+.grades-stat-card__icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  color: var(--grade-stat-accent);
+  border-radius: 14px;
+  background: var(--grade-stat-wash);
+  font-size: 1.08rem;
+}
+
+.grades-stat-card > div {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.grades-stat-card > div > span {
+  display: block;
+  color: #6e7c69;
+  font-size: 0.69rem;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.grades-stat-card strong {
+  display: block;
+  margin-top: 0.28rem;
+  color: #18320d;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 820;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.grades-stat-card small {
+  display: block;
+  margin-top: 0.55rem;
+  color: #7b8877;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
+.grades-stat-card--skeleton {
+  align-items: center;
+  pointer-events: none;
+}
+
+.grades-stat-card--skeleton > div {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.grades-content-skeleton {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 1.3fr);
+  gap: 2rem;
+  align-items: center;
+  min-height: 22rem;
+  padding: 2rem;
+  border: 1px solid #e1ebdc;
+  border-radius: 20px;
+  background: rgba(249, 252, 247, 0.86);
+}
+
+.grades-content-skeleton__visual {
+  width: 100%;
+  height: 16rem;
+}
+
+.grades-content-skeleton > div {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.grades-content-skeleton__button {
+  width: 9rem;
+  height: 2.7rem;
+  margin-top: 0.6rem;
+}
+
+.grades-results-dashboard {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.62fr) minmax(0, 1.38fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.grades-performance-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 23rem;
+  padding: clamp(1.5rem, 3vw, 2.2rem);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 90% 8%, rgba(220, 234, 211, 0.22), transparent 12rem),
+    linear-gradient(145deg, #173806, #4f7d3a);
+  box-shadow: 0 18px 40px rgba(30, 67, 7, 0.19);
+}
+
+.grades-performance-card__eyebrow {
+  color: #dcefd2;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.grades-performance-card > strong {
+  margin-top: 0.5rem;
+  color: #fff;
+  font-size: clamp(3rem, 6vw, 4.5rem);
+  font-weight: 850;
+  letter-spacing: -0.065em;
+  line-height: 1;
+}
+
+.premium-dashboard .grades-performance-card > p {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+  color: #e3f0dc;
+  font-size: 0.8rem;
+}
+
+.grades-performance-card__track {
+  height: 0.55rem;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.grades-performance-card__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #dcead3;
+  transition: width 600ms ease;
+}
+
+.grades-performance-card > small {
+  margin-top: 0.65rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.65rem;
+}
+
+.grades-results-feed {
+  min-width: 0;
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border: 1px solid #e0eadb;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 24px rgba(30, 67, 7, 0.05);
+}
+
+.grades-results-feed__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.grades-results-feed__heading h2 {
+  margin-top: 0.2rem;
+  color: #18320d;
+  font-size: 1.25rem;
+}
+
+.grades-result-count {
+  padding: 0.45rem 0.65rem;
+  color: #416d30;
+  border-radius: 999px;
+  background: #e7f1e1;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.grades-premium-empty {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+  min-height: 26rem;
+  padding: clamp(2rem, 5vw, 3.5rem);
+  overflow: hidden;
+  border: 1px solid rgba(79, 125, 58, 0.18);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 14% 50%, rgba(220, 234, 211, 0.75), transparent 18rem),
+    linear-gradient(135deg, rgba(247, 251, 244, 0.98), rgba(255, 255, 255, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 14px 34px rgba(30, 67, 7, 0.07);
+}
+
+.grades-premium-empty__visual {
+  position: relative;
+  display: grid;
+  min-height: 16rem;
+  place-items: center;
+}
+
+.grades-visual-orbit {
+  position: absolute;
+  width: 15rem;
+  height: 15rem;
+  border: 1px dashed rgba(79, 125, 58, 0.28);
+  border-radius: 50%;
+}
+
+.grades-visual-orbit::before,
+.grades-visual-orbit::after {
+  position: absolute;
+  border-radius: 50%;
+  background: #6f9d58;
+  box-shadow: 0 0 0 6px rgba(111, 157, 88, 0.13);
+  content: "";
+}
+
+.grades-visual-orbit::before {
+  top: 1.5rem;
+  left: 1rem;
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.grades-visual-orbit::after {
+  right: 1rem;
+  bottom: 2rem;
+  width: 0.45rem;
+  height: 0.45rem;
+}
+
+.grades-visual-sheet {
+  z-index: 1;
+  display: grid;
+  width: 9.5rem;
+  min-height: 11rem;
+  place-items: center;
+  padding: 1.25rem;
+  color: #1e4307;
+  border: 1px solid rgba(79, 125, 58, 0.17);
+  border-radius: 24px 24px 24px 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 22px 45px rgba(30, 67, 7, 0.16);
+  font-size: 2.6rem;
+  transform: rotate(-3deg);
+}
+
+.grades-visual-sheet > span {
+  display: flex;
+  gap: 0.35rem;
+  align-items: flex-end;
+  width: 100%;
+  height: 2.8rem;
+}
+
+.grades-visual-sheet b {
+  flex: 1;
+  border-radius: 4px 4px 2px 2px;
+  background: #dcead3;
+}
+
+.grades-visual-sheet b:nth-child(1) { height: 42%; }
+.grades-visual-sheet b:nth-child(2) { height: 70%; background: #6f9d58; }
+.grades-visual-sheet b:nth-child(3) { height: 100%; background: #1e4307; }
+
+.grades-visual-badge {
+  position: absolute;
+  z-index: 2;
+  top: 1.2rem;
+  right: calc(50% - 6.8rem);
+  display: grid;
+  width: 3.1rem;
+  height: 3.1rem;
+  place-items: center;
+  color: #fff;
+  border: 5px solid #f5faf2;
+  border-radius: 50%;
+  background: #4f7d3a;
+  box-shadow: 0 10px 22px rgba(30, 67, 7, 0.2);
+  animation: premium-float 4.8s ease-in-out infinite;
+}
+
+.grades-premium-empty__copy {
+  position: relative;
+  z-index: 1;
+  max-width: 38rem;
+}
+
+.premium-dashboard .grades-premium-empty__copy h2 {
+  margin: 0.55rem 0 0.75rem;
+  color: #18320d;
+  font-size: clamp(1.8rem, 3.4vw, 2.7rem);
+  font-weight: 820;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.premium-dashboard .grades-premium-empty__copy > p {
+  color: #657361;
+  font-size: clamp(0.88rem, 1.5vw, 1rem);
+  line-height: 1.72;
+}
+
+.grades-empty-guidance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin: 1.15rem 0 1.35rem;
+}
+
+.grades-empty-guidance span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #4c6144;
+  font-size: 0.7rem;
+  font-weight: 680;
+}
+
+.grades-empty-guidance i {
+  color: #6f9d58;
+}
+
+.grades-primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 3rem;
+  padding: 0.75rem 1.15rem;
+  color: #fff;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1e4307, #4f7d3a);
+  box-shadow: 0 10px 24px rgba(30, 67, 7, 0.2);
+  font-size: 0.8rem;
+  font-weight: 800;
+  transition: gap 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.grades-primary-button:hover {
+  gap: 0.85rem;
+  box-shadow: 0 14px 30px rgba(30, 67, 7, 0.25);
+  transform: translateY(-2px);
+}
+
+@keyframes grades-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1100px) {
+  .grades-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grades-results-dashboard,
+  .grades-premium-empty {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .grades-performance-card {
+    min-height: 17rem;
+  }
+
+  .grades-premium-empty__visual {
+    min-height: 14rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .premium-dashboard .premium-grades-panel {
+    padding: 1.25rem;
+  }
+
+  .grades-premium-header {
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .grades-back-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .grades-stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .grades-stat-card {
+    min-height: 7.7rem;
+  }
+
+  .grades-content-skeleton {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: auto;
+    padding: 1.25rem;
+  }
+
+  .grades-content-skeleton__visual {
+    height: 10rem;
+  }
+
+  .grades-premium-empty {
+    gap: 1rem;
+    min-height: auto;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .grades-premium-empty__visual {
+    min-height: 12rem;
+    transform: scale(0.86);
+  }
+
+  .grades-premium-empty__copy .premium-eyebrow,
+  .grades-empty-guidance {
+    justify-content: center;
+  }
+
+  .grades-primary-button {
+    width: 100%;
+  }
+
+  .grades-results-feed__heading {
+    align-items: flex-start;
+  }
+}
+
+/* Focused Personalized Pathway — isolated from the grades view. */
+.premium-dashboard .premium-pathway-panel {
+  width: min(100%, 88rem);
+  min-height: auto;
+  margin: 0 auto;
+  padding: clamp(2rem, 4vw, 3rem);
+  overflow: hidden;
+  border: 1px solid rgba(79, 125, 58, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 95% 0%, rgba(220, 234, 211, 0.72), transparent 24rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 244, 0.96));
+  box-shadow: 0 24px 60px rgba(30, 67, 7, 0.11);
+  animation: grades-fade-up 420ms ease both;
+}
+
+.pathway-premium-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid rgba(79, 125, 58, 0.13);
+}
+
+.pathway-premium-header__copy {
+  max-width: 46rem;
+}
+
+.premium-dashboard .pathway-premium-header h1 {
+  margin: 0.45rem 0 0.55rem;
+  color: #17350a;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.premium-dashboard .pathway-premium-header p {
+  max-width: 43rem;
+  color: #667661;
+  font-size: clamp(0.9rem, 1.4vw, 1rem);
+  line-height: 1.7;
+}
+
+.pathway-back-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  color: #365f25;
+  border: 1px solid rgba(79, 125, 58, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 5px 14px rgba(30, 67, 7, 0.05);
+  font-size: 0.78rem;
+  font-weight: 780;
+  backdrop-filter: blur(12px);
+  transition: gap 180ms ease, color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.pathway-back-button:hover {
+  gap: 0.85rem;
+  color: #fff;
+  background: #1e4307;
+  box-shadow: 0 10px 24px rgba(30, 67, 7, 0.17);
+  transform: translateY(-2px);
+}
+
+.pathway-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.55fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+  min-height: 28rem;
+  padding: clamp(2rem, 5vw, 3.5rem);
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(220, 234, 211, 0.24), transparent 19rem),
+    radial-gradient(circle at 5% 95%, rgba(111, 157, 88, 0.2), transparent 18rem),
+    linear-gradient(135deg, #153704 0%, #1e4307 48%, #4f7d3a 100%);
+  box-shadow: 0 20px 46px rgba(30, 67, 7, 0.2);
+}
+
+.pathway-hero::before {
+  position: absolute;
+  top: -8rem;
+  right: -5rem;
+  width: 25rem;
+  height: 25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  content: "";
+}
+
+.pathway-hero__copy {
+  position: relative;
+  z-index: 1;
+  max-width: 48rem;
+}
+
+.pathway-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.68rem;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.11);
+  font-size: 0.7rem;
+  font-weight: 800;
+  backdrop-filter: blur(10px);
+}
+
+.pathway-status--ready {
+  color: #1e4307;
+  background: #dcead3;
+}
+
+.premium-dashboard .pathway-hero__copy h2 {
+  max-width: 42rem;
+  margin-top: 1rem;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  font-size: clamp(2rem, 4.2vw, 3.25rem);
+  font-weight: 820;
+  letter-spacing: -0.05em;
+  line-height: 1.08;
+}
+
+.premium-dashboard .pathway-hero__copy > p {
+  max-width: 39rem;
+  margin-top: 0.8rem;
+  color: #e4efde !important;
+  -webkit-text-fill-color: #e4efde !important;
+  font-size: clamp(0.9rem, 1.5vw, 1rem);
+  line-height: 1.7;
+}
+
+.pathway-milestone {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  max-width: 42rem;
+  margin-top: 1.4rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.pathway-milestone__icon {
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  place-items: center;
+  color: #1e4307;
+  border-radius: 11px;
+  background: #dcead3;
+}
+
+.pathway-milestone strong {
+  color: #fff;
+  font-size: 0.82rem;
+}
+
+.premium-dashboard .pathway-milestone p {
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.72) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.pathway-primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 3rem;
+  margin-top: 1.25rem;
+  padding: 0.75rem 1.15rem;
+  color: #1e4307;
+  border-radius: 12px;
+  background: #dcead3;
+  box-shadow: 0 12px 26px rgba(7, 30, 1, 0.22);
+  font-size: 0.78rem;
+  font-weight: 820;
+  transition: gap 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.pathway-primary-button:hover {
+  gap: 0.85rem;
+  background: #fff;
+  box-shadow: 0 16px 32px rgba(7, 30, 1, 0.27);
+  transform: translateY(-2px);
+}
+
+.pathway-progress-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+}
+
+.pathway-progress-card__label {
+  color: #dcefd2;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.pathway-progress-ring {
+  display: grid;
+  width: 11rem;
+  height: 11rem;
+  margin: 1.1rem 0;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(#dcead3 var(--pathway-progress), rgba(255, 255, 255, 0.14) 0deg);
+  box-shadow: 0 14px 30px rgba(8, 32, 2, 0.2);
+}
+
+.pathway-progress-ring::before {
+  grid-area: 1 / 1;
+  width: 8.4rem;
+  height: 8.4rem;
+  border-radius: 50%;
+  background: rgba(24, 60, 8, 0.93);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  content: "";
+}
+
+.pathway-progress-ring > div {
+  z-index: 1;
+  display: grid;
+  grid-area: 1 / 1;
+}
+
+.pathway-progress-ring strong {
+  color: #fff;
+  font-size: 2.25rem;
+  letter-spacing: -0.055em;
+}
+
+.pathway-progress-ring span {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.pathway-progress-card__strand {
+  max-width: 100%;
+  color: #fff;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.premium-dashboard .pathway-progress-card > p {
+  margin-top: 0.35rem;
+  color: rgba(255, 255, 255, 0.68) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.68) !important;
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
+
+.premium-dashboard .premium-pathway-panel .pathway-status,
+.premium-dashboard .premium-pathway-panel .pathway-status i,
+.premium-dashboard .premium-pathway-panel .pathway-milestone strong,
+.premium-dashboard .premium-pathway-panel .pathway-progress-card__label,
+.premium-dashboard .premium-pathway-panel .pathway-progress-ring strong,
+.premium-dashboard .premium-pathway-panel .pathway-progress-ring span,
+.premium-dashboard .premium-pathway-panel .pathway-progress-card__strand,
+.premium-dashboard .premium-pathway-panel .pathway-progress-card > p {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.pathway-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.pathway-stat-card {
+  --path-stat-accent: #4f7d3a;
+  --path-stat-wash: #e7f1e1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  min-height: 9.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(79, 125, 58, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 22px rgba(30, 67, 7, 0.055);
+  backdrop-filter: blur(10px);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.pathway-stat-card:hover {
+  border-color: rgba(79, 125, 58, 0.3);
+  box-shadow: 0 15px 30px rgba(30, 67, 7, 0.1);
+  transform: translateY(-4px);
+}
+
+.pathway-stat-card--forest { --path-stat-accent: #1e4307; --path-stat-wash: #dcead3; }
+.pathway-stat-card--sage { --path-stat-accent: #6f9d58; --path-stat-wash: #e7f1e1; }
+.pathway-stat-card--teal { --path-stat-accent: #3f7768; --path-stat-wash: #dcefe8; }
+.pathway-stat-card--success { --path-stat-accent: #40823b; --path-stat-wash: #e1f1dd; }
+.pathway-stat-card--blue { --path-stat-accent: #52758c; --path-stat-wash: #e4eef3; }
+.pathway-stat-card--gold { --path-stat-accent: #967019; --path-stat-wash: #f7eac8; }
+
+.pathway-stat-card__icon {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  place-items: center;
+  color: var(--path-stat-accent);
+  border-radius: 12px;
+  background: var(--path-stat-wash);
+  font-size: 0.95rem;
+}
+
+.pathway-stat-card > div {
+  min-width: 0;
+}
+
+.pathway-stat-card > div > span {
+  display: block;
+  color: #71806c;
+  font-size: 0.62rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.pathway-stat-card strong {
+  display: block;
+  margin-top: 0.3rem;
+  overflow: hidden;
+  color: #18320d;
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  font-weight: 820;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.pathway-stat-card small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #7f8b7b;
+  font-size: 0.57rem;
+  line-height: 1.4;
+}
+
+.pathway-stat-card--skeleton {
+  pointer-events: none;
+}
+
+.pathway-stat-card--skeleton > div {
+  display: grid;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.pathway-loading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 13rem;
+  gap: 2rem;
+  align-items: center;
+  min-height: 25rem;
+  padding: 2.5rem;
+  border: 1px solid #e1ebdc;
+  border-radius: 20px;
+  background: #f8fbf6;
+}
+
+.pathway-loading > div {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.pathway-loading__ring {
+  width: 12rem;
+  height: 12rem;
+  border-radius: 50%;
+}
+
+@media (max-width: 1180px) {
+  .pathway-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .pathway-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pathway-progress-card {
+    max-width: 28rem;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .premium-dashboard .premium-pathway-panel {
+    padding: 1.25rem;
+  }
+
+  .pathway-premium-header {
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .pathway-back-button,
+  .pathway-primary-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pathway-hero {
+    gap: 1.5rem;
+    min-height: auto;
+    padding: 1.5rem;
+  }
+
+  .pathway-milestone {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pathway-stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pathway-stat-card {
+    min-height: 7.6rem;
+  }
+
+  .pathway-loading {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: auto;
+    padding: 1.5rem;
+  }
+
+  .pathway-loading__ring {
+    width: 9rem;
+    height: 9rem;
+    margin: 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-dashboard *,
+  .premium-dashboard *::before,
+  .premium-dashboard *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
