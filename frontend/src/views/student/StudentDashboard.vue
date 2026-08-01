@@ -104,7 +104,9 @@
             </div>
             <div v-else class="premium-empty-state">
               <div class="premium-empty-state__art" aria-hidden="true">
-                <span class="empty-check"><i class="fas fa-check"></i></span>
+                <span class="empty-check" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;">
+                  <i class="fas fa-check" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;"></i>
+                </span>
                 <i class="fas fa-clipboard-list"></i>
               </div>
               <div>
@@ -2939,6 +2941,12 @@ export default {
   transition: gap 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
+.premium-button:not(.premium-button--soft),
+.premium-button:not(.premium-button--soft) i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 .premium-button:hover {
   gap: 0.7rem;
   background: #2b5c10;
@@ -3016,7 +3024,8 @@ export default {
   align-items: center;
   gap: 0.3rem;
   padding: 0.33rem 0.5rem;
-  color: var(--white);
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
   background: rgba(16, 43, 7, 0.2);
@@ -3025,7 +3034,14 @@ export default {
 }
 
 .premium-course-card__status i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   font-size: 0.35rem;
+}
+
+.premium-course-card__status i::before {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .premium-course-card__body {
@@ -3135,9 +3151,19 @@ export default {
   transition: color 180ms ease, background 180ms ease;
 }
 
-.premium-course-card__actions a:hover {
-  color: var(--white);
+.premium-course-card__actions a:hover,
+.premium-course-card__actions a:focus-visible {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
   background: var(--forest);
+}
+
+.premium-course-card__actions a:hover i,
+.premium-course-card__actions a:hover i::before,
+.premium-course-card__actions a:focus-visible i,
+.premium-course-card__actions a:focus-visible i::before {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .premium-empty-state {
@@ -3180,6 +3206,12 @@ export default {
   border-radius: 50%;
   background: var(--forest);
   font-size: 0.65rem;
+}
+
+.empty-check i,
+.empty-check i::before {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .premium-empty-state h3 {
@@ -3658,7 +3690,7 @@ export default {
   width: min(100%, 88rem);
   min-height: auto;
   margin: 0 auto;
-  padding: clamp(2rem, 4vw, 3rem);
+  padding: clamp(1.25rem, 2.2vw, 1.75rem);
   overflow: hidden;
   border: 1px solid rgba(79, 125, 58, 0.16);
   border-radius: 20px;
@@ -3673,9 +3705,9 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.6rem;
+  gap: 1.5rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid rgba(79, 125, 58, 0.13);
 }
 
@@ -3684,9 +3716,9 @@ export default {
 }
 
 .premium-dashboard .grades-premium-header h1 {
-  margin: 0.45rem 0 0.55rem;
+  margin: 0.3rem 0 0.35rem;
   color: #17350a;
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: 1.08;
@@ -3696,7 +3728,7 @@ export default {
   max-width: 42rem;
   color: #667661;
   font-size: clamp(0.9rem, 1.4vw, 1rem);
-  line-height: 1.7;
+  line-height: 1.5;
 }
 
 .grades-back-button {
@@ -3728,8 +3760,8 @@ export default {
 .grades-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
 }
 
 .grades-stat-card {
@@ -3738,10 +3770,10 @@ export default {
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.85rem;
+  gap: 0.7rem;
   align-items: flex-start;
-  min-height: 9.4rem;
-  padding: 1.2rem;
+  min-height: 7rem;
+  padding: 1rem;
   overflow: hidden;
   border: 1px solid rgba(79, 125, 58, 0.14);
   border-radius: 18px;
@@ -3776,8 +3808,8 @@ export default {
 
 .grades-stat-card__icon {
   display: grid;
-  width: 3rem;
-  height: 3rem;
+  width: 2.7rem;
+  height: 2.7rem;
   place-items: center;
   color: var(--grade-stat-accent);
   border-radius: 14px;
@@ -3811,7 +3843,7 @@ export default {
 
 .grades-stat-card small {
   display: block;
-  margin-top: 0.55rem;
+  margin-top: 0.35rem;
   color: #7b8877;
   font-size: 0.62rem;
   line-height: 1.4;
@@ -3879,7 +3911,7 @@ export default {
 }
 
 .grades-performance-card__eyebrow {
-  color: #dcefd2;
+  color: #ffffff;
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -3900,7 +3932,7 @@ export default {
   align-items: center;
   gap: 0.45rem;
   margin-top: 0.8rem;
-  color: #e3f0dc;
+  color: #ffffff;
   font-size: 0.8rem;
 }
 
@@ -3922,8 +3954,17 @@ export default {
 
 .grades-performance-card > small {
   margin-top: 0.65rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
   font-size: 0.65rem;
+}
+
+.grades-performance-card > p i {
+  color: #ffffff;
+}
+
+.premium-dashboard .grades-performance-card :is(span, strong, p, small, i) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .grades-results-feed {
@@ -3962,10 +4003,10 @@ export default {
   position: relative;
   display: grid;
   grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr);
-  gap: clamp(2rem, 5vw, 4rem);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
   align-items: center;
-  min-height: 26rem;
-  padding: clamp(2rem, 5vw, 3.5rem);
+  min-height: 17.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
   overflow: hidden;
   border: 1px solid rgba(79, 125, 58, 0.18);
   border-radius: 20px;
@@ -3978,14 +4019,14 @@ export default {
 .grades-premium-empty__visual {
   position: relative;
   display: grid;
-  min-height: 16rem;
+  min-height: 12rem;
   place-items: center;
 }
 
 .grades-visual-orbit {
   position: absolute;
-  width: 15rem;
-  height: 15rem;
+  width: 11.5rem;
+  height: 11.5rem;
   border: 1px dashed rgba(79, 125, 58, 0.28);
   border-radius: 50%;
 }
@@ -4016,8 +4057,8 @@ export default {
 .grades-visual-sheet {
   z-index: 1;
   display: grid;
-  width: 9.5rem;
-  min-height: 11rem;
+  width: 7.5rem;
+  min-height: 8.8rem;
   place-items: center;
   padding: 1.25rem;
   color: #1e4307;
@@ -4025,7 +4066,7 @@ export default {
   border-radius: 24px 24px 24px 8px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 22px 45px rgba(30, 67, 7, 0.16);
-  font-size: 2.6rem;
+  font-size: 2rem;
   transform: rotate(-3deg);
 }
 
@@ -4050,11 +4091,11 @@ export default {
 .grades-visual-badge {
   position: absolute;
   z-index: 2;
-  top: 1.2rem;
-  right: calc(50% - 6.8rem);
+  top: 0.75rem;
+  right: calc(50% - 5.5rem);
   display: grid;
-  width: 3.1rem;
-  height: 3.1rem;
+  width: 2.6rem;
+  height: 2.6rem;
   place-items: center;
   color: #fff;
   border: 5px solid #f5faf2;
@@ -4064,6 +4105,11 @@ export default {
   animation: premium-float 4.8s ease-in-out infinite;
 }
 
+.grades-visual-badge i {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
 .grades-premium-empty__copy {
   position: relative;
   z-index: 1;
@@ -4071,9 +4117,9 @@ export default {
 }
 
 .premium-dashboard .grades-premium-empty__copy h2 {
-  margin: 0.55rem 0 0.75rem;
+  margin: 0.35rem 0 0.5rem;
   color: #18320d;
-  font-size: clamp(1.8rem, 3.4vw, 2.7rem);
+  font-size: clamp(1.65rem, 2.8vw, 2.2rem);
   font-weight: 820;
   letter-spacing: -0.045em;
   line-height: 1.1;
@@ -4082,14 +4128,14 @@ export default {
 .premium-dashboard .grades-premium-empty__copy > p {
   color: #657361;
   font-size: clamp(0.88rem, 1.5vw, 1rem);
-  line-height: 1.72;
+  line-height: 1.55;
 }
 
 .grades-empty-guidance {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem 1rem;
-  margin: 1.15rem 0 1.35rem;
+  margin: 0.8rem 0 1rem;
 }
 
 .grades-empty-guidance span {
@@ -4112,13 +4158,20 @@ export default {
   gap: 0.65rem;
   min-height: 3rem;
   padding: 0.75rem 1.15rem;
-  color: #fff;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
   border-radius: 12px;
   background: linear-gradient(135deg, #1e4307, #4f7d3a);
   box-shadow: 0 10px 24px rgba(30, 67, 7, 0.2);
   font-size: 0.8rem;
   font-weight: 800;
   transition: gap 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.grades-primary-button span,
+.grades-primary-button i {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
 }
 
 .grades-primary-button:hover {
@@ -4216,7 +4269,7 @@ export default {
   width: min(100%, 88rem);
   min-height: auto;
   margin: 0 auto;
-  padding: clamp(2rem, 4vw, 3rem);
+  padding: clamp(1.25rem, 2.2vw, 1.75rem);
   overflow: hidden;
   border: 1px solid rgba(79, 125, 58, 0.16);
   border-radius: 20px;
@@ -4231,9 +4284,9 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.6rem;
+  gap: 1.5rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid rgba(79, 125, 58, 0.13);
 }
 
@@ -4242,9 +4295,9 @@ export default {
 }
 
 .premium-dashboard .pathway-premium-header h1 {
-  margin: 0.45rem 0 0.55rem;
+  margin: 0.3rem 0 0.35rem;
   color: #17350a;
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: 1.08;
@@ -4254,7 +4307,7 @@ export default {
   max-width: 43rem;
   color: #667661;
   font-size: clamp(0.9rem, 1.4vw, 1rem);
-  line-height: 1.7;
+  line-height: 1.5;
 }
 
 .pathway-back-button {
@@ -4287,10 +4340,10 @@ export default {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.55fr);
-  gap: clamp(2rem, 5vw, 4rem);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
   align-items: center;
-  min-height: 28rem;
-  padding: clamp(2rem, 5vw, 3.5rem);
+  min-height: 19rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
   overflow: hidden;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -4340,10 +4393,10 @@ export default {
 
 .premium-dashboard .pathway-hero__copy h2 {
   max-width: 42rem;
-  margin-top: 1rem;
+  margin-top: 0.65rem;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
-  font-size: clamp(2rem, 4.2vw, 3.25rem);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 820;
   letter-spacing: -0.05em;
   line-height: 1.08;
@@ -4351,20 +4404,20 @@ export default {
 
 .premium-dashboard .pathway-hero__copy > p {
   max-width: 39rem;
-  margin-top: 0.8rem;
+  margin-top: 0.5rem;
   color: #e4efde !important;
   -webkit-text-fill-color: #e4efde !important;
   font-size: clamp(0.9rem, 1.5vw, 1rem);
-  line-height: 1.7;
+  line-height: 1.5;
 }
 
 .pathway-milestone {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.85rem;
+  gap: 0.7rem;
   max-width: 42rem;
-  margin-top: 1.4rem;
-  padding: 1rem;
+  margin-top: 0.8rem;
+  padding: 0.8rem;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.08);
@@ -4373,8 +4426,8 @@ export default {
 
 .pathway-milestone__icon {
   display: grid;
-  width: 2.7rem;
-  height: 2.7rem;
+  width: 2.4rem;
+  height: 2.4rem;
   place-items: center;
   color: #1e4307;
   border-radius: 11px;
@@ -4399,9 +4452,9 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
-  min-height: 3rem;
-  margin-top: 1.25rem;
-  padding: 0.75rem 1.15rem;
+  min-height: 2.75rem;
+  margin-top: 0.8rem;
+  padding: 0.65rem 1.05rem;
   color: #1e4307;
   border-radius: 12px;
   background: #dcead3;
@@ -4424,7 +4477,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1.5rem;
+  padding: 1rem;
   text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.17);
   border-radius: 20px;
@@ -4443,9 +4496,9 @@ export default {
 
 .pathway-progress-ring {
   display: grid;
-  width: 11rem;
-  height: 11rem;
-  margin: 1.1rem 0;
+  width: 8rem;
+  height: 8rem;
+  margin: 0.7rem 0;
   place-items: center;
   border-radius: 50%;
   background: conic-gradient(#dcead3 var(--pathway-progress), rgba(255, 255, 255, 0.14) 0deg);
@@ -4454,8 +4507,8 @@ export default {
 
 .pathway-progress-ring::before {
   grid-area: 1 / 1;
-  width: 8.4rem;
-  height: 8.4rem;
+  width: 6.1rem;
+  height: 6.1rem;
   border-radius: 50%;
   background: rgba(24, 60, 8, 0.93);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -4470,7 +4523,7 @@ export default {
 
 .pathway-progress-ring strong {
   color: #fff;
-  font-size: 2.25rem;
+  font-size: 1.8rem;
   letter-spacing: -0.055em;
 }
 
@@ -4510,8 +4563,8 @@ export default {
 .pathway-stat-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin-top: 1.25rem;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
 }
 
 .pathway-stat-card {
@@ -4520,8 +4573,8 @@ export default {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.7rem;
-  min-height: 9.5rem;
-  padding: 1rem;
+  min-height: 6.8rem;
+  padding: 0.8rem;
   border: 1px solid rgba(79, 125, 58, 0.14);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.86);
@@ -4545,8 +4598,8 @@ export default {
 
 .pathway-stat-card__icon {
   display: grid;
-  width: 2.65rem;
-  height: 2.65rem;
+  width: 2.4rem;
+  height: 2.4rem;
   place-items: center;
   color: var(--path-stat-accent);
   border-radius: 12px;
@@ -4579,7 +4632,7 @@ export default {
 
 .pathway-stat-card small {
   display: block;
-  margin-top: 0.5rem;
+  margin-top: 0.3rem;
   color: #7f8b7b;
   font-size: 0.57rem;
   line-height: 1.4;

@@ -138,11 +138,11 @@
             </button>
             <button
               type="button"
-              class="header-tour-btn"
+              class="header-tour-btn help-tour-trigger"
               data-tour="help-button"
               @click="launchManualTour"
-              aria-label="Help and tour"
-              title="Help / Tour"
+              aria-label="Open student tour guide"
+              title="Open Tour Guide"
             >
               <i class="fas fa-question-circle"></i>
             </button>
@@ -352,23 +352,23 @@ export default {
       },
       {
         key: 'activities',
-        title: 'Activities Page',
-        description: 'Activities is where you find tasks and assessments assigned by your teacher and continue work that is already in progress.',
+        title: 'Choose Your Classwork',
+        description: 'Select an activity, quiz, or exam from the task list. The highlighted card shows which task you are currently reviewing.',
         selector: '[data-tour="student-activities-table"]',
         route: '/student/activities'
       },
       {
         key: 'activity-details',
-        title: 'Activity Details',
-        description: 'Open an activity to review its details, deadline, progress, and lesson connection before starting or continuing it.',
+        title: 'Review Before You Begin',
+        description: 'Check the instructions, deadline, timer, question count, and linked lesson here before starting your work.',
         selector: '[data-tour="student-activity-detail"]',
         route: '/student/activities',
         action: 'open-first-assessment'
       },
       {
         key: 'assessment-page',
-        title: 'Assessment or Challenge Page',
-        description: 'Start an activity here to answer questions and submit your work. Some assessments may use timers or full-screen mode to help you stay focused.',
+        title: 'Start a Secure Assessment',
+        description: 'Exams open in a focused one-question workspace with autosave, a timer, progress navigation, and academic-integrity monitoring. Stay on the exam screen until you submit.',
         selector: '[data-tour="student-activity-start"]',
         route: '/student/activities',
         action: 'open-first-assessment'
@@ -376,7 +376,7 @@ export default {
       {
         key: 'finish',
         title: 'You Are Ready to Begin',
-        description: 'Start exploring your lessons and completing activities. You can restart this tour anytime using the Help or Tour Guide button.',
+        description: 'Start exploring your lessons and classwork. You can reopen this updated guide anytime using the Tour Guide button in the header.',
         selector: '[data-tour="help-button"]',
         route: '/student/dashboard'
       }

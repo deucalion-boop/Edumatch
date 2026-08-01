@@ -3,10 +3,18 @@
     <section class="activity-response-shell" data-tour="student-activities-table">
       <div class="section-header response-header">
         <div class="response-header-copy">
-          <h2 class="section-title"><span class="highlight">Activities / Exams</span></h2>
+          <span class="page-kicker"><i class="fas fa-clipboard-check" aria-hidden="true"></i> Classwork</span>
+          <h2 class="section-title"><span class="highlight">Activities &amp; Exams</span></h2>
           <p class="section-subtitle">
-            Choose one task at a time, read the important details first, then submit your work or start the exam when you are ready.
+            Choose a task, review what you need, and complete it when you are ready.
           </p>
+        </div>
+        <div class="response-progress" aria-label="How to complete classwork">
+          <span class="is-current"><b>1</b> Choose</span>
+          <i class="fas fa-chevron-right" aria-hidden="true"></i>
+          <span><b>2</b> Review</span>
+          <i class="fas fa-chevron-right" aria-hidden="true"></i>
+          <span><b>3</b> Complete</span>
         </div>
       </div>
 
@@ -49,6 +57,7 @@
                 type="button"
                 class="activity-list-card"
                 :class="{ active: selectedAssessmentId === assessment.id }"
+                :aria-pressed="selectedAssessmentId === assessment.id"
                 @click="selectAssessment(assessment)"
               >
                 <div class="activity-list-top">
@@ -71,20 +80,20 @@
                     {{ getTeacherDisplayName(assessment) }}
                   </span>
                   <span>
-                    <i class="fas fa-layer-group" aria-hidden="true"></i>
-                    {{ getAssessmentSourceLabel(assessment) }}
-                  </span>
-                  <span>
                     <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                     {{ assessment.submissionDeadline ? formatDateTime(assessment.submissionDeadline) : 'No due date' }}
                   </span>
                 </div>
+                <span class="activity-card-arrow" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
               </button>
             </div>
           </aside>
 
           <section v-if="selectedAssessment" class="activity-workspace" data-tour="student-activity-detail">
             <article class="workspace-focus-card">
+              <span class="workspace-focus-icon" :class="getAssessmentTypeClass(selectedAssessment)" aria-hidden="true">
+                <i class="fas" :class="isClassroomTask(selectedAssessment) ? 'fa-pen-to-square' : 'fa-file-circle-check'"></i>
+              </span>
               <div class="workspace-focus-copy">
                 <span class="card-eyebrow">Current Task</span>
                 <h3>{{ selectedAssessment.title || 'Untitled Assessment' }}</h3>
@@ -368,80 +377,76 @@
               <header class="workspace-card-head">
                 <div>
                   <span class="card-eyebrow">Step 2</span>
-                  <h4>Review the assessment details</h4>
-                  <p class="exam-card-subtitle">Check the timer, instructions, and linked lesson before you start the exam.</p>
+                  <h4>Get ready for your assessment</h4>
+                  <p class="exam-card-subtitle">Read the instructions and make sure you have enough uninterrupted time before starting.</p>
                 </div>
-                <span class="answer-status-pill" :class="getAssessmentState(selectedAssessment).tone">
-                  {{ getAssessmentState(selectedAssessment).label }}
-                </span>
               </header>
 
-              <div class="brief-meta-grid">
-                <div class="brief-meta-item">
-                  <span>Difficulty</span>
-                  <strong>{{ formatLabel(selectedAssessment.difficulty || 'N/A') }}</strong>
-                </div>
-                <div class="brief-meta-item">
-                  <span>Items</span>
-                  <strong>{{ selectedAssessment.numberOfItems || 0 }}</strong>
-                </div>
-                <div class="brief-meta-item">
-                  <span>Deadline</span>
-                  <strong>{{ selectedAssessment.submissionDeadline ? formatDateTime(selectedAssessment.submissionDeadline) : 'No deadline' }}</strong>
-                  <small>{{ selectedAssessment.submissionDeadline ? getRemainingLabel(selectedAssessment.submissionDeadline) : 'Teacher did not set a deadline.' }}</small>
-                </div>
-                <div class="brief-meta-item">
-                  <span>Exam Timer</span>
-                  <strong>{{ selectedAssessment.examDurationMinutes || 30 }} minutes</strong>
-                  <small>{{ getAssessmentState(selectedAssessment).support }}</small>
-                </div>
-              </div>
+              <div class="exam-review-layout">
+                <div class="exam-review-content">
+                  <section class="brief-section exam-brief-section is-instructions">
+                    <div class="brief-section-title">
+                      <span class="brief-section-icon"><i class="fas fa-list-check"></i></span>
+                      <div>
+                        <h5>Instructions</h5>
+                        <span>Read these directions before you begin.</span>
+                      </div>
+                    </div>
+                    <p v-if="selectedAssessment.challengeDescription" class="instruction-copy">{{ selectedAssessment.challengeDescription }}</p>
+                    <p v-else class="empty-copy">No special instructions were provided. Answer every item carefully before submitting.</p>
+                  </section>
 
-              <section v-if="selectedAssessment.challengeDescription" class="brief-section">
-                <div class="brief-section-head">
-                  <h5>Assessment Instructions</h5>
-                  <span>Review the directions before you start.</span>
-                </div>
-                <p class="instruction-copy">{{ selectedAssessment.challengeDescription }}</p>
-              </section>
+                  <section class="brief-section exam-brief-section">
+                    <div class="brief-section-title">
+                      <span class="brief-section-icon is-resource"><i class="fas fa-book-open"></i></span>
+                      <div>
+                        <h5>Study resource</h5>
+                        <span>Review the linked lesson before starting, if one is available.</span>
+                      </div>
+                    </div>
 
-              <section class="brief-section">
-                <div class="brief-section-head">
-                  <h5>Linked Lesson</h5>
-                  <span>Open the lesson resource if you need to review first.</span>
+                    <div v-if="selectedAssessment.linkedLesson" class="material-list">
+                      <button type="button" class="material-card" @click="openMaterial(selectedAssessment.linkedLesson.pdfPath)">
+                        <span class="material-icon" aria-hidden="true"><i class="fas fa-file-pdf"></i></span>
+                        <span class="material-copy">
+                          <strong>{{ selectedAssessment.linkedLesson.title || selectedAssessment.lessonTitle || 'Lesson Material' }}</strong>
+                          <small>{{ selectedAssessment.linkedLesson.pdfOriginalName || 'Teacher lesson file' }}</small>
+                        </span>
+                        <span class="material-open"><i class="fas fa-arrow-up-right-from-square"></i></span>
+                      </button>
+                    </div>
+                    <div v-else class="resource-empty">
+                      <i class="fas fa-circle-check" aria-hidden="true"></i>
+                      <span>No lesson is linked. You can continue when ready.</span>
+                    </div>
+                  </section>
                 </div>
 
-                <div v-if="selectedAssessment.linkedLesson" class="material-list">
+                <aside class="exam-start-panel">
+                  <div class="exam-start-panel-head">
+                    <span class="card-eyebrow">At a glance</span>
+                    <span class="answer-status-pill" :class="getAssessmentState(selectedAssessment).tone">
+                      {{ getAssessmentState(selectedAssessment).label }}
+                    </span>
+                  </div>
+                  <div class="exam-stat-list">
+                    <div class="exam-stat"><i class="fas fa-clock" aria-hidden="true"></i><span>Time limit<small>Starts when you begin</small></span><strong>{{ selectedAssessment.examDurationMinutes || 30 }} min</strong></div>
+                    <div class="exam-stat"><i class="fas fa-list-ol" aria-hidden="true"></i><span>Questions</span><strong>{{ selectedAssessment.numberOfItems || 0 }}</strong></div>
+                    <div class="exam-stat"><i class="fas fa-signal" aria-hidden="true"></i><span>Difficulty</span><strong>{{ formatLabel(selectedAssessment.difficulty || 'N/A') }}</strong></div>
+                    <div class="exam-stat"><i class="fas fa-calendar-day" aria-hidden="true"></i><span>Due<small>{{ selectedAssessment.submissionDeadline ? getRemainingLabel(selectedAssessment.submissionDeadline) : 'No deadline set' }}</small></span><strong>{{ selectedAssessment.submissionDeadline ? formatDateTime(selectedAssessment.submissionDeadline) : 'Open' }}</strong></div>
+                  </div>
+                  <div class="exam-ready-note"><i class="fas fa-shield-halved" aria-hidden="true"></i><span>Once started, your timer will continue running.</span></div>
                   <button
                     type="button"
-                    class="material-card"
-                    @click="openMaterial(selectedAssessment.linkedLesson.pdfPath)"
+                    class="primary-btn exam-start-btn"
+                    data-tour="student-activity-start"
+                    :disabled="isAssessmentStartDisabled(selectedAssessment)"
+                    @click="openAssessmentExam(selectedAssessment)"
                   >
-                    <span class="material-icon" aria-hidden="true">
-                      <i class="fas fa-file-pdf"></i>
-                    </span>
-                    <span class="material-copy">
-                      <strong>{{ selectedAssessment.linkedLesson.title || selectedAssessment.lessonTitle || 'Lesson Material' }}</strong>
-                      <small>{{ selectedAssessment.linkedLesson.pdfOriginalName || 'Teacher lesson file' }}</small>
-                    </span>
-                    <span class="material-open">
-                      <i class="fas fa-arrow-up-right-from-square"></i>
-                    </span>
+                    <span>{{ getAssessmentActionLabel(selectedAssessment) }}</span>
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
                   </button>
-                </div>
-                <p v-else class="empty-copy">No lesson resource is linked to this assessment.</p>
-              </section>
-
-              <div class="exam-actions">
-                <button
-                  type="button"
-                  class="primary-btn"
-                  data-tour="student-activity-start"
-                  :disabled="isAssessmentStartDisabled(selectedAssessment)"
-                  @click="openAssessmentExam(selectedAssessment)"
-                >
-                  {{ getAssessmentActionLabel(selectedAssessment) }}
-                </button>
+                </aside>
               </div>
             </article>
           </section>
@@ -1276,15 +1281,72 @@ export default {
 
 .response-header {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
+  padding: 0.25rem 0.15rem 0.4rem;
 }
 
 .response-header-copy {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.2rem;
+}
+
+.page-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.response-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.response-progress span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.response-progress b {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.7rem;
+}
+
+.response-progress .is-current {
+  color: #1d4ed8;
+}
+
+.response-progress .is-current b {
+  background: #1e4307;
+  color: #fff;
+}
+
+.response-progress > i {
+  color: #cbd5e1;
+  font-size: 0.62rem;
 }
 
 .section-subtitle {
@@ -1346,12 +1408,12 @@ export default {
   min-height: 520px;
   border: 1px solid var(--workspace-border);
   border-radius: var(--workspace-radius);
-  background:#f8fafc;
+  background: linear-gradient(145deg, #f8fafc 0%, #f5f8fc 100%);
   box-shadow: var(--workspace-shadow);
   padding: 1rem;
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: 292px minmax(0, 1fr);
+  gap: 1.15rem;
 }
 
 .workspace-state {
@@ -1411,12 +1473,12 @@ export default {
 }
 
 .activity-sidebar {
-  width: 320px;
+  width: 292px;
   min-width: 0;
-  border-radius: 22px;
+  border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(255, 255, 255, 0.78);
-  padding: 0.95rem;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.95rem;
@@ -1456,9 +1518,9 @@ export default {
 }
 
 .activity-sidebar-count {
-  min-width: 38px;
-  height: 38px;
-  border-radius: 14px;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 11px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1476,11 +1538,12 @@ export default {
 }
 
 .activity-list-card {
+  position: relative;
   width: 100%;
   border: 1px solid rgba(191, 219, 254, 0.8);
   border-radius: 18px;
   background: #f8fbff;
-  padding: 0.85rem;
+  padding: 0.9rem 2.15rem 0.9rem 0.9rem;
   text-align: left;
   cursor: pointer;
   display: grid;
@@ -1494,6 +1557,29 @@ export default {
   border-color: #60a5fa;
   box-shadow: 0 18px 38px rgba(37, 99, 235, 0.12);
   background: #ffffff;
+}
+
+.activity-list-card.active {
+  border-color: #1e4307;
+  box-shadow: 0 12px 28px rgba(30, 67, 7, 0.13), inset 3px 0 0 #1e4307;
+}
+
+.activity-list-card:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.24);
+  outline-offset: 2px;
+}
+
+.activity-card-arrow {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+.activity-list-card.active .activity-card-arrow {
+  color: #1e4307;
 }
 
 .activity-list-top {
@@ -1608,8 +1694,9 @@ export default {
 }
 
 .activity-list-meta {
-  display: grid;
-  gap: 0.32rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
   color: #475569;
   font-size: 0.76rem;
 }
@@ -1631,12 +1718,33 @@ export default {
 }
 
 .workspace-focus-card {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  background: linear-gradient(135deg, #ffffff 0%, #f7faff 100%);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.045);
+}
+
+.workspace-focus-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 1rem;
+}
+
+.workspace-focus-icon.is-exam {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.workspace-focus-icon.is-activity {
+  color: #0f766e;
+  background: #ccfbf1;
 }
 
 .workspace-focus-copy {
@@ -1683,7 +1791,7 @@ export default {
   border-radius: 24px;
   border: 1px solid rgba(226, 232, 240, 0.95);
   background: rgba(255, 255, 255, 0.93);
-  padding: 1.1rem;
+  padding: 1.25rem;
   display: grid;
   gap: 1rem;
   min-width: 0;
@@ -2174,6 +2282,177 @@ export default {
 
 .exam-detail-card {
   grid-template-columns: 1fr;
+  gap: 1.2rem;
+  overflow: hidden;
+}
+
+.exam-review-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.42fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.exam-review-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.exam-brief-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.exam-brief-section.is-instructions {
+  border-color: #bfdbfe;
+  background: linear-gradient(145deg, #f8fbff 0%, #fff 65%);
+}
+
+.exam-brief-section .brief-section-title {
+  margin-bottom: 0.15rem;
+}
+
+.exam-brief-section .brief-section-title h5 {
+  margin: 0 0 0.18rem;
+  color: #0f172a;
+  font-size: 0.98rem;
+}
+
+.exam-brief-section .brief-section-title span:not(.brief-section-icon) {
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.brief-section-icon.is-resource {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.exam-brief-section .instruction-copy,
+.exam-brief-section .empty-copy,
+.exam-brief-section .material-list {
+  padding-left: 3.25rem;
+}
+
+.resource-empty {
+  margin-left: 3.25rem;
+  min-height: 64px;
+  padding: 0.85rem 1rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.resource-empty i {
+  color: #10b981;
+}
+
+.exam-start-panel {
+  position: sticky;
+  top: 1rem;
+  border: 1px solid #dbe4ef;
+  border-radius: 20px;
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+}
+
+.exam-start-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.exam-start-panel .card-eyebrow {
+  color: #64748b;
+}
+
+.exam-stat-list {
+  display: grid;
+}
+
+.exam-stat {
+  min-height: 58px;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.exam-stat:first-child {
+  padding-top: 0;
+}
+
+.exam-stat > i {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.exam-stat span {
+  display: grid;
+  gap: 0.12rem;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.exam-stat small {
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.exam-stat strong {
+  max-width: 126px;
+  color: #0f172a;
+  font-size: 0.83rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.exam-ready-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.exam-ready-note i {
+  margin-top: 0.15rem;
+}
+
+.exam-start-btn {
+  width: 100%;
+  min-height: 48px;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
 }
 
 @media (max-width: 1180px) {
@@ -2187,6 +2466,11 @@ export default {
 
   .activity-list {
     max-height: none;
+    grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+  }
+
+  .exam-review-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
   }
 }
 
@@ -2213,7 +2497,7 @@ export default {
   }
 
   .workspace-focus-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .response-shell-body {
@@ -2229,14 +2513,38 @@ export default {
   }
 
   .workspace-focus-meta {
+    grid-column: 1 / -1;
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .response-progress {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .exam-review-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .exam-start-panel {
+    position: static;
   }
 
   .instruction-copy,
   .empty-copy,
   .material-list {
     padding-left: 0;
+  }
+
+  .exam-brief-section .instruction-copy,
+  .exam-brief-section .empty-copy,
+  .exam-brief-section .material-list {
+    padding-left: 0;
+  }
+
+  .resource-empty {
+    margin-left: 0;
   }
 
   .brief-meta-grid {

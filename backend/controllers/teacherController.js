@@ -891,6 +891,147 @@ const getTeacherLessons = asyncHandler(async (req, res) => {
   });
 });
 
+const updateTeacherLesson = asyncHandler(async (req, res) => {
+  const lesson = await Lesson.findOne({ _id: req.params.id, createdBy: req.user._id });
+  if (!lesson) {
+    const error = new Error('Lesson not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const normalizedTitle = String(req.body?.title || '').trim();
+  const normalizedDescription = String(req.body?.description || '').trim();
+  const normalizedSubjectId = String(req.body?.subjectId || '').trim();
+  if (!normalizedTitle || !normalizedDescription || !normalizedSubjectId) {
+    const error = new Error('Lesson title, description, and class are required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const subjectRecord = await findTeacherSubjectRecord(req.user._id, normalizedSubjectId);
+  if (!subjectRecord) {
+    const error = new Error('Selected class was not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const normalizedSubject = ensureTeacherSubjectAccess(req.user, subjectRecord.name);
+  const duplicateLesson = await Lesson.findOne({
+    _id: { $ne: lesson._id },
+    createdBy: req.user._id,
+    subjectId: subjectRecord._id,
+    title: new RegExp(`^${normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+  }).select('_id');
+  if (duplicateLesson) {
+    const error = new Error('A lesson with the same title already exists for this class');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  lesson.title = normalizedTitle;
+  lesson.description = normalizedDescription;
+  lesson.track = normalizeLessonStrand(subjectRecord.track || lesson.track) || lesson.track;
+  lesson.subject = normalizedSubject;
+  lesson.subjectId = subjectRecord._id;
+  lesson.subjectCode = subjectRecord.code;
+  lesson.subjectCategory = subjectRecord.subjectCategory || getSubjectCategory(normalizedSubject);
+  await lesson.save();
+  await lesson.populate('subjectId', 'className code track');
+
+  return sendSuccess(res, 200, 'Lesson updated successfully', {
+    lesson: lessonToResponse(lesson, req),
+  });
+});
+
+const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
+  const sourceLesson = await Lesson.findOne({ _id: req.params.id, createdBy: req.user._id });
+  if (!sourceLesson) {
+    const error = new Error('Lesson not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const requestedSubjectIds = uniqueBy(
+    (Array.isArray(req.body?.subjectIds) ? req.body.subjectIds : [req.body?.subjectId])
+      .map((subjectId) => String(subjectId || '').trim())
+      .filter(Boolean),
+    (subjectId) => subjectId
+  );
+  if (requestedSubjectIds.length === 0) {
+    const error = new Error('Select at least one additional class');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (requestedSubjectIds.length > 20) {
+    const error = new Error('You can add a lesson to at most 20 classes at a time');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const targetSubjects = await Subject.find({
+    _id: { $in: requestedSubjectIds },
+    teacherId: req.user._id,
+    isActive: true,
+  }).select('_id name className track code subjectCategory');
+  if (targetSubjects.length !== requestedSubjectIds.length) {
+    const error = new Error('One or more selected classes were not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const sourceSubjectId = String(sourceLesson.subjectId || '').trim();
+  const createdLessons = [];
+  const skippedClasses = [];
+  for (const subjectRecord of targetSubjects) {
+    if (String(subjectRecord._id) === sourceSubjectId) {
+      skippedClasses.push(subjectRecord.className || subjectRecord.name || 'Current class');
+      continue;
+    }
+
+    const normalizedSubject = ensureTeacherSubjectAccess(req.user, subjectRecord.name);
+    const existingLesson = await Lesson.findOne({
+      createdBy: req.user._id,
+      subjectId: subjectRecord._id,
+      title: new RegExp(`^${String(sourceLesson.title).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+    }).select('_id');
+    if (existingLesson) {
+      skippedClasses.push(subjectRecord.className || subjectRecord.name || 'Class');
+      continue;
+    }
+
+    const copiedAttachments = normalizeLessonAttachments(sourceLesson).map((attachment) => ({
+      originalName: attachment.originalName,
+      storedPath: attachment.storedPath,
+      mimeType: attachment.mimeType,
+      extension: attachment.extension,
+      size: attachment.size,
+      uploadedAt: attachment.uploadedAt,
+    }));
+    const copiedLesson = await Lesson.create({
+      title: sourceLesson.title,
+      description: sourceLesson.description,
+      track: normalizeLessonStrand(subjectRecord.track || sourceLesson.track) || sourceLesson.track,
+      subject: normalizedSubject,
+      subjectId: subjectRecord._id,
+      subjectCode: subjectRecord.code,
+      subjectCategory: subjectRecord.subjectCategory || getSubjectCategory(normalizedSubject),
+      pdfPath: sourceLesson.pdfPath,
+      pdfOriginalName: sourceLesson.pdfOriginalName,
+      attachments: copiedAttachments,
+      createdBy: req.user._id,
+    });
+    await copiedLesson.populate('subjectId', 'className code track');
+    createdLessons.push(copiedLesson);
+  }
+
+  return sendSuccess(res, 201, createdLessons.length > 0
+    ? 'Lesson added to the selected classes'
+    : 'This lesson is already available in the selected classes', {
+    lessons: createdLessons.map((lesson) => lessonToResponse(lesson, req)),
+    skippedClasses,
+  });
+});
+
 const getTeacherSubjects = asyncHandler(async (req, res) => {
   const subjects = await syncTeacherSubjects(req.user._id);
 
@@ -956,7 +1097,12 @@ const getTeacherSubjects = asyncHandler(async (req, res) => {
 
 const getTeacherAssessments = asyncHandler(async (req, res) => {
   const assessments = await Assessment.find({ createdBy: req.user._id })
-    .populate('lessonId', 'title track subject subjectId subjectCode')
+    .populate({
+      path: 'lessonId',
+      select: 'title track subject subjectId subjectCode',
+      populate: { path: 'subjectId', select: 'name className code track' },
+    })
+    .populate('subjectId', 'name className code track')
     .populate('publishedBy', 'name role')
     .populate('lastModifiedBy', 'name role')
     .sort({ createdAt: -1 })
@@ -997,8 +1143,9 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
       ? 'File Upload'
       : assessment.examType,
     subject: String(assessment.subject || assessment.lessonId?.subject || '').trim(),
-    subjectId: String(assessment.subjectId || assessment.lessonId?.subjectId || ''),
-    subjectCode: String(assessment.subjectCode || assessment.lessonId?.subjectCode || ''),
+    subjectId: String(assessment.subjectId?._id || assessment.subjectId || assessment.lessonId?.subjectId?._id || assessment.lessonId?.subjectId || ''),
+    subjectCode: String(assessment.subjectCode || assessment.subjectId?.code || assessment.lessonId?.subjectCode || assessment.lessonId?.subjectId?.code || ''),
+    className: String(assessment.subjectId?.className || assessment.lessonId?.subjectId?.className || '').trim(),
     subjectCategory: assessment.subjectCategory || 'Technical',
     difficulty: assessment.difficulty,
     numberOfItems: assessment.numberOfItems,
@@ -1014,6 +1161,7 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
     maxViolations: Number(assessment.maxViolations || 3),
     violationAction: String(assessment.violationAction || 'auto-submit'),
     submissionDeadline: assessment.submissionDeadline || null,
+    challengeDescription: String(assessment.challengeDescription || '').trim(),
     isDeadlinePassed: assessment.submissionDeadline ? isPastDate(assessment.submissionDeadline) : false,
     attachments: normalizeAssessmentAttachments(assessment).map((attachment) => toAssessmentAttachmentResponse(attachment, req)),
     attachmentCount: normalizeAssessmentAttachments(assessment).length,
@@ -1050,6 +1198,242 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, 200, 'Assessments fetched successfully', {
     assessments: mappedAssessments,
+  });
+});
+
+const updateTeacherAssessment = asyncHandler(async (req, res) => {
+  const assessment = await Assessment.findOne({ _id: req.params.id, createdBy: req.user._id });
+  if (!assessment) {
+    const error = new Error('Assessment not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const normalizedTitle = String(req.body?.title || '').trim();
+  const normalizedSubjectId = String(req.body?.subjectId || '').trim();
+  if (!normalizedTitle || !normalizedSubjectId) {
+    const error = new Error('Assessment title and class are required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const subjectRecord = await findTeacherSubjectRecord(req.user._id, normalizedSubjectId);
+  if (!subjectRecord) {
+    const error = new Error('Selected class was not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  const normalizedSubject = ensureTeacherSubjectAccess(req.user, subjectRecord.name);
+  const duplicateAssessment = await Assessment.findOne({
+    _id: { $ne: assessment._id },
+    createdBy: req.user._id,
+    subjectId: subjectRecord._id,
+    title: new RegExp(`^${normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+  }).select('_id');
+  if (duplicateAssessment) {
+    const error = new Error('An activity or assessment with the same title already exists for this class');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  if (assessment.countsTowardRecommendation) {
+    await assertUniqueGradingAssessment({
+      teacherId: req.user._id,
+      subjectId: subjectRecord._id,
+      gradingPeriod: assessment.gradingPeriod,
+      excludeAssessmentId: assessment._id,
+    });
+  }
+
+  let linkedLesson = assessment.lessonId
+    ? await Lesson.findOne({ _id: assessment.lessonId, createdBy: req.user._id }).select('_id title subjectId')
+    : null;
+  if (linkedLesson && String(linkedLesson.subjectId || '') !== String(subjectRecord._id)) {
+    linkedLesson = await Lesson.findOne({
+      createdBy: req.user._id,
+      subjectId: subjectRecord._id,
+      title: linkedLesson.title,
+    }).select('_id');
+  }
+
+  assessment.title = normalizedTitle;
+  assessment.subject = normalizedSubject;
+  assessment.subjectId = subjectRecord._id;
+  assessment.subjectCode = subjectRecord.code;
+  assessment.subjectCategory = subjectRecord.subjectCategory || assessment.subjectCategory || getSubjectCategory(normalizedSubject);
+  assessment.lessonId = linkedLesson?._id || null;
+  if (assessment.assessmentMode === 'activity') {
+    const challengeDescription = String(req.body?.challengeDescription || '').trim();
+    if (!challengeDescription) {
+      const error = new Error('Activity instructions are required');
+      error.statusCode = 400;
+      throw error;
+    }
+    assessment.challengeDescription = challengeDescription;
+    assessment.activityPoints = parseActivityPoints(req.body?.activityPoints, assessment.activityPoints || 100);
+  } else if (req.body?.difficulty !== undefined) {
+    const difficulty = String(req.body.difficulty || '').trim().toLowerCase();
+    if (!['easy', 'medium', 'hard'].includes(difficulty)) {
+      const error = new Error('Difficulty must be easy, medium, or hard');
+      error.statusCode = 400;
+      throw error;
+    }
+    assessment.difficulty = difficulty;
+  }
+  assessment.assignedStudentIds = await resolveAssignedStudentIds({
+    assignmentScope: assessment.assignmentScope,
+    teacherId: req.user._id,
+    subjectId: subjectRecord._id,
+  });
+  assessment.lastModifiedBy = req.user._id;
+  if (!assessment.publishedBy) assessment.publishedBy = req.user._id;
+  await assessment.save();
+
+  return sendSuccess(res, 200, 'Assessment updated successfully', { assessment });
+});
+
+const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
+  const sourceAssessment = await Assessment.findOne({ _id: req.params.id, createdBy: req.user._id });
+  if (!sourceAssessment) {
+    const error = new Error('Assessment not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const requestedSubjectIds = uniqueBy(
+    (Array.isArray(req.body?.subjectIds) ? req.body.subjectIds : [req.body?.subjectId])
+      .map((subjectId) => String(subjectId || '').trim())
+      .filter(Boolean),
+    (subjectId) => subjectId
+  );
+  if (requestedSubjectIds.length === 0) {
+    const error = new Error('Select at least one additional class');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (requestedSubjectIds.length > 20) {
+    const error = new Error('You can add an assessment to at most 20 classes at a time');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const targetSubjects = await Subject.find({
+    _id: { $in: requestedSubjectIds },
+    teacherId: req.user._id,
+    isActive: true,
+  }).select('_id name className track code subjectCategory');
+  if (targetSubjects.length !== requestedSubjectIds.length) {
+    const error = new Error('One or more selected classes were not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const sourceLesson = sourceAssessment.lessonId
+    ? await Lesson.findOne({ _id: sourceAssessment.lessonId, createdBy: req.user._id }).select('title')
+    : null;
+  const sourceSubjectId = String(sourceAssessment.subjectId || '').trim();
+  const createdAssessments = [];
+  const skippedClasses = [];
+
+  for (const subjectRecord of targetSubjects) {
+    const classLabel = subjectRecord.className || subjectRecord.name || 'Class';
+    if (String(subjectRecord._id) === sourceSubjectId) {
+      skippedClasses.push(classLabel);
+      continue;
+    }
+    ensureTeacherSubjectAccess(req.user, subjectRecord.name);
+
+    const existingAssessment = await Assessment.findOne({
+      createdBy: req.user._id,
+      subjectId: subjectRecord._id,
+      title: new RegExp(`^${String(sourceAssessment.title).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+    }).select('_id');
+    if (existingAssessment) {
+      skippedClasses.push(classLabel);
+      continue;
+    }
+
+    if (sourceAssessment.countsTowardRecommendation) {
+      try {
+        await assertUniqueGradingAssessment({
+          teacherId: req.user._id,
+          subjectId: subjectRecord._id,
+          gradingPeriod: sourceAssessment.gradingPeriod,
+        });
+      } catch (error) {
+        if (error.statusCode === 409) {
+          skippedClasses.push(classLabel);
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    const linkedLesson = sourceLesson
+      ? await Lesson.findOne({
+        createdBy: req.user._id,
+        subjectId: subjectRecord._id,
+        title: sourceLesson.title,
+      }).select('_id')
+      : null;
+    const assignedStudentIds = await resolveAssignedStudentIds({
+      assignmentScope: sourceAssessment.assignmentScope,
+      teacherId: req.user._id,
+      subjectId: subjectRecord._id,
+    });
+    const copiedAttachments = normalizeAssessmentAttachments(sourceAssessment).map((attachment) => ({
+      originalName: attachment.originalName,
+      storedPath: attachment.storedPath,
+      mimeType: attachment.mimeType,
+      extension: attachment.extension,
+      size: attachment.size,
+      uploadedAt: attachment.uploadedAt,
+    }));
+    const copiedQuestions = (Array.isArray(sourceAssessment.questions) ? sourceAssessment.questions : [])
+      .map((question) => ({
+        questionText: question.questionText,
+        type: question.type,
+        options: Array.isArray(question.options) ? [...question.options] : [],
+        correctAnswer: question.correctAnswer,
+        points: question.points,
+        explanation: question.explanation,
+      }));
+
+    const copiedAssessment = await Assessment.create({
+      lessonId: linkedLesson?._id || null,
+      title: sourceAssessment.title,
+      examType: sourceAssessment.examType,
+      subject: subjectRecord.name,
+      subjectId: subjectRecord._id,
+      subjectCode: subjectRecord.code,
+      subjectCategory: subjectRecord.subjectCategory || sourceAssessment.subjectCategory,
+      difficulty: sourceAssessment.difficulty,
+      numberOfItems: sourceAssessment.numberOfItems,
+      activityPoints: sourceAssessment.activityPoints,
+      examDurationMinutes: sourceAssessment.examDurationMinutes,
+      maxViolations: sourceAssessment.maxViolations,
+      violationAction: sourceAssessment.violationAction,
+      submissionDeadline: sourceAssessment.submissionDeadline,
+      challengeDescription: sourceAssessment.challengeDescription,
+      attachments: copiedAttachments,
+      assessmentMode: sourceAssessment.assessmentMode,
+      gradingPeriod: sourceAssessment.gradingPeriod,
+      countsTowardRecommendation: sourceAssessment.countsTowardRecommendation,
+      assignmentScope: sourceAssessment.assignmentScope,
+      assignedStudentIds,
+      questions: copiedQuestions,
+      createdBy: req.user._id,
+      publishedBy: req.user._id,
+      lastModifiedBy: req.user._id,
+    });
+    createdAssessments.push(copiedAssessment);
+  }
+
+  return sendSuccess(res, 201, createdAssessments.length > 0
+    ? 'Assessment added to the selected classes'
+    : 'This assessment is already available or conflicts with an existing grading assessment in the selected classes', {
+    assessments: createdAssessments,
+    skippedClasses,
   });
 });
 
@@ -1823,6 +2207,14 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
       passFailStatus,
       status: String(submission.status || 'completed'),
       submittedAt: submission.submittedAt || submission.createdAt || null,
+      violationCount: Number(submission.violationCount || 0),
+      terminationReason: String(submission.terminationReason || ''),
+      activityLog: (Array.isArray(submission.activityLog) ? submission.activityLog : []).map((event) => ({
+        type: String(event?.type || 'system_event'),
+        message: String(event?.message || ''),
+        metadata: event?.metadata && typeof event.metadata === 'object' ? event.metadata : {},
+        occurredAt: event?.occurredAt || null,
+      })),
       responseText,
       links,
       attachments,
@@ -2211,8 +2603,12 @@ module.exports = {
   deleteTeacherClass,
   createLesson,
   getTeacherLessons,
+  updateTeacherLesson,
+  copyTeacherLessonToClasses,
   getTeacherSubjects,
   getTeacherAssessments,
+  updateTeacherAssessment,
+  copyTeacherAssessmentToClasses,
   downloadTeacherLessonPdf,
   downloadTeacherLessonAttachment,
   createAssessment,

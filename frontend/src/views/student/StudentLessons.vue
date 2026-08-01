@@ -1,8 +1,30 @@
 <template>
-  <div class="student-dashboard-page">
-    <section class="section-card">
+  <div class="student-dashboard-page lessons-page">
+    <header class="lessons-page-hero">
+      <div class="lessons-page-hero__copy">
+        <span class="lessons-page-eyebrow"><i class="fas fa-book-open" aria-hidden="true"></i> Learning hub</span>
+        <h1>Lessons &amp; classes</h1>
+        <p>Select a class to view its learning materials, or join a new class using the code from your teacher.</p>
+        <div class="lessons-page-summary" aria-label="Learning summary">
+          <span><strong>{{ subjects.length }}</strong> approved class{{ subjects.length === 1 ? '' : 'es' }}</span>
+          <span><strong>{{ visibleLessons.length }}</strong> available lesson{{ visibleLessons.length === 1 ? '' : 's' }}</span>
+        </div>
+      </div>
+      <button type="button" class="join-class-trigger" data-tour="student-join-class-button" @click="openJoinClassModal">
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span>Join a class</span>
+      </button>
+    </header>
+
+    <div class="lessons-workspace">
+    <section class="section-card classes-panel">
       <div class="section-head">
-        <h3>My Classes</h3>
+        <div>
+          <span class="section-kicker">Class selector</span>
+          <h2>My classes</h2>
+          <p>Choose a class to filter the lesson feed.</p>
+        </div>
+        <span class="section-count">{{ subjects.length }}</span>
       </div>
       <div v-if="subjects.length" class="subjects-grid">
         <article
@@ -22,12 +44,20 @@
               <strong>{{ subject.className || subject.name }}</strong>
               <small>{{ subject.code }} · {{ subject.track || 'General' }}</small>
             </div>
-            <span class="subject-status approved">Approved</span>
+            <span class="subject-status approved">
+              <i
+                v-if="isSubjectSelected(subject)"
+                class="fas fa-check subject-selected-check"
+                style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;"
+                aria-hidden="true"
+              ></i>
+              {{ isSubjectSelected(subject) ? 'Selected' : 'Approved' }}
+            </span>
           </div>
           <div class="subject-metrics">
-            <span>{{ subject.lessonCount }} lessons</span>
-            <span>{{ subject.assessmentCount }} assessments</span>
-            <span>{{ Number(subject.performance?.averageScore || 0).toFixed(2) }}% avg</span>
+            <span><i class="fas fa-book-open" aria-hidden="true"></i>{{ subject.lessonCount }} lessons</span>
+            <span><i class="fas fa-clipboard-check" aria-hidden="true"></i>{{ subject.assessmentCount }} assessments</span>
+            <span><i class="fas fa-chart-line" aria-hidden="true"></i>{{ Number(subject.performance?.averageScore || 0).toFixed(2) }}% avg</span>
           </div>
           <p v-if="subject.description" class="subject-teacher">{{ subject.description }}</p>
           <p class="subject-teacher">Teacher: {{ subject.teacher?.name || 'Teacher' }}</p>
@@ -62,20 +92,19 @@
       </div>
     </section>
 
-    <section class="active-courses-section" data-tour="student-lessons-table">
+    <section class="active-courses-section lessons-panel" data-tour="student-lessons-table">
       <div class="section-header">
         <div>
+          <span class="section-kicker">Lesson library</span>
           <h2 class="section-title">
             <span class="highlight">Lessons</span>
           </h2>
           <p class="section-subtitle">{{ lessonsSectionSubtitle }}</p>
         </div>
-        <button type="button" class="join-class-trigger" data-tour="student-join-class-button" @click="openJoinClassModal" aria-label="Join class">
-          <i class="fas fa-plus" style="color: #ffffff !important;"></i>
-        </button>
       </div>
 
       <div v-if="selectedSubject" class="active-subject-banner">
+        <span class="active-subject-icon" aria-hidden="true"><i class="fas fa-chalkboard-user"></i></span>
         <div class="active-subject-copy">
           <span class="active-subject-label">Selected class</span>
           <strong>{{ getSubjectDisplayName(selectedSubject) }}</strong>
@@ -90,9 +119,12 @@
           <span>Loading lessons...</span>
         </div>
 
-        <div v-else-if="visibleLessons.length === 0" class="feed-state">
-          <i class="fas fa-book-open"></i>
-          <span>{{ currentLessonsEmptyMessage }}</span>
+        <div v-else-if="visibleLessons.length === 0" class="feed-state feed-state--empty">
+          <span class="feed-state-icon" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+          <div>
+            <strong>No lessons posted yet</strong>
+            <span>{{ currentLessonsEmptyMessage }}</span>
+          </div>
         </div>
 
         <div v-else class="lessons-feed">
@@ -174,6 +206,7 @@
         </div>
       </div>
     </section>
+    </div>
 
     <div
       v-if="previewAttachment"
@@ -1536,6 +1569,423 @@ export default {
 
   .lesson-attachment-link {
     font-size: 0.68rem;
+  }
+}
+/* Lessons workspace redesign */
+.lessons-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.lessons-page-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  min-height: 12rem;
+  padding: clamp(1.4rem, 3vw, 2.25rem);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(187, 255, 89, 0.18), transparent 15rem),
+    linear-gradient(135deg, #173806 0%, #1e4307 54%, #4f7d3a 100%);
+  box-shadow: 0 18px 42px rgba(30, 67, 7, 0.18);
+}
+
+.lessons-page-hero::after {
+  position: absolute;
+  right: -4rem;
+  bottom: -7rem;
+  width: 18rem;
+  height: 18rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.lessons-page-hero__copy {
+  position: relative;
+  z-index: 1;
+  max-width: 48rem;
+}
+
+.lessons-page-eyebrow,
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #6a8428 !important;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.lessons-page-eyebrow,
+.lessons-page-eyebrow i {
+  color: #dcefd2 !important;
+  -webkit-text-fill-color: #dcefd2 !important;
+}
+
+.lessons-page-hero h1 {
+  margin: 0.4rem 0 0;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: clamp(1.9rem, 3.4vw, 2.75rem);
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.lessons-page-hero__copy > p {
+  max-width: 42rem;
+  margin: 0.55rem 0 0;
+  color: #e4efde !important;
+  -webkit-text-fill-color: #e4efde !important;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.lessons-page-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.lessons-page-summary span {
+  padding: 0.42rem 0.7rem;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.lessons-page-summary strong {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.lessons-page-hero .join-class-trigger {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  min-height: 3rem;
+  flex: 0 0 auto;
+  gap: 0.55rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.lessons-page-hero .join-class-trigger span,
+.lessons-page-hero .join-class-trigger i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.lessons-workspace {
+  display: grid;
+  grid-template-columns: minmax(17.5rem, 0.72fr) minmax(0, 1.7fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.lessons-page .section-card,
+.lessons-page .active-courses-section {
+  margin: 0;
+  padding: 1.15rem;
+  border: 1px solid #dfe8da !important;
+  border-radius: 18px;
+  background: #ffffff !important;
+  box-shadow: 0 10px 28px rgba(30, 67, 7, 0.06);
+}
+
+.lessons-page .section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid #e6ede2;
+}
+
+.lessons-page .section-head h2,
+.lessons-page .section-title {
+  margin: 0.25rem 0 0;
+  color: #18320d !important;
+  font-size: 1.25rem;
+  letter-spacing: -0.025em;
+}
+
+.lessons-page .section-head p {
+  margin: 0.25rem 0 0;
+  color: #6d7969 !important;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.section-count {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #1e4307 !important;
+  border-radius: 10px;
+  background: #e7f1e1;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.lessons-page .subjects-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+
+.lessons-page .subject-card {
+  position: relative;
+  padding: 0.9rem;
+  border: 1px solid #e2e9de;
+  border-radius: 14px;
+  background: #fbfdf9;
+  box-shadow: none;
+}
+
+.lessons-page .subject-card:hover {
+  border-color: #adc69f;
+  background: #f7fbf4;
+  box-shadow: 0 8px 20px rgba(30, 67, 7, 0.08);
+}
+
+.lessons-page .subject-card.active {
+  padding-left: 1rem;
+  border-color: #6f9d58;
+  background: linear-gradient(135deg, #f1f7ed 0%, #ffffff 100%);
+  box-shadow: 0 10px 24px rgba(30, 67, 7, 0.1);
+}
+
+.lessons-page .subject-card.active::before {
+  position: absolute;
+  top: 0.8rem;
+  bottom: 0.8rem;
+  left: 0;
+  width: 4px;
+  border-radius: 0 999px 999px 0;
+  background: #1e4307;
+  content: "";
+}
+
+.lessons-page .subject-card-head strong {
+  color: #18320d !important;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.lessons-page .subject-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #1e4307 !important;
+  background: #e7f1e1;
+  font-size: 0.64rem;
+}
+
+.lessons-page .subject-status i {
+  color: #1e4307 !important;
+  -webkit-text-fill-color: #1e4307 !important;
+}
+
+.lessons-page .subject-card.active .subject-status {
+  color: #ffffff !important;
+  background: #1e4307;
+}
+
+.lessons-page .subject-card.active .subject-status .subject-selected-check,
+.lessons-page .subject-card.active .subject-status .subject-selected-check::before,
+:global(body.student-dashboard .subject-selected-check),
+:global(body.student-dashboard .subject-selected-check::before) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.lessons-page .subject-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.lessons-page .subject-metrics span {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.45rem 0.35rem;
+  color: #556451 !important;
+  border-radius: 9px;
+  background: #f0f5ed;
+  font-size: 0.62rem;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.lessons-page .subject-metrics i {
+  color: #4f7d3a !important;
+  -webkit-text-fill-color: #4f7d3a !important;
+  font-size: 0.72rem;
+}
+
+.lessons-page .subject-teacher {
+  color: #64705f !important;
+}
+
+.lessons-page .subject-card-hint {
+  margin-top: 0.7rem;
+  padding-top: 0.65rem;
+  color: #365f25 !important;
+  border-top: 1px solid #e3eae0;
+  font-size: 0.68rem;
+}
+
+.lessons-page .section-header {
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid #e6ede2;
+}
+
+.lessons-page .section-subtitle {
+  max-width: 48rem;
+  margin-top: 0.3rem;
+  color: #6d7969 !important;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.lessons-page .active-subject-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  border-color: #d9e6d3;
+  background: #f7fbf4;
+}
+
+.active-subject-icon,
+.feed-state-icon {
+  display: inline-grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #ffffff;
+  border-radius: 12px;
+  background: #1e4307;
+}
+
+.active-subject-icon i,
+.feed-state-icon i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.lessons-page .active-subject-count {
+  border-color: #cbdcc3;
+  background: #ffffff;
+}
+
+.lessons-page .courses-lessons-feed-wrap {
+  min-height: 18rem;
+  margin-top: 0.8rem;
+  padding: 0.7rem;
+  border-color: #e0e8dc;
+  background: #fafcf9;
+}
+
+.feed-state--empty {
+  min-height: 16.5rem;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.feed-state--empty .feed-state-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(30, 67, 7, 0.16);
+}
+
+.feed-state--empty > div {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 30rem;
+}
+
+.feed-state--empty strong {
+  color: #18320d !important;
+  font-size: 1rem;
+}
+
+.feed-state--empty > div > span {
+  color: #6d7969 !important;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+@media (max-width: 1080px) {
+  .lessons-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lessons-page .subjects-grid {
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .lessons-page-hero {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.1rem;
+    min-height: auto;
+    padding: 1.25rem;
+  }
+
+  .lessons-page-hero .join-class-trigger {
+    width: 100%;
+  }
+
+  .lessons-page .section-card,
+  .lessons-page .active-courses-section {
+    padding: 0.9rem;
+    border-radius: 15px;
+  }
+
+  .lessons-page .subjects-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lessons-page .active-subject-banner {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .lessons-page .active-subject-count {
+    grid-column: 2;
+    width: fit-content;
+  }
+
+  .feed-state--empty {
+    min-height: 13rem;
+    padding: 1.25rem;
   }
 }
 </style>

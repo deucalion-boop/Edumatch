@@ -8,8 +8,12 @@ const {
   deleteTeacherClass,
   createLesson,
   getTeacherLessons,
+  updateTeacherLesson,
+  copyTeacherLessonToClasses,
   getTeacherSubjects,
   getTeacherAssessments,
+  updateTeacherAssessment,
+  copyTeacherAssessmentToClasses,
   downloadTeacherLessonPdf,
   downloadTeacherLessonAttachment,
   createAssessment,
@@ -47,6 +51,8 @@ router.post(
 );
 router.post('/subjects', createTeacherClass);
 router.get('/lessons', getTeacherLessons);
+router.patch('/lessons/:id', updateTeacherLesson);
+router.post('/lessons/:id/classes', copyTeacherLessonToClasses);
 router.get('/subjects', getTeacherSubjects);
 router.patch('/subjects/:subjectId', updateTeacherClass);
 router.delete('/subjects/:subjectId', deleteTeacherClass);
@@ -60,6 +66,8 @@ router.post(
   createAssessment
 );
 router.get('/assessments', getTeacherAssessments);
+router.patch('/assessments/:id', updateTeacherAssessment);
+router.post('/assessments/:id/classes', copyTeacherAssessmentToClasses);
 router.put('/assessments/:id/questions', updateAssessmentQuestions);
 router.get('/assessments/:id/results', getAssessmentResultsSummary);
 router.get('/students', getTeacherStudents);

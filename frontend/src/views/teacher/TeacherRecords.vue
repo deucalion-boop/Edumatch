@@ -234,8 +234,8 @@
               <input
                 v-model.trim="lessonSearchQuery"
                 type="search"
-                placeholder="Search lessons or files"
-                aria-label="Search lessons or files"
+                placeholder="Search lessons, classes, or files"
+                aria-label="Search lessons, classes, or files"
               />
               <button
                 v-if="lessonSearchQuery"
@@ -271,6 +271,14 @@
               </select>
               <i class="fas fa-chevron-down lessons-select-chevron" aria-hidden="true"></i>
             </label>
+          </div>
+
+          <div v-if="lessonActionMessage" class="lesson-action-banner" :class="lessonActionMessageType" role="status">
+            <i class="fas" :class="lessonActionMessageType === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'" aria-hidden="true"></i>
+            <span>{{ lessonActionMessage }}</span>
+            <button type="button" aria-label="Dismiss message" @click="lessonActionMessage = ''">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
           </div>
 
           <div v-if="lessonsHaveFilters" class="lessons-results-bar" aria-live="polite">
@@ -309,16 +317,33 @@
                     </span>
                     <h4>{{ lesson.title }}</h4>
                   </div>
-                  <div class="record-card-date-group">
-                    <i class="far fa-calendar-alt" aria-hidden="true"></i>
-                    <span>
-                      <span class="record-date-label">Published</span>
-                      <span class="record-card-date">{{ formatDate(lesson.createdAt) }}</span>
-                    </span>
+                  <div class="lesson-card-header-actions">
+                    <div class="record-card-date-group">
+                      <i class="far fa-calendar-alt" aria-hidden="true"></i>
+                      <span>
+                        <span class="record-date-label">Published</span>
+                        <span class="record-card-date">{{ formatDate(lesson.createdAt) }}</span>
+                      </span>
+                    </div>
+                    <div class="lesson-manage-actions" aria-label="Manage lesson">
+                      <button type="button" title="Edit lesson" @click="openLessonEditModal(lesson)">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                        <span>Edit</span>
+                      </button>
+                      <button type="button" title="Add lesson to other classes" @click="openLessonCopyModal(lesson)">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        <span>Add to classes</span>
+                      </button>
+                    </div>
                   </div>
                 </header>
 
                 <div class="record-chip-row">
+                  <span class="record-chip chip-class">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    <span class="record-chip-label">Class:</span>
+                    {{ lesson.className || 'Not assigned' }}
+                  </span>
                   <span class="record-chip chip-subject">
                     <i class="fas fa-book-open" aria-hidden="true"></i>
                     {{ lesson.subject || 'N/A' }}
@@ -478,8 +503,8 @@
               <input
                 v-model.trim="assessmentSearchQuery"
                 type="search"
-                placeholder="Search assessments or lessons"
-                aria-label="Search assessments or lessons"
+                placeholder="Search assessments, classes, or lessons"
+                aria-label="Search assessments, classes, or lessons"
               />
               <button
                 v-if="assessmentSearchQuery"
@@ -530,6 +555,14 @@
             </label>
           </div>
 
+          <div v-if="assessmentActionMessage" class="assessment-action-banner" role="status">
+            <i class="fas fa-circle-check" aria-hidden="true"></i>
+            <span>{{ assessmentActionMessage }}</span>
+            <button type="button" aria-label="Dismiss message" @click="assessmentActionMessage = ''">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+
           <div v-if="assessmentsHaveFilters" class="assessments-results-bar" aria-live="polite">
             <span>Showing {{ filteredAssessments.length }} of {{ normalizedAssessments.length }} assessments</span>
             <button type="button" @click="clearAssessmentFilters">Clear filters</button>
@@ -576,6 +609,11 @@
                 </header>
 
                 <div class="record-chip-row">
+                  <span class="record-chip chip-class">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    <span class="record-chip-label">Class:</span>
+                    {{ assessment.className || 'Not assigned' }}
+                  </span>
                   <span class="record-chip chip-subject"><i class="fas fa-book-open" aria-hidden="true"></i>{{ assessment.subject || 'N/A' }}</span>
                   <span v-if="assessment.gradingPeriod" class="record-chip chip-neutral"><i class="far fa-calendar" aria-hidden="true"></i>{{ assessment.gradingPeriod }} Grading</span>
                   <span v-if="assessment.countsTowardRecommendation" class="record-chip chip-success"><i class="fas fa-star" aria-hidden="true"></i>Recommendation Basis</span>
@@ -685,6 +723,14 @@
                 </div>
 
                 <div class="record-card-actions">
+                  <button type="button" class="record-link record-link-button assessment-action-secondary" @click="openAssessmentEditModal(assessment)">
+                    <i class="fas fa-pen"></i>
+                    Edit
+                  </button>
+                  <button type="button" class="record-link record-link-button assessment-action-secondary" @click="openAssessmentCopyModal(assessment)">
+                    <i class="fas fa-plus"></i>
+                    Add to Classes
+                  </button>
                   <button type="button" class="record-link record-link-button assessment-action-secondary" @click="openDeadlineEditor(assessment)">
                     <i class="fas fa-calendar-pen"></i>
                     Edit Deadline
@@ -1336,6 +1382,7 @@
                     <th>Score</th>
                     <th>Percentage</th>
                     <th>Result</th>
+                    <th>Integrity</th>
                     <th>Submitted At</th>
                   </tr>
                 </thead>
@@ -1359,6 +1406,24 @@
                       >
                         {{ result.passFailStatus === 'pass' ? 'Pass' : 'Fail' }}
                       </span>
+                    </td>
+                    <td>
+                      <details v-if="result.violationCount > 0" class="integrity-log-details">
+                        <summary>
+                          <span class="integrity-count has-violations"><i class="fas fa-triangle-exclamation"></i>{{ result.violationCount }} violation{{ result.violationCount === 1 ? '' : 's' }}</span>
+                        </summary>
+                        <div class="integrity-log-popover">
+                          <strong>Integrity activity</strong>
+                          <span v-if="result.terminationReason" class="integrity-termination">Outcome: {{ formatLabel(result.terminationReason) }}</span>
+                          <ol>
+                            <li v-for="(event, eventIndex) in getViolationEvents(result)" :key="`${result.id}-violation-${eventIndex}`">
+                              <span>{{ event.message || formatLabel(event.type) }}</span>
+                              <small>{{ formatDateTime(event.occurredAt) }}</small>
+                            </li>
+                          </ol>
+                        </div>
+                      </details>
+                      <span v-else class="integrity-count is-clear"><i class="fas fa-shield-halved"></i>Clear</span>
                     </td>
                     <td>{{ formatDateTime(result.submittedAt) }}</td>
                   </tr>
@@ -1486,6 +1551,183 @@
         </div>
       </div>
 
+      <div v-if="showLessonEditModal && selectedLessonForEdit" class="records-modal-backdrop" @click.self="closeLessonEditModal">
+        <div class="records-modal-dialog lesson-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="lesson-edit-title">
+          <div class="records-modal-header">
+            <div>
+              <h3 id="lesson-edit-title">Edit lesson</h3>
+              <p>Correct the lesson details or move it to the right class.</p>
+            </div>
+            <button type="button" class="lesson-modal-close" aria-label="Close edit lesson" @click="closeLessonEditModal">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <form @submit.prevent="saveLessonEdit">
+            <div class="records-modal-body lesson-manage-form">
+              <label>
+                <span>Lesson title</span>
+                <input v-model.trim="lessonEditForm.title" type="text" maxlength="160" required />
+              </label>
+              <label>
+                <span>Class</span>
+                <select v-model="lessonEditForm.subjectId" required>
+                  <option value="" disabled>Select class</option>
+                  <option v-for="classItem in teacherSubjects" :key="`lesson-edit-class-${classItem.id}`" :value="classItem.id">
+                    {{ getTeacherClassLabel(classItem) }}
+                  </option>
+                </select>
+              </label>
+              <label>
+                <span>Description</span>
+                <textarea v-model.trim="lessonEditForm.description" rows="5" maxlength="3000" required></textarea>
+              </label>
+              <p v-if="lessonEditError" class="lesson-manage-error">{{ lessonEditError }}</p>
+            </div>
+            <div class="records-modal-footer">
+              <button type="button" class="lesson-secondary-btn" :disabled="isSavingLessonEdit" @click="closeLessonEditModal">Cancel</button>
+              <button type="submit" class="lesson-primary-btn" :disabled="isSavingLessonEdit">
+                <i v-if="isSavingLessonEdit" class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                {{ isSavingLessonEdit ? 'Saving...' : 'Save changes' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div v-if="showLessonCopyModal && selectedLessonForCopy" class="records-modal-backdrop" @click.self="closeLessonCopyModal">
+        <div class="records-modal-dialog lesson-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="lesson-copy-title">
+          <div class="records-modal-header">
+            <div>
+              <h3 id="lesson-copy-title">Add lesson to other classes</h3>
+              <p>Reuse “{{ selectedLessonForCopy.title }}” and its uploaded file without uploading again.</p>
+            </div>
+            <button type="button" class="lesson-modal-close" aria-label="Close add to classes" @click="closeLessonCopyModal">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <form @submit.prevent="copyLessonToClasses">
+            <div class="records-modal-body lesson-manage-form">
+              <div class="lesson-current-class">
+                <span>Currently in</span>
+                <strong>{{ selectedLessonForCopy.className || 'Unassigned class' }}</strong>
+              </div>
+              <fieldset class="lesson-class-picker">
+                <legend>Select one or more additional classes</legend>
+                <label v-for="classItem in availableLessonCopyClasses" :key="`lesson-copy-class-${classItem.id}`">
+                  <input v-model="lessonCopySubjectIds" type="checkbox" :value="classItem.id" />
+                  <span><strong>{{ classItem.className || classItem.name || 'Class' }}</strong><small>{{ classItem.code || classItem.name || '' }}</small></span>
+                </label>
+                <p v-if="availableLessonCopyClasses.length === 0" class="lesson-manage-empty">No other classes are available.</p>
+              </fieldset>
+              <p v-if="lessonCopyError" class="lesson-manage-error">{{ lessonCopyError }}</p>
+            </div>
+            <div class="records-modal-footer">
+              <button type="button" class="lesson-secondary-btn" :disabled="isCopyingLesson" @click="closeLessonCopyModal">Cancel</button>
+              <button type="submit" class="lesson-primary-btn" :disabled="isCopyingLesson || lessonCopySubjectIds.length === 0">
+                <i v-if="isCopyingLesson" class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                {{ isCopyingLesson ? 'Adding...' : `Add to ${lessonCopySubjectIds.length || ''} class${lessonCopySubjectIds.length === 1 ? '' : 'es'}` }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div v-if="showAssessmentEditModal && selectedAssessmentForEdit" class="records-modal-backdrop" @click.self="closeAssessmentEditModal">
+        <div class="records-modal-dialog lesson-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="assessment-edit-title">
+          <div class="records-modal-header">
+            <div>
+              <h3 id="assessment-edit-title">Edit {{ getAssessmentTypeLabel(selectedAssessmentForEdit).toLowerCase() }}</h3>
+              <p>Correct its details or move it to the right class.</p>
+            </div>
+            <button type="button" class="lesson-modal-close" aria-label="Close assessment editor" @click="closeAssessmentEditModal">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <form @submit.prevent="saveAssessmentEdit">
+            <div class="records-modal-body lesson-manage-form">
+              <label>
+                <span>Title</span>
+                <input v-model.trim="assessmentEditForm.title" type="text" maxlength="160" required />
+              </label>
+              <label>
+                <span>Class</span>
+                <select v-model="assessmentEditForm.subjectId" required>
+                  <option value="" disabled>Select class</option>
+                  <option v-for="classItem in teacherSubjects" :key="`assessment-edit-class-${classItem.id}`" :value="classItem.id">
+                    {{ getTeacherClassLabel(classItem) }}
+                  </option>
+                </select>
+              </label>
+              <template v-if="isActivityAssessment(selectedAssessmentForEdit)">
+                <label>
+                  <span>Activity instructions</span>
+                  <textarea v-model.trim="assessmentEditForm.challengeDescription" rows="5" maxlength="5000" required></textarea>
+                </label>
+                <label>
+                  <span>Points</span>
+                  <input v-model.number="assessmentEditForm.activityPoints" type="number" min="1" max="100" required />
+                </label>
+              </template>
+              <label v-else>
+                <span>Difficulty</span>
+                <select v-model="assessmentEditForm.difficulty" required>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </label>
+              <p class="lesson-manage-empty">Use “Edit Deadline” on the record card to change its due date.</p>
+              <p v-if="assessmentEditError" class="lesson-manage-error">{{ assessmentEditError }}</p>
+            </div>
+            <div class="records-modal-footer">
+              <button type="button" class="lesson-secondary-btn" :disabled="isSavingAssessmentEdit" @click="closeAssessmentEditModal">Cancel</button>
+              <button type="submit" class="lesson-primary-btn" :disabled="isSavingAssessmentEdit">
+                <i v-if="isSavingAssessmentEdit" class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                {{ isSavingAssessmentEdit ? 'Saving...' : 'Save changes' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div v-if="showAssessmentCopyModal && selectedAssessmentForCopy" class="records-modal-backdrop" @click.self="closeAssessmentCopyModal">
+        <div class="records-modal-dialog lesson-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="assessment-copy-title">
+          <div class="records-modal-header">
+            <div>
+              <h3 id="assessment-copy-title">Add to other classes</h3>
+              <p>Copy “{{ selectedAssessmentForCopy.title }}” with its questions, files, settings, and deadline.</p>
+            </div>
+            <button type="button" class="lesson-modal-close" aria-label="Close add to classes" @click="closeAssessmentCopyModal">
+              <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+          </div>
+          <form @submit.prevent="copyAssessmentToClasses">
+            <div class="records-modal-body lesson-manage-form">
+              <div class="lesson-current-class">
+                <span>Currently in</span>
+                <strong>{{ selectedAssessmentForCopy.className || 'Unassigned class' }}</strong>
+              </div>
+              <fieldset class="lesson-class-picker">
+                <legend>Select one or more additional classes</legend>
+                <label v-for="classItem in availableAssessmentCopyClasses" :key="`assessment-copy-class-${classItem.id}`">
+                  <input v-model="assessmentCopySubjectIds" type="checkbox" :value="classItem.id" />
+                  <span><strong>{{ classItem.className || classItem.name || 'Class' }}</strong><small>{{ classItem.code || classItem.name || '' }}</small></span>
+                </label>
+                <p v-if="availableAssessmentCopyClasses.length === 0" class="lesson-manage-empty">No other classes are available.</p>
+              </fieldset>
+              <p v-if="assessmentCopyError" class="lesson-manage-error">{{ assessmentCopyError }}</p>
+            </div>
+            <div class="records-modal-footer">
+              <button type="button" class="lesson-secondary-btn" :disabled="isCopyingAssessment" @click="closeAssessmentCopyModal">Cancel</button>
+              <button type="submit" class="lesson-primary-btn" :disabled="isCopyingAssessment || assessmentCopySubjectIds.length === 0">
+                <i v-if="isCopyingAssessment" class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                {{ isCopyingAssessment ? 'Adding...' : `Add to ${assessmentCopySubjectIds.length || ''} class${assessmentCopySubjectIds.length === 1 ? '' : 'es'}` }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div v-if="isTourActive" class="teacher-page-tour-layer" aria-live="polite">
         <div class="teacher-page-tour-backdrop"></div>
         <div v-if="tourSpotlightStyle" class="teacher-page-tour-spotlight" :style="tourSpotlightStyle"></div>
@@ -1569,11 +1811,40 @@ const lessonPage = ref(1)
 const lessonSearchQuery = ref('')
 const lessonSubjectFilter = ref('all')
 const lessonSortOrder = ref('newest')
+const lessonActionMessage = ref('')
+const lessonActionMessageType = ref('success')
+const showLessonEditModal = ref(false)
+const selectedLessonForEdit = ref(null)
+const isSavingLessonEdit = ref(false)
+const lessonEditError = ref('')
+const lessonEditForm = reactive({ title: '', description: '', subjectId: '' })
+const showLessonCopyModal = ref(false)
+const selectedLessonForCopy = ref(null)
+const lessonCopySubjectIds = ref([])
+const isCopyingLesson = ref(false)
+const lessonCopyError = ref('')
 const assessmentPage = ref(1)
 const assessmentSearchQuery = ref('')
 const assessmentSubjectFilter = ref('all')
 const assessmentTypeFilter = ref('all')
 const assessmentSortOrder = ref('newest')
+const assessmentActionMessage = ref('')
+const showAssessmentEditModal = ref(false)
+const selectedAssessmentForEdit = ref(null)
+const isSavingAssessmentEdit = ref(false)
+const assessmentEditError = ref('')
+const assessmentEditForm = reactive({
+  title: '',
+  subjectId: '',
+  challengeDescription: '',
+  activityPoints: 100,
+  difficulty: 'medium',
+})
+const showAssessmentCopyModal = ref(false)
+const selectedAssessmentForCopy = ref(null)
+const assessmentCopySubjectIds = ref([])
+const isCopyingAssessment = ref(false)
+const assessmentCopyError = ref('')
 const teacherSubjects = ref([])
 const teacherAdvisorySection = ref(null)
 const attendanceRecords = ref([])
@@ -1839,6 +2110,21 @@ const getRelativeDateKey = (offsetDays = 0) => {
 const formatLabel = (value) => String(value || '').replace(/[-_]/g, ' ')
   .replace(/\b\w/g, (char) => char.toUpperCase())
 
+const violationEventTypes = new Set([
+  'tab_hidden',
+  'window_blur',
+  'fullscreen_exit',
+  'navigation_attempt',
+  'inspection_shortcut',
+  'copy_attempt',
+  'paste_attempt',
+  'contextmenu_attempt',
+])
+
+const getViolationEvents = (result) => (Array.isArray(result?.activityLog) ? result.activityLog : [])
+  .filter((event) => violationEventTypes.has(String(event?.type || '').trim().toLowerCase()))
+  .sort((left, right) => new Date(right?.occurredAt || 0).getTime() - new Date(left?.occurredAt || 0).getTime())
+
 const attendanceScopeLabel = (scope) => String(scope || '').trim().toLowerCase() === 'advisory_class'
   ? 'Advisory'
   : 'Handled Class'
@@ -1858,15 +2144,27 @@ const attendanceSelectedDateLabel = computed(() => {
   return `Selected: ${formatDate(attendanceDateKey.value)}`
 })
 
-const normalizedLessons = computed(() => lessons.value.map((lesson) => ({
-  ...lesson,
-  subject: String(lesson?.subject || '').trim()
-})))
+const normalizedLessons = computed(() => lessons.value.map((lesson) => {
+  const subjectId = String(lesson?.subjectId || '').trim()
+  const linkedClass = teacherSubjects.value.find((subject) => String(subject?.id || '').trim() === subjectId)
 
-const normalizedAssessments = computed(() => assessments.value.map((assessment) => ({
-  ...assessment,
-  subject: String(assessment?.subject || assessment?.lessonSubject || '').trim()
-})))
+  return {
+    ...lesson,
+    subject: String(lesson?.subject || '').trim(),
+    className: String(lesson?.className || linkedClass?.className || linkedClass?.name || '').trim(),
+  }
+}))
+
+const normalizedAssessments = computed(() => assessments.value.map((assessment) => {
+  const subjectId = String(assessment?.subjectId || '').trim()
+  const linkedClass = teacherSubjects.value.find((subject) => String(subject?.id || '').trim() === subjectId)
+
+  return {
+    ...assessment,
+    subject: String(assessment?.subject || assessment?.lessonSubject || '').trim(),
+    className: String(assessment?.className || linkedClass?.className || linkedClass?.name || '').trim(),
+  }
+}))
 
 const getAssessmentTypeKey = (assessment) => {
   const mode = normalizeSearchText(assessment?.assessmentMode)
@@ -1915,6 +2213,11 @@ const lessonSubjectOptions = computed(() => [...new Set(
     .filter(Boolean)
 )].sort((left, right) => left.localeCompare(right)))
 
+const availableLessonCopyClasses = computed(() => {
+  const currentSubjectId = String(selectedLessonForCopy.value?.subjectId || '').trim()
+  return teacherSubjects.value.filter((classItem) => String(classItem?.id || '').trim() !== currentSubjectId)
+})
+
 const lessonAttachmentTotal = computed(() => normalizedLessons.value.reduce((total, lesson) => {
   const attachmentCount = Array.isArray(lesson.attachments) ? lesson.attachments.length : 0
   return total + Math.max(1, attachmentCount)
@@ -1936,7 +2239,7 @@ const filteredLessons = computed(() => {
     const attachmentNames = Array.isArray(lesson.attachments)
       ? lesson.attachments.map((attachment) => attachment?.fileName).join(' ')
       : lesson.pdfOriginalName
-    return normalizeSearchText(`${lesson.title} ${lesson.subject} ${attachmentNames}`).includes(query)
+    return normalizeSearchText(`${lesson.title} ${lesson.className} ${lesson.subject} ${attachmentNames}`).includes(query)
   })
 
   return [...matches].sort((left, right) => {
@@ -1954,6 +2257,11 @@ const assessmentSubjectOptions = computed(() => [...new Set(
     .map((assessment) => assessment.subject)
     .filter(Boolean)
 )].sort((left, right) => left.localeCompare(right)))
+
+const availableAssessmentCopyClasses = computed(() => {
+  const currentSubjectId = String(selectedAssessmentForCopy.value?.subjectId || '').trim()
+  return teacherSubjects.value.filter((classItem) => String(classItem?.id || '').trim() !== currentSubjectId)
+})
 
 const assessmentSubmissionTotal = computed(() => normalizedAssessments.value.reduce(
   (total, assessment) => total + Number(assessment?.submissionsCount || 0),
@@ -1974,7 +2282,7 @@ const filteredAssessments = computed(() => {
     if (assessmentTypeFilter.value !== 'all' && getAssessmentTypeKey(assessment) !== assessmentTypeFilter.value) return false
     if (!query) return true
     return normalizeSearchText(
-      `${assessment.title} ${assessment.lessonTitle} ${assessment.subject} ${assessment.examType} ${assessment.difficulty}`
+      `${assessment.title} ${assessment.lessonTitle} ${assessment.className} ${assessment.subject} ${assessment.examType} ${assessment.difficulty}`
     ).includes(query)
   })
 
@@ -2530,6 +2838,9 @@ const fetchRecords = async () => {
       gradeValue: result.gradeValue ?? null,
       teacherFeedback: String(result.teacherFeedback || '').trim(),
       isTeacherGraded: Boolean(result.isTeacherGraded),
+      violationCount: Number(result.violationCount || 0),
+      terminationReason: String(result.terminationReason || '').trim(),
+      activityLog: Array.isArray(result.activityLog) ? result.activityLog : [],
     }))
     await fetchAttendanceHistory()
     await fetchAttendanceRoster()
@@ -2750,6 +3061,221 @@ const changeLessonPage = (direction) => {
 
 const changeAssessmentPage = (direction) => {
   assessmentPage.value = clampPage(assessmentPage.value + direction, assessmentTotalPages.value)
+}
+
+const getTeacherClassLabel = (classItem) => {
+  const className = String(classItem?.className || classItem?.name || 'Class').trim()
+  const code = String(classItem?.code || '').trim()
+  return code ? `${className} (${code})` : className
+}
+
+const openLessonEditModal = (lesson) => {
+  selectedLessonForEdit.value = lesson || null
+  lessonEditForm.title = String(lesson?.title || '').trim()
+  lessonEditForm.description = String(lesson?.description || '').trim()
+  lessonEditForm.subjectId = String(lesson?.subjectId || '').trim()
+  lessonEditError.value = ''
+  showLessonEditModal.value = Boolean(lesson)
+}
+
+const closeLessonEditModal = () => {
+  if (isSavingLessonEdit.value) return
+  showLessonEditModal.value = false
+  selectedLessonForEdit.value = null
+  lessonEditError.value = ''
+}
+
+const saveLessonEdit = async () => {
+  if (!selectedLessonForEdit.value?.id || isSavingLessonEdit.value) return
+  if (!lessonEditForm.title || !lessonEditForm.description || !lessonEditForm.subjectId) {
+    lessonEditError.value = 'Complete the lesson title, class, and description.'
+    return
+  }
+
+  isSavingLessonEdit.value = true
+  lessonEditError.value = ''
+  try {
+    const lessonId = encodeURIComponent(selectedLessonForEdit.value.id)
+    const response = await axios.patch(
+      `${resolveApiBaseUrl()}/teacher/lessons/${lessonId}`,
+      {
+        title: lessonEditForm.title,
+        description: lessonEditForm.description,
+        subjectId: lessonEditForm.subjectId,
+      },
+      getAuthConfig(),
+    )
+    const updatedLesson = response.data?.lesson
+    if (updatedLesson?.id) {
+      lessons.value = lessons.value.map((lesson) => String(lesson?.id) === String(updatedLesson.id) ? updatedLesson : lesson)
+    } else {
+      await fetchRecords()
+    }
+    showLessonEditModal.value = false
+    selectedLessonForEdit.value = null
+    lessonActionMessageType.value = 'success'
+    lessonActionMessage.value = 'Lesson changes saved successfully.'
+  } catch (error) {
+    console.error('Failed to update lesson:', error)
+    lessonEditError.value = error.response?.data?.message || 'Failed to update the lesson.'
+  } finally {
+    isSavingLessonEdit.value = false
+  }
+}
+
+const openLessonCopyModal = (lesson) => {
+  selectedLessonForCopy.value = lesson || null
+  lessonCopySubjectIds.value = []
+  lessonCopyError.value = ''
+  showLessonCopyModal.value = Boolean(lesson)
+}
+
+const closeLessonCopyModal = () => {
+  if (isCopyingLesson.value) return
+  showLessonCopyModal.value = false
+  selectedLessonForCopy.value = null
+  lessonCopySubjectIds.value = []
+  lessonCopyError.value = ''
+}
+
+const copyLessonToClasses = async () => {
+  if (!selectedLessonForCopy.value?.id || isCopyingLesson.value) return
+  if (lessonCopySubjectIds.value.length === 0) {
+    lessonCopyError.value = 'Select at least one additional class.'
+    return
+  }
+
+  isCopyingLesson.value = true
+  lessonCopyError.value = ''
+  try {
+    const lessonId = encodeURIComponent(selectedLessonForCopy.value.id)
+    const response = await axios.post(
+      `${resolveApiBaseUrl()}/teacher/lessons/${lessonId}/classes`,
+      { subjectIds: lessonCopySubjectIds.value },
+      getAuthConfig(),
+    )
+    await fetchRecords()
+    const addedCount = Array.isArray(response.data?.lessons) ? response.data.lessons.length : 0
+    const skippedCount = Array.isArray(response.data?.skippedClasses) ? response.data.skippedClasses.length : 0
+    showLessonCopyModal.value = false
+    selectedLessonForCopy.value = null
+    lessonCopySubjectIds.value = []
+    lessonActionMessageType.value = 'success'
+    lessonActionMessage.value = addedCount > 0
+      ? `Lesson added to ${addedCount} class${addedCount === 1 ? '' : 'es'}${skippedCount ? `; ${skippedCount} already had it` : ''}.`
+      : 'The selected classes already have this lesson.'
+  } catch (error) {
+    console.error('Failed to add lesson to classes:', error)
+    lessonCopyError.value = error.response?.data?.message || 'Failed to add the lesson to the selected classes.'
+  } finally {
+    isCopyingLesson.value = false
+  }
+}
+
+const openAssessmentEditModal = (assessment) => {
+  selectedAssessmentForEdit.value = assessment || null
+  assessmentEditForm.title = String(assessment?.title || '').trim()
+  assessmentEditForm.subjectId = String(assessment?.subjectId || '').trim()
+  assessmentEditForm.challengeDescription = String(assessment?.challengeDescription || '').trim()
+  assessmentEditForm.activityPoints = Number(assessment?.activityPoints || 100)
+  assessmentEditForm.difficulty = String(assessment?.difficulty || 'medium').trim().toLowerCase()
+  assessmentEditError.value = ''
+  showAssessmentEditModal.value = Boolean(assessment)
+}
+
+const closeAssessmentEditModal = () => {
+  if (isSavingAssessmentEdit.value) return
+  showAssessmentEditModal.value = false
+  selectedAssessmentForEdit.value = null
+  assessmentEditError.value = ''
+}
+
+const saveAssessmentEdit = async () => {
+  const assessment = selectedAssessmentForEdit.value
+  if (!assessment?.id || isSavingAssessmentEdit.value) return
+  if (!assessmentEditForm.title || !assessmentEditForm.subjectId) {
+    assessmentEditError.value = 'Complete the title and class.'
+    return
+  }
+  if (isActivityAssessment(assessment) && !assessmentEditForm.challengeDescription) {
+    assessmentEditError.value = 'Activity instructions are required.'
+    return
+  }
+
+  isSavingAssessmentEdit.value = true
+  assessmentEditError.value = ''
+  try {
+    const assessmentId = encodeURIComponent(assessment.id)
+    await axios.patch(
+      `${resolveApiBaseUrl()}/teacher/assessments/${assessmentId}`,
+      {
+        title: assessmentEditForm.title,
+        subjectId: assessmentEditForm.subjectId,
+        challengeDescription: assessmentEditForm.challengeDescription,
+        activityPoints: assessmentEditForm.activityPoints,
+        difficulty: assessmentEditForm.difficulty,
+      },
+      getAuthConfig(),
+    )
+    showAssessmentEditModal.value = false
+    selectedAssessmentForEdit.value = null
+    await fetchRecords()
+    assessmentActionMessage.value = `${getAssessmentTypeLabel(assessment)} changes saved successfully.`
+  } catch (error) {
+    console.error('Failed to update assessment:', error)
+    assessmentEditError.value = error.response?.data?.message || 'Failed to update the assessment.'
+  } finally {
+    isSavingAssessmentEdit.value = false
+  }
+}
+
+const openAssessmentCopyModal = (assessment) => {
+  selectedAssessmentForCopy.value = assessment || null
+  assessmentCopySubjectIds.value = []
+  assessmentCopyError.value = ''
+  showAssessmentCopyModal.value = Boolean(assessment)
+}
+
+const closeAssessmentCopyModal = () => {
+  if (isCopyingAssessment.value) return
+  showAssessmentCopyModal.value = false
+  selectedAssessmentForCopy.value = null
+  assessmentCopySubjectIds.value = []
+  assessmentCopyError.value = ''
+}
+
+const copyAssessmentToClasses = async () => {
+  const assessment = selectedAssessmentForCopy.value
+  if (!assessment?.id || isCopyingAssessment.value) return
+  if (assessmentCopySubjectIds.value.length === 0) {
+    assessmentCopyError.value = 'Select at least one additional class.'
+    return
+  }
+
+  isCopyingAssessment.value = true
+  assessmentCopyError.value = ''
+  try {
+    const assessmentId = encodeURIComponent(assessment.id)
+    const response = await axios.post(
+      `${resolveApiBaseUrl()}/teacher/assessments/${assessmentId}/classes`,
+      { subjectIds: assessmentCopySubjectIds.value },
+      getAuthConfig(),
+    )
+    const addedCount = Array.isArray(response.data?.assessments) ? response.data.assessments.length : 0
+    const skippedCount = Array.isArray(response.data?.skippedClasses) ? response.data.skippedClasses.length : 0
+    showAssessmentCopyModal.value = false
+    selectedAssessmentForCopy.value = null
+    assessmentCopySubjectIds.value = []
+    await fetchRecords()
+    assessmentActionMessage.value = addedCount > 0
+      ? `${getAssessmentTypeLabel(assessment)} added to ${addedCount} class${addedCount === 1 ? '' : 'es'}${skippedCount ? `; ${skippedCount} already had it or had a grading-period conflict` : ''}.`
+      : 'The selected classes already have this assessment or a conflicting grading assessment.'
+  } catch (error) {
+    console.error('Failed to add assessment to classes:', error)
+    assessmentCopyError.value = error.response?.data?.message || 'Failed to add the assessment to the selected classes.'
+  } finally {
+    isCopyingAssessment.value = false
+  }
 }
 
 const openResultsModal = (assessment) => {
@@ -3733,6 +4259,40 @@ onBeforeUnmount(() => {
   text-align: left;
 }
 
+#teacherRecordsLessonsPanel .lesson-card-header-actions {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+}
+
+#teacherRecordsLessonsPanel .lesson-manage-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+#teacherRecordsLessonsPanel .lesson-manage-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 30px;
+  border: 1px solid #cfddc7;
+  border-radius: 9px;
+  padding: 0.35rem 0.58rem;
+  background: #ffffff;
+  color: #406331;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+#teacherRecordsLessonsPanel .lesson-manage-actions button:hover {
+  border-color: #9fbd90;
+  background: #f2f8ee;
+  transform: translateY(-1px);
+}
+
 #teacherRecordsLessonsPanel .record-card-date-group > i {
   color: #6f9d58;
   font-size: 0.85rem;
@@ -3764,10 +4324,48 @@ onBeforeUnmount(() => {
   color: #315f1e;
 }
 
+#teacherRecordsLessonsPanel .chip-class {
+  border-color: #cdd8eb;
+  background: #f1f5fb;
+  color: #35547f;
+}
+
+#teacherRecordsLessonsPanel .record-chip-label {
+  font-weight: 700;
+}
+
 #teacherRecordsLessonsPanel .chip-neutral {
   border-color: #dfe6dc;
   background: #fafcf9;
   color: #687761;
+}
+
+#teacherRecordsLessonsPanel .lesson-action-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  border: 1px solid #bbd9ad;
+  border-radius: 12px;
+  padding: 0.72rem 0.85rem;
+  background: #f1f8ed;
+  color: #315f1e;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+#teacherRecordsLessonsPanel .lesson-action-banner.error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+#teacherRecordsLessonsPanel .lesson-action-banner button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 }
 
 #teacherRecordsLessonsPanel .record-card-body {
@@ -4441,10 +5039,42 @@ onBeforeUnmount(() => {
   color: #315f1e;
 }
 
+#teacherRecordsAssessmentsPanel .chip-class {
+  border-color: #cdd8eb;
+  background: #f1f5fb;
+  color: #35547f;
+}
+
+#teacherRecordsAssessmentsPanel .record-chip-label {
+  font-weight: 800;
+}
+
 #teacherRecordsAssessmentsPanel .chip-neutral {
   border-color: #dfe6dc;
   background: #fafcf9;
   color: #687761;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-action-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+  border: 1px solid #bbd9ad;
+  border-radius: 12px;
+  padding: 0.72rem 0.85rem;
+  background: #f1f8ed;
+  color: #315f1e;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-action-banner button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 }
 
 #teacherRecordsAssessmentsPanel .chip-type {
@@ -5410,6 +6040,172 @@ onBeforeUnmount(() => {
 
 .deadline-modal-dialog {
   width: min(540px, 100%);
+}
+
+.lesson-manage-dialog {
+  width: min(590px, 100%);
+}
+
+.lesson-modal-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 1px solid #dbe2ea;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.lesson-manage-form {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.lesson-manage-form > label {
+  display: grid;
+  gap: 0.42rem;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.lesson-manage-form input[type='text'],
+.lesson-manage-form input[type='number'],
+.lesson-manage-form select,
+.lesson-manage-form textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 11px;
+  padding: 0.68rem 0.75rem;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+}
+
+.lesson-manage-form textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.lesson-manage-form input:focus,
+.lesson-manage-form select:focus,
+.lesson-manage-form textarea:focus {
+  outline: none;
+  border-color: #7fa66c;
+  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.15);
+}
+
+.lesson-current-class {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 1px solid #dce9d5;
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: #f5faf2;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.lesson-current-class strong {
+  color: #315f1e;
+}
+
+.lesson-class-picker {
+  display: grid;
+  gap: 0.55rem;
+  max-height: 290px;
+  overflow: auto;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.lesson-class-picker legend {
+  margin-bottom: 0.6rem;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.lesson-class-picker label {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.68rem 0.75rem;
+  cursor: pointer;
+}
+
+.lesson-class-picker label:has(input:checked) {
+  border-color: #91b57f;
+  background: #f2f8ee;
+}
+
+.lesson-class-picker input {
+  width: 17px;
+  height: 17px;
+  accent-color: #5d8c46;
+}
+
+.lesson-class-picker label > span {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.lesson-class-picker strong {
+  color: #1f2937;
+  font-size: 0.84rem;
+}
+
+.lesson-class-picker small {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.lesson-manage-error,
+.lesson-manage-empty {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.lesson-manage-empty {
+  color: #64748b;
+}
+
+.lesson-secondary-btn,
+.lesson-primary-btn {
+  border-radius: 10px;
+  padding: 0.62rem 0.85rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lesson-secondary-btn {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+}
+
+.lesson-primary-btn {
+  border: 1px solid #5d8c46;
+  background: #5d8c46;
+  color: #ffffff;
+}
+
+.lesson-secondary-btn:disabled,
+.lesson-primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .deadline-modal-body {
@@ -10618,6 +11414,89 @@ onBeforeUnmount(() => {
   #teacherRecordsAttendancePanel .attendance-history-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+.integrity-count {
+  width: max-content;
+  padding: 0.34rem 0.58rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.integrity-count.is-clear {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.integrity-count.has-violations {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.integrity-log-details summary {
+  width: max-content;
+  list-style: none;
+  cursor: pointer;
+}
+
+.integrity-log-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.integrity-log-popover {
+  width: min(310px, 72vw);
+  margin-top: 0.55rem;
+  padding: 0.7rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  display: grid;
+  gap: 0.45rem;
+  background: #fff;
+  color: #334155;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.integrity-log-popover > strong {
+  color: #0f172a;
+  font-size: 0.78rem;
+}
+
+.integrity-termination {
+  color: #b91c1c;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.integrity-log-popover ol {
+  max-height: 180px;
+  margin: 0;
+  padding-left: 1.1rem;
+  overflow-y: auto;
+}
+
+.integrity-log-popover li {
+  padding: 0.3rem 0;
+  color: #475569;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.integrity-log-popover li span,
+.integrity-log-popover li small {
+  display: block;
+}
+
+.integrity-log-popover li small {
+  margin-top: 0.12rem;
+  color: #94a3b8;
+  font-size: 0.62rem;
 }
 </style>
 
