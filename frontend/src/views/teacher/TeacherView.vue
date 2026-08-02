@@ -181,7 +181,7 @@
                     </button>
                   </div>
                 </div>
-                <UserNotificationList :notifications="messageNotifications" :loading="isNotificationsLoading" />
+                <UserNotificationList :notifications="messageNotifications" :loading="isNotificationsLoading" @select="closeNotificationsPanel" />
               </div>
             </div>
             <div ref="accountMenuRef" class="account-menu">

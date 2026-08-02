@@ -12,6 +12,7 @@ const {
   getManagedTeacherAssessments,
   createManagedTeacherAssessment,
   updateManagedTeacherAssessment,
+  sendManagedTeacherAnnouncement,
 } = require('../controllers/headteacherController');
 const { getAiStatus, generateAssessmentWithAi } = require('../controllers/aiController');
 const { getHeadTeacherAttendanceOverview } = require('../controllers/attendanceController');
@@ -34,5 +35,6 @@ router.get('/ai/status', getAiStatus);
 router.post('/assessments/ai-generate', generateAssessmentWithAi);
 router.post('/teachers', createTeacherAccount);
 router.put('/teachers/:id', updateManagedTeacher);
+router.post('/teachers/:id/announcements', sendManagedTeacherAnnouncement);
 
 module.exports = router;

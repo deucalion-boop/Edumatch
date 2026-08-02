@@ -20,10 +20,12 @@ async function createAdminMessageNotification({
 }) {
   const preview = buildMessagePreview(content);
   const senderName = String(sender?.name || sender?.username || 'Admin').trim() || 'Admin';
+  const senderRole = String(sender?.role || 'admin').trim().toLowerCase();
+  const senderLabel = senderRole === 'headteacher' ? 'Head Teacher' : 'Admin';
 
   const messageRecord = await AdminMessage.create({
     senderId: sender?._id,
-    senderRole: String(sender?.role || 'admin').trim().toLowerCase(),
+    senderRole,
     senderName,
     recipientId: recipient?._id,
     recipientRole: String(recipient?.role || '').trim().toLowerCase(),
@@ -37,10 +39,10 @@ async function createAdminMessageNotification({
     recipientId: recipient?._id,
     recipientRole: String(recipient?.role || '').trim().toLowerCase(),
     senderId: sender?._id || null,
-    senderRole: String(sender?.role || 'admin').trim().toLowerCase(),
+    senderRole,
     senderName,
-    type: 'admin_message',
-    title: urgent ? 'Urgent message from Admin' : 'New message from Admin',
+    type: senderRole === 'headteacher' ? 'management_message' : 'admin_message',
+    title: urgent ? `Urgent message from ${senderLabel}` : `New message from ${senderLabel}`,
     message: `${senderName}: ${String(subject || '').trim()}`,
     subject: String(subject || '').trim(),
     preview,
@@ -49,7 +51,7 @@ async function createAdminMessageNotification({
     viewedAt: null,
     messageId: messageRecord._id,
     meta: {
-      source: 'admin_messaging_modal',
+      source: senderRole === 'headteacher' ? 'headteacher_announcement' : 'admin_messaging_modal',
     },
   });
 

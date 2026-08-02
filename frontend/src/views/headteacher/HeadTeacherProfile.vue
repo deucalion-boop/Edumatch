@@ -105,7 +105,8 @@
               </label>
               <label class="headteacher-form-group headteacher-form-group-full">
                 <span>Contact Number</span>
-                <input v-model.trim="profileForm.contactNumber" type="text" placeholder="Optional contact number">
+                <input v-model.trim="profileForm.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789">
+                <small v-if="errors.contactNumber" class="headteacher-form-feedback error">{{ errors.contactNumber }}</small>
               </label>
             </div>
 
@@ -124,6 +125,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -139,6 +141,7 @@ const profileForm = reactive({
 const errors = reactive({
   name: '',
   email: '',
+  contactNumber: '',
 })
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'HeadTeacher').trim())
@@ -149,7 +152,7 @@ const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.v
 const syncProfileForm = () => {
   profileForm.name = String(authStore.user?.name || authStore.user?.displayName || '').trim()
   profileForm.email = String(authStore.user?.email || '').trim()
-  profileForm.contactNumber = String(authStore.user?.contactNumber || '').trim()
+  profileForm.contactNumber = normalizePhilippinePhone(authStore.user?.contactNumber)
 }
 
 const clearBanner = () => { banner.message = '' }
@@ -179,6 +182,7 @@ const handleAccountMenuClickOutside = (event) => {
 const validateProfile = () => {
   errors.name = ''
   errors.email = ''
+  errors.contactNumber = ''
   if (!String(profileForm.name || '').trim()) errors.name = 'Display name is required.'
   const emailValue = String(profileForm.email || '').trim()
   if (!emailValue) {
@@ -186,7 +190,10 @@ const validateProfile = () => {
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
     errors.email = 'Enter a valid email address.'
   }
-  return !errors.name && !errors.email
+  if (!isValidPhilippinePhone(profileForm.contactNumber)) {
+    errors.contactNumber = 'Enter a valid Philippine number beginning with +63.'
+  }
+  return !errors.name && !errors.email && !errors.contactNumber
 }
 
 const saveProfile = () => {
@@ -200,7 +207,7 @@ const saveProfile = () => {
     name: String(profileForm.name || '').trim(),
     displayName: String(profileForm.name || '').trim(),
     email: String(profileForm.email || '').trim(),
-    contactNumber: String(profileForm.contactNumber || '').trim(),
+    contactNumber: normalizePhilippinePhone(profileForm.contactNumber),
   })
   banner.type = 'success'
   banner.message = 'HeadTeacher profile updated successfully.'
@@ -211,6 +218,7 @@ const resetProfile = () => {
   syncProfileForm()
   errors.name = ''
   errors.email = ''
+  errors.contactNumber = ''
 }
 
 onMounted(() => {

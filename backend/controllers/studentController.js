@@ -11,6 +11,16 @@ const { computeMasteryFromSubmissions, recalculateStudentMasteryProgress } = req
 const { formatRecommendationPayload, recomputeStudentRecommendation } = require('../services/recommendationService');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
+const {
+  notifyAutomatedGrade,
+  notifySubmissionCompleted,
+  safelyRunNotificationTask,
+} = require('../services/studentNotificationService');
+const {
+  notifyEnrollmentRequest,
+  notifyExamIncident,
+  notifyTeacherSubmission,
+} = require('../services/teacherNotificationService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
@@ -941,6 +951,28 @@ async function finalizeSubmission({
     });
   }
 
+  await Promise.all([
+    safelyRunNotificationTask('assessment submission', () => notifySubmissionCompleted({
+      submission,
+      assessment,
+    })),
+    safelyRunNotificationTask('automated grade', () => notifyAutomatedGrade({
+      submission,
+      assessment,
+    })),
+    safelyRunNotificationTask('teacher submission', () => notifyTeacherSubmission({
+      submission,
+      assessment,
+    })),
+    ...(['auto_submitted', 'terminated'].includes(String(status || '').toLowerCase())
+      ? [safelyRunNotificationTask('exam incident', () => notifyExamIncident({
+        submission,
+        assessment,
+        action: String(status || '').toLowerCase(),
+      }))]
+      : []),
+  ]);
+
   return {
     submission,
     summary: {
@@ -1224,6 +1256,12 @@ const logAssessmentActivity = asyncHandler(async (req, res) => {
 
   if (reachedLimit && violationAction === 'pause') {
     await submission.save();
+    await safelyRunNotificationTask('paused assessment incident', () => notifyExamIncident({
+      submission,
+      assessment,
+      student: req.user,
+      action: 'paused',
+    }));
     return sendSuccess(res, 200, 'Violation logged and exam paused', {
       ruleTriggered: true,
       violationCount: Number(submission.violationCount || 0),
@@ -1402,6 +1440,16 @@ const turnInActivityResponse = asyncHandler(async (req, res) => {
     assessment,
     finalize: true,
   });
+
+  await safelyRunNotificationTask('activity submission', () => notifySubmissionCompleted({
+    submission,
+    assessment,
+  }));
+  await safelyRunNotificationTask('teacher activity submission', () => notifyTeacherSubmission({
+    submission,
+    assessment,
+    student: req.user,
+  }));
 
   return sendSuccess(res, 201, 'Activity submitted successfully', {
     submission: toActivitySubmissionResponse(submission, req),
@@ -1595,6 +1643,12 @@ const joinSubjectByCode = asyncHandler(async (req, res) => {
   enrollment.requestedAt = new Date();
   enrollment.decidedAt = null;
   await enrollment.save();
+
+  await safelyRunNotificationTask('enrollment request', () => notifyEnrollmentRequest({
+    enrollment,
+    student: req.user,
+    subject,
+  }));
 
   return sendSuccess(res, 201, 'Enrollment request sent successfully', {
     request: {

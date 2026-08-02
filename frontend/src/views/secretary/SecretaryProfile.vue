@@ -115,7 +115,8 @@
 
             <label class="secretary-field secretary-field-wide">
               <span>Contact Number</span>
-              <input v-model.trim="profileForm.contactNumber" type="text" placeholder="Enter contact number">
+              <input v-model.trim="profileForm.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789">
+              <small v-if="errors.contactNumber" class="secretary-field-error">{{ errors.contactNumber }}</small>
             </label>
           </div>
 
@@ -134,6 +135,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -154,6 +156,7 @@ const profileForm = reactive({
 const errors = reactive({
   name: '',
   email: '',
+  contactNumber: '',
 })
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
@@ -184,7 +187,7 @@ const handleAccountMenuClickOutside = (event) => {
 const syncProfileForm = () => {
   profileForm.name = String(authStore.user?.name || authStore.user?.displayName || '').trim()
   profileForm.email = String(authStore.user?.email || '').trim()
-  profileForm.contactNumber = String(authStore.user?.contactNumber || '').trim()
+  profileForm.contactNumber = normalizePhilippinePhone(authStore.user?.contactNumber)
 }
 
 const clearBanner = () => {
@@ -194,6 +197,7 @@ const clearBanner = () => {
 const validateProfile = () => {
   errors.name = ''
   errors.email = ''
+  errors.contactNumber = ''
 
   if (!String(profileForm.name || '').trim()) {
     errors.name = 'Display name is required.'
@@ -206,7 +210,11 @@ const validateProfile = () => {
     errors.email = 'Enter a valid email address.'
   }
 
-  return !errors.name && !errors.email
+  if (!isValidPhilippinePhone(profileForm.contactNumber)) {
+    errors.contactNumber = 'Enter a valid Philippine number beginning with +63.'
+  }
+
+  return !errors.name && !errors.email && !errors.contactNumber
 }
 
 const saveProfile = () => {
@@ -221,7 +229,7 @@ const saveProfile = () => {
     name: String(profileForm.name || '').trim(),
     displayName: String(profileForm.name || '').trim(),
     email: String(profileForm.email || '').trim(),
-    contactNumber: String(profileForm.contactNumber || '').trim(),
+    contactNumber: normalizePhilippinePhone(profileForm.contactNumber),
   })
 
   banner.type = 'success'
@@ -233,6 +241,7 @@ const resetProfile = () => {
   syncProfileForm()
   errors.name = ''
   errors.email = ''
+  errors.contactNumber = ''
 }
 
 syncProfileForm()

@@ -1,5 +1,7 @@
 const Notification = require('../models/Notification');
 const { sendSuccess } = require('../utils/responseHelper');
+const { safelyRunNotificationTask, syncStudentNotifications } = require('../services/studentNotificationService');
+const { syncTeacherNotifications } = require('../services/teacherNotificationService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -18,6 +20,7 @@ function normalizeNotification(notification) {
     viewedAt: notification.viewedAt || null,
     createdAt: notification.createdAt || null,
     messageId: notification.messageId || null,
+    meta: notification.meta && typeof notification.meta === 'object' ? notification.meta : {},
   };
 }
 
@@ -27,10 +30,17 @@ const getMyNotifications = asyncHandler(async (req, res) => {
   const recipientId = req.user._id;
   const recipientRole = String(req.user.role || '').trim().toLowerCase();
 
+  if (recipientRole === 'student') {
+    await safelyRunNotificationTask('student notification sync', () => syncStudentNotifications(recipientId));
+  } else if (recipientRole === 'teacher') {
+    await safelyRunNotificationTask('teacher notification sync', () => syncTeacherNotifications(recipientId));
+  }
+
   const [notifications, unreadCount] = await Promise.all([
     Notification.find({
       recipientId,
       recipientRole,
+      isCleared: { $ne: true },
     })
       .sort({ urgent: -1, createdAt: -1 })
       .limit(limit)
@@ -39,6 +49,7 @@ const getMyNotifications = asyncHandler(async (req, res) => {
       recipientId,
       recipientRole,
       isViewed: false,
+      isCleared: { $ne: true },
     }),
   ]);
 
@@ -58,6 +69,7 @@ const markAllNotificationsViewed = asyncHandler(async (req, res) => {
       recipientId,
       recipientRole,
       isViewed: false,
+      isCleared: { $ne: true },
     },
     {
       $set: {
@@ -105,13 +117,13 @@ const clearAllNotifications = asyncHandler(async (req, res) => {
   const recipientId = req.user._id;
   const recipientRole = String(req.user.role || '').trim().toLowerCase();
 
-  const result = await Notification.deleteMany({
-    recipientId,
-    recipientRole,
-  });
+  const result = await Notification.updateMany(
+    { recipientId, recipientRole, isCleared: { $ne: true } },
+    { $set: { isCleared: true, isViewed: true, viewedAt: new Date() } }
+  );
 
   return sendSuccess(res, 200, 'Notifications cleared successfully', {
-    deletedCount: Number(result?.deletedCount || 0),
+    deletedCount: Number(result?.modifiedCount || 0),
     unreadCount: 0,
   });
 });

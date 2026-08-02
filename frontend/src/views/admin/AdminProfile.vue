@@ -206,7 +206,8 @@
 
                 <label class="profile-field profile-field--wide">
                   <span>Contact Number</span>
-                  <input v-model.trim="profileForm.contactNumber" type="text" placeholder="Optional contact number" />
+                  <input v-model.trim="profileForm.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789" />
+                  <small v-if="errors.contactNumber" class="profile-field-error">{{ errors.contactNumber }}</small>
                 </label>
               </div>
 
@@ -226,6 +227,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -249,6 +251,7 @@ const errors = reactive({
   name: '',
   email: '',
   username: '',
+  contactNumber: '',
 })
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Admin').trim())
@@ -288,7 +291,7 @@ const syncProfileForm = () => {
   profileForm.name = String(authStore.user?.name || authStore.user?.displayName || '').trim()
   profileForm.email = String(authStore.user?.email || '').trim()
   profileForm.username = String(authStore.user?.username || '').trim()
-  profileForm.contactNumber = String(authStore.user?.contactNumber || '').trim()
+  profileForm.contactNumber = normalizePhilippinePhone(authStore.user?.contactNumber)
   profileImageDraft.value = String(authStore.user?.profileImage || authStore.user?.avatar || '').trim()
   selectedPhotoName.value = ''
   if (profilePhotoInput.value) {
@@ -367,6 +370,7 @@ const validateProfile = () => {
   errors.name = ''
   errors.email = ''
   errors.username = ''
+  errors.contactNumber = ''
 
   if (!String(profileForm.name || '').trim()) {
     errors.name = 'Display name is required.'
@@ -383,7 +387,11 @@ const validateProfile = () => {
     errors.username = 'Username is required.'
   }
 
-  return !errors.name && !errors.email && !errors.username
+  if (!isValidPhilippinePhone(profileForm.contactNumber)) {
+    errors.contactNumber = 'Enter a valid Philippine number beginning with +63.'
+  }
+
+  return !errors.name && !errors.email && !errors.username && !errors.contactNumber
 }
 
 const saveProfile = () => {
@@ -400,7 +408,7 @@ const saveProfile = () => {
     displayName: String(profileForm.name || '').trim(),
     email: String(profileForm.email || '').trim(),
     username: String(profileForm.username || '').trim(),
-    contactNumber: String(profileForm.contactNumber || '').trim(),
+    contactNumber: normalizePhilippinePhone(profileForm.contactNumber),
     profileImage: profileImageDraft.value,
   })
 
@@ -418,6 +426,7 @@ const resetProfile = () => {
   errors.name = ''
   errors.email = ''
   errors.username = ''
+  errors.contactNumber = ''
 }
 
 watch(

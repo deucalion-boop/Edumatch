@@ -13,23 +13,40 @@
       v-for="notification in notifications"
       :key="notification.id"
       class="user-notification-item"
-      :class="{ urgent: notification.urgent, unread: !notification.isViewed }"
+      :class="{ urgent: notification.urgent, unread: !notification.isViewed, clickable: isClickable(notification) }"
+      :role="isClickable(notification) ? 'button' : undefined"
+      :tabindex="isClickable(notification) ? 0 : undefined"
+      @click="selectNotification(notification)"
+      @keydown.enter.prevent="selectNotification(notification)"
+      @keydown.space.prevent="selectNotification(notification)"
     >
-      <div class="user-notification-topline">
-        <span class="user-notification-title">{{ notification.title }}</span>
-        <span v-if="notification.urgent" class="user-notification-badge">Urgent</span>
-      </div>
-      <p class="user-notification-subject">{{ notification.subject }}</p>
-      <p class="user-notification-preview">{{ notification.preview }}</p>
-      <div class="user-notification-meta">
-        <span>{{ notification.senderName || 'Admin' }}</span>
-        <span>{{ formatTimestamp(notification.createdAt) }}</span>
+      <div class="user-notification-layout">
+        <span class="user-notification-icon" aria-hidden="true">
+          <i :class="notificationIcon(notification.type)"></i>
+        </span>
+        <div class="user-notification-content">
+          <div class="user-notification-topline">
+            <span class="user-notification-title">{{ notification.title }}</span>
+            <span v-if="notification.urgent" class="user-notification-badge">Urgent</span>
+          </div>
+          <p class="user-notification-subject">{{ notification.subject }}</p>
+          <p class="user-notification-preview">{{ notification.preview }}</p>
+          <div class="user-notification-meta">
+            <span>{{ notification.senderName || 'EduMatch' }}</span>
+            <span>{{ formatTimestamp(notification.createdAt) }}</span>
+          </div>
+        </div>
+        <i v-if="isClickable(notification)" class="fas fa-chevron-right user-notification-chevron" aria-hidden="true"></i>
       </div>
     </article>
   </div>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const props = defineProps({
   notifications: {
     type: Array,
@@ -44,6 +61,45 @@ const props = defineProps({
     default: 'No notifications',
   },
 })
+
+const emit = defineEmits(['select'])
+
+const ICONS_BY_TYPE = {
+  lesson_published: 'fas fa-book-open',
+  activity_assigned: 'fas fa-tasks',
+  assessment_assigned: 'fas fa-clipboard-list',
+  deadline_upcoming: 'fas fa-clock',
+  activity_submitted: 'fas fa-circle-check',
+  assessment_submitted: 'fas fa-circle-check',
+  grade_released: 'fas fa-chart-line',
+  grade_updated: 'fas fa-chart-line',
+  teacher_feedback: 'fas fa-comment-dots',
+  recommendation_ready: 'fas fa-compass',
+  recommendation_progress: 'fas fa-route',
+  admin_message: 'fas fa-bullhorn',
+  management_message: 'fas fa-bullhorn',
+  enrollment_request: 'fas fa-user-plus',
+  student_submission: 'fas fa-file-alt',
+  grading_queue: 'fas fa-marker',
+  deadline_missed: 'fas fa-calendar-times',
+  deadline_upcoming_teacher: 'fas fa-calendar-day',
+  exam_incident: 'fas fa-triangle-exclamation',
+}
+
+function notificationIcon(type) {
+  return ICONS_BY_TYPE[String(type || '').toLowerCase()] || 'fas fa-bell'
+}
+
+function isClickable(notification) {
+  const route = String(notification?.meta?.route || '')
+  return route.startsWith('/student/') || route.startsWith('/teacher/')
+}
+
+function selectNotification(notification) {
+  if (!isClickable(notification)) return
+  emit('select', notification)
+  router.push(String(notification.meta.route)).catch(() => {})
+}
 
 function formatTimestamp(value) {
   if (!value) return 'Just now'
@@ -98,6 +154,52 @@ function formatTimestamp(value) {
 .user-notification-item.urgent {
   border-color: #f3c37a;
   background: linear-gradient(180deg, #fffaf0 0%, #fff6e8 100%);
+}
+
+.user-notification-item.clickable {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.user-notification-item.clickable:hover,
+.user-notification-item.clickable:focus-visible {
+  border-color: #93c5fd;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.11);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.user-notification-layout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.user-notification-content {
+  min-width: 0;
+}
+
+.user-notification-icon {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.user-notification-item.urgent .user-notification-icon {
+  background: #ffedd5;
+  color: #b45309;
+}
+
+.user-notification-chevron {
+  align-self: center;
+  color: #94a3b8;
+  font-size: 0.75rem;
 }
 
 .user-notification-topline {

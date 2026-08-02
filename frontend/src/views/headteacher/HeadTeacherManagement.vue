@@ -347,6 +347,16 @@
                     <div class="headteacher-row-actions">
                       <button
                         type="button"
+                        class="headteacher-directory-action-btn is-message"
+                        :disabled="teacher.status !== 'active'"
+                        :aria-label="`Send announcement to ${teacher.name}`"
+                        title="Send announcement"
+                        @click.stop="openAnnouncementModal(teacher)"
+                      >
+                        <i class="fas fa-bullhorn"></i>
+                      </button>
+                      <button
+                        type="button"
                         class="headteacher-directory-action-btn is-save"
                         :disabled="isUpdatingTeacherAssignment || !hasTeacherAssignmentChanged(teacher)"
                         :aria-label="`Save advisory section for ${teacher.name}`"
@@ -476,6 +486,15 @@
               </div>
 
               <div class="headteacher-row-actions headteacher-mobile-actions">
+                <button
+                  type="button"
+                  class="headteacher-button headteacher-button-outline headteacher-button-sm"
+                  :disabled="teacher.status !== 'active'"
+                  @click.stop="openAnnouncementModal(teacher)"
+                >
+                  <i class="fas fa-bullhorn"></i>
+                  Announce
+                </button>
                 <button
                   type="button"
                   class="headteacher-button headteacher-button-primary headteacher-button-sm headteacher-save-section-btn"
@@ -673,7 +692,7 @@
               </label>
               <label class="headteacher-form-group">
                 <span>Contact Number</span>
-                <input v-model.trim="form.contactNumber" type="text" placeholder="Optional contact number">
+                <input v-model.trim="form.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789">
               </label>
               <label class="headteacher-form-group">
                 <span>Access</span>
@@ -697,6 +716,45 @@
               <button type="submit" class="headteacher-button headteacher-button-primary" :disabled="isSubmitting">
                 <i class="fas" :class="isSubmitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
                 {{ isSubmitting ? 'Saving...' : 'Create Teacher & Email Credentials' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div v-if="isAnnouncementModalOpen" class="headteacher-modal-shell" @click.self="closeAnnouncementModal">
+        <div class="headteacher-modal-panel headteacher-announcement-modal">
+          <div class="headteacher-modal-head">
+            <div>
+              <h3>Send Teacher Announcement</h3>
+              <p>This will appear in {{ announcementTarget?.name || 'the teacher' }}'s notification bell.</p>
+            </div>
+            <button type="button" class="headteacher-modal-close" @click="closeAnnouncementModal" aria-label="Close announcement form">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <form class="headteacher-form" @submit.prevent="sendTeacherAnnouncement">
+            <label class="headteacher-form-group">
+              <span>Subject</span>
+              <input v-model.trim="announcementForm.subject" type="text" maxlength="200" required placeholder="Announcement subject">
+            </label>
+            <label class="headteacher-form-group">
+              <span>Message</span>
+              <textarea v-model.trim="announcementForm.content" maxlength="5000" required rows="6" placeholder="Write your announcement"></textarea>
+            </label>
+            <label class="headteacher-announcement-urgent">
+              <input v-model="announcementForm.urgent" type="checkbox">
+              <span>Mark as urgent</span>
+            </label>
+
+            <p v-if="announcementMessage" class="headteacher-form-feedback" :class="announcementMessageType">{{ announcementMessage }}</p>
+
+            <div class="headteacher-modal-actions">
+              <button type="button" class="headteacher-button headteacher-button-outline" @click="closeAnnouncementModal">Cancel</button>
+              <button type="submit" class="headteacher-button headteacher-button-primary" :disabled="isSendingAnnouncement">
+                <i class="fas" :class="isSendingAnnouncement ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+                {{ isSendingAnnouncement ? 'Sending...' : 'Send Announcement' }}
               </button>
             </div>
           </form>
@@ -832,6 +890,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import gsap from 'gsap'
 import { useAuthStore } from '../../stores/auth.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -844,6 +903,8 @@ const isSubmitting = ref(false)
 const isCreateModalOpen = ref(false)
 const isStudentsModalOpen = ref(false)
 const isAttendanceModalOpen = ref(false)
+const isAnnouncementModalOpen = ref(false)
+const isSendingAnnouncement = ref(false)
 const isUpdatingTeacherAssignment = ref(false)
 const updatingTeacherAssignmentId = ref('')
 const formMessage = ref('')
@@ -869,6 +930,9 @@ const attendanceOverview = ref({
 const selectedTeacher = ref(null)
 const selectedTeacherStudents = ref([])
 const selectedAttendanceRecord = ref(null)
+const announcementTarget = ref(null)
+const announcementMessage = ref('')
+const announcementMessageType = ref('success')
 const isStudentsLoading = ref(false)
 const studentsErrorMessage = ref('')
 const currentPage = ref(1)
@@ -894,6 +958,11 @@ const form = reactive({
   username: '',
   contactNumber: '',
   advisorySectionId: '',
+})
+const announcementForm = reactive({
+  subject: '',
+  content: '',
+  urgent: false,
 })
 
 const resolveApiBaseUrl = () => {
@@ -1183,6 +1252,45 @@ const closeStudentsModal = () => {
   studentsErrorMessage.value = ''
 }
 
+const openAnnouncementModal = (teacher) => {
+  announcementTarget.value = teacher
+  announcementForm.subject = ''
+  announcementForm.content = ''
+  announcementForm.urgent = false
+  announcementMessage.value = ''
+  announcementMessageType.value = 'success'
+  isAnnouncementModalOpen.value = true
+}
+
+const closeAnnouncementModal = () => {
+  if (isSendingAnnouncement.value) return
+  isAnnouncementModalOpen.value = false
+  announcementTarget.value = null
+  announcementMessage.value = ''
+}
+
+const sendTeacherAnnouncement = async () => {
+  const teacherId = normalizeTeacherId(announcementTarget.value)
+  if (!teacherId) return
+  isSendingAnnouncement.value = true
+  announcementMessage.value = ''
+  try {
+    await axios.post(
+      `${resolveApiBaseUrl()}/headteacher/teachers/${encodeURIComponent(teacherId)}/announcements`,
+      { ...announcementForm },
+      getAuthConfig(),
+    )
+    announcementMessage.value = 'Announcement sent successfully.'
+    announcementMessageType.value = 'success'
+    window.setTimeout(() => closeAnnouncementModal(), 500)
+  } catch (error) {
+    announcementMessage.value = error.response?.data?.message || 'Failed to send announcement.'
+    announcementMessageType.value = 'error'
+  } finally {
+    isSendingAnnouncement.value = false
+  }
+}
+
 const openAttendanceModal = (record) => {
   selectedAttendanceRecord.value = record || null
   isAttendanceModalOpen.value = Boolean(selectedAttendanceRecord.value)
@@ -1352,12 +1460,19 @@ const createTeacher = async () => {
   isSubmitting.value = true
   formMessage.value = ''
   try {
+    const contactNumber = normalizePhilippinePhone(form.contactNumber)
+    if (!isValidPhilippinePhone(contactNumber)) {
+      formMessage.value = 'Please enter a valid Philippine contact number beginning with +63.'
+      formMessageType.value = 'error'
+      return
+    }
+
     const response = await axios.post(`${resolveApiBaseUrl()}/headteacher/teachers`, {
       name: form.name,
       email: form.email,
       username: form.username,
       subject: departmentLabel.value,
-      contactNumber: form.contactNumber,
+      contactNumber,
       advisorySectionId: form.advisorySectionId || undefined,
     }, getAuthConfig())
 
@@ -1453,6 +1568,39 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.headteacher-announcement-modal {
+  max-width: 620px;
+}
+
+.headteacher-announcement-modal textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 130px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  color: #0f172a;
+  font: inherit;
+}
+
+.headteacher-announcement-modal textarea:focus {
+  border-color: #2563eb;
+  outline: 3px solid rgba(37, 99, 235, 0.12);
+}
+
+.headteacher-announcement-urgent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #334155;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.headteacher-directory-action-btn.is-message {
+  color: #1d4ed8;
+}
+
 .headteacher-sr-only {
   position: absolute;
   width: 1px;

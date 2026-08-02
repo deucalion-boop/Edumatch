@@ -175,7 +175,11 @@
                     </button>
                   </div>
                 </div>
-                <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" />
+                <UserNotificationList
+                  :notifications="notifications"
+                  :loading="isNotificationsLoading"
+                  @select="closeNotificationsPanel"
+                />
               </div>
             </div>
             <div ref="accountMenuRef" class="account-menu">
@@ -286,6 +290,7 @@ export default {
       closeNotificationsPanel,
       clearAllNotifications,
     } = useUserNotifications({ limit: 8, pollIntervalMs: 15000 })
+
     const isTourActive = ref(false)
     const tourStepIndex = ref(0)
     const tourTargetRect = ref(null)

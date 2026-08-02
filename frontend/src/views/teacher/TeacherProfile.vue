@@ -46,7 +46,7 @@
                     </button>
                   </div>
                 </div>
-                <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" />
+                <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" @select="closeNotificationsPanel" />
               </div>
             </div>
             <div ref="accountMenuRef" class="account-menu">
@@ -255,6 +255,8 @@
                           id="phone"
                           v-model="formData.phone"
                           type="tel"
+                          inputmode="tel"
+                          placeholder="+63 912 345 6789"
                           :readonly="!isEditing"
                         >
                       </div>
@@ -309,6 +311,7 @@ import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -458,7 +461,7 @@ const applyUserProfile = (apiUser = {}) => {
   user.status = statusValue
   user.statusLabel = statusLabel
   user.subject = apiUser.subject || authStore.user?.subject || ''
-  user.contactNumber = apiUser.contactNumber || ''
+  user.contactNumber = normalizePhilippinePhone(apiUser.contactNumber)
   user.profileImage = profileImage
   user.createdAt = apiUser.createdAt || null
 }
@@ -531,7 +534,7 @@ const handleAvatarUpload = (event) => {
 const validateCommonFields = () => {
   const fullName = `${formData.firstName} ${formData.lastName}`.trim()
   const email = String(formData.email || '').trim()
-  const contactNumber = String(formData.phone || '').trim().replace(/\s+/g, ' ')
+  const contactNumber = normalizePhilippinePhone(formData.phone)
 
   if (!fullName) return { error: 'Full name is required' }
   if (!email) return { error: 'Email is required' }
@@ -539,8 +542,7 @@ const validateCommonFields = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email)) return { error: 'Please enter a valid email address' }
 
-  const contactRegex = /^\+?[0-9()\-. ]{7,30}$/
-  if (contactNumber && !contactRegex.test(contactNumber)) return { error: 'Please enter a valid contact number' }
+  if (!isValidPhilippinePhone(contactNumber)) return { error: 'Please enter a valid Philippine contact number beginning with +63' }
 
   return { fullName, email, contactNumber }
 }

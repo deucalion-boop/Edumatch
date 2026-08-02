@@ -180,6 +180,8 @@
                         type="tel" 
                         id="phone" 
                         v-model="formData.phone"
+                        inputmode="tel"
+                        placeholder="+63 912 345 6789"
                         :readonly="!isEditing"
                       >
                     </div>
@@ -205,6 +207,7 @@
 <script>
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 export default {
   name: 'StudentProfile',
@@ -323,7 +326,7 @@ export default {
         role,
         status: statusValue,
         statusLabel,
-        contactNumber: apiUser.contactNumber || '',
+        contactNumber: normalizePhilippinePhone(apiUser.contactNumber),
         strand: apiUser.strand || '',
         profileImage,
         gradeLevel: apiUser.gradeLevel || '',
@@ -331,7 +334,7 @@ export default {
         profile: {
           ...this.user.profile,
           fullName,
-          phone: apiUser.contactNumber || '',
+          phone: normalizePhilippinePhone(apiUser.contactNumber),
           avatar: profileImage || null
         }
       }
@@ -423,7 +426,7 @@ export default {
 
         const fullName = `${this.formData.firstName} ${this.formData.lastName}`.trim()
         const email = String(this.formData.email || '').trim()
-        const contactNumber = String(this.formData.phone || '').trim().replace(/\s+/g, ' ')
+        const contactNumber = normalizePhilippinePhone(this.formData.phone)
         const gradeLevel = String(this.formData.gradeLevel || this.user.gradeLevel || '').trim()
 
         if (!fullName) {
@@ -439,9 +442,8 @@ export default {
           this.showToast('error', 'Please enter a valid email address')
           return
         }
-        const contactRegex = /^\+?[0-9()\-. ]{7,30}$/
-        if (contactNumber && !contactRegex.test(contactNumber)) {
-          this.showToast('error', 'Please enter a valid contact number')
+        if (!isValidPhilippinePhone(contactNumber)) {
+          this.showToast('error', 'Please enter a valid Philippine contact number beginning with +63')
           return
         }
         const allowedGradeLevels = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']

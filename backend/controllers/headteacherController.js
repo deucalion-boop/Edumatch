@@ -31,6 +31,12 @@ const { uploadFiles } = require('../services/storageService');
 const { getSectionOrThrow, syncTeacherAdvisoryAssignments } = require('../services/sectionService');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
+const { createAdminMessageNotification } = require('../services/notificationService');
+const {
+  notifyAssessmentAssigned,
+  notifyLessonPublished,
+  safelyRunNotificationTask,
+} = require('../services/studentNotificationService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const ALLOWED_ACCOUNT_STATUSES = ['pending', 'active', 'inactive', 'suspended'];
@@ -205,7 +211,7 @@ async function findManagedTeacherForHeadTeacher(req, teacherId, options = {}) {
     role: ROLE_TEACHER,
     department,
     managedBy: req.user._id,
-  }).select('_id name subject department strand');
+  }).select('_id name username role status subject department strand');
 
   if (!teacher) {
     const error = new Error('Teacher not found');
@@ -740,6 +746,11 @@ const createManagedTeacherLesson = asyncHandler(async (req, res) => {
     createdBy: teacher._id,
   });
 
+  await safelyRunNotificationTask('head teacher lesson', () => notifyLessonPublished({
+    lesson,
+    publisher: req.user,
+  }));
+
   return sendSuccess(res, 201, 'Lesson created and assigned successfully', {
     lesson: headTeacherLessonToResponse(lesson, teacher),
   });
@@ -937,6 +948,11 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     lastModifiedBy: req.user._id,
   });
 
+  await safelyRunNotificationTask('head teacher assessment', () => notifyAssessmentAssigned({
+    assessment,
+    publisher: req.user,
+  }));
+
   const hydratedAssessment = await Assessment.findById(assessment._id)
     .populate('lessonId', 'title track subject subjectId subjectCode')
     .populate('publishedBy', 'name role')
@@ -1088,6 +1104,49 @@ const updateManagedTeacherAssessment = asyncHandler(async (req, res) => {
   });
 });
 
+const sendManagedTeacherAnnouncement = asyncHandler(async (req, res) => {
+  const department = ensureHeadTeacher(req);
+  const teacher = await findManagedTeacherForHeadTeacher(req, req.params.id, { department });
+  const subject = String(req.body?.subject || '').trim();
+  const content = String(req.body?.content || '').trim();
+  const urgent = req.body?.urgent === true;
+
+  if (!subject || !content) {
+    const error = new Error('Announcement subject and message are required');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (subject.length > 200 || content.length > 5000) {
+    const error = new Error('Announcement subject or message is too long');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (String(teacher.status || '').trim().toLowerCase() !== 'active') {
+    const error = new Error('Announcements can only be sent to active teachers');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const { notificationRecord } = await createAdminMessageNotification({
+    sender: req.user,
+    recipient: teacher,
+    subject,
+    content,
+    urgent,
+  });
+
+  return sendSuccess(res, 201, 'Announcement sent successfully', {
+    notification: {
+      id: notificationRecord._id,
+      recipientId: notificationRecord.recipientId,
+      subject: notificationRecord.subject,
+      preview: notificationRecord.preview,
+      urgent: notificationRecord.urgent === true,
+      createdAt: notificationRecord.createdAt || null,
+    },
+  });
+});
+
 module.exports = {
   getManagedTeachers,
   createTeacherAccount,
@@ -1098,4 +1157,5 @@ module.exports = {
   getManagedTeacherAssessments,
   createManagedTeacherAssessment,
   updateManagedTeacherAssessment,
+  sendManagedTeacherAnnouncement,
 };

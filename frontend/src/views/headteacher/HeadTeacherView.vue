@@ -270,7 +270,7 @@
               </label>
               <label class="headteacher-form-group">
                 <span>Contact Number</span>
-                <input v-model.trim="form.contactNumber" type="text" placeholder="Optional contact number">
+                <input v-model.trim="form.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789">
               </label>
             </div>
 
@@ -296,6 +296,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import Chart from 'chart.js/auto'
 import { useAuthStore } from '../../stores/auth.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -755,12 +756,19 @@ const createTeacher = async () => {
   isSubmitting.value = true
   formMessage.value = ''
   try {
+    const contactNumber = normalizePhilippinePhone(form.contactNumber)
+    if (!isValidPhilippinePhone(contactNumber)) {
+      formMessage.value = 'Please enter a valid Philippine contact number beginning with +63.'
+      formMessageType.value = 'error'
+      return
+    }
+
     const response = await axios.post(`${resolveApiBaseUrl()}/headteacher/teachers`, {
       name: form.name,
       email: form.email,
       username: form.username,
       subject: departmentLabel.value,
-      contactNumber: form.contactNumber,
+      contactNumber,
     }, getAuthConfig())
 
     const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()

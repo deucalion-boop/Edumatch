@@ -46,7 +46,7 @@
                     </button>
                   </div>
                 </div>
-                <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" />
+                <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" @select="closeNotificationsPanel" />
               </div>
             </div>
             <div ref="accountMenuRef" class="account-menu">
@@ -256,6 +256,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -480,9 +481,13 @@ const saveProfileInfo = async () => {
     showToast('error', 'Please resolve the highlighted profile fields.')
     return
   }
+  if (!isValidPhilippinePhone(profileForm.contactNumber)) {
+    showToast('error', 'Please enter a valid Philippine contact number beginning with +63.')
+    return
+  }
   settings.fullName = String(profileForm.displayName || '').trim() || settings.fullName
   settings.email = String(profileForm.email || '').trim()
-  settings.contactNumber = String(profileForm.contactNumber || '').trim()
+  settings.contactNumber = normalizePhilippinePhone(profileForm.contactNumber)
   showToast('success', 'Profile information updated.')
 }
 const saveSecuritySettings = async () => {
@@ -749,7 +754,7 @@ onMounted(() => {
   const authUser = authStore.user || {}
   settings.fullName = authUser.name || authUser.displayName || authUser.username || 'Teacher'
   settings.email = authUser.email || ''
-  settings.contactNumber = authUser.contactNumber || authUser.profile?.contactNumber || ''
+  settings.contactNumber = normalizePhilippinePhone(authUser.contactNumber || authUser.profile?.contactNumber)
   profileForm.displayName = settings.fullName
   profileForm.email = settings.email
   profileForm.contactNumber = settings.contactNumber

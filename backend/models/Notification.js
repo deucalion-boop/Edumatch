@@ -75,6 +75,11 @@ const notificationSchema = new mongoose.Schema(
       default: false,
       index: true,
     },
+    isCleared: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     viewedAt: {
       type: Date,
       default: null,

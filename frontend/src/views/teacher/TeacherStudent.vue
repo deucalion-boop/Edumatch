@@ -148,7 +148,7 @@
                       <button type="button" class="notification-dropdown-close" @click="closeNotificationsPanel" aria-label="Close notifications"><i class="fas fa-times"></i></button>
                     </div>
                   </div>
-                  <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" />
+                  <UserNotificationList :notifications="notifications" :loading="isNotificationsLoading" @select="closeNotificationsPanel" />
                 </div>
               </div>
               <div ref="accountMenuRef" class="account-menu">
@@ -628,7 +628,7 @@
               </label>
               <label class="class-form-group">
                 <span>Contact Number</span>
-                <input v-model.trim="studentInviteForm.contactNumber" type="text" placeholder="Optional contact number">
+                <input v-model.trim="studentInviteForm.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789">
               </label>
               <label class="class-form-group">
                 <span>Advisory Section</span>
@@ -799,6 +799,7 @@ import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -1572,11 +1573,18 @@ const submitStudentInvite = async () => {
       return
     }
 
+    const contactNumber = normalizePhilippinePhone(studentInviteForm.contactNumber)
+    if (!isValidPhilippinePhone(contactNumber)) {
+      studentInviteMessage.value = 'Please enter a valid Philippine contact number beginning with +63.'
+      studentInviteMessageType.value = 'error'
+      return
+    }
+
     const response = await axios.post(`${resolveApiBaseUrl()}/teacher/students`, {
       name: studentInviteForm.name,
       email: studentInviteForm.email,
       username: normalizedUsername,
-      contactNumber: studentInviteForm.contactNumber,
+      contactNumber,
     }, getAuthConfig())
 
     const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()

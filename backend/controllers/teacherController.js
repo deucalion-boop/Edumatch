@@ -26,6 +26,11 @@ const { getSectionOrThrow } = require('../services/sectionService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
 const {
+  notifyAssessmentAssigned,
+  notifyLessonPublished,
+  safelyRunNotificationTask,
+} = require('../services/studentNotificationService');
+const {
   STRANDS,
   normalizeStrand,
   getSubjectsByStrand,
@@ -873,6 +878,11 @@ const createLesson = asyncHandler(async (req, res) => {
     throw saveError;
   }
 
+  await safelyRunNotificationTask('new lesson', () => notifyLessonPublished({
+    lesson,
+    publisher: req.user,
+  }));
+
   return sendSuccess(res, 201, 'Lesson created successfully', {
     lesson: lessonToResponse(lesson, req),
   });
@@ -1022,6 +1032,10 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
     });
     await copiedLesson.populate('subjectId', 'className code track');
     createdLessons.push(copiedLesson);
+    await safelyRunNotificationTask('copied lesson', () => notifyLessonPublished({
+      lesson: copiedLesson,
+      publisher: req.user,
+    }));
   }
 
   return sendSuccess(res, 201, createdLessons.length > 0
@@ -1427,6 +1441,10 @@ const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
       lastModifiedBy: req.user._id,
     });
     createdAssessments.push(copiedAssessment);
+    await safelyRunNotificationTask('copied assessment', () => notifyAssessmentAssigned({
+      assessment: copiedAssessment,
+      publisher: req.user,
+    }));
   }
 
   return sendSuccess(res, 201, createdAssessments.length > 0
@@ -1730,6 +1748,11 @@ const createAssessment = asyncHandler(async (req, res) => {
     });
     throw saveError;
   }
+
+  await safelyRunNotificationTask('new assessment', () => notifyAssessmentAssigned({
+    assessment,
+    publisher: req.user,
+  }));
 
   return sendSuccess(res, 201, 'Assessment created successfully', { assessment });
 });

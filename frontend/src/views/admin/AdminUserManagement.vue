@@ -552,6 +552,7 @@
                   type="tel" 
                   id="contactNumber" 
                   v-model.trim="newUser.contactNumber"
+                  inputmode="tel"
                   placeholder="+63 912 345 6789"
                 >
               </div>
@@ -740,6 +741,7 @@
                     type="tel"
                     id="editContactNumber"
                     v-model.trim="editUserData.contactNumber"
+                    inputmode="tel"
                     placeholder="+63 912 345 6789"
                   >
                 </div>
@@ -1370,6 +1372,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { debounce } from 'lodash'
 import { useAuthStore } from '../../stores/auth.js'
+import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 export default {
   name: 'AdminUserManagement',
@@ -1494,7 +1497,6 @@ export default {
     const accountMenuRef = ref(null)
     const isAccountMenuOpen = ref(false)
     const STUDENT_FIXED_GRADE_LEVEL = 'Grade 10'
-    const contactNumberPattern = /^\+?[0-9()\-. ]{7,30}$/
     const isFetchingUsers = ref(false)
     let userPresenceRefreshTimerId = null
 
@@ -1917,7 +1919,7 @@ export default {
         department: firstDefined(user?.department, fallback?.department, ''),
         subject: firstDefined(user?.subject, fallback?.subject, ''),
         strand: firstDefined(user?.strand, fallback?.strand, ''),
-        contactNumber: firstDefined(user?.contactNumber, fallback?.contactNumber, ''),
+        contactNumber: normalizePhilippinePhone(firstDefined(user?.contactNumber, fallback?.contactNumber, '')),
         profileImage: firstDefined(user?.profileImage, fallback?.profileImage, ''),
         avatar: resolvedAvatar,
         isOnline: firstDefined(user?.isOnline, fallback?.isOnline, false),
@@ -2373,7 +2375,7 @@ export default {
         status: user.status,
         department: user.role === 'headteacher' ? (user.department || '') : '',
         subject: user.subject || '',
-        contactNumber: user.contactNumber || '',
+        contactNumber: normalizePhilippinePhone(user.contactNumber),
         avatar: resolveUserAvatarUrl(user),
         avatarPreview: ''
       }
@@ -2416,9 +2418,9 @@ export default {
         showToastMessage('Role must be secretary or headteacher', 'error')
         return
       }
-      const contactNumber = String(newUser.contactNumber || '').trim().replace(/\s+/g, ' ')
-      if (contactNumber && !contactNumberPattern.test(contactNumber)) {
-        showToastMessage('Please enter a valid contact number', 'error')
+      const contactNumber = normalizePhilippinePhone(newUser.contactNumber)
+      if (!isValidPhilippinePhone(contactNumber)) {
+        showToastMessage('Please enter a valid Philippine contact number beginning with +63', 'error')
         return
       }
       if (newUser.role === 'headteacher' && !String(newUser.department || '').trim()) {
@@ -2483,7 +2485,7 @@ export default {
       const role = String(editUserData.value.role || '').trim()
       const status = String(editUserData.value.status || '').trim()
       const department = String(editUserData.value.department || '').trim()
-      const contactNumber = String(editUserData.value.contactNumber || '').trim().replace(/\s+/g, ' ')
+      const contactNumber = normalizePhilippinePhone(editUserData.value.contactNumber)
 
       if (!editUserData.value.id) {
         showToastMessage('Invalid user record. Please reopen Edit User.', 'error')
@@ -2516,8 +2518,8 @@ export default {
         showToastMessage('This department already has a Head Teacher assigned', 'error')
         return
       }
-      if (contactNumber && !contactNumberPattern.test(contactNumber)) {
-        showToastMessage('Please enter a valid contact number', 'error')
+      if (!isValidPhilippinePhone(contactNumber)) {
+        showToastMessage('Please enter a valid Philippine contact number beginning with +63', 'error')
         return
       }
 
