@@ -39,6 +39,7 @@ const {
   lockTeacherAttendance,
 } = require('../controllers/attendanceController');
 const { getSectionDirectory } = require('../controllers/sectionController');
+const { aiLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
 
 const router = express.Router();
 
@@ -46,6 +47,7 @@ router.use(authMiddleware, roleMiddleware('teacher'));
 
 router.post(
   '/lessons',
+  uploadLimiter,
   lessonUpload.fields([{ name: 'lessonPlanFile', maxCount: 1 }]),
   createLesson
 );
@@ -62,6 +64,7 @@ router.get('/lessons/:id/attachments/:attachmentId/download', downloadTeacherLes
 
 router.post(
   '/assessments',
+  uploadLimiter,
   uploadTeacherAssessmentFiles.fields([{ name: 'attachments', maxCount: 5 }]),
   createAssessment
 );
@@ -83,10 +86,10 @@ router.get('/attendance', listTeacherAttendanceRecords);
 router.post('/attendance', saveTeacherAttendance);
 router.patch('/attendance/:id/lock', lockTeacherAttendance);
 router.get('/profile', getTeacherProfile);
-router.put('/profile', uploadProfileImage.single('profileImage'), updateTeacherProfile);
+router.put('/profile', uploadLimiter, uploadProfileImage.single('profileImage'), updateTeacherProfile);
 router.patch('/tour-preference', updateTeacherTourPreference);
 
 router.get('/ai/status', getAiStatus);
-router.post('/assessments/ai-generate', generateAssessmentWithAi);
+router.post('/assessments/ai-generate', aiLimiter, generateAssessmentWithAi);
 
 module.exports = router;

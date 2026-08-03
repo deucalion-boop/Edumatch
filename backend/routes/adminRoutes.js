@@ -25,13 +25,14 @@ const {
 } = require('../controllers/adminController');
 const { getAdminAttendanceReport } = require('../controllers/attendanceController');
 const { getSectionDirectory } = require('../controllers/sectionController');
+const { uploadLimiter } = require('../middlewares/rateLimiters');
 
 const router = express.Router();
 
 router.use(authMiddleware, roleMiddleware('admin'));
 
 router.route('/users').post(createUser).get(getUsers);
-router.route('/users/:id').get(getUserById).put(uploadProfileImage.single('profileImage'), updateUser).delete(deleteUser);
+router.route('/users/:id').get(getUserById).put(uploadLimiter, uploadProfileImage.single('profileImage'), updateUser).delete(deleteUser);
 router.post('/users/:id/messages', sendUserMessage);
 router.get('/audit-logs', getAuditLogs);
 router.get('/login-attempts', getLoginAttempts);

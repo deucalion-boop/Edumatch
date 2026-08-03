@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Session = require('../models/Session');
 const { sendSuccess } = require('../utils/responseHelper');
 const { assertPasswordMeetsPolicy } = require('../utils/passwordPolicy');
 
@@ -23,7 +24,7 @@ const changePassword = asyncHandler(async (req, res) => {
 
   assertPasswordMeetsPolicy(newPassword);
 
-  const user = await User.findById(req.user?._id).select('+password');
+  const user = await User.findById(req.user?._id).select('+password +tokenVersion');
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
@@ -40,7 +41,12 @@ const changePassword = asyncHandler(async (req, res) => {
   user.password = newPassword;
   user.forcePasswordChange = false;
   user.temporaryPasswordIssuedAt = null;
+  user.tokenVersion = Number(user.tokenVersion || 0) + 1;
   await user.save();
+  await Session.updateMany(
+    { userId: user._id, revokedAt: null },
+    { $set: { revokedAt: new Date(), revokedReason: 'Password changed' } }
+  );
 
   return sendSuccess(res, 200, 'Password updated successfully', {
     user: {

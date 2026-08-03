@@ -1030,7 +1030,6 @@ const createUser = asyncHandler(async (req, res) => {
     contactNumber,
     department,
   } = req.body;
-  console.log('[createUser] request body:', req.body);
 
   if (!name || !email || !username || !role) {
     const error = new Error('name, email, username, and role are required');
@@ -1238,7 +1237,6 @@ const getUserById = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, email, password, role, status, subject, contactNumber, department } = req.body;
-  console.log('[TEMP][updateUser] request body:', req.body);
 
   const user = await User.findById(id).select('+password');
   if (!user) {

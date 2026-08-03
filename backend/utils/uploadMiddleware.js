@@ -13,16 +13,26 @@ function buildSafeFileError(message) {
   return error;
 }
 
+function isAllowedLessonFile(file) {
+  const extension = path.extname(file?.originalname || '').toLowerCase();
+  const mime = String(file?.mimetype || '').toLowerCase();
+  return LESSON_FILE_EXTENSIONS.includes(extension)
+    && (mime === 'application/pdf' || mime === 'application/x-pdf');
+}
+
+function isAllowedProfileImage(file) {
+  const extension = path.extname(file?.originalname || '').toLowerCase();
+  const mime = String(file?.mimetype || '').toLowerCase();
+  const expectedMimeByExtension = {
+    '.jpg': ['image/jpeg'], '.jpeg': ['image/jpeg'], '.png': ['image/png'], '.webp': ['image/webp'],
+  };
+  return Boolean(expectedMimeByExtension[extension]?.includes(mime));
+}
+
 const lessonUpload = multer({
   storage: memoryStorage,
   fileFilter: (_req, file, cb) => {
-    const extension = path.extname(file.originalname).toLowerCase();
-    const mime = String(file.mimetype || '').toLowerCase();
-    const isPdfMime = mime === 'application/pdf'
-      || mime === 'application/x-pdf'
-      || mime === 'application/octet-stream';
-
-    if (!LESSON_FILE_EXTENSIONS.includes(extension) || !isPdfMime) {
+    if (!isAllowedLessonFile(file)) {
       return cb(buildSafeFileError('Only PDF lesson plan files are allowed'));
     }
 
@@ -37,11 +47,7 @@ const lessonUpload = multer({
 const uploadProfileImage = multer({
   storage: memoryStorage,
   fileFilter: (_req, file, cb) => {
-    const extension = path.extname(file.originalname).toLowerCase();
-    const isImageMime = String(file.mimetype || '').startsWith('image/');
-    const isAllowedExtension = IMAGE_EXTENSIONS.includes(extension);
-
-    if (!isImageMime || !isAllowedExtension) {
+    if (!isAllowedProfileImage(file)) {
       return cb(buildSafeFileError('Only JPG, JPEG, PNG, or WEBP images are allowed'));
     }
 
@@ -64,16 +70,35 @@ function isDocumentOrImageMime(mimeValue) {
     || mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     || mime === 'text/plain'
     || mime === 'application/zip'
-    || mime === 'application/x-zip-compressed'
-    || mime === 'application/octet-stream';
+    || mime === 'application/x-zip-compressed';
+}
+
+function isAllowedCommonAttachment(file) {
+  const extension = path.extname(file?.originalname || '').toLowerCase();
+  const mime = String(file?.mimetype || '').toLowerCase();
+  const allowedMimes = {
+    '.pdf': ['application/pdf'],
+    '.doc': ['application/msword'],
+    '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    '.ppt': ['application/vnd.ms-powerpoint'],
+    '.pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+    '.xls': ['application/vnd.ms-excel'],
+    '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+    '.txt': ['text/plain'],
+    '.jpg': ['image/jpeg'],
+    '.jpeg': ['image/jpeg'],
+    '.png': ['image/png'],
+    '.webp': ['image/webp'],
+    '.zip': ['application/zip', 'application/x-zip-compressed'],
+  };
+  return SUBMISSION_FILE_EXTENSIONS.includes(extension) && Boolean(allowedMimes[extension]?.includes(mime));
 }
 
 function buildCommonAttachmentUpload(message) {
   return multer({
     storage: memoryStorage,
     fileFilter: (_req, file, cb) => {
-      const extension = path.extname(file.originalname).toLowerCase();
-      if (!SUBMISSION_FILE_EXTENSIONS.includes(extension) || !isDocumentOrImageMime(file.mimetype)) {
+      if (!isAllowedCommonAttachment(file)) {
         return cb(buildSafeFileError(message));
       }
 
@@ -99,4 +124,8 @@ module.exports = {
   uploadProfileImage,
   uploadStudentSubmissionFiles,
   uploadTeacherAssessmentFiles,
+  isAllowedLessonFile,
+  isAllowedProfileImage,
+  isAllowedCommonAttachment,
+  isDocumentOrImageMime,
 };

@@ -11,7 +11,6 @@ require('dotenv').config({
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const { connectDatabase } = require('./config/database');
 const User = require('./models/User');
@@ -27,6 +26,8 @@ const Section = require('./models/Section');
 const Notification = require('./models/Notification');
 const Recommendation = require('./models/Recommendation');
 const AdminMessage = require('./models/AdminMessage');
+const Session = require('./models/Session');
+const OtpChallenge = require('./models/OtpChallenge');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -42,6 +43,7 @@ const { notFoundMiddleware, errorMiddleware } = require('./middlewares/errorMidd
 const { validateMailApiEnvironment } = require('./services/gmailService');
 const { ensureDefaultSections } = require('./services/sectionService');
 const { isSupabaseStorageConfigured, getSupabaseStorageConfig } = require('./services/supabaseStorageService');
+const { apiLimiter, redisReady } = require('./middlewares/rateLimiters');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,6 +52,27 @@ const DEFAULT_ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || 'admin@edumatch.lo
 const DEFAULT_ADMIN_USERNAME = String(process.env.ADMIN_USERNAME || 'admin').trim() || 'admin';
 const DEFAULT_ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || 'Admin123!').trim() || 'Admin123!';
 const uploadsDir = path.resolve(__dirname, 'uploads');
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = new Set(
+  String(process.env.CORS_ALLOWED_ORIGINS || process.env.FRONTEND_URL || '')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean)
+);
+if (!isProduction) {
+  allowedOrigins.add('http://localhost:5173');
+  allowedOrigins.add('http://127.0.0.1:5173');
+}
+
+function resolveTrustProxy() {
+  const configured = String(process.env.TRUST_PROXY || '').trim();
+  if (!configured) return false;
+  if (/^\d+$/.test(configured)) return Number(configured);
+  if (['loopback', 'linklocal', 'uniquelocal'].includes(configured)) return configured;
+  throw new Error('TRUST_PROXY must be a hop count or a trusted Express subnet name');
+}
+
+app.set('trust proxy', resolveTrustProxy());
 const supabaseOrigin = (() => {
   try {
     const configuredUrl = String(process.env.SUPABASE_URL || '').trim();
@@ -72,23 +95,24 @@ app.use(helmet({
     },
   },
 }));
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(String(origin).replace(/\/+$/, ''))) return callback(null, true);
+    const error = new Error('Origin is not allowed by CORS');
+    error.statusCode = 403;
+    return callback(error);
+  },
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Authorization', 'Content-Type'],
+  maxAge: 600,
+}));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use((req, _res, next) => {
-  console.log(`[HTTP] ${req.method} ${req.originalUrl}`);
+  const safePath = String(req.path || '')
+    .replace(/\/(invite|reset)\/[^/]+/gi, '/$1/[REDACTED]');
+  console.log(`[HTTP] ${req.method} ${safePath}`);
   next();
-});
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: 'Too many requests. Please try again later.',
-  },
 });
 
 app.use('/api', apiLimiter);
@@ -394,6 +418,8 @@ async function syncApplicationIndexes() {
     Notification,
     Recommendation,
     AdminMessage,
+    Session,
+    OtpChallenge,
   ];
 
   for (const model of indexedModels) {
@@ -425,6 +451,7 @@ async function bootstrap() {
   }
 
   await connectDatabase();
+  await redisReady;
   await reconcileCriticalIndexes();
   await cleanupDuplicateData();
   await cleanupLegacyAiSettingsFields();

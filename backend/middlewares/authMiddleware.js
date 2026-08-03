@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Settings = require('../models/Settings');
+const Session = require('../models/Session');
 
 const DEFAULT_SESSION_TIMEOUT_MINUTES = 120;
 const DEFAULT_REMEMBERED_SESSION_TIMEOUT_DAYS = 30;
@@ -17,13 +18,35 @@ async function authMiddleware(req, _res, next) {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: 'edumatch-api',
+      audience: 'edumatch-web',
+    });
     const rememberSession = decoded?.remember === true;
 
-    const user = await User.findById(decoded.id).select('-password +lastActivityAt');
+    const user = await User.findById(decoded.id).select('-password +lastActivityAt +tokenVersion');
 
     if (!user) {
       const error = new Error('User not found');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    if (!decoded.jti || Number(decoded.tokenVersion || 0) !== Number(user.tokenVersion || 0)) {
+      const error = new Error('Session has been revoked');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const session = await Session.findOne({
+      userId: user._id,
+      tokenId: decoded.jti,
+      revokedAt: null,
+      expiresAt: { $gt: new Date() },
+    });
+    if (!session) {
+      const error = new Error('Session has been revoked');
       error.statusCode = 401;
       throw error;
     }
@@ -70,10 +93,12 @@ async function authMiddleware(req, _res, next) {
     }
 
     await User.updateOne({ _id: user._id }, { $set: { lastActivityAt: now } });
+    await Session.updateOne({ _id: session._id }, { $set: { lastSeenAt: now } });
     user.lastActivityAt = now;
 
     req.user = user;
     req.token = token;
+    req.session = session;
 
     return next();
   } catch (error) {

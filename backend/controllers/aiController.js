@@ -498,7 +498,6 @@ const generateAssessmentWithAi = asyncHandler(async (req, res) => {
     deadline: deadlineRaw,
     deadlineAt: deadlineAtRaw,
   } = req.body;
-  console.log('[generateAssessmentWithAi] request body:', req.body);
 
   if ((!lessonId && !subjectId) || !examType || !difficulty || !numberOfItems || !String(subject || '').trim()) {
     const error = new Error('lessonId or subjectId, examType, subject, difficulty, and numberOfItems are required');

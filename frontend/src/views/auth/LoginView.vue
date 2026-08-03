@@ -39,9 +39,11 @@
           </div>
 
           <form v-if="!isInviteMode" class="auth-form" @submit.prevent="handleSubmit">
-            <div class="auth-form-section-label">Account details</div>
+            <div class="auth-form-section-label">
+              {{ otpRequired ? 'Two-factor verification' : 'Account details' }}
+            </div>
 
-            <div class="auth-form-group">
+            <div v-if="!otpRequired" class="auth-form-group">
               <label class="auth-form-label" for="username">
                 <i class="fas fa-user"></i> Username
               </label>
@@ -62,7 +64,7 @@
               <div class="validation-message" id="usernameValidation">{{ validation.username }}</div>
             </div>
 
-            <div class="auth-form-group">
+            <div v-if="!otpRequired" class="auth-form-group">
               <label class="auth-form-label" for="password">
                 <i class="fas fa-lock"></i> Password
               </label>
@@ -92,6 +94,32 @@
               <div class="validation-message" id="passwordValidation">{{ validation.password }}</div>
             </div>
 
+            <div v-if="otpRequired" class="auth-form-group">
+              <label class="auth-form-label" for="otpCode">
+                <i class="fas fa-mobile-screen-button"></i> Verify OTP
+              </label>
+              <p class="auth-form-helper">
+                Enter the 6-digit one-time password sent to {{ otpDeliveryHint || 'your registered email address' }}.
+              </p>
+              <p class="auth-form-helper" :class="{ 'otp-expired': otpSecondsRemaining === 0 }">
+                {{ otpSecondsRemaining > 0 ? `OTP expires in ${otpSecondsRemaining}s` : 'OTP expired. Return to sign in to request a new code.' }}
+              </p>
+              <div class="auth-form-input-wrapper has-icon">
+                <i class="auth-form-icon fas fa-shield-halved"></i>
+                <input
+                  id="otpCode"
+                  v-model.trim="form.otpCode"
+                  class="auth-form-input"
+                  placeholder="6-digit OTP"
+                  required
+                  maxlength="6"
+                  autocomplete="one-time-code"
+                  @input="clearValidation('otp')"
+                />
+              </div>
+              <div class="validation-message">{{ validation.otp }}</div>
+            </div>
+
             <div class="auth-form-group captcha-group">
               <div class="auth-form-group-heading">
                 <label class="auth-form-label" for="captchaValidation">
@@ -103,7 +131,7 @@
               <div v-if="captchaMessage" class="validation-message" id="captchaValidation">{{ captchaMessage }}</div>
             </div>
 
-            <div class="auth-options">
+            <div v-if="!otpRequired" class="auth-options">
               <label class="remember-me">
                 <input type="checkbox" v-model="form.remember" />
                 <span>Keep me signed in on this device</span>
@@ -115,8 +143,12 @@
 
             <div class="auth-actions">
               <button type="submit" class="auth-submit-btn" :disabled="isLoading" id="submitBtn">
-                <i class="fas fa-sign-in-alt login-submit-icon"></i>
-                <span>{{ isLoading ? 'Signing In...' : 'Sign In' }}</span>
+                <i class="fas login-submit-icon" :class="otpRequired ? 'fa-shield-halved' : 'fa-sign-in-alt'"></i>
+                <span>{{ isLoading ? (otpRequired ? 'Verifying...' : 'Signing In...') : (otpRequired ? 'Verify OTP' : 'Sign In') }}</span>
+              </button>
+              <button v-if="otpRequired" type="button" class="auth-submit-btn auth-submit-btn--secondary" :disabled="isLoading" @click="backToCredentials">
+                <i class="fas fa-arrow-left login-submit-icon"></i>
+                <span>Back to sign in</span>
               </button>
             </div>
           </form>
@@ -256,8 +288,14 @@ export default {
     const form = reactive({
       username: rememberedUsername,
       password: '',
-      remember: Boolean(rememberedUsername)
+      remember: Boolean(rememberedUsername),
+      otpCode: '',
     })
+    const otpRequired = ref(false)
+    const otpChallengeToken = ref('')
+    const otpDeliveryHint = ref('')
+    const otpSecondsRemaining = ref(0)
+    let otpCountdownTimerId = null
     
     const showPassword = ref(false)
     const isLoading = ref(false)
@@ -272,7 +310,8 @@ export default {
     const validation = reactive({
       username: '',
       password: '',
-      captcha: ''
+      captcha: '',
+      otp: '',
     })
     const inviteForm = reactive({
       password: '',
@@ -405,19 +444,48 @@ export default {
     const togglePasswordVisibility = () => {
       showPassword.value = !showPassword.value
     }
+
+    const stopOtpCountdown = () => {
+      if (otpCountdownTimerId !== null) window.clearInterval(otpCountdownTimerId)
+      otpCountdownTimerId = null
+    }
+
+    const startOtpCountdown = (expiresAt) => {
+      stopOtpCountdown()
+      const expiryTime = new Date(expiresAt || Date.now() + 120000).getTime()
+      const updateCountdown = () => {
+        otpSecondsRemaining.value = Math.max(0, Math.ceil((expiryTime - Date.now()) / 1000))
+        if (otpSecondsRemaining.value === 0) {
+          stopOtpCountdown()
+          validation.otp = 'OTP expired. Return to sign in to request a new code.'
+        }
+      }
+      updateCountdown()
+      if (otpSecondsRemaining.value > 0) otpCountdownTimerId = window.setInterval(updateCountdown, 1000)
+    }
     
     // Form submission
     const handleSubmit = async () => {
       // Validate all fields
-      validateUsername()
-      validatePassword()
+      if (!otpRequired.value) {
+        validateUsername()
+        validatePassword()
+      }
       
       // Check if there are any validation errors
-      if (validation.username || validation.password) {
+      if (!otpRequired.value && (validation.username || validation.password)) {
         return
       }
       if (!captchaToken.value) {
         validation.captcha = 'Please verify that you are not a robot'
+        return
+      }
+      if (otpRequired.value && !/^\d{6}$/.test(form.otpCode)) {
+        validation.otp = 'Enter the 6-digit OTP sent to your email'
+        return
+      }
+      if (otpRequired.value && otpSecondsRemaining.value === 0) {
+        validation.otp = 'OTP expired. Return to sign in to request a new code.'
         return
       }
       
@@ -425,12 +493,30 @@ export default {
       
       try {
         // Call your authentication service
-        const result = await authStore.login({
-          username: form.username,
-          password: form.password,
-          remember: form.remember,
-          captchaToken: captchaToken.value,
-        })
+        const result = otpRequired.value
+          ? await authStore.verifyLoginOtp({
+              challengeToken: otpChallengeToken.value,
+              otpCode: form.otpCode,
+              captchaToken: captchaToken.value,
+              remember: form.remember,
+              username: form.username,
+            })
+          : await authStore.login({
+              username: form.username,
+              password: form.password,
+              remember: form.remember,
+              captchaToken: captchaToken.value,
+            })
+
+        if (result?.requiresOtp) {
+          otpRequired.value = true
+          otpChallengeToken.value = result.challengeToken
+          otpDeliveryHint.value = result.deliveryHint || ''
+          form.otpCode = ''
+          startOtpCountdown(result.expiresAt)
+          resetCaptcha()
+          return
+        }
         
         const redirectPath = result?.redirectPath || route.query.redirect || authStore.getDashboardPath()
         router.push(redirectPath)
@@ -440,6 +526,20 @@ export default {
       } finally {
         isLoading.value = false
       }
+    }
+
+    const backToCredentials = () => {
+      otpRequired.value = false
+      otpChallengeToken.value = ''
+      otpDeliveryHint.value = ''
+      otpSecondsRemaining.value = 0
+      stopOtpCountdown()
+      form.otpCode = ''
+      form.password = ''
+      validation.password = ''
+      validation.otp = ''
+      authStore.clearAlerts()
+      resetCaptcha()
     }
 
     const loadInvite = async () => {
@@ -521,11 +621,15 @@ export default {
     )
 
     onBeforeUnmount(() => {
+      stopOtpCountdown()
       resetCaptcha()
     })
     
     return {
       form,
+      otpRequired,
+      otpDeliveryHint,
+      otpSecondsRemaining,
       invite,
       inviteForm,
       recaptchaContainer,
@@ -541,6 +645,7 @@ export default {
       clearValidation,
       togglePasswordVisibility,
       handleSubmit,
+      backToCredentials,
       handleInviteSubmit
     }
   }
@@ -580,6 +685,49 @@ export default {
   width: 100%;
   padding: 0;
   justify-content: center;
+}
+
+.auth-actions .auth-submit-btn--secondary {
+  margin-top: 0.75rem;
+  color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: none !important;
+}
+
+.auth-actions .auth-submit-btn--secondary span,
+.auth-actions .auth-submit-btn--secondary i {
+  color: #ffffff !important;
+}
+
+.auth-form-helper.otp-expired {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.remember-me input[type='checkbox'] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  background: #ffffff !important;
+  border: 1px solid #ffffff !important;
+  border-radius: 3px;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+}
+
+.remember-me input[type='checkbox']::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  transform: scale(0);
+  background: #111111;
+  clip-path: polygon(14% 44%, 0 65%, 42% 100%, 100% 16%, 80% 0, 40% 62%);
+}
+
+.remember-me input[type='checkbox']:checked::before {
+  transform: scale(1);
 }
 
 .login-layout {

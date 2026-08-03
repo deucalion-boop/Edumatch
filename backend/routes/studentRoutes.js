@@ -29,11 +29,12 @@ const {
 } = require('../controllers/attendanceController');
 
 const router = express.Router();
+const { uploadLimiter } = require('../middlewares/rateLimiters');
 
 router.use(authMiddleware, roleMiddleware('student'));
 
 router.get('/profile', getStudentProfile);
-router.put('/profile', uploadProfileImage.single('profileImage'), updateStudentProfile);
+router.put('/profile', uploadLimiter, uploadProfileImage.single('profileImage'), updateStudentProfile);
 router.patch('/tour-preference', updateStudentTourPreference);
 router.get('/subjects', getMySubjects);
 router.post('/subjects/join', joinSubjectByCode);
@@ -50,8 +51,8 @@ router.post('/assessments/:id/activity', logAssessmentActivity);
 router.post('/assessments/:id/submissions', submitAssessment);
 router.get('/submissions/me', getMySubmissions);
 router.get('/activity-submissions', getMyActivitySubmissions);
-router.post('/assessments/:id/activity-response/draft', uploadStudentSubmissionFiles.fields([{ name: 'attachments', maxCount: 5 }]), saveActivityResponseDraft);
-router.post('/assessments/:id/activity-response/submit', uploadStudentSubmissionFiles.fields([{ name: 'attachments', maxCount: 5 }]), turnInActivityResponse);
+router.post('/assessments/:id/activity-response/draft', uploadLimiter, uploadStudentSubmissionFiles.fields([{ name: 'attachments', maxCount: 5 }]), saveActivityResponseDraft);
+router.post('/assessments/:id/activity-response/submit', uploadLimiter, uploadStudentSubmissionFiles.fields([{ name: 'attachments', maxCount: 5 }]), turnInActivityResponse);
 router.post('/assessments/:id/activity-response/unsubmit', unsubmitActivityResponse);
 
 module.exports = router;

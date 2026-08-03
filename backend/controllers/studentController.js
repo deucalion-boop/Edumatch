@@ -1288,7 +1288,6 @@ const submitAssessment = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
   const { id } = req.params;
   const { answers } = req.body;
-  console.log('[submitAssessment] request body:', req.body);
 
   if (!Array.isArray(answers)) {
     const error = new Error('answers must be an array');

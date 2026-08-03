@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema(
         validator(value) {
           if (!value) return true;
           const normalized = String(value);
-          // Allow persisted bcrypt hashes while enforcing 8-16 chars for plain-text input.
+          // Allow persisted bcrypt hashes while enforcing the application password bounds.
           if (BCRYPT_HASH_REGEX.test(normalized)) return true;
           return normalized.length >= 8 && normalized.length <= 16;
         },
@@ -128,6 +128,12 @@ const userSchema = new mongoose.Schema(
     lastActivityAt: {
       type: Date,
       default: null,
+      select: false,
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0,
       select: false,
     },
     strand: {

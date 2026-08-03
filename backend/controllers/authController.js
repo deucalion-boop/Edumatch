@@ -1,8 +1,11 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const LoginAttempt = require('../models/LoginAttempt');
 const Settings = require('../models/Settings');
+const Session = require('../models/Session');
+const OtpChallenge = require('../models/OtpChallenge');
 const { sendSuccess } = require('../utils/responseHelper');
 const { sendEmailViaGmail } = require('../services/gmailService');
 const { assertPasswordMeetsPolicy, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } = require('../utils/passwordPolicy');
@@ -16,14 +19,126 @@ const APP_NAME = 'EduMatch';
 const DEFAULT_MAINTENANCE_MESSAGE = 'The system is currently under maintenance. Please check back later.';
 const DEFAULT_ACCESS_TOKEN_TTL = '1d';
 const DEFAULT_REMEMBER_ME_TOKEN_TTL = '30d';
+const LOGIN_OTP_TTL_MINUTES = 2;
+const LOGIN_OTP_MAX_ATTEMPTS = 5;
 
-function signToken(userId, remember = false) {
+async function createSessionAndSignToken(user, req, remember = false) {
   const rememberSession = remember === true;
+  const tokenId = crypto.randomUUID();
+  const ttlMs = rememberSession ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+  const ipAddress = resolveClientIpAddress(req).slice(0, 120);
+  const userAgent = resolveClientUserAgent(req);
+  const familiarDevice = await Session.exists({ userId: user._id, userAgent });
+  await Session.create({
+    userId: user._id,
+    tokenId,
+    ipAddress,
+    userAgent,
+    remember: rememberSession,
+    lastSeenAt: new Date(),
+    expiresAt: new Date(Date.now() + ttlMs),
+  });
+  if (String(user.role || '').toLowerCase() === 'admin' && !familiarDevice) {
+    void sendAdminLoginAlert(user, { ipAddress, userAgent });
+  }
   return jwt.sign(
-    { id: userId, remember: rememberSession },
+    { id: user._id, jti: tokenId, tokenVersion: Number(user.tokenVersion || 0), remember: rememberSession },
     process.env.JWT_SECRET,
-    { expiresIn: rememberSession ? DEFAULT_REMEMBER_ME_TOKEN_TTL : DEFAULT_ACCESS_TOKEN_TTL }
+    {
+      expiresIn: rememberSession ? DEFAULT_REMEMBER_ME_TOKEN_TTL : DEFAULT_ACCESS_TOKEN_TTL,
+      algorithm: 'HS256',
+      issuer: 'edumatch-api',
+      audience: 'edumatch-web',
+    }
   );
+}
+
+async function sendAdminLoginAlert(user, { ipAddress, userAgent }) {
+  try {
+    const text = `A new device signed in to your EduMatch administrator account. IP: ${ipAddress || 'unknown'}. Device: ${userAgent || 'unknown'}. If this was not you, reset your password and revoke the session immediately.`;
+    const result = await sendEmailViaGmail({
+      to: { email: user.email, name: user.name },
+      subject: 'EduMatch security alert: new administrator sign-in',
+      text,
+      html: `<p>${text.replace(/[&<>]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[character])}</p>`,
+    });
+    if (!result?.sent) console.error('[SECURITY_ALERT] New-device alert was not delivered.');
+  } catch (_error) {
+    console.error('[SECURITY_ALERT] New-device alert was not delivered.');
+  }
+}
+
+function maskEmail(email) {
+  const [local = '', domain = ''] = String(email || '').split('@');
+  return `${local.slice(0, 2)}${'*'.repeat(Math.max(2, local.length - 2))}@${domain}`;
+}
+
+function requiresEmailOtp(user) {
+  if (String(user?.role || '').trim().toLowerCase() !== 'admin') return true;
+
+  const email = String(user?.email || '').trim().toLowerCase();
+  if (!email) return false;
+  const domain = email.split('@')[1] || '';
+  const isSampleAddress = domain.endsWith('.local')
+    || ['example.com', 'example.org', 'example.net'].includes(domain);
+  return !isSampleAddress;
+}
+
+async function issueLoginOtp(user, req, remember) {
+  const otpCode = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+  const challengeToken = crypto.randomBytes(32).toString('hex');
+  const challengeTokenHash = crypto.createHash('sha256').update(challengeToken).digest('hex');
+  const expiresAt = new Date(Date.now() + LOGIN_OTP_TTL_MINUTES * 60 * 1000);
+
+  await OtpChallenge.updateMany(
+    { userId: user._id, consumedAt: null },
+    { $set: { consumedAt: new Date() } }
+  );
+  await OtpChallenge.create({
+    userId: user._id,
+    challengeTokenHash,
+    otpHash: await bcrypt.hash(otpCode, 10),
+    remember,
+    ipAddress: resolveClientIpAddress(req).slice(0, 120),
+    userAgent: resolveClientUserAgent(req),
+    expiresAt,
+  });
+
+  const emailResult = await sendEmailViaGmail({
+    to: { email: user.email, name: user.name },
+    subject: 'EduMatch login verification code',
+    text: `Your EduMatch verification code is ${otpCode}. It expires in ${LOGIN_OTP_TTL_MINUTES} minutes. Do not share this code.`,
+    html: `<p>Your EduMatch verification code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${otpCode}</p><p>It expires in ${LOGIN_OTP_TTL_MINUTES} minutes. Do not share this code.</p>`,
+  });
+  if (!emailResult?.sent) {
+    await OtpChallenge.deleteOne({ challengeTokenHash });
+    const error = new Error('Unable to send the verification code. Please try again.');
+    error.statusCode = 502;
+    throw error;
+  }
+  return { challengeToken, expiresAt };
+}
+
+function buildLoginUser(user, req) {
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    username: user.username || '',
+    role: user.role,
+    status: user.status,
+    strand: user.strand || '',
+    subject: user.subject || '',
+    department: user.department || '',
+    gradeLevel: user.gradeLevel || '',
+    profileImage: normalizeProfileImageUrl(user, req),
+    contactNumber: user.contactNumber || '',
+    hasCompletedTeacherTour: user.hasCompletedTeacherTour === true,
+    hasCompletedStudentTour: user.hasCompletedStudentTour === true,
+    forcePasswordChange: user.forcePasswordChange === true,
+    temporaryPasswordIssuedAt: user.temporaryPasswordIssuedAt || null,
+    createdAt: user.createdAt || null,
+  };
 }
 
 function normalizeProfileImageUrl(user, req) {
@@ -42,12 +157,7 @@ function buildResetPasswordLink(token) {
 }
 
 function resolveClientIpAddress(req) {
-  const forwardedFor = String(req.headers['x-forwarded-for'] || '')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean)[0];
-  const fallbackIp = String(req.ip || req.socket?.remoteAddress || '').trim();
-  return String(forwardedFor || fallbackIp).replace(/^::ffff:/, '').trim();
+  return String(req.ip || req.socket?.remoteAddress || '').replace(/^::ffff:/, '').trim();
 }
 
 function resolveClientUserAgent(req) {
@@ -147,7 +257,13 @@ async function verifyRecaptchaToken({ token, remoteIp }) {
     clearTimeout(timeoutId);
     if (!response.ok) return false;
     const body = await response.json();
-    return body?.success === true;
+    const allowedHostnames = String(process.env.RECAPTCHA_ALLOWED_HOSTNAMES || '')
+      .split(',')
+      .map((hostname) => hostname.trim().toLowerCase())
+      .filter(Boolean);
+    const verifiedHostname = String(body?.hostname || '').trim().toLowerCase();
+    return body?.success === true
+      && (allowedHostnames.length === 0 || allowedHostnames.includes(verifiedHostname));
   } catch (_error) {
     return false;
   }
@@ -185,7 +301,7 @@ const login = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findOne({ username: normalizedUsername }).select(
-    '+password +failedLoginAttempts +lockUntil +lastActivityAt +lastLoginAt'
+    '+password +failedLoginAttempts +lockUntil +lastActivityAt +lastLoginAt +tokenVersion'
   );
 
   if (!user) {
@@ -292,44 +408,92 @@ const login = asyncHandler(async (req, res) => {
 
   user.failedLoginAttempts = 0;
   user.lockUntil = null;
+  await user.save();
+
+  if (!requiresEmailOtp(user)) {
+    user.lastLoginAt = now;
+    user.lastActivityAt = now;
+    await user.save();
+    await recordLoginAttempt(req, {
+      username: normalizedUsername,
+      user,
+      outcome: 'success',
+      reason: 'Login successful; OTP bypassed for administrator sample email',
+    });
+    const token = await createSessionAndSignToken(user, req, rememberSession);
+    return sendSuccess(res, 200, 'Login successful', {
+      token,
+      redirectPath: user.forcePasswordChange ? '/auth/change-password' : undefined,
+      user: buildLoginUser(user, req),
+    });
+  }
+
+  const challenge = await issueLoginOtp(user, req, rememberSession);
+  return sendSuccess(res, 202, 'Verification code sent', {
+    requiresOtp: true,
+    challengeToken: challenge.challengeToken,
+    expiresAt: challenge.expiresAt,
+    deliveryHint: maskEmail(user.email),
+  });
+});
+
+const verifyLoginOtp = asyncHandler(async (req, res) => {
+  const challengeToken = String(req.body?.challengeToken || '').trim();
+  const otpCode = String(req.body?.otpCode || '').replace(/\D/g, '');
+  if (!challengeToken || !/^\d{6}$/.test(otpCode)) {
+    const error = new Error('A valid 6-digit verification code is required');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!await verifyRecaptchaToken({ token: req.body?.captchaToken, remoteIp: resolveClientIpAddress(req) })) {
+    const error = new Error('Please verify that you are not a robot');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const challengeTokenHash = crypto.createHash('sha256').update(challengeToken).digest('hex');
+  const challenge = await OtpChallenge.findOne({
+    challengeTokenHash,
+    consumedAt: null,
+    expiresAt: { $gt: new Date() },
+  }).select('+otpHash');
+  if (!challenge || Number(challenge.failedAttempts || 0) >= LOGIN_OTP_MAX_ATTEMPTS) {
+    const error = new Error('Verification challenge is invalid or expired');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!await bcrypt.compare(otpCode, challenge.otpHash)) {
+    challenge.failedAttempts = Number(challenge.failedAttempts || 0) + 1;
+    if (challenge.failedAttempts >= LOGIN_OTP_MAX_ATTEMPTS) challenge.consumedAt = new Date();
+    await challenge.save();
+    const error = new Error('Invalid verification code');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const user = await User.findById(challenge.userId).select('+tokenVersion +lastActivityAt +lastLoginAt');
+  if (!user || user.status !== 'active') {
+    const error = new Error('Account is no longer available');
+    error.statusCode = 403;
+    throw error;
+  }
+  const { maintenanceModeEnabled, maintenanceMessage } = await getMaintenancePolicy();
+  if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
+    const error = new Error(maintenanceMessage);
+    error.statusCode = 503;
+    throw error;
+  }
+  const now = new Date();
+  challenge.consumedAt = now;
   user.lastLoginAt = now;
   user.lastActivityAt = now;
-  await user.save();
-  req.auditLogContext = {
-    ...req.auditLogContext,
-    actionLabel: 'User login',
-  };
-  await recordLoginAttempt(req, {
-    username: normalizedUsername,
-    user,
-    outcome: 'success',
-    reason: 'Login successful',
-  });
-
-  const token = signToken(user._id, rememberSession);
-
-  return sendSuccess(res, 200, 'Login successful', {
+  await Promise.all([challenge.save(), user.save()]);
+  await recordLoginAttempt(req, { username: user.username, user, outcome: 'success', reason: 'Login and OTP verification successful' });
+  const token = await createSessionAndSignToken(user, req, challenge.remember === true);
+  return sendSuccess(res, 200, 'Login verified successfully', {
     token,
     redirectPath: user.forcePasswordChange ? '/auth/change-password' : undefined,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      username: user.username || '',
-      role: user.role,
-      status: user.status,
-      strand: user.strand || '',
-      subject: user.subject || '',
-      department: user.department || '',
-      gradeLevel: user.gradeLevel || '',
-      profileImage: normalizeProfileImageUrl(user, req),
-      contactNumber: user.contactNumber || '',
-      hasCompletedTeacherTour: user.hasCompletedTeacherTour === true,
-      hasCompletedStudentTour: user.hasCompletedStudentTour === true,
-      forcePasswordChange: user.forcePasswordChange === true,
-      temporaryPasswordIssuedAt: user.temporaryPasswordIssuedAt || null,
-      createdAt: user.createdAt || null,
-    },
+    user: buildLoginUser(user, req),
   });
 });
 
@@ -487,16 +651,16 @@ const requestPasswordReset = asyncHandler(async (req, res) => {
     await user.save();
 
     const resetLink = buildResetPasswordLink(rawToken);
-    const emailResult = await sendPasswordResetEmail({
-      email: user.email,
-      name: user.name,
-      resetLink,
-    });
-
-    if (!emailResult?.sent) {
-      const error = new Error(emailResult?.reason || 'Unable to send reset email');
-      error.statusCode = 502;
-      throw error;
+    try {
+      const emailResult = await sendPasswordResetEmail({
+        email: user.email,
+        name: user.name,
+        resetLink,
+      });
+      if (!emailResult?.sent) console.error('[PASSWORD_RESET] Delivery failed for a valid account.');
+    } catch (_error) {
+      // Keep the public response identical so delivery failures cannot enumerate accounts.
+      console.error('[PASSWORD_RESET] Delivery failed for a valid account.');
     }
   }
 
@@ -562,6 +726,7 @@ const completePasswordReset = asyncHandler(async (req, res) => {
   user.password = password;
   user.forcePasswordChange = false;
   user.temporaryPasswordIssuedAt = null;
+  user.tokenVersion = Number(user.tokenVersion || 0) + 1;
   if (!user.resetPassword) {
     user.resetPassword = {};
   }
@@ -569,12 +734,17 @@ const completePasswordReset = asyncHandler(async (req, res) => {
   user.resetPassword.usedAt = now;
 
   await user.save();
+  await Session.updateMany(
+    { userId: user._id, revokedAt: null },
+    { $set: { revokedAt: now, revokedReason: 'Password reset' } }
+  );
 
   return sendSuccess(res, 200, 'Password reset successful. You can now sign in.');
 });
 
 module.exports = {
   login,
+  verifyLoginOtp,
   syncPresence,
   validateInvite,
   completeInvite,

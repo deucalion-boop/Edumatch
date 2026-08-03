@@ -90,7 +90,7 @@
                         <i class="fas" :class="showNewPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                       </button>
                     </div>
-                    <p class="field-help">Aim for 8 to 16 characters with uppercase, lowercase, a number, and a symbol.</p>
+                    <p class="field-help">Use 8 to 16 characters with uppercase, lowercase, a number, and a symbol.</p>
                   </div>
 
                   <div class="form-group confirm-password-group">

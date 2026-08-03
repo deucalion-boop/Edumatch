@@ -17,6 +17,7 @@ const {
 const { getAiStatus, generateAssessmentWithAi } = require('../controllers/aiController');
 const { getHeadTeacherAttendanceOverview } = require('../controllers/attendanceController');
 const { getSectionDirectory } = require('../controllers/sectionController');
+const { aiLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
 
 const router = express.Router();
 
@@ -27,12 +28,12 @@ router.get('/sections', getSectionDirectory);
 router.get('/teachers/:id/students', getManagedTeacherStudents);
 router.get('/attendance', getHeadTeacherAttendanceOverview);
 router.get('/lessons', getManagedTeacherLessons);
-router.post('/lessons', lessonUpload.fields([{ name: 'lessonPlanFile', maxCount: 1 }]), createManagedTeacherLesson);
+router.post('/lessons', uploadLimiter, lessonUpload.fields([{ name: 'lessonPlanFile', maxCount: 1 }]), createManagedTeacherLesson);
 router.get('/assessments', getManagedTeacherAssessments);
 router.post('/assessments', createManagedTeacherAssessment);
 router.put('/assessments/:id', updateManagedTeacherAssessment);
 router.get('/ai/status', getAiStatus);
-router.post('/assessments/ai-generate', generateAssessmentWithAi);
+router.post('/assessments/ai-generate', aiLimiter, generateAssessmentWithAi);
 router.post('/teachers', createTeacherAccount);
 router.put('/teachers/:id', updateManagedTeacher);
 router.post('/teachers/:id/announcements', sendManagedTeacherAnnouncement);

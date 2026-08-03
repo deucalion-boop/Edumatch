@@ -743,7 +743,6 @@ const createLesson = asyncHandler(async (req, res) => {
   ).trim();
   const uploadedFiles = Array.isArray(req.files?.lessonPlanFile) ? req.files.lessonPlanFile : [];
 
-  console.log('[createLesson] request body keys:', Object.keys(req.body || {}));
   console.log('[createLesson] request files keys:', Object.keys(req.files || {}));
 
   if (!normalizedTitle || !normalizedSubject || !normalizedDescription) {
@@ -1521,7 +1520,6 @@ const createAssessment = asyncHandler(async (req, res) => {
     deadlineAt: deadlineAtRaw,
     activityPoints: activityPointsRaw,
   } = req.body;
-  console.log('[createAssessment] request body:', req.body);
 
   const normalizedAssessmentMode = String(assessmentMode || 'activity').trim().toLowerCase() || 'activity';
   const isActivityAssessment = normalizedAssessmentMode === 'activity';

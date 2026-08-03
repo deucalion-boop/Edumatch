@@ -205,6 +205,7 @@ function shouldForceLogout(error) {
     'user not found',
     'invalid or expired token',
     'session expired due to inactivity. please sign in again.',
+    'session has been revoked',
     'authorization token is required',
   ].includes(message)
 }
@@ -297,9 +298,23 @@ export function useAuthStore() {
       const apiBaseUrl = resolveApiBaseUrl()
       const response = await axios.post(
         `${apiBaseUrl}/auth/login`,
-        { username: normalizedUsername, password, captchaToken, remember: shouldRememberAccount }
+        {
+          username: normalizedUsername,
+          password,
+          captchaToken,
+          remember: shouldRememberAccount,
+        }
       )
       const responseData = response.data || {}
+      if (responseData.requiresOtp === true && responseData.challengeToken) {
+        state.error = ''
+        return {
+          requiresOtp: true,
+          challengeToken: responseData.challengeToken,
+          deliveryHint: responseData.deliveryHint || '',
+          expiresAt: responseData.expiresAt || null,
+        }
+      }
       const normalizedRole = String(responseData.user?.role || '').toLowerCase().trim()
 
       if (!responseData.success || !normalizedRole) {
@@ -330,6 +345,37 @@ export function useAuthStore() {
       } else {
         state.error = error.response?.data?.message || 'Unable to sign in'
       }
+      throw new Error(state.error)
+    }
+  }
+
+  const verifyLoginOtp = async ({ challengeToken, otpCode, captchaToken, remember = false, username = '' }) => {
+    clearAlerts()
+    try {
+      const response = await axios.post(`${resolveApiBaseUrl()}/auth/login/verify-otp`, {
+        challengeToken,
+        otpCode,
+        captchaToken,
+      })
+      const responseData = response.data || {}
+      const normalizedRole = String(responseData.user?.role || '').toLowerCase().trim()
+      if (!responseData.success || !responseData.token || !normalizedRole) throw new Error('Unable to verify login')
+
+      state.user = {
+        ...responseData.user,
+        role: normalizedRole,
+        forcePasswordChange: responseData.user?.forcePasswordChange === true,
+        hasCompletedTeacherTour: responseData.user?.hasCompletedTeacherTour === true,
+        hasCompletedStudentTour: responseData.user?.hasCompletedStudentTour === true,
+      }
+      state.token = responseData.token
+      persistAuthState({ remember: remember === true })
+      persistRememberedUsername(remember === true ? username : '')
+      startPresenceHeartbeat()
+      await sendPresenceHeartbeat({ force: true })
+      return { redirectPath: responseData.redirectPath || dashboardPathByRole(normalizedRole), role: normalizedRole }
+    } catch (error) {
+      state.error = error.response?.data?.message || error.message || 'Unable to verify login'
       throw new Error(state.error)
     }
   }
@@ -451,14 +497,7 @@ export function useAuthStore() {
       )
 
       state.message = response.data?.message || 'Password updated successfully'
-      if (state.user) {
-        state.user = {
-          ...state.user,
-          forcePasswordChange: false,
-          temporaryPasswordIssuedAt: null,
-        }
-        persistUserStateToActiveStorage()
-      }
+      clearPersistedAuth()
 
       return response.data?.user || null
     } catch (error) {
@@ -468,6 +507,12 @@ export function useAuthStore() {
   }
 
   const logout = () => {
+    const token = state.token
+    if (token) {
+      void axios.post(`${resolveApiBaseUrl()}/auth/logout`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => null)
+    }
     clearPersistedAuth()
   }
 
@@ -504,6 +549,7 @@ export function useAuthStore() {
     setUser,
     logout,
     login,
+    verifyLoginOtp,
     googleLogin,
     clearAlerts,
     consumeMessage,

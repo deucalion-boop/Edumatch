@@ -174,6 +174,20 @@
                       </div>
                     </div>
                   </div>
+
+                  <div class="settings-row">
+                    <div class="settings-label">
+                      <label>Active sessions</label>
+                      <span class="settings-desc">Review signed-in devices and revoke any session you do not recognize.</span>
+                    </div>
+                    <div class="settings-input settings-input--stack">
+                      <div v-for="session in activeSessions" :key="session.id" class="settings-meta">
+                        <strong>{{ session.current ? 'Current device' : 'Other device' }}</strong>
+                        <span>{{ session.ipAddress || 'Unknown IP' }} · {{ session.userAgent || 'Unknown browser' }}</span>
+                        <button v-if="!session.current" type="button" class="btn btn-outline" @click="revokeSession(session.id)">Revoke</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </article>
 
@@ -389,6 +403,7 @@ export default {
 
     const saving = ref(false)
     const clearCacheLoading = ref(false)
+    const activeSessions = ref([])
     const hasUnsavedChanges = ref(false)
     const originalSettings = ref(null)
     const settingsMeta = reactive({
@@ -483,6 +498,25 @@ export default {
 
     const markAsUnsaved = () => {
       hasUnsavedChanges.value = true
+    }
+
+    const loadSecurityState = async () => {
+      try {
+        const sessionsResponse = await axios.get(`${apiBaseUrl}/auth/sessions`, getAuthConfig())
+        activeSessions.value = sessionsResponse.data?.sessions || []
+      } catch (error) {
+        showToastMessage(error.response?.data?.message || 'Failed to load account security', 'error')
+      }
+    }
+
+    const revokeSession = async (sessionId) => {
+      try {
+        await axios.delete(`${apiBaseUrl}/auth/sessions/${encodeURIComponent(sessionId)}`, getAuthConfig())
+        activeSessions.value = activeSessions.value.filter((session) => session.id !== sessionId)
+        showToastMessage('Session revoked', 'success')
+      } catch (error) {
+        showToastMessage(error.response?.data?.message || 'Failed to revoke session', 'error')
+      }
     }
 
     const applySettingsSnapshot = (snapshot) => {
@@ -727,6 +761,7 @@ export default {
     onMounted(() => {
       document.body.classList.add('admin-dashboard')
       loadSettings()
+      loadSecurityState()
       window.addEventListener('resize', syncMobileMenuBodyState)
       syncMobileMenuBodyState()
       window.addEventListener('beforeunload', handleBeforeUnload)
@@ -754,6 +789,8 @@ export default {
       settings,
       saving,
       clearCacheLoading,
+      activeSessions,
+      revokeSession,
       hasUnsavedChanges,
       showToast,
       toastType,

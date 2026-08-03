@@ -197,7 +197,7 @@ export default {
           newPassword: form.newPassword,
           confirmNewPassword: form.confirmNewPassword,
         })
-        router.push(authStore.getDashboardPath())
+        router.push({ path: '/auth/login', query: { message: 'Password updated. Please sign in again.' } })
       } catch (_error) {
         // Error is handled by the auth store.
       } finally {

@@ -76,12 +76,7 @@ function truncate(value, maxLength = 200) {
 }
 
 function normalizeClientIpAddress(req) {
-  const forwardedFor = String(req.headers['x-forwarded-for'] || '')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean)[0];
-  const fallbackIp = String(req.ip || req.socket?.remoteAddress || '').trim();
-  return truncate(String(forwardedFor || fallbackIp).replace(/^::ffff:/, ''), 120);
+  return truncate(String(req.ip || req.socket?.remoteAddress || '').replace(/^::ffff:/, ''), 120);
 }
 
 function normalizeRoutePath(req) {
