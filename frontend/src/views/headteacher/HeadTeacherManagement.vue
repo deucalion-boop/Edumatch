@@ -1,5 +1,5 @@
 <template>
-  <div class="headteacher-workspace headteacher-dashboard-page headteacher-content-page">
+  <div class="headteacher-workspace headteacher-dashboard-page headteacher-content-page headteacher-management-page">
     <aside id="headteacher-sidebar-drawer" class="headteacher-sidebar" :class="{ active: isSidebarOpen }">
       <div class="headteacher-sidebar-header">
         <div class="headteacher-brand">
@@ -3062,5 +3062,314 @@ onBeforeUnmount(() => {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* Forest theme: mirrors the Head Teacher dashboard palette. */
+.headteacher-management-page {
+  --management-forest: #1e4307;
+  --management-forest-deep: #122b03;
+  --management-leaf: #5f8f32;
+  --management-soft: #edf5e8;
+  --management-lime: #b8d88a;
+  --management-gold: #d4aa2f;
+  --management-ink: #172014;
+  --management-muted: #667260;
+  --management-border: rgba(30, 67, 7, 0.14);
+}
+
+.headteacher-management-page .headteacher-main {
+  background:
+    radial-gradient(circle at 92% 3%, rgba(95, 143, 50, 0.16), transparent 26rem),
+    radial-gradient(circle at 24% 100%, rgba(184, 216, 138, 0.18), transparent 30rem),
+    linear-gradient(145deg, #f8fbf5 0%, #f1f6ed 54%, #edf3e8 100%);
+}
+
+.headteacher-management-page .headteacher-directory-enterprise {
+  --directory-navy: var(--management-ink);
+  --directory-copy: #52604d;
+  --directory-muted: var(--management-muted);
+  --directory-line: rgba(30, 67, 7, 0.13);
+  --directory-blue: var(--management-forest);
+  border-color: var(--management-border);
+  background:
+    radial-gradient(circle at 96% 0%, rgba(184, 216, 138, 0.2), transparent 27%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 243, 0.98));
+  box-shadow: 0 22px 52px rgba(30, 67, 7, 0.09);
+}
+
+.headteacher-management-page .headteacher-section-title,
+.headteacher-management-page .headteacher-directory-summary-card strong,
+.headteacher-management-page .headteacher-directory-toolbar-meta strong,
+.headteacher-management-page .headteacher-name-cell strong,
+.headteacher-management-page .headteacher-directory-empty h3 {
+  color: var(--management-ink);
+}
+
+.headteacher-management-page .headteacher-section-subtitle,
+.headteacher-management-page .headteacher-directory-summary-card > div > span,
+.headteacher-management-page .headteacher-directory-toolbar-meta,
+.headteacher-management-page .headteacher-directory-empty p,
+.headteacher-management-page .headteacher-mobile-hint {
+  color: var(--management-muted);
+}
+
+.headteacher-management-page .headteacher-directory-cta,
+.headteacher-management-page .headteacher-directory-empty-action,
+.headteacher-management-page .headteacher-button-primary {
+  border-color: var(--management-forest);
+  background: linear-gradient(135deg, var(--management-forest), #3f751d);
+  color: #fff;
+  box-shadow: 0 11px 24px rgba(30, 67, 7, 0.22);
+}
+
+.headteacher-management-page .headteacher-directory-cta:hover,
+.headteacher-management-page .headteacher-directory-empty-action:hover,
+.headteacher-management-page .headteacher-button-primary:hover:not(:disabled) {
+  border-color: #28580b;
+  background: linear-gradient(135deg, #28580b, #4d8427);
+  box-shadow: 0 14px 28px rgba(30, 67, 7, 0.27);
+}
+
+.headteacher-management-page .headteacher-directory-summary-card {
+  border-color: var(--management-border);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 20px rgba(30, 67, 7, 0.045);
+}
+
+.headteacher-management-page .headteacher-directory-summary-card:hover {
+  border-color: rgba(30, 67, 7, 0.28);
+  box-shadow: 0 14px 28px rgba(30, 67, 7, 0.09);
+}
+
+.headteacher-management-page .headteacher-directory-summary-icon {
+  background: linear-gradient(145deg, var(--management-forest), #477b22);
+  color: #fff;
+  box-shadow: 0 8px 17px rgba(30, 67, 7, 0.17);
+}
+
+.headteacher-management-page .headteacher-directory-summary-card.is-active .headteacher-directory-summary-icon {
+  background: linear-gradient(145deg, #477b22, #71a948);
+  color: #fff;
+}
+
+.headteacher-management-page .headteacher-directory-summary-card.is-pending .headteacher-directory-summary-icon {
+  background: linear-gradient(145deg, #8a6605, var(--management-gold));
+  color: #fff;
+}
+
+.headteacher-management-page .headteacher-directory-summary-card.is-inactive .headteacher-directory-summary-icon {
+  background: linear-gradient(145deg, #596454, #7b8975);
+  color: #fff;
+}
+
+.headteacher-management-page .headteacher-directory-toolbar {
+  border-color: var(--management-border);
+  background: rgba(237, 245, 232, 0.72);
+}
+
+.headteacher-management-page .headteacher-directory-search > i,
+.headteacher-management-page .headteacher-directory-sort-button i {
+  color: #78906b;
+}
+
+.headteacher-management-page .headteacher-directory-search input,
+.headteacher-management-page .headteacher-directory-sort select,
+.headteacher-management-page .headteacher-inline-select,
+.headteacher-management-page .headteacher-announcement-modal textarea,
+.headteacher-management-page .headteacher-form-group input,
+.headteacher-management-page .headteacher-form-group select {
+  border-color: rgba(30, 67, 7, 0.18);
+  background: #fff;
+  color: var(--management-ink);
+}
+
+.headteacher-management-page .headteacher-directory-search input:focus,
+.headteacher-management-page .headteacher-directory-sort select:focus,
+.headteacher-management-page .headteacher-inline-select:focus,
+.headteacher-management-page .headteacher-announcement-modal textarea:focus,
+.headteacher-management-page .headteacher-form-group input:focus,
+.headteacher-management-page .headteacher-form-group select:focus {
+  border-color: rgba(30, 67, 7, 0.55);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(30, 67, 7, 0.11);
+}
+
+.headteacher-management-page .headteacher-directory-clear-search {
+  background: var(--management-soft);
+  color: var(--management-forest);
+}
+
+.headteacher-management-page .headteacher-directory-filter-chip {
+  border-color: rgba(30, 67, 7, 0.14);
+  color: #52604d;
+}
+
+.headteacher-management-page .headteacher-directory-filter-chip:hover {
+  border-color: rgba(30, 67, 7, 0.35);
+}
+
+.headteacher-management-page .headteacher-directory-filter-chip.active {
+  border-color: var(--management-forest);
+  background: var(--management-soft);
+  color: var(--management-forest);
+  box-shadow: 0 4px 12px rgba(30, 67, 7, 0.1);
+}
+
+.headteacher-management-page .headteacher-directory-filter-chip:focus-visible,
+.headteacher-management-page .headteacher-directory-cta:focus-visible,
+.headteacher-management-page .headteacher-directory-action-btn:focus-visible {
+  outline: 3px solid rgba(30, 67, 7, 0.18);
+  outline-offset: 2px;
+}
+
+.headteacher-management-page .headteacher-directory-filter-chip.active strong {
+  background: #dcebd0;
+  color: var(--management-forest);
+}
+
+.headteacher-management-page .headteacher-directory-reset,
+.headteacher-management-page .headteacher-email-link,
+.headteacher-management-page .headteacher-directory-action-btn.is-message {
+  color: #28580b;
+}
+
+.headteacher-management-page .headteacher-directory-reset:hover {
+  background: var(--management-soft);
+}
+
+.headteacher-management-page .headteacher-directory-loading,
+.headteacher-management-page .headteacher-directory-enterprise .headteacher-table-shell,
+.headteacher-management-page .headteacher-directory-mobile-skeleton,
+.headteacher-management-page .headteacher-mobile-card {
+  border-color: var(--management-border);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 32px rgba(30, 67, 7, 0.06);
+}
+
+.headteacher-management-page .headteacher-directory-enterprise .headteacher-table thead th {
+  border-bottom-color: rgba(30, 67, 7, 0.13);
+  background: rgba(237, 245, 232, 0.96);
+  color: #52604d;
+}
+
+.headteacher-management-page .headteacher-directory-enterprise .headteacher-table tbody td {
+  background: #fff;
+}
+
+.headteacher-management-page .headteacher-directory-enterprise .headteacher-table tbody tr:nth-child(even) td {
+  background: #fafcf8;
+}
+
+.headteacher-management-page .headteacher-directory-enterprise .headteacher-table-row-interactive:hover {
+  box-shadow: 0 10px 26px rgba(30, 67, 7, 0.09);
+}
+
+.headteacher-management-page .headteacher-directory-enterprise .headteacher-table-row-interactive:hover td {
+  background: #f1f7ed;
+}
+
+.headteacher-management-page .headteacher-directory-enterprise .headteacher-avatar {
+  outline-color: #dcebd0;
+  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.12);
+}
+
+.headteacher-management-page .headteacher-directory-action-btn {
+  border-color: rgba(30, 67, 7, 0.15);
+  color: #52604d;
+}
+
+.headteacher-management-page .headteacher-directory-action-btn.is-save {
+  border-color: #c8dcb8;
+  background: var(--management-soft);
+  color: var(--management-forest);
+}
+
+.headteacher-management-page .headteacher-directory-action-btn.is-activate {
+  border-color: #bad7a6;
+  background: #f0f8ea;
+  color: #28580b;
+}
+
+.headteacher-management-page .headteacher-directory-empty-illustration,
+.headteacher-management-page .headteacher-directory-loading-icon {
+  background: linear-gradient(145deg, #f2f8ee, #dcebd0);
+  color: var(--management-forest);
+  box-shadow: inset 0 0 0 1px rgba(30, 67, 7, 0.18), 0 16px 32px rgba(30, 67, 7, 0.1);
+}
+
+.headteacher-management-page .headteacher-empty-orbit {
+  border-color: rgba(30, 67, 7, 0.24);
+}
+
+.headteacher-management-page .headteacher-directory-skeleton {
+  background: #e3ecdd;
+}
+
+.headteacher-management-page .headteacher-page-btn.active {
+  border-color: var(--management-forest);
+  background: linear-gradient(135deg, var(--management-forest), #3f751d);
+  color: #fff;
+}
+
+.headteacher-management-page .headteacher-students-modal,
+.headteacher-management-page .headteacher-attendance-modal {
+  border-color: var(--management-border);
+  background:
+    radial-gradient(circle at top right, rgba(184, 216, 138, 0.18), transparent 30%),
+    linear-gradient(180deg, #fff, #f5f9f1);
+  box-shadow: 0 32px 72px rgba(30, 67, 7, 0.18);
+}
+
+.headteacher-management-page .headteacher-students-eyebrow,
+.headteacher-management-page .headteacher-attendance-eyebrow {
+  color: var(--management-forest);
+}
+
+.headteacher-management-page .headteacher-students-summary-card,
+.headteacher-management-page .headteacher-attendance-summary-card,
+.headteacher-management-page .headteacher-student-card,
+.headteacher-management-page .headteacher-attendance-card {
+  border-color: var(--management-border);
+  box-shadow: 0 14px 28px rgba(30, 67, 7, 0.06);
+}
+
+.headteacher-management-page .headteacher-mobile-card-interactive:hover,
+.headteacher-management-page .headteacher-mobile-card-interactive:focus-visible,
+.headteacher-management-page .headteacher-student-card:hover {
+  border-color: rgba(30, 67, 7, 0.28);
+  box-shadow: 0 18px 36px rgba(30, 67, 7, 0.11);
+}
+
+.headteacher-management-page .headteacher-inline-select:disabled {
+  background: #f3f6f1;
+  color: #7c8975;
+}
+
+.headteacher-management-page .headteacher-directory-feedback.success {
+  border-color: rgba(30, 67, 7, 0.16);
+  background: var(--management-soft);
+  color: var(--management-forest);
+}
+
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.active,
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.router-link-active,
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active {
+  border-color: var(--management-forest) !important;
+  background: linear-gradient(135deg, var(--management-forest), #3e711d) !important;
+  box-shadow: 0 12px 22px rgba(30, 67, 7, 0.18) !important;
+}
+
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.active > span,
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.router-link-active > span,
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active > span {
+  color: #fff !important;
+}
+
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.active i,
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.router-link-active i,
+body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active i {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
 }
 </style>

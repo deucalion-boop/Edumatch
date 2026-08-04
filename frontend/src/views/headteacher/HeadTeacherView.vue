@@ -62,7 +62,7 @@
             <button type="button" class="headteacher-mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
               <i class="fas fa-bars"></i>
             </button>
-            <div class="headteacher-dashboard-header-copy headteacher-matched-header-copy">
+            <div class="headteacher-management-header-copy headteacher-matched-header-copy">
               <h1>{{ departmentLabel }} Department</h1>
               <p class="headteacher-header-subtitle">Create, monitor, and manage teachers under your department with a unified administrative view.</p>
             </div>
@@ -98,7 +98,8 @@
         </div>
       </header>
 
-      <div class="headteacher-stat-grid">
+      <div class="headteacher-summary-stack">
+        <div class="headteacher-stat-grid">
           <article class="headteacher-stat-card">
             <div class="headteacher-stat-icon teachers">
               <i class="fas fa-chalkboard-teacher"></i>
@@ -142,6 +143,51 @@
               <small class="headteacher-stat-note">{{ summary.totalLessons }} lessons and {{ summary.totalAssessments }} assessments</small>
             </div>
           </article>
+        </div>
+
+        <Transition name="headteacher-alert-row" mode="out-in">
+          <section v-if="isLoading && !hasLoaded" key="attention-loading" class="headteacher-attention-row is-loading" aria-live="polite">
+            <div class="headteacher-attention-heading">
+              <span class="headteacher-attention-icon"><i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i></span>
+              <div>
+                <strong>Checking department status</strong>
+                <span>Reviewing teacher accounts and recent content.</span>
+              </div>
+            </div>
+            <div class="headteacher-attention-skeletons" aria-hidden="true"><span></span><span></span><span></span></div>
+          </section>
+
+          <section v-else-if="dashboardError" key="attention-error" class="headteacher-attention-row is-error" role="alert">
+            <div class="headteacher-attention-heading">
+              <span class="headteacher-attention-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></span>
+              <div>
+                <strong>Dashboard data unavailable</strong>
+                <span>{{ dashboardError }}</span>
+              </div>
+            </div>
+            <button type="button" class="headteacher-attention-retry" @click="fetchTeachers()">
+              <i class="fas fa-redo" aria-hidden="true"></i>
+              Retry
+            </button>
+          </section>
+
+          <section v-else-if="hasAttentionRequired" key="attention-ready" class="headteacher-attention-row" aria-labelledby="headteacher-attention-title">
+            <div class="headteacher-attention-heading">
+              <span class="headteacher-attention-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></span>
+              <div>
+                <strong id="headteacher-attention-title">Attention Required</strong>
+                <span>{{ attentionTotal }} item{{ attentionTotal === 1 ? '' : 's' }} may need review</span>
+              </div>
+            </div>
+            <div class="headteacher-attention-chips">
+              <span class="headteacher-attention-chip"><strong>{{ attention.inactiveTeachers }}</strong> Inactive Teachers</span>
+              <span class="headteacher-attention-chip" :title="`Active teachers with no lessons or assessments created in the last ${attention.recentContentWindowDays} days`">
+                <strong>{{ attention.teachersWithoutRecentContent }}</strong> Without Recent Content
+              </span>
+              <span class="headteacher-attention-chip"><strong>{{ attention.pendingTeacherAccounts }}</strong> Pending Accounts</span>
+            </div>
+          </section>
+        </Transition>
       </div>
 
       <div class="headteacher-dashboard-overview">
@@ -205,12 +251,46 @@
                   <span>Assessments In Range</span>
                   <strong>{{ analyticsAssessmentsInRange }}</strong>
                 </div>
+                <div class="headteacher-highlight-pill headteacher-activity-highlight">
+                  <div class="headteacher-activity-label">
+                    <span>Teachers Active This Month</span>
+                    <span
+                      class="headteacher-metric-tooltip"
+                      tabindex="0"
+                      role="note"
+                      data-tooltip="Counts active teacher accounts that signed in, used EduMatch, or created content during the current calendar month."
+                      aria-label="About Teachers Active This Month"
+                    >
+                      <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                  <span v-if="isLoading && !hasLoaded" class="headteacher-activity-loading" aria-label="Loading teacher activity"></span>
+                  <strong v-else-if="dashboardError" class="headteacher-activity-unavailable">Activity unavailable</strong>
+                  <strong v-else-if="teacherActivity.eligibleTeachers === 0">No active teachers yet</strong>
+                  <template v-else>
+                    <strong>{{ teacherActivity.activeThisMonth }} of {{ teacherActivity.eligibleTeachers }} Teachers Active</strong>
+                    <div
+                      class="headteacher-activity-progress"
+                      role="progressbar"
+                      aria-label="Teachers active this month"
+                      :aria-valuenow="teacherActivityPercent"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      <span :style="{ width: `${teacherActivityPercent}%` }"></span>
+                    </div>
+                  </template>
+                </div>
               </div>
             </div>
             <div class="headteacher-analytics-actions">
+              <button type="button" class="headteacher-create-teacher-cta" aria-label="Create teacher account" title="Create Teacher" @click="openCreateModal">
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <span>Create Teacher</span>
+              </button>
               <label class="headteacher-analytics-filter">
                 <span>Range</span>
-                <select v-model="lessonAnalyticsFilter" @change="fetchTeachers">
+                <select v-model="lessonAnalyticsFilter" @change="fetchTeachers()">
                   <option value="1">Today</option>
                   <option value="3">Last 3 months</option>
                   <option value="12">Last 12 months</option>
@@ -307,6 +387,8 @@ const isAccountMenuOpen = ref(false)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
 const isCreateModalOpen = ref(false)
+const hasLoaded = ref(false)
+const dashboardError = ref('')
 const formMessage = ref('')
 const formMessageType = ref('success')
 const teachers = ref([])
@@ -315,6 +397,7 @@ const pageSize = ref(6)
 const accountMenuRef = ref(null)
 const lessonTrendCanvas = ref(null)
 let lessonTrendChart = null
+let dashboardRefreshTimer = null
 const lessonAnalyticsFilter = ref('3')
 const summary = reactive({
   totalTeachers: 0,
@@ -323,6 +406,16 @@ const summary = reactive({
   totalLessonsAndAssessments: 0,
   totalLessons: 0,
   totalAssessments: 0,
+})
+const attention = reactive({
+  inactiveTeachers: 0,
+  teachersWithoutRecentContent: 0,
+  pendingTeacherAccounts: 0,
+  recentContentWindowDays: 30,
+})
+const teacherActivity = reactive({
+  activeThisMonth: 0,
+  eligibleTeachers: 0,
 })
 const lessonAnalytics = reactive({
   labels: [],
@@ -390,11 +483,25 @@ const analyticsCaption = computed(() => {
 
 const analyticsAssessmentsInRange = computed(() => assessmentAnalytics.values.reduce((sum, value) => sum + Number(value || 0), 0))
 const analyticsContentInRange = computed(() => analyticsLessonsInRange.value + analyticsAssessmentsInRange.value)
+const attentionTotal = computed(() => (
+  attention.inactiveTeachers
+  + attention.teachersWithoutRecentContent
+  + attention.pendingTeacherAccounts
+))
+const hasAttentionRequired = computed(() => hasLoaded.value && attentionTotal.value > 0)
+const teacherActivityPercent = computed(() => {
+  if (teacherActivity.eligibleTeachers <= 0) return 0
+  return Math.min(100, Math.round((teacherActivity.activeThisMonth / teacherActivity.eligibleTeachers) * 100))
+})
 const lessonAnalyticsPercent = computed(() => {
-  return Math.min(100, Math.max(0, Number(summary.totalLessons || 0)))
+  const totalContent = Number(summary.totalLessons || 0) + Number(summary.totalAssessments || 0)
+  if (totalContent === 0) return 0
+  return Math.round((Number(summary.totalLessons || 0) / totalContent) * 100)
 })
 const assessmentAnalyticsPercent = computed(() => {
-  return Math.min(100, Math.max(0, Number(summary.totalAssessments || 0)))
+  const totalContent = Number(summary.totalLessons || 0) + Number(summary.totalAssessments || 0)
+  if (totalContent === 0) return 0
+  return Math.round((Number(summary.totalAssessments || 0) / totalContent) * 100)
 })
 const analyticsPeakPeriodLabel = computed(() => {
   if (lessonAnalytics.labels.length === 0) return 'No activity'
@@ -539,6 +646,10 @@ watch(totalPages, (value) => {
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
 const closeSidebar = () => { isSidebarOpen.value = false }
 const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.value }
+const openCreateModal = () => {
+  isAccountMenuOpen.value = false
+  isCreateModalOpen.value = true
+}
 
 const resetForm = () => {
   form.name = ''
@@ -600,8 +711,8 @@ const createLessonTrendChart = () => {
   }
 
   const gradient = ctx.createLinearGradient(0, 0, 0, 320)
-  gradient.addColorStop(0, 'rgba(37, 99, 235, 0.22)')
-  gradient.addColorStop(1, 'rgba(37, 99, 235, 0.02)')
+  gradient.addColorStop(0, 'rgba(30, 67, 7, 0.24)')
+  gradient.addColorStop(1, 'rgba(30, 67, 7, 0.02)')
 
   lessonTrendChart = new Chart(ctx, {
     type: 'line',
@@ -611,7 +722,7 @@ const createLessonTrendChart = () => {
         {
           label: 'Lessons created',
           data: [...lessonAnalytics.values],
-          borderColor: '#2563eb',
+          borderColor: '#1e4307',
           backgroundColor: gradient,
           fill: true,
           borderWidth: 3,
@@ -619,21 +730,21 @@ const createLessonTrendChart = () => {
           pointRadius: 4,
           pointHoverRadius: 5,
           pointBackgroundColor: '#ffffff',
-          pointBorderColor: '#2563eb',
+          pointBorderColor: '#1e4307',
           pointBorderWidth: 2,
         },
         {
           label: 'Activities/Assessments created',
           data: [...assessmentAnalytics.values],
-          borderColor: '#8b5cf6',
-          backgroundColor: 'rgba(139, 92, 246, 0.08)',
+          borderColor: '#a27b08',
+          backgroundColor: 'rgba(162, 123, 8, 0.08)',
           fill: false,
           borderWidth: 3,
           tension: 0.35,
           pointRadius: 4,
           pointHoverRadius: 5,
           pointBackgroundColor: '#ffffff',
-          pointBorderColor: '#8b5cf6',
+          pointBorderColor: '#a27b08',
           pointBorderWidth: 2,
         },
       ],
@@ -646,7 +757,7 @@ const createLessonTrendChart = () => {
           display: false,
         },
         tooltip: {
-          backgroundColor: '#0f172a',
+          backgroundColor: '#173506',
           titleColor: '#ffffff',
           bodyColor: '#e2e8f0',
           displayColors: false,
@@ -707,8 +818,8 @@ const updateLessonTrendChart = () => {
   lessonTrendChart.update()
 }
 
-const fetchTeachers = async () => {
-  isLoading.value = true
+const fetchTeachers = async ({ silent = false } = {}) => {
+  if (!silent) isLoading.value = true
   try {
     const response = await axios.get(`${resolveApiBaseUrl()}/headteacher/teachers`, {
       ...getAuthConfig(),
@@ -736,6 +847,12 @@ const fetchTeachers = async () => {
     summary.totalLessonsAndAssessments = Number(responseSummary.totalLessonsAndAssessments || 0)
     summary.totalLessons = Number(responseSummary.totalLessons || 0)
     summary.totalAssessments = Number(responseSummary.totalAssessments || 0)
+    attention.inactiveTeachers = Number(responseSummary.attention?.inactiveTeachers || 0)
+    attention.teachersWithoutRecentContent = Number(responseSummary.attention?.teachersWithoutRecentContent || 0)
+    attention.pendingTeacherAccounts = Number(responseSummary.attention?.pendingTeacherAccounts || 0)
+    attention.recentContentWindowDays = Number(responseSummary.attention?.recentContentWindowDays || 30)
+    teacherActivity.activeThisMonth = Number(responseSummary.teacherActivity?.activeThisMonth || 0)
+    teacherActivity.eligibleTeachers = Number(responseSummary.teacherActivity?.eligibleTeachers || 0)
     const labels = Array.isArray(responseSummary.lessonAnalytics?.labels) ? responseSummary.lessonAnalytics.labels : []
     const values = Array.isArray(responseSummary.lessonAnalytics?.values) ? responseSummary.lessonAnalytics.values : []
     const assessmentLabels = Array.isArray(responseSummary.assessmentAnalytics?.labels) ? responseSummary.assessmentAnalytics.labels : []
@@ -747,8 +864,12 @@ const fetchTeachers = async () => {
     assessmentAnalytics.labels = normalizedAssessmentAnalytics.labels
     assessmentAnalytics.values = normalizedAssessmentAnalytics.values
     updateLessonTrendChart()
+    dashboardError.value = ''
+    hasLoaded.value = true
+  } catch (error) {
+    dashboardError.value = error.response?.data?.message || 'Unable to load the latest teacher analytics. Please try again.'
   } finally {
-    isLoading.value = false
+    if (!silent) isLoading.value = false
   }
 }
 
@@ -801,10 +922,17 @@ onMounted(() => {
   document.addEventListener('click', handleAccountMenuClickOutside)
   createLessonTrendChart()
   fetchTeachers()
+  dashboardRefreshTimer = window.setInterval(() => {
+    if (document.visibilityState === 'visible') fetchTeachers({ silent: true })
+  }, 60000)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleAccountMenuClickOutside)
+  if (dashboardRefreshTimer) {
+    window.clearInterval(dashboardRefreshTimer)
+    dashboardRefreshTimer = null
+  }
   if (lessonTrendChart) {
     lessonTrendChart.destroy()
     lessonTrendChart = null

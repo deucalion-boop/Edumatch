@@ -43,6 +43,7 @@ const ALLOWED_ACCOUNT_STATUSES = ['pending', 'active', 'inactive', 'suspended'];
 const DEFAULT_LESSON_ANALYTICS_MONTHS = 3;
 const MIN_LESSON_ANALYTICS_MONTHS = 1;
 const MAX_LESSON_ANALYTICS_MONTHS = 12;
+const RECENT_TEACHER_CONTENT_DAYS = 30;
 
 function uniqueBy(items, keyFn) {
   const seen = new Set();
@@ -137,6 +138,24 @@ async function buildMonthlyCreationAnalytics(Model, teacherIds, monthCount) {
   return analyticsBuckets;
 }
 
+async function buildLatestTeacherContentActivity(Model, teacherIds) {
+  if (!teacherIds.length) return [];
+
+  return Model.aggregate([
+    {
+      $match: {
+        createdBy: { $in: teacherIds },
+      },
+    },
+    {
+      $group: {
+        _id: '$createdBy',
+        lastCreatedAt: { $max: '$createdAt' },
+      },
+    },
+  ]);
+}
+
 function ensureHeadTeacher(req) {
   if (String(req.user?.role || '') !== ROLE_HEADTEACHER) {
     const error = new Error('Only HeadTeachers can perform this action');
@@ -179,6 +198,10 @@ async function buildLessonAttachmentPayload(files, { teacherId = '' } = {}) {
 }
 
 function headTeacherLessonToResponse(lesson, teacher) {
+  const publisher = lesson?.publishedBy && typeof lesson.publishedBy === 'object'
+    ? lesson.publishedBy
+    : null;
+
   return {
     id: String(lesson?._id || ''),
     title: String(lesson?.title || '').trim(),
@@ -189,6 +212,17 @@ function headTeacherLessonToResponse(lesson, teacher) {
     subjectCategory: String(lesson?.subjectCategory || '').trim(),
     pdfOriginalName: String(lesson?.pdfOriginalName || '').trim(),
     createdAt: lesson?.createdAt || null,
+    creator: publisher
+      ? {
+        id: String(publisher._id || ''),
+        name: String(publisher.name || 'Head Teacher').trim() || 'Head Teacher',
+        role: String(publisher.role || ROLE_HEADTEACHER).trim() || ROLE_HEADTEACHER,
+      }
+      : {
+        id: String(teacher?._id || ''),
+        name: String(teacher?.name || 'Teacher').trim() || 'Teacher',
+        role: ROLE_TEACHER,
+      },
     teacher: {
       id: String(teacher?._id || ''),
       name: String(teacher?.name || 'Teacher').trim() || 'Teacher',
@@ -294,13 +328,19 @@ const getManagedTeachers = asyncHandler(async (req, res) => {
     department,
     managedBy: req.user._id,
   })
-    .select('-password')
+    .select('-password +lastActivityAt +lastLoginAt')
     .populate('managedBy', 'name email')
     .populate('advisorySectionId', 'name')
     .sort({ createdAt: -1 });
 
   const teacherIds = teachers.map((teacher) => teacher._id);
-  const [studentCount, lessonCount, assessmentCount] = teacherIds.length > 0
+  const [
+    studentCount,
+    lessonCount,
+    assessmentCount,
+    latestLessonActivity,
+    latestAssessmentActivity,
+  ] = teacherIds.length > 0
     ? await Promise.all([
       User.countDocuments({
         role: ROLE_STUDENT,
@@ -313,8 +353,10 @@ const getManagedTeachers = asyncHandler(async (req, res) => {
       Assessment.countDocuments({
         createdBy: { $in: teacherIds },
       }),
+      buildLatestTeacherContentActivity(Lesson, teacherIds),
+      buildLatestTeacherContentActivity(Assessment, teacherIds),
     ])
-    : [0, 0, 0];
+    : [0, 0, 0, [], []];
 
   const [lessonAnalyticsBuckets, assessmentAnalyticsBuckets] = await Promise.all([
     buildMonthlyCreationAnalytics(Lesson, teacherIds, analyticsMonthCount),
@@ -326,6 +368,39 @@ const getManagedTeachers = asyncHandler(async (req, res) => {
     return mappedTeacher;
   });
   const activeTeachers = teachersPayload.filter((teacher) => String(teacher.status || '').trim().toLowerCase() === 'active').length;
+  const now = new Date();
+  const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const recentContentCutoff = new Date(now.getTime() - (RECENT_TEACHER_CONTENT_DAYS * 24 * 60 * 60 * 1000));
+  const latestContentByTeacher = new Map();
+
+  [...latestLessonActivity, ...latestAssessmentActivity].forEach((entry) => {
+    const teacherId = String(entry?._id || '');
+    const activityDate = entry?.lastCreatedAt ? new Date(entry.lastCreatedAt) : null;
+    const existingDate = latestContentByTeacher.get(teacherId);
+    if (activityDate && !Number.isNaN(activityDate.getTime()) && (!existingDate || activityDate > existingDate)) {
+      latestContentByTeacher.set(teacherId, activityDate);
+    }
+  });
+
+  const inactiveTeachers = teachersPayload.filter((teacher) => String(teacher.status || '').trim().toLowerCase() === 'inactive').length;
+  const pendingTeacherAccounts = teachersPayload.filter((teacher) => String(teacher.status || '').trim().toLowerCase() === 'pending').length;
+  const teachersWithoutRecentContent = teachersPayload.filter((teacher) => {
+    if (String(teacher.status || '').trim().toLowerCase() !== 'active') return false;
+    const lastContentAt = latestContentByTeacher.get(String(teacher._id || teacher.id || ''));
+    return !lastContentAt || lastContentAt < recentContentCutoff;
+  }).length;
+  const teachersActiveThisMonth = teachersPayload.filter((teacher) => {
+    if (String(teacher.status || '').trim().toLowerCase() !== 'active') return false;
+    const teacherId = String(teacher._id || teacher.id || '');
+    const accountActivityAt = teacher.lastActivityAt || teacher.lastLoginAt;
+    const accountActivityDate = accountActivityAt ? new Date(accountActivityAt) : null;
+    const contentActivityDate = latestContentByTeacher.get(teacherId);
+    const usedAccountThisMonth = accountActivityDate
+      && !Number.isNaN(accountActivityDate.getTime())
+      && accountActivityDate >= currentMonthStart;
+    const createdContentThisMonth = contentActivityDate && contentActivityDate >= currentMonthStart;
+    return Boolean(usedAccountThisMonth || createdContentThisMonth);
+  }).length;
 
   return sendSuccess(res, 200, 'Teachers fetched successfully', {
     department,
@@ -337,6 +412,17 @@ const getManagedTeachers = asyncHandler(async (req, res) => {
       totalLessonsAndAssessments: Number(lessonCount || 0) + Number(assessmentCount || 0),
       totalLessons: lessonCount,
       totalAssessments: assessmentCount,
+      attention: {
+        inactiveTeachers,
+        teachersWithoutRecentContent,
+        pendingTeacherAccounts,
+        recentContentWindowDays: RECENT_TEACHER_CONTENT_DAYS,
+      },
+      teacherActivity: {
+        activeThisMonth: teachersActiveThisMonth,
+        eligibleTeachers: activeTeachers,
+        monthStart: currentMonthStart,
+      },
       lessonAnalytics: {
         months: analyticsMonthCount,
         labels: lessonAnalyticsBuckets.map((bucket) => bucket.label),
@@ -640,6 +726,7 @@ const getManagedTeacherLessons = asyncHandler(async (req, res) => {
   const lessons = await Lesson.find({
     createdBy: { $in: teachers.map((teacher) => teacher._id) },
   })
+    .populate('publishedBy', 'name role')
     .sort({ createdAt: -1 })
     .lean();
 
@@ -744,7 +831,10 @@ const createManagedTeacherLesson = asyncHandler(async (req, res) => {
     pdfOriginalName: primaryAttachment.originalName,
     attachments: attachmentsPayload,
     createdBy: teacher._id,
+    publishedBy: req.user._id,
   });
+
+  await lesson.populate('publishedBy', 'name role');
 
   await safelyRunNotificationTask('head teacher lesson', () => notifyLessonPublished({
     lesson,

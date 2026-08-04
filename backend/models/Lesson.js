@@ -92,6 +92,12 @@ const lessonSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    publishedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,

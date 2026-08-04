@@ -3378,3 +3378,548 @@ body.headteacher-dashboard .headteacher-sidebar .headteacher-sidebar-nav .headte
     line-height: 1.3;
   }
 }
+
+/* Forest dashboard theme -------------------------------------------------- */
+.headteacher-overview-page {
+  --ht-forest: #1e4307;
+  --ht-forest-deep: #122b03;
+  --ht-forest-soft: #edf5e8;
+  --ht-leaf: #5f8f32;
+  --ht-lime: #b8d88a;
+  --ht-gold: #d4aa2f;
+  --ht-ink: #172014;
+  --ht-muted: #667260;
+  --ht-border: rgba(30, 67, 7, 0.14);
+}
+
+body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
+  background:
+    radial-gradient(circle at 92% 3%, rgba(95, 143, 50, 0.16), transparent 26rem),
+    radial-gradient(circle at 24% 100%, rgba(184, 216, 138, 0.18), transparent 30rem),
+    linear-gradient(145deg, #f8fbf5 0%, #f1f6ed 54%, #edf3e8 100%);
+}
+
+.headteacher-overview-page .headteacher-stat-card {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--ht-border);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 14px 30px rgba(30, 67, 7, 0.075);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.headteacher-overview-page .headteacher-stat-card::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--ht-forest), var(--ht-lime));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.headteacher-overview-page .headteacher-stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(30, 67, 7, 0.26);
+  box-shadow: 0 20px 36px rgba(30, 67, 7, 0.12);
+}
+
+.headteacher-overview-page .headteacher-stat-card:hover::after {
+  opacity: 1;
+}
+
+.headteacher-overview-page .headteacher-stat-icon.teachers,
+.headteacher-overview-page .headteacher-stat-icon.active,
+.headteacher-overview-page .headteacher-stat-icon.students,
+.headteacher-overview-page .headteacher-stat-icon.lessons {
+  background: linear-gradient(145deg, var(--ht-forest), #477b22);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(30, 67, 7, 0.2);
+}
+
+.headteacher-overview-page .headteacher-stat-card:nth-child(2) .headteacher-stat-icon {
+  background: linear-gradient(145deg, #477b22, #71a948);
+}
+
+.headteacher-overview-page .headteacher-stat-card:nth-child(3) .headteacher-stat-icon {
+  background: linear-gradient(145deg, #315f13, #66963c);
+}
+
+.headteacher-overview-page .headteacher-stat-card:nth-child(4) .headteacher-stat-icon {
+  background: linear-gradient(145deg, #8a6605, var(--ht-gold));
+}
+
+.headteacher-overview-page .headteacher-stat-label,
+.headteacher-overview-page .headteacher-stat-note,
+.headteacher-overview-page .headteacher-section-subtitle,
+.headteacher-overview-page .headteacher-radial-copy p,
+.headteacher-overview-page .headteacher-chart-caption,
+.headteacher-overview-page .headteacher-legend-item small {
+  color: var(--ht-muted);
+}
+
+.headteacher-overview-page .headteacher-stat-value,
+.headteacher-overview-page .headteacher-section-title,
+.headteacher-overview-page .headteacher-radial-copy h3,
+.headteacher-overview-page .headteacher-legend-item strong {
+  color: var(--ht-ink);
+}
+
+.headteacher-overview-page .headteacher-panel {
+  border-color: var(--ht-border);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 18px 38px rgba(30, 67, 7, 0.08);
+}
+
+.headteacher-overview-page .headteacher-radial-card {
+  border-color: rgba(30, 67, 7, 0.13);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(184, 216, 138, 0.2), transparent 42%),
+    linear-gradient(145deg, #fff, #f5f9f1);
+  box-shadow: 0 12px 26px rgba(30, 67, 7, 0.07);
+}
+
+.headteacher-overview-page .headteacher-radial-chart {
+  --track-color: #e2ebdc;
+  filter: drop-shadow(0 10px 12px rgba(30, 67, 7, 0.12));
+}
+
+.headteacher-overview-page .headteacher-radial-chart.lessons {
+  --progress-color: var(--ht-forest);
+}
+
+.headteacher-overview-page .headteacher-radial-chart.assessments {
+  --progress-color: var(--ht-gold);
+}
+
+.headteacher-overview-page .headteacher-radial-chart::before {
+  background: linear-gradient(145deg, #fff, #f2f7ed);
+  box-shadow: inset 0 0 0 1px rgba(30, 67, 7, 0.1);
+}
+
+.headteacher-overview-page .headteacher-radial-center strong {
+  color: var(--ht-forest-deep);
+}
+
+.headteacher-overview-page .headteacher-radial-center span,
+.headteacher-overview-page .headteacher-analytics-kicker {
+  color: var(--ht-forest);
+}
+
+.headteacher-overview-page .headteacher-analytics-panel {
+  border-color: rgba(30, 67, 7, 0.15);
+  background:
+    radial-gradient(circle at 98% 0%, rgba(184, 216, 138, 0.18), transparent 30%),
+    rgba(255, 255, 255, 0.9);
+}
+
+.headteacher-overview-page .headteacher-highlight-pill,
+.headteacher-overview-page .headteacher-legend-item {
+  border-color: rgba(30, 67, 7, 0.13);
+  background: linear-gradient(145deg, #fff, var(--ht-forest-soft));
+}
+
+.headteacher-overview-page .headteacher-highlight-pill strong {
+  color: var(--ht-forest-deep);
+}
+
+.headteacher-overview-page .headteacher-analytics-filter select {
+  border-color: rgba(30, 67, 7, 0.18);
+  background: #fff;
+  color: var(--ht-forest-deep);
+}
+
+.headteacher-overview-page .headteacher-analytics-filter select:focus {
+  border-color: rgba(30, 67, 7, 0.5);
+  box-shadow: 0 0 0 3px rgba(30, 67, 7, 0.12);
+}
+
+.headteacher-overview-page .headteacher-chart-shell {
+  border-color: rgba(30, 67, 7, 0.12);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.78), rgba(248, 251, 245, 0.88)),
+    repeating-linear-gradient(0deg, transparent 0 35px, rgba(30, 67, 7, 0.035) 35px 36px);
+  box-shadow: inset 0 1px 0 #fff, 0 12px 24px rgba(30, 67, 7, 0.05);
+}
+
+.headteacher-overview-page .headteacher-legend-swatch.lessons {
+  background: var(--ht-forest);
+  box-shadow: 0 0 0 4px rgba(30, 67, 7, 0.12);
+}
+
+.headteacher-overview-page .headteacher-legend-swatch.assessments {
+  background: var(--ht-gold);
+  box-shadow: 0 0 0 4px rgba(212, 170, 47, 0.14);
+}
+
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link:hover {
+  border-color: rgba(30, 67, 7, 0.16) !important;
+  background: var(--ht-forest-soft) !important;
+}
+
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.active,
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.router-link-active,
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active {
+  border-color: var(--ht-forest) !important;
+  background: linear-gradient(135deg, var(--ht-forest), #3e711d) !important;
+  box-shadow: 0 12px 22px rgba(30, 67, 7, 0.18) !important;
+}
+
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.active > span,
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.router-link-active > span,
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active > span {
+  color: #fff !important;
+}
+
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.active i,
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.router-link-active i,
+body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active i {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+}
+
+@media (max-width: 640px) {
+  .headteacher-overview-page .headteacher-stat-card:hover {
+    transform: none;
+  }
+}
+
+/* Dashboard management actions and attention states ---------------------- */
+.headteacher-overview-page .headteacher-summary-stack {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  margin-bottom: 1.55rem;
+}
+
+.headteacher-overview-page .headteacher-create-teacher-cta {
+  min-height: 44px;
+  padding: 0.72rem 1rem;
+  border: 1px solid rgba(30, 67, 7, 0.25);
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--ht-forest), #3f751d);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  font-size: 0.86rem;
+  font-weight: 750;
+  white-space: nowrap;
+  box-shadow: 0 10px 22px rgba(30, 67, 7, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.headteacher-overview-page .headteacher-create-teacher-cta:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #28580b, #4d8427);
+  box-shadow: 0 14px 26px rgba(30, 67, 7, 0.26);
+}
+
+.headteacher-overview-page .headteacher-create-teacher-cta:active {
+  transform: translateY(0);
+}
+
+.headteacher-overview-page .headteacher-create-teacher-cta:focus-visible,
+.headteacher-overview-page .headteacher-attention-retry:focus-visible,
+.headteacher-overview-page .headteacher-metric-tooltip:focus-visible {
+  outline: 3px solid rgba(255, 213, 66, 0.62);
+  outline-offset: 2px;
+}
+
+.headteacher-overview-page .headteacher-attention-row {
+  min-height: 62px;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid rgba(180, 124, 12, 0.22);
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(245, 190, 58, 0.12), transparent 36%),
+    linear-gradient(135deg, rgba(255, 253, 246, 0.98), rgba(255, 248, 225, 0.94));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 10px 22px rgba(113, 73, 3, 0.055);
+}
+
+.headteacher-overview-page .headteacher-attention-row.is-error {
+  border-color: rgba(185, 28, 28, 0.18);
+  background: linear-gradient(135deg, #fff, #fff5f5);
+}
+
+.headteacher-overview-page .headteacher-attention-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.68rem;
+  min-width: 0;
+}
+
+.headteacher-overview-page .headteacher-attention-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 11px;
+  background: rgba(212, 170, 47, 0.15);
+  color: #9a6700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headteacher-overview-page .is-error .headteacher-attention-icon {
+  background: rgba(185, 28, 28, 0.09);
+  color: #b91c1c;
+}
+
+.headteacher-overview-page .headteacher-attention-heading > div {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.headteacher-overview-page .headteacher-attention-heading strong {
+  color: #5e4108;
+  font-size: 0.84rem;
+}
+
+.headteacher-overview-page .headteacher-attention-heading span:not(.headteacher-attention-icon) {
+  color: #8a6b2e;
+  font-size: 0.7rem;
+}
+
+.headteacher-overview-page .headteacher-attention-chips,
+.headteacher-overview-page .headteacher-attention-skeletons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.48rem;
+  flex-wrap: wrap;
+}
+
+.headteacher-overview-page .headteacher-attention-chip {
+  min-height: 34px;
+  padding: 0.46rem 0.68rem;
+  border: 1px solid rgba(180, 124, 12, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  color: #735417;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.headteacher-overview-page .headteacher-attention-chip strong {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #f2c14e;
+  color: #4f3500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+.headteacher-overview-page .headteacher-attention-skeletons span,
+.headteacher-overview-page .headteacher-activity-loading {
+  display: inline-block;
+  width: 116px;
+  height: 32px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(212, 170, 47, 0.08), rgba(212, 170, 47, 0.22), rgba(212, 170, 47, 0.08));
+  background-size: 220% 100%;
+  animation: headteacher-attention-shimmer 1.35s ease-in-out infinite;
+}
+
+.headteacher-overview-page .headteacher-attention-retry {
+  min-height: 36px;
+  padding: 0.5rem 0.76rem;
+  border: 1px solid rgba(185, 28, 28, 0.18);
+  border-radius: 11px;
+  background: #fff;
+  color: #991b1b;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.headteacher-overview-page .headteacher-activity-highlight {
+  min-width: 205px;
+}
+
+.headteacher-overview-page .headteacher-activity-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.headteacher-overview-page .headteacher-metric-tooltip {
+  position: relative;
+  color: var(--ht-forest);
+  cursor: help;
+}
+
+.headteacher-overview-page .headteacher-metric-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  z-index: 30;
+  width: min(260px, 72vw);
+  padding: 0.62rem 0.7rem;
+  border-radius: 10px;
+  background: var(--ht-forest-deep);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 10px 22px rgba(18, 43, 3, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.headteacher-overview-page .headteacher-metric-tooltip:hover::after,
+.headteacher-overview-page .headteacher-metric-tooltip:focus::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.headteacher-overview-page .headteacher-activity-progress {
+  width: 100%;
+  height: 5px;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(30, 67, 7, 0.1);
+}
+
+.headteacher-overview-page .headteacher-activity-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ht-forest), #76a94c);
+  transition: width 0.45s ease;
+}
+
+.headteacher-overview-page .headteacher-activity-loading {
+  width: 100%;
+  height: 18px;
+  border-radius: 7px;
+}
+
+.headteacher-overview-page .headteacher-activity-unavailable {
+  color: #9f341f;
+}
+
+.headteacher-alert-row-enter-active,
+.headteacher-alert-row-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.headteacher-alert-row-enter-from,
+.headteacher-alert-row-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@keyframes headteacher-attention-shimmer {
+  to { background-position: -220% 0; }
+}
+
+@media (min-width: 900px) and (min-height: 700px) {
+  .headteacher-overview-page .headteacher-summary-stack {
+    gap: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  .headteacher-overview-page .headteacher-attention-row {
+    min-height: 50px;
+    padding: 0.48rem 0.65rem;
+    border-radius: 14px;
+  }
+
+  .headteacher-overview-page .headteacher-attention-icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 9px;
+  }
+
+  .headteacher-overview-page .headteacher-attention-chip {
+    min-height: 29px;
+    padding: 0.32rem 0.5rem;
+    font-size: 0.62rem;
+  }
+
+  .headteacher-overview-page .headteacher-attention-chip strong {
+    height: 19px;
+    min-width: 19px;
+    font-size: 0.6rem;
+  }
+
+  .headteacher-overview-page .headteacher-create-teacher-cta {
+    min-height: 38px;
+    padding: 0.58rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.76rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .headteacher-overview-page .headteacher-attention-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .headteacher-overview-page .headteacher-attention-chips,
+  .headteacher-overview-page .headteacher-attention-skeletons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .headteacher-overview-page .headteacher-analytics-actions .headteacher-create-teacher-cta {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .headteacher-overview-page .headteacher-create-teacher-cta {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 0.65rem 0.85rem;
+    border-radius: 12px;
+  }
+
+  .headteacher-overview-page .headteacher-attention-chip {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headteacher-overview-page .headteacher-create-teacher-cta,
+  .headteacher-overview-page .headteacher-stat-card,
+  .headteacher-overview-page .headteacher-activity-progress > span,
+  .headteacher-alert-row-enter-active,
+  .headteacher-alert-row-leave-active {
+    transition: none;
+  }
+
+  .headteacher-overview-page .headteacher-attention-skeletons span,
+  .headteacher-overview-page .headteacher-activity-loading {
+    animation: none;
+  }
+}

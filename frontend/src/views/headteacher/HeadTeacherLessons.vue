@@ -1,5 +1,5 @@
 <template>
-  <div class="headteacher-workspace headteacher-dashboard-page headteacher-content-page">
+  <div class="headteacher-workspace headteacher-dashboard-page headteacher-content-page headteacher-lessons-page">
     <aside id="headteacher-sidebar-drawer" class="headteacher-sidebar" :class="{ active: isSidebarOpen }">
       <div class="headteacher-sidebar-header">
         <div class="headteacher-brand">
@@ -280,7 +280,7 @@
         </div>
 
         <div v-else class="headteacher-lesson-list">
-          <article v-for="lesson in lessons" :key="lesson.id" class="headteacher-lesson-card">
+          <article v-for="lesson in paginatedLessons" :key="lesson.id" class="headteacher-lesson-card">
             <div class="headteacher-lesson-card-top">
               <div class="headteacher-lesson-card-copy">
                 <div class="headteacher-lesson-card-badges">
@@ -296,11 +296,41 @@
             </div>
 
             <div class="headteacher-lesson-meta">
-              <span><i class="fas fa-user"></i> Assigned to {{ lesson.teacher?.name || 'Teacher' }}</span>
+              <span class="headteacher-lesson-creator">
+                <i class="fas fa-user-pen"></i>
+                Created by {{ lesson.creator?.name || lesson.teacher?.name || 'Teacher' }}
+                <small>{{ formatCreatorRole(lesson.creator?.role) }}</small>
+              </span>
+              <span><i class="fas fa-user-check"></i> Assigned to {{ lesson.teacher?.name || 'Teacher' }}</span>
               <span><i class="fas fa-calendar-alt"></i> {{ formatDate(lesson.createdAt) }}</span>
               <span><i class="fas fa-book-open"></i> {{ lesson.track || 'GENERAL' }}</span>
             </div>
           </article>
+
+          <nav v-if="lessonTotalPages > 1" class="headteacher-pagination headteacher-lesson-pagination" aria-label="Lesson assignment pages">
+            <div class="headteacher-pagination-info">
+              Showing {{ lessonPageStart }}–{{ lessonPageEnd }} of {{ lessons.length }} lessons
+            </div>
+            <div class="headteacher-pagination-controls">
+              <button type="button" class="headteacher-page-btn" :disabled="lessonCurrentPage === 1" @click="goToPreviousLessonPage">
+                Previous
+              </button>
+              <button
+                v-for="page in visibleLessonPages"
+                :key="`lesson-page-${page}`"
+                type="button"
+                class="headteacher-page-btn"
+                :class="{ active: page === lessonCurrentPage }"
+                :aria-current="page === lessonCurrentPage ? 'page' : undefined"
+                @click="goToLessonPage(page)"
+              >
+                {{ page }}
+              </button>
+              <button type="button" class="headteacher-page-btn" :disabled="lessonCurrentPage === lessonTotalPages" @click="goToNextLessonPage">
+                Next
+              </button>
+            </div>
+          </nav>
         </div>
       </section>
       </div>
@@ -606,6 +636,8 @@ const assessmentGenerationWarning = ref('')
 const AI_CONFIG_WARNING_MESSAGE = 'AI Generator is not configured. Please contact the administrator to set up the API Key and Model.'
 const teachers = ref([])
 const lessons = ref([])
+const lessonCurrentPage = ref(1)
+const lessonPageSize = 5
 const managedAssessments = ref([])
 const activeWorkspaceTab = ref('lessons')
 const accountMenuRef = ref(null)
@@ -669,6 +701,20 @@ const latestLessonTeacherLabel = computed(() => {
   if (lessons.value.length === 0) return 'No teacher assignment yet'
   return lessons.value[0]?.teacher?.name || 'Teacher'
 })
+const lessonTotalPages = computed(() => Math.max(1, Math.ceil(lessons.value.length / lessonPageSize)))
+const paginatedLessons = computed(() => {
+  const start = (lessonCurrentPage.value - 1) * lessonPageSize
+  return lessons.value.slice(start, start + lessonPageSize)
+})
+const visibleLessonPages = computed(() => {
+  const maxVisible = 5
+  let start = Math.max(1, lessonCurrentPage.value - Math.floor(maxVisible / 2))
+  const end = Math.min(lessonTotalPages.value, start + maxVisible - 1)
+  start = Math.max(1, end - maxVisible + 1)
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+})
+const lessonPageStart = computed(() => lessons.value.length === 0 ? 0 : ((lessonCurrentPage.value - 1) * lessonPageSize) + 1)
+const lessonPageEnd = computed(() => Math.min(lessonCurrentPage.value * lessonPageSize, lessons.value.length))
 const filteredAssessmentLessons = computed(() => lessons.value.filter((lesson) => lesson.teacher?.id === assessmentForm.teacherId))
 const selectedAssessmentLesson = computed(() => filteredAssessmentLessons.value.find((lesson) => lesson.id === assessmentForm.lessonId) || null)
 const filteredManagedAssessments = computed(() => {
@@ -716,6 +762,13 @@ const closeAccountMenu = () => {
   isAccountMenuOpen.value = false
 }
 
+const goToLessonPage = (page) => {
+  lessonCurrentPage.value = Math.min(lessonTotalPages.value, Math.max(1, Number(page) || 1))
+}
+
+const goToPreviousLessonPage = () => goToLessonPage(lessonCurrentPage.value - 1)
+const goToNextLessonPage = () => goToLessonPage(lessonCurrentPage.value + 1)
+
 const formatDate = (value) => {
   if (!value) return 'N/A'
   const parsed = new Date(value)
@@ -725,6 +778,12 @@ const formatDate = (value) => {
     day: '2-digit',
     year: 'numeric',
   }).format(parsed)
+}
+
+const formatCreatorRole = (role) => {
+  const normalized = String(role || 'teacher').trim().toLowerCase()
+  if (normalized === 'headteacher' || normalized === 'head_teacher') return 'Head Teacher'
+  return normalized === 'teacher' ? 'Teacher' : 'Staff'
 }
 
 const setBanner = (type, message) => {
@@ -841,6 +900,7 @@ const submitLesson = async () => {
     await axios.post(`${resolveApiBaseUrl()}/headteacher/lessons`, payload, getAuthConfig())
     setBanner('success', 'Lesson created and assigned successfully.')
     resetForm()
+    lessonCurrentPage.value = 1
     await fetchLessons()
   } catch (error) {
     const message = error.response?.data?.message || 'Failed to create lesson.'
@@ -1093,6 +1153,10 @@ watch(
     }
   }
 )
+
+watch(lessonTotalPages, (totalPages) => {
+  if (lessonCurrentPage.value > totalPages) lessonCurrentPage.value = totalPages
+})
 
 onMounted(() => {
   loadPage()
@@ -1554,6 +1618,18 @@ onBeforeUnmount(() => {
   gap: 0.4rem;
 }
 
+.headteacher-lesson-creator small {
+  margin: 0;
+  padding: 0.18rem 0.42rem;
+  border-radius: 999px;
+  background: #dcebd0;
+  color: var(--lessons-forest);
+  font-size: 0.64rem;
+  font-weight: 750;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .headteacher-lesson-meta span i.fa-book-open,
 .headteacher-lesson-meta span i.fa-book-open::before {
   color: #f97316 !important;
@@ -1753,6 +1829,336 @@ small {
 
   .headteacher-context-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Forest theme: mirrors the Head Teacher dashboard and management pages. */
+.headteacher-lessons-page {
+  --lessons-forest: #1e4307;
+  --lessons-forest-deep: #122b03;
+  --lessons-leaf: #5f8f32;
+  --lessons-soft: #edf5e8;
+  --lessons-lime: #b8d88a;
+  --lessons-gold: #d4aa2f;
+  --lessons-ink: #172014;
+  --lessons-muted: #667260;
+  --lessons-border: rgba(30, 67, 7, 0.14);
+}
+
+.headteacher-lessons-page .headteacher-main {
+  background:
+    radial-gradient(circle at 92% 3%, rgba(95, 143, 50, 0.16), transparent 26rem),
+    radial-gradient(circle at 24% 100%, rgba(184, 216, 138, 0.18), transparent 30rem),
+    linear-gradient(145deg, #f8fbf5 0%, #f1f6ed 54%, #edf3e8 100%);
+}
+
+.headteacher-lessons-page .headteacher-panel {
+  border-color: var(--lessons-border);
+  background:
+    radial-gradient(circle at 98% 0%, rgba(184, 216, 138, 0.13), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 243, 0.98));
+  box-shadow: 0 18px 40px rgba(30, 67, 7, 0.075);
+}
+
+.headteacher-lessons-page .headteacher-workspace-tab {
+  border-color: var(--lessons-border);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 26px rgba(30, 67, 7, 0.045);
+}
+
+.headteacher-lessons-page .headteacher-workspace-tab:hover {
+  border-color: rgba(30, 67, 7, 0.28);
+  box-shadow: 0 14px 30px rgba(30, 67, 7, 0.09);
+}
+
+.headteacher-lessons-page .headteacher-workspace-tab.active {
+  border-color: rgba(30, 67, 7, 0.3);
+  background: linear-gradient(180deg, var(--lessons-soft), #fff);
+  box-shadow: 0 14px 30px rgba(30, 67, 7, 0.12);
+}
+
+.headteacher-lessons-page .headteacher-workspace-tab-copy strong,
+.headteacher-lessons-page .headteacher-step-break h3,
+.headteacher-lessons-page .headteacher-selected-teacher-copy strong,
+.headteacher-lessons-page .headteacher-upload-copy strong,
+.headteacher-lessons-page .headteacher-summary-item strong,
+.headteacher-lessons-page .headteacher-lesson-card-top h3,
+.headteacher-lessons-page .headteacher-context-card strong,
+.headteacher-lessons-page .headteacher-draft-head h3,
+.headteacher-lessons-page .headteacher-draft-item h4,
+.headteacher-lessons-page .headteacher-assessment-card h3 {
+  color: var(--lessons-ink);
+}
+
+.headteacher-lessons-page .headteacher-workspace-tab-copy small,
+.headteacher-lessons-page .headteacher-step-break p,
+.headteacher-lessons-page .headteacher-selected-teacher-copy span,
+.headteacher-lessons-page .headteacher-selected-teacher-empty,
+.headteacher-lessons-page .headteacher-helper-copy,
+.headteacher-lessons-page .headteacher-upload-copy small,
+.headteacher-lessons-page .headteacher-summary-item span,
+.headteacher-lessons-page .headteacher-summary-item small,
+.headteacher-lessons-page .headteacher-lesson-card-top p,
+.headteacher-lessons-page .headteacher-lesson-meta,
+.headteacher-lessons-page .headteacher-context-card span,
+.headteacher-lessons-page .headteacher-draft-head p,
+.headteacher-lessons-page .headteacher-assessment-card p,
+.headteacher-lessons-page .headteacher-assessment-meta {
+  color: var(--lessons-muted);
+}
+
+.headteacher-lessons-page .headteacher-workspace-tab-count {
+  background: #f1f6ed;
+  color: var(--lessons-forest-deep);
+}
+
+.headteacher-lessons-page .headteacher-workspace-tab.active .headteacher-workspace-tab-count {
+  background: #dcebd0;
+  color: var(--lessons-forest);
+}
+
+.headteacher-lessons-page .headteacher-lessons-form-card,
+.headteacher-lessons-page .headteacher-lessons-summary-card,
+.headteacher-lessons-page .headteacher-lesson-card {
+  border-color: var(--lessons-border);
+  background: linear-gradient(180deg, #fff, #f6faf3);
+  box-shadow: 0 18px 40px rgba(30, 67, 7, 0.065);
+}
+
+.headteacher-lessons-page .headteacher-lessons-form-card::before {
+  background: radial-gradient(circle, rgba(95, 143, 50, 0.16), transparent 68%);
+}
+
+.headteacher-lessons-page .headteacher-eyebrow,
+.headteacher-lessons-page .headteacher-step-label {
+  background: #dcebd0;
+  color: var(--lessons-forest);
+}
+
+.headteacher-lessons-page .headteacher-mini-badge {
+  border-color: var(--lessons-border);
+  background: rgba(255, 255, 255, 0.88);
+  color: #46543f;
+}
+
+.headteacher-lessons-page .headteacher-step-break,
+.headteacher-lessons-page .headteacher-context-card {
+  border-color: var(--lessons-border);
+  background: linear-gradient(180deg, #fff, #f4f8f1);
+}
+
+.headteacher-lessons-page .headteacher-selected-teacher-card {
+  border-color: rgba(30, 67, 7, 0.16);
+  background: linear-gradient(135deg, #fff, var(--lessons-soft));
+}
+
+.headteacher-lessons-page .headteacher-selected-teacher-card.empty {
+  background: linear-gradient(135deg, #fff, #f5f8f3);
+}
+
+.headteacher-lessons-page .headteacher-selected-teacher-avatar {
+  background: linear-gradient(135deg, var(--lessons-forest), #477b22);
+  box-shadow: 0 8px 17px rgba(30, 67, 7, 0.18);
+}
+
+.headteacher-lessons-page .headteacher-selected-teacher-status,
+.headteacher-lessons-page .headteacher-upload-action {
+  color: var(--lessons-forest);
+}
+
+.headteacher-lessons-page .headteacher-status-dot {
+  background: var(--lessons-leaf);
+  box-shadow: 0 0 0 4px rgba(95, 143, 50, 0.15);
+}
+
+.headteacher-lessons-page .headteacher-form-group input,
+.headteacher-lessons-page .headteacher-form-group select,
+.headteacher-lessons-page .headteacher-form-group textarea {
+  border-color: rgba(30, 67, 7, 0.18);
+  background: #fff;
+  color: var(--lessons-ink);
+}
+
+.headteacher-lessons-page .headteacher-form-group input:focus,
+.headteacher-lessons-page .headteacher-form-group select:focus,
+.headteacher-lessons-page .headteacher-form-group textarea:focus {
+  border-color: rgba(30, 67, 7, 0.55);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(30, 67, 7, 0.11);
+}
+
+.headteacher-lessons-page .headteacher-upload-dropzone {
+  border-color: rgba(30, 67, 7, 0.32);
+  background: linear-gradient(135deg, #fff, #f4f8f1);
+}
+
+.headteacher-lessons-page .headteacher-upload-dropzone:hover {
+  border-color: var(--lessons-forest);
+  box-shadow: 0 14px 28px rgba(30, 67, 7, 0.1);
+}
+
+.headteacher-lessons-page .headteacher-upload-icon {
+  background: #fbe9e6;
+  color: #a73825;
+}
+
+.headteacher-lessons-page .headteacher-summary-item {
+  border-color: var(--lessons-border);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.headteacher-lessons-page .headteacher-summary-item.teachers {
+  border-left: 3px solid var(--lessons-forest);
+}
+
+.headteacher-lessons-page .headteacher-summary-item.lessons {
+  border-left: 3px solid var(--lessons-leaf);
+}
+
+.headteacher-lessons-page .headteacher-summary-item.latest {
+  border-left: 3px solid var(--lessons-gold);
+}
+
+.headteacher-lessons-page .headteacher-lesson-card-top {
+  border-bottom-color: rgba(30, 67, 7, 0.1);
+}
+
+.headteacher-lessons-page .headteacher-lesson-pill {
+  background: #dcebd0;
+  color: var(--lessons-forest);
+}
+
+.headteacher-lessons-page .headteacher-lesson-pill.subtle {
+  background: var(--lessons-soft);
+  color: #315f13;
+}
+
+.headteacher-lessons-page .headteacher-lesson-pill.period,
+.headteacher-lessons-page .headteacher-lesson-file-chip {
+  border-color: rgba(212, 170, 47, 0.3);
+  background: #fff8df;
+  color: #765600;
+}
+
+.headteacher-lessons-page .headteacher-lesson-meta i,
+.headteacher-lessons-page .headteacher-assessment-meta i {
+  color: var(--lessons-leaf);
+}
+
+.headteacher-lessons-page .headteacher-lesson-meta span i.fa-book-open,
+.headteacher-lessons-page .headteacher-lesson-meta span i.fa-book-open::before {
+  color: var(--lessons-gold) !important;
+}
+
+.headteacher-lessons-page .headteacher-policy-note {
+  border-color: rgba(30, 67, 7, 0.18);
+  background: linear-gradient(135deg, var(--lessons-soft), #f9fbf7);
+  color: #46543f;
+}
+
+.headteacher-lessons-page .headteacher-policy-note strong {
+  color: var(--lessons-forest-deep);
+}
+
+.headteacher-lessons-page .headteacher-draft-box,
+.headteacher-lessons-page .headteacher-draft-item,
+.headteacher-lessons-page .headteacher-assessment-card {
+  border-color: var(--lessons-border);
+  background: linear-gradient(135deg, #fff, #f5f9f1);
+}
+
+.headteacher-lessons-page .headteacher-button-primary {
+  border-color: var(--lessons-forest);
+  background: linear-gradient(135deg, var(--lessons-forest), #3f751d);
+  color: #fff;
+  box-shadow: 0 11px 24px rgba(30, 67, 7, 0.22);
+}
+
+.headteacher-lessons-page .headteacher-button-primary:hover:not(:disabled) {
+  border-color: #28580b;
+  background: linear-gradient(135deg, #28580b, #4d8427);
+  box-shadow: 0 14px 28px rgba(30, 67, 7, 0.27);
+}
+
+.headteacher-lessons-page .headteacher-button-outline:hover:not(:disabled) {
+  border-color: rgba(30, 67, 7, 0.28);
+  background: var(--lessons-soft);
+  color: var(--lessons-forest);
+}
+
+.headteacher-lessons-page .headteacher-banner.success {
+  border-color: rgba(30, 67, 7, 0.15);
+  background: linear-gradient(180deg, #fff, var(--lessons-soft));
+  color: var(--lessons-forest);
+}
+
+.headteacher-lessons-page .headteacher-table-state {
+  border-color: var(--lessons-border);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--lessons-muted);
+}
+
+.headteacher-lessons-page .headteacher-lesson-pagination {
+  margin-top: 0.25rem;
+  border: 1px solid var(--lessons-border);
+  border-radius: 16px;
+  background: rgba(237, 245, 232, 0.78);
+}
+
+.headteacher-lessons-page .headteacher-pagination-info {
+  color: var(--lessons-muted);
+}
+
+.headteacher-lessons-page .headteacher-page-btn {
+  border-color: rgba(30, 67, 7, 0.16);
+  color: #46543f;
+}
+
+.headteacher-lessons-page .headteacher-page-btn:hover:not(:disabled):not(.active) {
+  border-color: rgba(30, 67, 7, 0.3);
+  background: var(--lessons-soft);
+  color: var(--lessons-forest);
+}
+
+.headteacher-lessons-page .headteacher-page-btn.active {
+  border-color: var(--lessons-forest);
+  background: linear-gradient(135deg, var(--lessons-forest), #3f751d);
+  color: #fff;
+  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.18);
+}
+
+.headteacher-lessons-page .headteacher-page-btn:focus-visible {
+  outline: 3px solid rgba(30, 67, 7, 0.16);
+  outline-offset: 2px;
+}
+
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.active,
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-active,
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active {
+  border-color: var(--lessons-forest) !important;
+  background: linear-gradient(135deg, var(--lessons-forest), #3e711d) !important;
+  box-shadow: 0 12px 22px rgba(30, 67, 7, 0.18) !important;
+}
+
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.active > span,
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-active > span,
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active > span {
+  color: #fff !important;
+}
+
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.active i,
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-active i,
+body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active i {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .headteacher-lessons-page .headteacher-workspace-tab,
+  .headteacher-lessons-page .headteacher-upload-dropzone,
+  .headteacher-lessons-page .headteacher-button {
+    transition: none;
   }
 }
 </style>

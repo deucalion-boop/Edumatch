@@ -1167,9 +1167,25 @@ const getUsers = asyncHandler(async (req, res) => {
     .populate('managedBy', 'name email')
     .sort({ createdAt: -1 });
   const dedupedUsers = uniqueBy(users, (user) => String(user?._id || '').trim() || String(user?.email || '').trim().toLowerCase());
+  const teacherIds = dedupedUsers
+    .filter((user) => String(user?.role || '') === ROLE_TEACHER)
+    .map((user) => user._id);
+  const lessonCounts = teacherIds.length
+    ? await Lesson.aggregate([
+        { $match: { createdBy: { $in: teacherIds } } },
+        { $group: { _id: '$createdBy', count: { $sum: 1 } } },
+      ])
+    : [];
+  const lessonCountsByTeacher = new Map(
+    lessonCounts.map((row) => [String(row._id), Number(row.count || 0)])
+  );
+
   return sendSuccess(res, 200, 'Users fetched successfully', {
     users: dedupedUsers.map((user) => {
       const mapped = mapUserResponse(user, req);
+      if (String(user?.role || '') === ROLE_TEACHER) {
+        mapped.lessonsCreated = lessonCountsByTeacher.get(String(user._id)) || 0;
+      }
       if (String(user?.role || '') === ROLE_STUDENT) {
         const progress = user?.enrollment?.progress || {};
         mapped.progress = {

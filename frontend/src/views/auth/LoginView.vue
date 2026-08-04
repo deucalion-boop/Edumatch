@@ -11,6 +11,13 @@
     <div class="auth-container">
       <div class="login-layout">
         <section class="login-form-panel">
+          <div class="login-panel-geometry" aria-hidden="true">
+            <span class="login-panel-shape login-panel-shape--rectangle"></span>
+            <span class="login-panel-shape login-panel-shape--polygon"></span>
+            <span class="login-panel-shape login-panel-shape--small"></span>
+            <span class="login-panel-accent login-panel-accent--top"></span>
+            <span class="login-panel-accent login-panel-accent--bottom"></span>
+          </div>
           <div class="login-form-shell">
       <!-- Login Card -->
       <div class="auth-card-wrapper">
@@ -710,7 +717,7 @@ export default {
   height: 16px;
   margin: 0;
   background: #ffffff !important;
-  border: 1px solid #ffffff !important;
+  border: 1px solid #9ca3af !important;
   border-radius: 3px;
   display: inline-grid;
   place-content: center;
@@ -744,15 +751,112 @@ export default {
 }
 
 .login-form-panel {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100dvh;
   padding: clamp(1rem, 2.8vw, 2.25rem) clamp(1.4rem, 3vw, 2.8rem);
-  background: #ffffff;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.login-form-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 62% 54% at 50% 48%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.76) 42%, rgba(248, 250, 252, 0) 76%),
+    radial-gradient(circle at 0 0, rgba(126, 185, 77, 0.72) 0 3px, transparent 3.5px) 77px 64px / 204px 164px,
+    radial-gradient(circle at 0 0, rgba(232, 184, 36, 0.7) 0 3px, transparent 3.5px) 115px 64px / 268px 195px,
+    radial-gradient(circle at 0 0, rgba(148, 163, 184, 0.18) 0 1.15px, transparent 1.5px) 17px 31px / 40px 32px,
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px) 0 0 / 40px 40px;
+}
+
+.login-form-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 17% 10%, rgba(63, 143, 70, 0.08) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 85% 72%, rgba(212, 175, 55, 0.1) 0 2px, transparent 2.5px);
+}
+
+.login-panel-geometry {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.login-panel-shape {
+  position: absolute;
+  display: block;
+}
+
+.login-panel-shape--rectangle {
+  width: clamp(112px, 14vw, 178px);
+  height: clamp(112px, 14vw, 178px);
+  top: 34px;
+  left: 0;
+  background: linear-gradient(135deg, rgba(165, 203, 126, 0.94), rgba(83, 151, 70, 0.72));
+  clip-path: polygon(0 0, 78% 0, 0 78%);
+  filter: drop-shadow(0 12px 24px rgba(63, 143, 70, 0.1));
+}
+
+.login-panel-shape--polygon {
+  width: clamp(145px, 18vw, 230px);
+  height: clamp(130px, 17vw, 215px);
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(165, 203, 126, 0.42), rgba(73, 143, 67, 0.8));
+  clip-path: polygon(100% 20%, 100% 100%, 18% 100%);
+  filter: drop-shadow(-10px -12px 28px rgba(63, 143, 70, 0.08));
+}
+
+.login-panel-shape--small {
+  width: clamp(200px, 25vw, 315px);
+  height: clamp(200px, 25vw, 315px);
+  left: clamp(-165px, -12vw, -96px);
+  bottom: clamp(-165px, -12vw, -96px);
+  border-radius: 50%;
+  background: rgba(151, 196, 107, 0.1);
+  box-shadow:
+    58px -44px 0 rgba(151, 196, 107, 0.055),
+    116px -88px 0 rgba(151, 196, 107, 0.025);
+}
+
+.login-panel-accent {
+  position: absolute;
+  display: block;
+  width: clamp(125px, 14vw, 180px);
+  height: 2px;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0), #e0b52e 24%, #e0b52e 76%, rgba(212, 175, 55, 0));
+  box-shadow: 0 9px 0 rgba(212, 175, 55, 0.15);
+}
+
+.login-panel-accent--top {
+  top: 48px;
+  left: 62px;
+  transform: rotate(-45deg);
+}
+
+.login-panel-accent--bottom {
+  right: 38px;
+  bottom: 58px;
+  transform: rotate(-45deg);
 }
 
 .login-form-shell {
+  position: relative;
+  z-index: 1;
   width: min(100%, 540px);
   display: flex;
   flex-direction: column;
@@ -876,9 +980,13 @@ export default {
 }
 
 .login-page .auth-form-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-weight: 700;
   color: #111111;
   font-size: 0.74rem;
+  line-height: 1.2;
   margin-bottom: 0.22rem;
 }
 
@@ -1188,12 +1296,31 @@ export default {
     border-radius: 0;
   }
 
-  .login-page .auth-card {
-    border-radius: 25px;
+  .login-design-panel {
+    display: none;
+    min-height: auto;
   }
 
-  .login-design-panel {
-    min-height: auto;
+  .login-form-panel {
+    min-height: 100dvh;
+    padding:
+      max(1rem, env(safe-area-inset-top))
+      max(0.75rem, env(safe-area-inset-right))
+      max(1rem, env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .login-form-shell {
+    width: min(100%, 520px);
+  }
+
+  .login-page .auth-card {
+    padding: 0.85rem !important;
+    border-radius: 21px;
+  }
+
+  .login-page .auth-card-container {
+    border-radius: 22px;
   }
 
   .login-design-title {
@@ -1230,6 +1357,59 @@ export default {
 
   .login-page .auth-options {
     padding: 0.9rem;
+    width: 100%;
+  }
+
+  .login-form-panel::after {
+    opacity: 0.72;
+  }
+
+  .login-panel-accent {
+    width: 118px;
+  }
+}
+
+@media (max-width: 400px) {
+  .login-form-panel {
+    padding-inline: 0.55rem;
+  }
+
+  .login-page .auth-card {
+    padding: 0.72rem !important;
+  }
+
+  .login-page .auth-card-title {
+    font-size: 1.25rem;
+  }
+
+  .login-page .auth-card-subtitle {
+    font-size: 0.72rem;
+  }
+
+  .login-page .captcha-group {
+    padding-inline: 0.35rem;
+    overflow: hidden;
+  }
+
+  .recaptcha-widget {
+    --captcha-scale: clamp(0.76, calc((100vw - 4.25rem) / 304), 1);
+    min-height: calc(78px * var(--captcha-scale));
+    overflow: hidden;
+  }
+
+  .recaptcha-widget > div {
+    flex: 0 0 304px;
+    transform: scale(var(--captcha-scale));
+    transform-origin: top center;
+  }
+
+  .login-page .auth-options {
+    gap: 0.65rem;
+    padding: 0.75rem;
+  }
+
+  .login-page .auth-copyright {
+    font-size: 0.68rem;
   }
 }
 
