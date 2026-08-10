@@ -4291,6 +4291,102 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   color: #44503f;
 }
 
+#coursesContent {
+  --course-green: #4f8a35;
+  --course-green-dark: #3d6d29;
+  --course-green-soft: #edf5e9;
+  --course-border: #dce5d8;
+  --course-ink: #172014;
+  --course-muted: #667064;
+}
+
+#coursesContent .courses-list {
+  gap: 0.8rem;
+}
+
+#coursesContent .course-item {
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
+  padding: 1.15rem;
+  border-color: var(--course-border);
+  border-left: 4px solid var(--course-green);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 5px 14px rgba(31, 51, 25, 0.06);
+}
+
+#coursesContent .course-item:hover {
+  transform: none;
+  border-color: #c5d5bf;
+  border-left-color: var(--course-green-dark);
+  box-shadow: 0 8px 20px rgba(31, 51, 25, 0.09);
+}
+
+#coursesContent .course-info h4 {
+  color: var(--course-ink);
+}
+
+#coursesContent .course-summary-text,
+#coursesContent .course-progress-copy small {
+  color: var(--course-muted);
+}
+
+#coursesContent .course-meta:first-of-type {
+  padding: 0.32rem 0.6rem;
+  border-color: #d5e6ce;
+  border-radius: 5px;
+  background: var(--course-green-soft);
+  color: var(--course-green-dark);
+}
+
+#coursesContent .course-meta:last-of-type {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--course-muted);
+}
+
+#coursesContent .course-progress {
+  border-color: var(--course-border);
+  border-radius: 6px;
+  background: #f8faf7;
+  box-shadow: none;
+}
+
+#coursesContent .course-progress-label {
+  color: var(--course-ink);
+}
+
+#coursesContent .course-progress-value {
+  min-width: 58px;
+  min-height: 36px;
+  border-color: var(--course-green);
+  border-radius: 6px;
+  background: var(--course-green);
+  box-shadow: none;
+}
+
+#coursesContent .progress-bar,
+#coursesContent .course-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: #dbe5d7;
+  box-shadow: none;
+}
+
+#coursesContent .progress-fill {
+  background: var(--course-green);
+  box-shadow: none;
+}
+
+#coursesContent .course-progress-meta span {
+  min-height: 30px;
+  padding: 0.3rem 0.55rem;
+  border-color: var(--course-border);
+  border-radius: 5px;
+  color: #44503f;
+}
+
 @media (max-width: 1100px) {
   #progressContent .progress-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
