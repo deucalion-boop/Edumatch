@@ -1536,9 +1536,9 @@ watch(students, () => {
 }
 
 .secretary-dashboard-nav button.active {
-  background: #245b13;
+  background: #4f8a35;
   color: #ffffff;
-  box-shadow: 0 5px 12px rgba(21, 128, 61, 0.2);
+  box-shadow: 0 5px 12px rgba(79, 138, 53, 0.24);
 }
 
 .secretary-dashboard-nav button::after {

@@ -283,16 +283,23 @@ onBeforeUnmount(() => {
 }
 
 .secretary-save-profile-btn {
-  border-color: #245b13;
-  background: #245b13;
+  border-color: #4f8a35;
+  background: #4f8a35;
   background-image: none;
   color: #ffffff !important;
   box-shadow: none;
 }
 
-.secretary-save-profile-btn:hover {
-  border-color: #1b460e;
-  background: #1b460e;
+.secretary-save-profile-btn:hover,
+.secretary-save-profile-btn:focus {
+  border-color: #416f2c;
+  background: #416f2c;
+  background-image: none;
+}
+
+.secretary-save-profile-btn:active {
+  border-color: #365d25;
+  background: #365d25;
   background-image: none;
 }
 </style>

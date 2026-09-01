@@ -9921,9 +9921,14 @@ onBeforeUnmount(() => {
   height: 48px;
   flex: 0 0 48px;
   border-radius: 15px;
-  background: #1e4307;
+  background: #4f8a35;
   color: #ffffff;
   box-shadow: 0 9px 20px rgba(30, 67, 7, 0.18);
+}
+
+#teacherRecordsAttendancePanel .attendance-workspace-icon i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-kicker {

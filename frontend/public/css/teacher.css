@@ -3751,19 +3751,29 @@ body.teacher-dashboard .teacher-dashboard {
 }
 
 body.teacher-dashboard .btn-primary,
-body.teacher-dashboard .btn-success,
-body.teacher-dashboard .btn-danger {
-    background: #111111 !important;
+body.teacher-dashboard .btn-success {
+    background: #4f8a35 !important;
     color: #FFFFFF !important;
-    border-color: #111111 !important;
+    border-color: #4f8a35 !important;
     background-image: none !important;
 }
 
 body.teacher-dashboard .btn-primary:hover,
-body.teacher-dashboard .btn-success:hover,
+body.teacher-dashboard .btn-success:hover {
+    background: #3f702b !important;
+    border-color: #3f702b !important;
+}
+
+body.teacher-dashboard .btn-danger {
+    background: #dc2626 !important;
+    color: #FFFFFF !important;
+    border-color: #dc2626 !important;
+    background-image: none !important;
+}
+
 body.teacher-dashboard .btn-danger:hover {
-    background: #1F2937 !important;
-    border-color: #1F2937 !important;
+    background: #b91c1c !important;
+    border-color: #b91c1c !important;
 }
 
 body.teacher-dashboard .btn-outline,
@@ -5322,8 +5332,8 @@ body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-sublink.active {
 
 body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-sublink.active::before,
 body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-dropdown-activities .nav-sublink.active::before {
-    background: #2563eb !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    background: #4f8a35 !important;
+    box-shadow: 0 0 0 3px rgba(79, 138, 53, 0.1) !important;
 }
 
 body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-sublink.active .nav-sublink-title,
@@ -5406,4 +5416,38 @@ body.teacher-dashboard .teacher-sidebar .sidebar-footer .status-indicator {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
     }
+}
+
+/* Keep filled teacher actions on the same brand green across scoped views. */
+body.teacher-dashboard .teacher-tour-btn-primary,
+body.teacher-dashboard .teacher-page-tour-btn-primary,
+body.teacher-dashboard .record-link-button,
+body.teacher-dashboard .attendance-save-btn,
+body.teacher-dashboard .builder-main .btn-primary,
+body.teacher-dashboard .student-primary-actions .btn-primary,
+body.teacher-dashboard .class-management-controls .create-class-btn,
+body.teacher-dashboard .lessons-page-btn.active,
+body.teacher-dashboard .assessments-page-btn.active,
+body.teacher-dashboard .attendance-scope-btn.active,
+body.teacher-dashboard .student-roster-tab.active {
+    background: #4f8a35 !important;
+    border-color: #4f8a35 !important;
+    color: #ffffff !important;
+    background-image: none !important;
+}
+
+body.teacher-dashboard .teacher-tour-btn-primary:hover:not(:disabled),
+body.teacher-dashboard .teacher-page-tour-btn-primary:hover:not(:disabled),
+body.teacher-dashboard .record-link-button:hover:not(:disabled),
+body.teacher-dashboard .attendance-save-btn:hover:not(:disabled),
+body.teacher-dashboard .builder-main .btn-primary:hover:not(:disabled),
+body.teacher-dashboard .student-primary-actions .btn-primary:hover:not(:disabled),
+body.teacher-dashboard .class-management-controls .create-class-btn:hover:not(:disabled) {
+    background: #3f702b !important;
+    border-color: #3f702b !important;
+}
+
+body.teacher-dashboard .record-link-button .fa-pen {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }

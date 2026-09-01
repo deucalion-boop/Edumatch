@@ -3164,8 +3164,8 @@ onBeforeUnmount(() => {
 
 .wizard-progress li.active .wizard-step-marker,
 .wizard-progress li.completed .wizard-step-marker {
-  border-color: #1e4307;
-  background: #1e4307;
+  border-color: #4f8a35;
+  background: #4f8a35;
   color: #ffffff;
 }
 
