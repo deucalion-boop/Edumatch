@@ -1700,10 +1700,22 @@ export default {
 
     const resolveUserAvatarUrl = (user) => {
       const profileImage = String(user?.profileImage || '').trim()
-      if (profileImage) return profileImage
-      const avatar = String(user?.avatar || '').trim()
-      if (avatar) return avatar
-      return ''
+      const raw = profileImage || String(user?.avatar || '').trim()
+      if (!raw) return ''
+
+      // The backend may return an absolute localhost URL for private storage.
+      // Rebuild it from the active API base so admin avatars work through the
+      // Vite/deployment proxy rather than the viewer's localhost.
+      try {
+        const parsed = new URL(raw, window.location.origin)
+        if (parsed.pathname.startsWith('/api/storage/')) {
+          return `${apiBaseUrl}${parsed.pathname.slice('/api'.length)}${parsed.search}${parsed.hash}`
+        }
+      } catch (_error) {
+        // Preserve a non-URL value below; it may be a local preview URL.
+      }
+
+      return raw
     }
 
     const cleanupEditAvatarPreview = () => {

@@ -1252,7 +1252,7 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, email, password, role, status, subject, contactNumber, department } = req.body;
+  const { name, email, username, password, role, status, subject, contactNumber, department } = req.body;
 
   const user = await User.findById(id).select('+password');
   if (!user) {
@@ -1273,6 +1273,21 @@ const updateUser = asyncHandler(async (req, res) => {
 
   if (name !== undefined) user.name = name;
   if (email !== undefined) user.email = String(email).toLowerCase().trim();
+  if (username !== undefined) {
+    const normalizedUsername = String(username).trim();
+    if (!normalizedUsername || normalizedUsername.length > 50) {
+      const error = new Error('Username must be between 1 and 50 characters');
+      error.statusCode = 400;
+      throw error;
+    }
+    const usernameExists = await User.findOne({ username: normalizedUsername, _id: { $ne: id } }).select('_id');
+    if (usernameExists) {
+      const error = new Error('Username already exists');
+      error.statusCode = 409;
+      throw error;
+    }
+    user.username = normalizedUsername;
+  }
   if (password !== undefined && String(password).trim()) {
     const normalizedPassword = String(password).trim();
     assertPasswordMeetsPolicy(normalizedPassword);
@@ -1329,6 +1344,7 @@ const updateUser = asyncHandler(async (req, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      username: user.username || '',
       role: user.role,
       status: user.status,
       strand: user.strand,

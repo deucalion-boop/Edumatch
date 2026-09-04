@@ -224,6 +224,7 @@
 </template>
 
 <script setup>
+import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
@@ -239,6 +240,7 @@ const isAccountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
 const profilePhotoInput = ref(null)
 const profileImageDraft = ref('')
+const selectedProfilePhoto = ref(null)
 const selectedPhotoName = ref('')
 const banner = reactive({ type: 'success', message: '' })
 const profileForm = reactive({
@@ -254,12 +256,32 @@ const errors = reactive({
   contactNumber: '',
 })
 
+const resolveProfileImageUrl = (value) => {
+  const raw = String(value || '').trim()
+  if (!raw || /^data:|^blob:/i.test(raw)) return raw
+
+  try {
+    const parsed = new URL(raw, window.location.origin)
+    if (parsed.pathname.startsWith('/api/storage/')) {
+      const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+      const apiBase = configured
+        ? (configured.endsWith('/api') ? configured : `${configured}/api`)
+        : '/api'
+      return `${apiBase}${parsed.pathname.slice('/api'.length)}${parsed.search}${parsed.hash}`
+    }
+  } catch (_error) {
+    // Keep the supplied value below when it is not a URL.
+  }
+
+  return raw
+}
+
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Admin').trim())
 const usernameLabel = computed(() => String(authStore.user?.username || 'Not provided').trim())
 const avatarUrl = computed(() => {
-  if (profileImageDraft.value) return profileImageDraft.value
+  if (profileImageDraft.value) return resolveProfileImageUrl(profileImageDraft.value)
   const profileImage = String(authStore.user?.profileImage || authStore.user?.avatar || '').trim()
-  if (profileImage) return profileImage
+  if (profileImage) return resolveProfileImageUrl(profileImage)
   return ''
 })
 
@@ -292,7 +314,7 @@ const syncProfileForm = () => {
   profileForm.email = String(authStore.user?.email || '').trim()
   profileForm.username = String(authStore.user?.username || '').trim()
   profileForm.contactNumber = normalizePhilippinePhone(authStore.user?.contactNumber)
-  profileImageDraft.value = String(authStore.user?.profileImage || authStore.user?.avatar || '').trim()
+  profileImageDraft.value = resolveProfileImageUrl(authStore.user?.profileImage || authStore.user?.avatar || '')
   selectedPhotoName.value = ''
   if (profilePhotoInput.value) {
     profilePhotoInput.value.value = ''
@@ -320,18 +342,9 @@ const handleProfilePhotoChange = (event) => {
     return
   }
 
-  const reader = new FileReader()
-  reader.onload = () => {
-    profileImageDraft.value = String(reader.result || '')
-    selectedPhotoName.value = file.name
-  }
-  reader.onerror = () => {
-    banner.type = 'error'
-    banner.message = 'The selected profile photo could not be read.'
-    selectedPhotoName.value = ''
-    event.target.value = ''
-  }
-  reader.readAsDataURL(file)
+  selectedProfilePhoto.value = file
+  profileImageDraft.value = URL.createObjectURL(file)
+  selectedPhotoName.value = file.name
 }
 
 const clearBanner = () => {
@@ -394,7 +407,7 @@ const validateProfile = () => {
   return !errors.name && !errors.email && !errors.username && !errors.contactNumber
 }
 
-const saveProfile = () => {
+const saveProfile = async () => {
   clearBanner()
 
   if (!validateProfile()) {
@@ -403,14 +416,43 @@ const saveProfile = () => {
     return
   }
 
-  authStore.setUser({
-    name: String(profileForm.name || '').trim(),
-    displayName: String(profileForm.name || '').trim(),
-    email: String(profileForm.email || '').trim(),
-    username: String(profileForm.username || '').trim(),
-    contactNumber: normalizePhilippinePhone(profileForm.contactNumber),
-    profileImage: profileImageDraft.value,
-  })
+  const userId = String(authStore.user?.id || authStore.user?._id || '').trim()
+  const token = String(authStore.token || '').trim()
+  if (!userId || !token) {
+    banner.type = 'error'
+    banner.message = 'Your session expired. Please sign in again.'
+    return
+  }
+
+  try {
+    const payload = new FormData()
+    payload.append('name', String(profileForm.name || '').trim())
+    payload.append('email', String(profileForm.email || '').trim())
+    payload.append('username', String(profileForm.username || '').trim())
+    payload.append('contactNumber', normalizePhilippinePhone(profileForm.contactNumber))
+    if (selectedProfilePhoto.value) payload.append('profileImage', selectedProfilePhoto.value)
+
+    const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+    const apiBase = configured ? (configured.endsWith('/api') ? configured : `${configured}/api`) : '/api'
+    const response = await axios.put(`${apiBase}/admin/users/${encodeURIComponent(userId)}`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const updatedUser = response.data?.user
+    if (!updatedUser) throw new Error('Profile update response was invalid')
+
+    authStore.setUser({
+      ...authStore.user,
+      ...updatedUser,
+      displayName: updatedUser.name || profileForm.name,
+      profileImage: resolveProfileImageUrl(updatedUser.profileImage || ''),
+    })
+    profileImageDraft.value = resolveProfileImageUrl(updatedUser.profileImage || '')
+    selectedProfilePhoto.value = null
+  } catch (error) {
+    banner.type = 'error'
+    banner.message = error.response?.data?.message || 'Failed to save the admin profile.'
+    return
+  }
 
   selectedPhotoName.value = ''
   if (profilePhotoInput.value) {
