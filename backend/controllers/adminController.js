@@ -101,6 +101,14 @@ function systemSettingsResponse(settings) {
       systemVersion: String(settings?.maintenance?.systemVersion || DEFAULT_SYSTEM_VERSION).trim() || DEFAULT_SYSTEM_VERSION,
       lastBackupAt: settings?.maintenance?.lastBackupAt || null,
       lastBackupFileName: String(settings?.maintenance?.lastBackupFileName || '').trim(),
+      backupHistory: Array.isArray(settings?.maintenance?.backupHistory)
+        ? settings.maintenance.backupHistory.map((backup) => ({
+          fileName: String(backup?.fileName || '').trim(),
+          generatedAt: backup?.generatedAt || null,
+          collectionCount: Number(backup?.collectionCount || 0),
+          sizeBytes: Number(backup?.sizeBytes || 0),
+        }))
+        : [],
       lastCacheClearedAt: settings?.maintenance?.lastCacheClearedAt || null,
     },
     updatedAt: settings?.updatedAt || null,
@@ -1488,6 +1496,7 @@ const saveSystemSettings = asyncHandler(async (req, res) => {
         systemVersion: normalizedSettings.maintenance.systemVersion,
         lastBackupAt: existingSettings?.maintenance?.lastBackupAt || null,
         lastBackupFileName: existingSettings?.maintenance?.lastBackupFileName || '',
+        backupHistory: existingSettings?.maintenance?.backupHistory || [],
         lastCacheClearedAt: existingSettings?.maintenance?.lastCacheClearedAt || null,
       },
       updatedBy: req.user._id,
@@ -1555,15 +1564,32 @@ const backupDatabase = asyncHandler(async (req, res) => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const fileName = `edumatch-backup-${timestamp}.json`;
   const filePath = path.join(backupDir, fileName);
-  await fs.writeFile(filePath, JSON.stringify(backupPayload, null, 2), 'utf8');
+  const serializedBackup = JSON.stringify(backupPayload, null, 2);
+  const generatedAt = new Date();
+  const sizeBytes = Buffer.byteLength(serializedBackup, 'utf8');
+  await fs.writeFile(filePath, serializedBackup, 'utf8');
+
+  const backupHistoryEntry = {
+    fileName,
+    generatedAt,
+    collectionCount: filteredCollections.length,
+    sizeBytes,
+  };
 
   const updatedSettings = await Settings.findOneAndUpdate(
     { key: 'global' },
     {
       $set: {
-        'maintenance.lastBackupAt': new Date(),
+        'maintenance.lastBackupAt': generatedAt,
         'maintenance.lastBackupFileName': fileName,
         updatedBy: req.user._id,
+      },
+      $push: {
+        'maintenance.backupHistory': {
+          $each: [backupHistoryEntry],
+          $position: 0,
+          $slice: 10,
+        },
       },
       $setOnInsert: {
         key: 'global',
@@ -1580,10 +1606,11 @@ const backupDatabase = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, 'Database backup completed successfully', {
     backup: {
       fileName,
-      filePath,
       collectionCount: filteredCollections.length,
-      generatedAt: updatedSettings?.maintenance?.lastBackupAt || new Date(),
+      sizeBytes,
+      generatedAt: updatedSettings?.maintenance?.lastBackupAt || generatedAt,
     },
+    backupHistory: systemSettingsResponse(updatedSettings).maintenance.backupHistory,
   });
 });
 

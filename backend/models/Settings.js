@@ -1,5 +1,15 @@
 ﻿const mongoose = require('mongoose');
 
+const backupHistoryEntrySchema = new mongoose.Schema(
+  {
+    fileName: { type: String, required: true, trim: true },
+    generatedAt: { type: Date, required: true, default: Date.now },
+    collectionCount: { type: Number, default: 0, min: 0 },
+    sizeBytes: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+);
+
 const settingsSchema = new mongoose.Schema(
   {
     key: {
@@ -59,6 +69,10 @@ const settingsSchema = new mongoose.Schema(
         type: String,
         default: '',
         trim: true,
+      },
+      backupHistory: {
+        type: [backupHistoryEntrySchema],
+        default: [],
       },
       lastCacheClearedAt: {
         type: Date,

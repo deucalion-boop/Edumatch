@@ -14,6 +14,7 @@ const { resolveStoredFileUrl } = require('../utils/fileStorage');
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const DEFAULT_MAX_LOGIN_ATTEMPTS = 5;
 const DEFAULT_ACCOUNT_LOCKOUT_DURATION_MINUTES = 30;
+const DEFAULT_EMAIL_VERIFICATION_REQUIRED = true;
 const RESET_TOKEN_TTL_MINUTES = 60;
 const APP_NAME = 'EduMatch';
 const DEFAULT_MAINTENANCE_MESSAGE = 'The system is currently under maintenance. Please check back later.';
@@ -232,6 +233,11 @@ async function getMaintenancePolicy() {
   };
 }
 
+async function getEmailVerificationPolicy() {
+  const settings = await Settings.findOne({ key: 'global' }).select('user.emailVerificationRequired').lean();
+  return settings?.user?.emailVerificationRequired ?? DEFAULT_EMAIL_VERIFICATION_REQUIRED;
+}
+
 async function verifyRecaptchaToken({ token, remoteIp }) {
   const recaptchaSecret = String(process.env.RECAPTCHA_SECRET_KEY || '').trim();
   const captchaToken = String(token || '').trim();
@@ -410,7 +416,8 @@ const login = asyncHandler(async (req, res) => {
   user.lockUntil = null;
   await user.save();
 
-  if (!requiresEmailOtp(user)) {
+  const emailVerificationRequired = await getEmailVerificationPolicy();
+  if (!emailVerificationRequired || !requiresEmailOtp(user)) {
     user.lastLoginAt = now;
     user.lastActivityAt = now;
     await user.save();
@@ -418,7 +425,9 @@ const login = asyncHandler(async (req, res) => {
       username: normalizedUsername,
       user,
       outcome: 'success',
-      reason: 'Login successful; OTP bypassed for administrator sample email',
+      reason: emailVerificationRequired
+        ? 'Login successful; OTP bypassed for administrator sample email'
+        : 'Login successful; email verification is disabled by system settings',
     });
     const token = await createSessionAndSignToken(user, req, rememberSession);
     return sendSuccess(res, 200, 'Login successful', {
