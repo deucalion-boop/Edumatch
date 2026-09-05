@@ -30,6 +30,7 @@ const {
 } = require('../services/userManagementService');
 const { createAdminMessageNotification } = require('../services/notificationService');
 const { countUnreadNotifications } = require('../services/supabaseNotificationService');
+const { getSupabaseAnalytics } = require('../services/supabaseAnalyticsService');
 const {
   APPROVED_EXPORT_REQUEST_TTL_MINUTES,
   EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
@@ -1568,7 +1569,7 @@ const getRawSettingsDebug = asyncHandler(async (_req, res) => {
   });
 });
 
-const getAnalytics = asyncHandler(async (_req, res) => {
+const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
   const now = new Date();
   const periodStart = new Date(now);
   periodStart.setDate(periodStart.getDate() - 30);
@@ -2120,6 +2121,11 @@ const getAnalytics = asyncHandler(async (_req, res) => {
     },
     recentActivities,
   });
+});
+
+const getAnalytics = asyncHandler(async (_req, res) => {
+  const payload = await getSupabaseAnalytics();
+  return sendSuccess(res, 200, 'Analytics fetched successfully', payload);
 });
 
 const sendUserMessage = asyncHandler(async (req, res) => {
