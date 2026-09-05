@@ -1,7 +1,11 @@
-const Notification = require('../models/Notification');
 const { sendSuccess } = require('../utils/responseHelper');
-const { safelyRunNotificationTask, syncStudentNotifications } = require('../services/studentNotificationService');
-const { syncTeacherNotifications } = require('../services/teacherNotificationService');
+const {
+  clearNotifications,
+  countUnreadNotifications,
+  listNotifications,
+  markAllNotificationsViewed: markAllViewedInSupabase,
+  markNotificationViewed: markViewedInSupabase,
+} = require('../services/supabaseNotificationService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -30,27 +34,9 @@ const getMyNotifications = asyncHandler(async (req, res) => {
   const recipientId = req.user._id;
   const recipientRole = String(req.user.role || '').trim().toLowerCase();
 
-  if (recipientRole === 'student') {
-    await safelyRunNotificationTask('student notification sync', () => syncStudentNotifications(recipientId));
-  } else if (recipientRole === 'teacher') {
-    await safelyRunNotificationTask('teacher notification sync', () => syncTeacherNotifications(recipientId));
-  }
-
   const [notifications, unreadCount] = await Promise.all([
-    Notification.find({
-      recipientId,
-      recipientRole,
-      isCleared: { $ne: true },
-    })
-      .sort({ urgent: -1, createdAt: -1 })
-      .limit(limit)
-      .lean(),
-    Notification.countDocuments({
-      recipientId,
-      recipientRole,
-      isViewed: false,
-      isCleared: { $ne: true },
-    }),
+    listNotifications({ recipientId, recipientRole, limit }),
+    countUnreadNotifications({ recipientId, recipientRole }),
   ]);
 
   return sendSuccess(res, 200, 'Notifications fetched successfully', {
@@ -62,22 +48,7 @@ const getMyNotifications = asyncHandler(async (req, res) => {
 const markAllNotificationsViewed = asyncHandler(async (req, res) => {
   const recipientId = req.user._id;
   const recipientRole = String(req.user.role || '').trim().toLowerCase();
-  const now = new Date();
-
-  await Notification.updateMany(
-    {
-      recipientId,
-      recipientRole,
-      isViewed: false,
-      isCleared: { $ne: true },
-    },
-    {
-      $set: {
-        isViewed: true,
-        viewedAt: now,
-      },
-    }
-  );
+  await markAllViewedInSupabase({ recipientId, recipientRole });
 
   return sendSuccess(res, 200, 'Notifications marked as viewed', {
     unreadCount: 0,
@@ -85,22 +56,11 @@ const markAllNotificationsViewed = asyncHandler(async (req, res) => {
 });
 
 const markNotificationViewed = asyncHandler(async (req, res) => {
-  const notification = await Notification.findOneAndUpdate(
-    {
-      _id: req.params.id,
-      recipientId: req.user._id,
-      recipientRole: String(req.user.role || '').trim().toLowerCase(),
-    },
-    {
-      $set: {
-        isViewed: true,
-        viewedAt: new Date(),
-      },
-    },
-    {
-      new: true,
-    }
-  ).lean();
+  const notification = await markViewedInSupabase({
+    id: req.params.id,
+    recipientId: req.user._id,
+    recipientRole: String(req.user.role || '').trim().toLowerCase(),
+  });
 
   if (!notification) {
     const error = new Error('Notification not found');
@@ -117,13 +77,10 @@ const clearAllNotifications = asyncHandler(async (req, res) => {
   const recipientId = req.user._id;
   const recipientRole = String(req.user.role || '').trim().toLowerCase();
 
-  const result = await Notification.updateMany(
-    { recipientId, recipientRole, isCleared: { $ne: true } },
-    { $set: { isCleared: true, isViewed: true, viewedAt: new Date() } }
-  );
+  const deletedCount = await clearNotifications({ recipientId, recipientRole });
 
   return sendSuccess(res, 200, 'Notifications cleared successfully', {
-    deletedCount: Number(result?.modifiedCount || 0),
+    deletedCount,
     unreadCount: 0,
   });
 });

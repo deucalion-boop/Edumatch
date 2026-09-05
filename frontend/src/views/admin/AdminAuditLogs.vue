@@ -479,7 +479,6 @@ const REQUEST_SOURCE_LABELS = {
   '/api/admin/export-requests/:id/review': 'Export approvals',
   '/api/admin/settings/security': 'Security settings',
   '/api/admin/settings/system': 'System settings',
-  '/api/admin/settings/system/backup': 'System backup',
   '/api/admin/settings/system/clear-cache': 'System maintenance',
   '/api/teacher/lessons': 'Lesson management',
   '/api/teacher/subjects': 'Subject management',

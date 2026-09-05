@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const Settings = require('../models/Settings');
-const Session = require('../models/Session');
+const { findSupabaseAccount } = require('../services/supabaseAccountService');
+const { findActiveSession, touchSession } = require('../services/supabaseAuthPersistenceService');
 
 const DEFAULT_SESSION_TIMEOUT_MINUTES = 120;
 const DEFAULT_REMEMBERED_SESSION_TIMEOUT_DAYS = 30;
@@ -25,7 +24,7 @@ async function authMiddleware(req, _res, next) {
     });
     const rememberSession = decoded?.remember === true;
 
-    const user = await User.findById(decoded.id).select('-password +lastActivityAt +tokenVersion');
+    const user = await findSupabaseAccount('id', decoded.id);
 
     if (!user) {
       const error = new Error('User not found');
@@ -39,12 +38,7 @@ async function authMiddleware(req, _res, next) {
       throw error;
     }
 
-    const session = await Session.findOne({
-      userId: user._id,
-      tokenId: decoded.jti,
-      revokedAt: null,
-      expiresAt: { $gt: new Date() },
-    });
+    const session = await findActiveSession(user._id, decoded.jti);
     if (!session) {
       const error = new Error('Session has been revoked');
       error.statusCode = 401;
@@ -68,15 +62,13 @@ async function authMiddleware(req, _res, next) {
       throw error;
     }
 
-    const settings = await Settings.findOne({ key: 'global' }).select('security maintenance').lean();
-    const configuredSessionTimeoutMinutes = Number(settings?.security?.sessionTimeoutMinutes || DEFAULT_SESSION_TIMEOUT_MINUTES);
+    const configuredSessionTimeoutMinutes = DEFAULT_SESSION_TIMEOUT_MINUTES;
     const rememberedSessionTimeoutMinutes = DEFAULT_REMEMBERED_SESSION_TIMEOUT_DAYS * 24 * 60;
     const sessionTimeoutMinutes = rememberSession
       ? Math.max(configuredSessionTimeoutMinutes, rememberedSessionTimeoutMinutes)
       : configuredSessionTimeoutMinutes;
-    const maintenanceModeEnabled = settings?.maintenance?.maintenanceModeEnabled === true;
-    const maintenanceMessage =
-      String(settings?.maintenance?.maintenanceMessage || DEFAULT_MAINTENANCE_MESSAGE).trim() || DEFAULT_MAINTENANCE_MESSAGE;
+    const maintenanceModeEnabled = false;
+    const maintenanceMessage = DEFAULT_MAINTENANCE_MESSAGE;
     const now = new Date();
     const lastActivityAt = user.lastActivityAt ? new Date(user.lastActivityAt) : null;
 
@@ -92,9 +84,8 @@ async function authMiddleware(req, _res, next) {
       throw error;
     }
 
-    await User.updateOne({ _id: user._id }, { $set: { lastActivityAt: now } });
-    await Session.updateOne({ _id: session._id }, { $set: { lastSeenAt: now } });
     user.lastActivityAt = now;
+    await Promise.all([user.save(), touchSession(session._id, now)]);
 
     req.user = user;
     req.token = token;

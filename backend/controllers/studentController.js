@@ -4,13 +4,14 @@ const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
 const Subject = require('../models/Subject');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
-const Section = require('../models/Section');
 const User = require('../models/User');
 const { sendSuccess } = require('../utils/responseHelper');
 const { computeMasteryFromSubmissions, recalculateStudentMasteryProgress } = require('../utils/studentProgress');
 const { formatRecommendationPayload, recomputeStudentRecommendation } = require('../services/recommendationService');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
+const { findSectionById } = require('../services/sectionService');
+const { findSupabaseAccount, listSupabaseAccounts } = require('../services/supabaseAccountService');
 const {
   notifyAutomatedGrade,
   notifySubmissionCompleted,
@@ -163,16 +164,10 @@ function subjectResponse(subject, enrollment = null) {
 }
 
 async function resolveStudentSectionContext(studentId, req) {
-  const student = await User.findById(studentId)
-    .select('sectionId')
-    .populate('sectionId', 'name')
-    .lean();
-
-  const section = student?.sectionId
-    ? {
-      id: String(student.sectionId._id || ''),
-      name: String(student.sectionId.name || '').trim(),
-    }
+  const student = await findSupabaseAccount('id', String(studentId || '').trim());
+  const sectionRow = student?.sectionId ? await findSectionById(student.sectionId) : null;
+  const section = sectionRow
+    ? { id: String(sectionRow.id || ''), name: String(sectionRow.name || '').trim() }
     : null;
 
   if (!section?.id) {
@@ -182,12 +177,11 @@ async function resolveStudentSectionContext(studentId, req) {
     };
   }
 
-  const adviser = await User.findOne({
-    role: 'teacher',
-    advisorySectionId: section.id,
-  })
-    .select('_id name email department subject profileImage')
-    .lean();
+  const accounts = await listSupabaseAccounts();
+  const adviser = accounts.find((account) => (
+    String(account?.role || '').trim() === 'teacher'
+    && String(account?.advisorySectionId || '').trim() === section.id
+  )) || null;
 
   return {
     section,
@@ -1634,7 +1628,7 @@ const joinSubjectByCode = asyncHandler(async (req, res) => {
     teacherId: subject.teacherId,
   });
   const section = req.user?.sectionId
-    ? await Section.findById(req.user.sectionId).select('name').lean()
+    ? await findSectionById(req.user.sectionId)
     : null;
   enrollment.sectionId = req.user?.sectionId || undefined;
   enrollment.sectionName = String(section?.name || '').trim();

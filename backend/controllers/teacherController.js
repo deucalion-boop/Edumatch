@@ -26,6 +26,18 @@ const { getSectionOrThrow } = require('../services/sectionService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
 const {
+  createSupabaseAccount,
+  findSupabaseAccountByEmail,
+  findSupabaseAccountByUsername,
+} = require('../services/supabaseAccountService');
+const {
+  createSupabaseLesson,
+  listSupabaseLessons,
+  findSupabaseLesson,
+  createSupabaseAssessment,
+  listSupabaseAssessments,
+} = require('../services/supabaseContentService');
+const {
   notifyAssessmentAssigned,
   notifyLessonPublished,
   safelyRunNotificationTask,
@@ -199,10 +211,8 @@ const createStudentInvite = asyncHandler(async (req, res) => {
     error.statusCode = 409;
     throw error;
   }
-  const advisorySection = await getSectionOrThrow(req.user?.advisorySectionId, {
-    message: 'You must be assigned to an advisory section before creating student accounts',
-  });
-  const existing = await User.findOne({ email: normalizedEmail }).select('_id');
+  const advisorySectionId = String(req.user?.advisorySectionId || '').trim();
+  const existing = await findSupabaseAccountByEmail(normalizedEmail);
   if (existing) {
     const error = new Error('Email already exists');
     error.statusCode = 409;
@@ -221,15 +231,22 @@ const createStudentInvite = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  const existingUsername = await findSupabaseAccountByUsername(normalizedUsername);
+  if (existingUsername) {
+    const error = new Error('Username already exists');
+    error.statusCode = 409;
+    throw error;
+  }
+
   const now = new Date();
 
-  const created = await User.create({
+  const created = await createSupabaseAccount({
     name: String(name).trim(),
     email: normalizedEmail,
     username: normalizedUsername,
     role: ROLE_STUDENT,
     status: 'active',
-    sectionId: advisorySection._id,
+    sectionId: advisorySectionId,
     department: String(req.user?.department || '').trim(),
     gradeLevel: 'Grade 10',
     contactNumber: normalizeContactNumber(contactNumber),
@@ -791,43 +808,13 @@ const createLesson = asyncHandler(async (req, res) => {
   let lesson;
   try {
     const normalizedSubjectId = String(subjectId || '').trim();
-    let subjectRecord = null;
-
-    if (normalizedSubjectId) {
-      subjectRecord = await findTeacherSubjectRecord(req.user._id, normalizedSubjectId);
-      if (!subjectRecord) {
-        const error = new Error('Selected class was not found');
-        error.statusCode = 404;
-        throw error;
-      }
+    if (!normalizedSubjectId) {
+      const error = new Error('Select the class where this lesson should be posted.');
+      error.statusCode = 400;
+      throw error;
     }
 
-    if (!subjectRecord) {
-      const matchingSubjects = await Subject.find({
-        teacherId: req.user._id,
-        isActive: true,
-        name: normalizedSubject,
-        ...(requestedStrand ? { track: requestedStrand } : {}),
-      })
-        .sort({ createdAt: 1 })
-        .select('_id name className track code subjectCategory');
-
-      if (matchingSubjects.length === 0) {
-        const error = new Error('Create a class first in Student Management before posting lessons.');
-        error.statusCode = 400;
-        throw error;
-      }
-
-      if (matchingSubjects.length > 1) {
-        const error = new Error('Select the class where this lesson should be posted.');
-        error.statusCode = 400;
-        throw error;
-      }
-
-      subjectRecord = matchingSubjects[0];
-    }
-
-    const lessonTrack = normalizeLessonStrand(subjectRecord?.track || normalizedTrack) || normalizedTrack;
+    const lessonTrack = normalizedTrack;
     if (!isSubjectAllowedForStrand({ strand: lessonTrack, subject: normalizedSubject })) {
       const allowedSubjects = getSubjectsByStrand(lessonTrack);
       const error = new Error(`subject is invalid for strand ${lessonTrack}. Allowed subjects: ${allowedSubjects.join(', ')}`);
@@ -835,11 +822,11 @@ const createLesson = asyncHandler(async (req, res) => {
       throw error;
     }
 
-    const duplicateLesson = await Lesson.findOne({
-      createdBy: req.user._id,
-      subjectId: subjectRecord._id,
-      title: new RegExp(`^${normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-    }).select('_id');
+    const existingLessons = await listSupabaseLessons(req.user._id);
+    const duplicateLesson = existingLessons.find((item) => (
+      String(item.subjectId || '') === normalizedSubjectId
+      && String(item.title || '').trim().toLowerCase() === normalizedTitle.toLowerCase()
+    ));
 
     if (duplicateLesson) {
       const error = new Error('A lesson with the same title already exists for this class');
@@ -847,14 +834,14 @@ const createLesson = asyncHandler(async (req, res) => {
       throw error;
     }
 
-    lesson = await Lesson.create({
+    lesson = await createSupabaseLesson({
       title: normalizedTitle,
       description: normalizedDescription,
       track: lessonTrack,
       subject: normalizedSubject,
-      subjectId: subjectRecord._id,
-      subjectCode: subjectRecord.code,
-      subjectCategory: subjectRecord.subjectCategory || normalizedSubjectCategory,
+      subjectId: normalizedSubjectId,
+      subjectCode: '',
+      subjectCategory: normalizedSubjectCategory,
       pdfPath: primaryAttachment.storedPath,
       pdfOriginalName: primaryAttachment.originalName,
       attachments: attachmentsPayload,
@@ -877,20 +864,13 @@ const createLesson = asyncHandler(async (req, res) => {
     throw saveError;
   }
 
-  await safelyRunNotificationTask('new lesson', () => notifyLessonPublished({
-    lesson,
-    publisher: req.user,
-  }));
-
   return sendSuccess(res, 201, 'Lesson created successfully', {
     lesson: lessonToResponse(lesson, req),
   });
 });
 
 const getTeacherLessons = asyncHandler(async (req, res) => {
-  const lessons = await Lesson.find({ createdBy: req.user._id })
-    .populate('subjectId', 'className code track')
-    .sort({ createdAt: -1 });
+  const lessons = await listSupabaseLessons(req.user._id);
   const dedupedLessons = uniqueBy(lessons, (lesson) => {
     if (lesson?._id) return String(lesson._id);
     return `${normalizeKeyPart(lesson?.title)}:${normalizeKeyPart(getLessonTrack(lesson))}:${String(lesson?.createdBy || '')}`;
@@ -1109,17 +1089,14 @@ const getTeacherSubjects = asyncHandler(async (req, res) => {
 });
 
 const getTeacherAssessments = asyncHandler(async (req, res) => {
-  const assessments = await Assessment.find({ createdBy: req.user._id })
-    .populate({
-      path: 'lessonId',
-      select: 'title track subject subjectId subjectCode',
-      populate: { path: 'subjectId', select: 'name className code track' },
-    })
-    .populate('subjectId', 'name className code track')
-    .populate('publishedBy', 'name role')
-    .populate('lastModifiedBy', 'name role')
-    .sort({ createdAt: -1 })
-    .lean();
+  const [assessments, lessons] = await Promise.all([
+    listSupabaseAssessments(req.user._id),
+    listSupabaseLessons(req.user._id),
+  ]);
+  const lessonById = new Map(lessons.map((lesson) => [String(lesson._id), lesson]));
+  assessments.forEach((assessment) => {
+    if (assessment.lessonId) assessment.lessonId = lessonById.get(String(assessment.lessonId)) || assessment.lessonId;
+  });
   const dedupedAssessments = uniqueBy(assessments, (assessment) => {
     if (assessment?._id) return String(assessment._id);
     return [
@@ -1130,24 +1107,7 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
     ].join(':');
   });
 
-  const assessmentIds = dedupedAssessments.map((assessment) => assessment._id);
-  let submissionCountsByAssessment = new Map();
-
-  if (assessmentIds.length > 0) {
-    const submissionCounts = await Submission.aggregate([
-      {
-        $match: {
-          assessmentId: { $in: assessmentIds },
-          status: { $in: ['completed', 'auto_submitted', 'terminated'] },
-        },
-      },
-      { $group: { _id: '$assessmentId', count: { $sum: 1 } } },
-    ]);
-
-    submissionCountsByAssessment = new Map(
-      submissionCounts.map((item) => [String(item._id), item.count])
-    );
-  }
+  const submissionCountsByAssessment = new Map();
 
   const mappedAssessments = dedupedAssessments.map((assessment) => ({
     id: assessment._id,
@@ -1552,7 +1512,7 @@ const createAssessment = asyncHandler(async (req, res) => {
     : parseExamDurationMinutes(examDurationMinutesRaw, { required: true });
 
   const lesson = hasLinkedLesson
-    ? await Lesson.findOne({ _id: normalizedLessonId, createdBy: req.user._id })
+    ? await findSupabaseLesson(normalizedLessonId, req.user._id)
     : null;
   if (hasLinkedLesson && !lesson) {
     const error = new Error('Lesson not found for this teacher');
@@ -1560,17 +1520,14 @@ const createAssessment = asyncHandler(async (req, res) => {
     throw error;
   }
   if (!hasLinkedLesson && normalizedSubjectId) {
-    selectedClass = await Subject.findOne({
+    selectedClass = {
       _id: normalizedSubjectId,
-      teacherId: req.user._id,
-      isActive: true,
-    });
-
-    if (!selectedClass) {
-      const error = new Error('Selected class was not found');
-      error.statusCode = 404;
-      throw error;
-    }
+      id: normalizedSubjectId,
+      name: String(subject || req.user?.subject || '').trim(),
+      track: normalizeLessonStrand(req.body?.strand || req.user?.strand || 'GENERAL') || 'GENERAL',
+      code: '',
+      subjectCategory: String(subjectCategory || '').trim(),
+    };
   }
   if (!hasLinkedLesson && !selectedClass) {
     const error = new Error('Select a linked lesson or class before creating this assessment');
@@ -1600,16 +1557,13 @@ const createAssessment = asyncHandler(async (req, res) => {
     error.statusCode = 400;
     throw error;
   }
-  const duplicateAssessmentQuery = {
-    createdBy: req.user._id,
-    title: new RegExp(`^${normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-    examType: normalizedExamType,
-    lessonId: hasLinkedLesson ? normalizedLessonId : null,
-  };
-  if (!hasLinkedLesson && selectedClass?._id) {
-    duplicateAssessmentQuery.subjectId = selectedClass._id;
-  }
-  const duplicateAssessment = await Assessment.findOne(duplicateAssessmentQuery).select('_id');
+  const existingAssessments = await listSupabaseAssessments(req.user._id);
+  const duplicateAssessment = existingAssessments.find((item) => (
+    String(item.title || '').trim().toLowerCase() === normalizedTitle.toLowerCase()
+    && String(item.examType || '') === normalizedExamType
+    && String(item.lessonId || '') === (hasLinkedLesson ? normalizedLessonId : '')
+    && (hasLinkedLesson || String(item.subjectId || '') === String(selectedClass?._id || ''))
+  ));
 
   if (duplicateAssessment) {
     const error = new Error(hasLinkedLesson
@@ -1660,48 +1614,38 @@ const createAssessment = asyncHandler(async (req, res) => {
       assignmentScope,
     });
     const subjectRecord = lesson
-      ? await resolveTeacherSubjectRecord({
-        teacherId: req.user._id,
-        subjectId: lesson.subjectId,
-        subjectName: lesson.subject || normalizedSubject,
+      ? {
+        _id: lesson.subjectId,
+        id: lesson.subjectId,
+        name: lesson.subject || normalizedSubject,
         track: lesson.track,
+        code: lesson.subjectCode || '',
         subjectCategory: lesson.subjectCategory || getSubjectCategory(normalizedSubject),
-      })
+      }
       : selectedClass;
     if (lesson && !subjectRecord) {
       const error = new Error('Linked lesson is not attached to a class. Recreate the lesson with a class selected.');
       error.statusCode = 400;
       throw error;
     }
-    if (
-      lesson
-      && (
-        !lesson.subjectId
-        || String(lesson.subjectId) !== String(subjectRecord._id)
-        || String(lesson.subjectCode || '') !== String(subjectRecord.code)
-      )
-    ) {
-      lesson.subjectId = subjectRecord._id;
-      lesson.subjectCode = subjectRecord.code;
-      await lesson.save();
-    }
-
     if (assessmentPolicy.countsTowardRecommendation) {
-      await assertUniqueGradingAssessment({
-        teacherId: req.user._id,
-        subjectId: subjectRecord?._id,
-        gradingPeriod: assessmentPolicy.gradingPeriod,
-      });
+      const duplicateGradingAssessment = existingAssessments.find((item) => (
+        item.countsTowardRecommendation === true
+        && String(item.subjectId || '') === String(subjectRecord?._id || '')
+        && String(item.gradingPeriod || '') === String(assessmentPolicy.gradingPeriod || '')
+      ));
+      if (duplicateGradingAssessment) {
+        const error = new Error('A grading assessment already exists for this class and grading period');
+        error.statusCode = 409;
+        throw error;
+      }
     }
 
-    const assignedStudentIds = await resolveAssignedStudentIds({
-      assignmentScope: assessmentPolicy.assignmentScope,
-      teacherId: req.user._id,
-      subjectId: subjectRecord?._id || null,
-      fallbackToAllHandledStudents: isActivityAssessment && !lesson && !subjectRecord,
-    });
+    const assignedStudentIds = Array.isArray(req.body?.assignedStudentIds)
+      ? req.body.assignedStudentIds
+      : [];
 
-    assessment = await Assessment.create({
+    assessment = await createSupabaseAssessment({
       lessonId: lesson?._id || undefined,
       title: normalizedTitle,
       examType: normalizedExamType,
@@ -1746,11 +1690,6 @@ const createAssessment = asyncHandler(async (req, res) => {
     });
     throw saveError;
   }
-
-  await safelyRunNotificationTask('new assessment', () => notifyAssessmentAssigned({
-    assessment,
-    publisher: req.user,
-  }));
 
   return sendSuccess(res, 201, 'Assessment created successfully', { assessment });
 });

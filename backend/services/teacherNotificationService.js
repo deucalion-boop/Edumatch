@@ -1,9 +1,9 @@
 const crypto = require('crypto');
 const Assessment = require('../models/Assessment');
-const Notification = require('../models/Notification');
+const { upsertNotification } = require('./supabaseNotificationService');
 const Submission = require('../models/Submission');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
-const User = require('../models/User');
+const { findSupabaseAccount } = require('./supabaseAccountService');
 
 const TEACHER_ROLE = 'teacher';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -41,44 +41,28 @@ async function createTeacherNotification({
   if (!normalizedRecipientId || !normalizedEventKey) return null;
 
   const senderName = truncate(sender?.name || sender?.username || 'EduMatch', 120);
-  const now = new Date();
-  return Notification.findOneAndUpdate(
-    {
-      recipientId: normalizedRecipientId,
-      recipientRole: TEACHER_ROLE,
-      type: clean(type, 'teacher_update').toLowerCase(),
-      'meta.eventKey': normalizedEventKey,
-    },
-    {
-      $setOnInsert: {
-        recipientId: normalizedRecipientId,
-        recipientRole: TEACHER_ROLE,
-        senderId: sender?._id || null,
-        senderRole: clean(sender?.role, 'system').toLowerCase(),
-        senderName,
-        type: clean(type, 'teacher_update').toLowerCase(),
-        title: truncate(title, 220),
-        message: truncate(subject || title, 400),
-        subject: truncate(subject || title, 200),
-        preview: truncate(preview || subject || title, 220),
-        urgent: urgent === true,
-        isViewed: false,
-        isCleared: false,
-        viewedAt: null,
-        meta: { ...meta, eventKey: normalizedEventKey },
-        createdAt: now,
-        updatedAt: now,
-      },
-    },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
+  return upsertNotification({
+    recipientId: normalizedRecipientId,
+    recipientRole: TEACHER_ROLE,
+    senderId: sender?._id || null,
+    senderRole: clean(sender?.role, 'system').toLowerCase(),
+    senderName,
+    type: clean(type, 'teacher_update').toLowerCase(),
+    title: truncate(title, 220),
+    message: truncate(subject || title, 400),
+    subject: truncate(subject || title, 200),
+    preview: truncate(preview || subject || title, 220),
+    urgent: urgent === true,
+    eventKey: normalizedEventKey,
+    meta,
+  });
 }
 
 async function getStudent(studentOrId) {
   if (studentOrId && typeof studentOrId === 'object' && studentOrId.name) return studentOrId;
   const studentId = clean(studentOrId?._id || studentOrId);
   if (!studentId) return null;
-  return User.findById(studentId).select('_id name username role').lean();
+  return findSupabaseAccount('id', studentId);
 }
 
 async function notifyEnrollmentRequest({ enrollment, student, subject }) {

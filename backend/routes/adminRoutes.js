@@ -18,7 +18,6 @@ const {
   getSecuritySettings,
   getSystemSettings,
   saveSystemSettings,
-  backupDatabase,
   clearSystemCache,
   getRawSettingsDebug,
   getAnalytics,
@@ -46,7 +45,6 @@ router.get('/settings/security', getSecuritySettings);
 router.put('/settings/security', saveSecuritySettings);
 router.get('/settings/system', getSystemSettings);
 router.put('/settings/system', saveSystemSettings);
-router.post('/settings/system/backup', backupDatabase);
 router.post('/settings/system/clear-cache', clearSystemCache);
 router.get('/debug/settings/raw', getRawSettingsDebug);
 

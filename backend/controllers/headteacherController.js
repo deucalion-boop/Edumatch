@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const mongoose = require('mongoose');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
@@ -30,6 +31,20 @@ const {
 const { uploadFiles } = require('../services/storageService');
 const { getSectionOrThrow, syncTeacherAdvisoryAssignments } = require('../services/sectionService');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
+const {
+  createSupabaseAccount,
+  findSupabaseAccount,
+  findSupabaseAccountByEmail,
+  findSupabaseAccountByUsername,
+  listSupabaseAccounts,
+} = require('../services/supabaseAccountService');
+const {
+  createSupabaseLesson,
+  listSupabaseLessons,
+  findSupabaseLesson,
+  createSupabaseAssessment,
+  listSupabaseAssessments,
+} = require('../services/supabaseContentService');
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
 const { createAdminMessageNotification } = require('../services/notificationService');
 const {
@@ -240,14 +255,14 @@ function resolveAssessmentSubjectCategory({ subjectCategory, examType, title, le
 
 async function findManagedTeacherForHeadTeacher(req, teacherId, options = {}) {
   const department = options.department || ensureHeadTeacher(req);
-  const teacher = await User.findOne({
-    _id: teacherId,
-    role: ROLE_TEACHER,
-    department,
-    managedBy: req.user._id,
-  }).select('_id name username role status subject department strand');
+  const teacher = await findSupabaseAccount('id', String(teacherId || '').trim());
 
-  if (!teacher) {
+  if (
+    !teacher
+    || String(teacher.role || '') !== ROLE_TEACHER
+    || String(teacher.department || '') !== department
+    || String(teacher.managedBy || '') !== String(req.user._id || '')
+  ) {
     const error = new Error('Teacher not found');
     error.statusCode = 404;
     throw error;
@@ -323,44 +338,46 @@ function headTeacherAssessmentToResponse(assessment, teacher, submissionCountsBy
 const getManagedTeachers = asyncHandler(async (req, res) => {
   const department = ensureHeadTeacher(req);
   const analyticsMonthCount = sanitizeAnalyticsMonthCount(req.query?.months);
-  const teachers = await User.find({
-    role: ROLE_TEACHER,
-    department,
-    managedBy: req.user._id,
-  })
-    .select('-password +lastActivityAt +lastLoginAt')
-    .populate('managedBy', 'name email')
-    .populate('advisorySectionId', 'name')
-    .sort({ createdAt: -1 });
+  const headTeacherId = String(req.user?._id || req.user?.id || '').trim();
+  const accounts = await listSupabaseAccounts();
+  const teachers = accounts
+    .filter((account) => (
+      String(account?.role || '').trim() === ROLE_TEACHER
+      && String(account?.department || '').trim() === department
+      && String(account?.managedBy?._id || account?.managedBy?.id || account?.managedBy || '').trim() === headTeacherId
+    ))
+    .sort((left, right) => new Date(right?.createdAt || 0).getTime() - new Date(left?.createdAt || 0).getTime());
 
-  const teacherIds = teachers.map((teacher) => teacher._id);
+  const teacherAccountIds = teachers
+    .map((teacher) => String(teacher?._id || teacher?.id || '').trim())
+    .filter(Boolean);
+  const mongoTeacherIds = teacherAccountIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+  const studentCount = accounts.filter((account) => (
+    String(account?.role || '').trim() === ROLE_STUDENT
+    && teacherAccountIds.includes(String(account?.managedBy?._id || account?.managedBy?.id || account?.managedBy || '').trim())
+    && account?.archive?.isArchived !== true
+  )).length;
   const [
-    studentCount,
     lessonCount,
     assessmentCount,
     latestLessonActivity,
     latestAssessmentActivity,
-  ] = teacherIds.length > 0
+  ] = mongoTeacherIds.length > 0
     ? await Promise.all([
-      User.countDocuments({
-        role: ROLE_STUDENT,
-        managedBy: { $in: teacherIds },
-        ...buildExcludeArchivedStudentsFilter(),
-      }),
       Lesson.countDocuments({
-        createdBy: { $in: teacherIds },
+        createdBy: { $in: mongoTeacherIds },
       }),
       Assessment.countDocuments({
-        createdBy: { $in: teacherIds },
+        createdBy: { $in: mongoTeacherIds },
       }),
-      buildLatestTeacherContentActivity(Lesson, teacherIds),
-      buildLatestTeacherContentActivity(Assessment, teacherIds),
+      buildLatestTeacherContentActivity(Lesson, mongoTeacherIds),
+      buildLatestTeacherContentActivity(Assessment, mongoTeacherIds),
     ])
-    : [0, 0, 0, [], []];
+    : [0, 0, [], []];
 
   const [lessonAnalyticsBuckets, assessmentAnalyticsBuckets] = await Promise.all([
-    buildMonthlyCreationAnalytics(Lesson, teacherIds, analyticsMonthCount),
-    buildMonthlyCreationAnalytics(Assessment, teacherIds, analyticsMonthCount),
+    buildMonthlyCreationAnalytics(Lesson, mongoTeacherIds, analyticsMonthCount),
+    buildMonthlyCreationAnalytics(Assessment, mongoTeacherIds, analyticsMonthCount),
   ]);
 
   const teachersPayload = teachers.map((teacher) => {
@@ -457,7 +474,7 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
 
   const normalizedEmail = String(email).toLowerCase().trim();
   const normalizedUsername = String(username || '').trim();
-  const existing = await User.findOne({ email: normalizedEmail }).select('_id');
+  const existing = await findSupabaseAccountByEmail(normalizedEmail);
   if (existing) {
     const error = new Error('Email already exists');
     error.statusCode = 409;
@@ -470,7 +487,7 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const existingUsername = await User.findOne({ username: normalizedUsername }).select('_id');
+  const existingUsername = await findSupabaseAccountByUsername(normalizedUsername);
   if (existingUsername) {
     const error = new Error('Username already exists');
     error.statusCode = 409;
@@ -490,7 +507,7 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     subject,
   });
 
-  const created = await User.create({
+  const created = await createSupabaseAccount({
     name: String(name).trim(),
     email: normalizedEmail,
     username: normalizedUsername,
@@ -498,7 +515,7 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     status: 'active',
     subject: scopedFields.subject,
     department: scopedFields.department,
-    advisorySectionId: advisorySectionId ? (await getSectionOrThrow(advisorySectionId))._id : undefined,
+    advisorySectionId: advisorySectionId ? String(advisorySectionId).trim() : undefined,
     strand: '',
     gradeLevel: '',
     contactNumber: normalizeContactNumber(contactNumber),
@@ -510,10 +527,6 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
       usedAt: null,
     },
   });
-  await syncTeacherAdvisoryAssignments({
-    nextSectionId: created.advisorySectionId,
-  });
-
   const inviteResult = await issueInviteForUser({
     user: created,
     req,
@@ -704,13 +717,12 @@ const getManagedTeacherStudents = asyncHandler(async (req, res) => {
 
 const getManagedTeacherLessons = asyncHandler(async (req, res) => {
   const department = ensureHeadTeacher(req);
-  const teachers = await User.find({
-    role: ROLE_TEACHER,
-    department,
-    managedBy: req.user._id,
-  })
-    .select('_id name subject department')
-    .lean();
+  const accounts = await listSupabaseAccounts();
+  const teachers = accounts.filter((account) => (
+    String(account.role || '') === ROLE_TEACHER
+    && String(account.department || '') === department
+    && String(account.managedBy?._id || account.managedBy?.id || account.managedBy || '') === String(req.user._id || '')
+  ));
 
   if (teachers.length === 0) {
     return sendSuccess(res, 200, 'Managed lessons fetched successfully', {
@@ -723,12 +735,8 @@ const getManagedTeacherLessons = asyncHandler(async (req, res) => {
   }
 
   const teacherMap = new Map(teachers.map((teacher) => [String(teacher._id), teacher]));
-  const lessons = await Lesson.find({
-    createdBy: { $in: teachers.map((teacher) => teacher._id) },
-  })
-    .populate('publishedBy', 'name role')
-    .sort({ createdAt: -1 })
-    .lean();
+  const teacherIds = new Set(teachers.map((teacher) => String(teacher._id || teacher.id)));
+  const lessons = (await listSupabaseLessons()).filter((lesson) => teacherIds.has(String(lesson.createdBy)));
 
   return sendSuccess(res, 200, 'Managed lessons fetched successfully', {
     lessons: lessons.map((lesson) => headTeacherLessonToResponse(lesson, teacherMap.get(String(lesson.createdBy)))),
@@ -752,18 +760,7 @@ const createManagedTeacherLesson = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const teacher = await User.findOne({
-    _id: normalizedTeacherId,
-    role: ROLE_TEACHER,
-    department,
-    managedBy: req.user._id,
-  }).select('_id name subject department strand');
-
-  if (!teacher) {
-    const error = new Error('Teacher not found');
-    error.statusCode = 404;
-    throw error;
-  }
+  const teacher = await findManagedTeacherForHeadTeacher(req, normalizedTeacherId, { department });
 
   const normalizedTrack = normalizeStrand(strand || track || teacher.strand || 'GENERAL') || 'GENERAL';
   const normalizedSubject = String(teacher.department || department).trim();
@@ -793,11 +790,10 @@ const createManagedTeacherLesson = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const duplicateLesson = await Lesson.findOne({
-    createdBy: teacher._id,
-    title: new RegExp(`^${normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-    track: new RegExp(`^${normalizedTrack.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-  }).select('_id');
+  const duplicateLesson = (await listSupabaseLessons(teacher._id)).find((item) => (
+    String(item.title || '').trim().toLowerCase() === normalizedTitle.toLowerCase()
+    && String(item.track || '').trim().toLowerCase() === normalizedTrack.toLowerCase()
+  ));
 
   if (duplicateLesson) {
     const error = new Error('A lesson with the same title and track already exists for this teacher');
@@ -806,26 +802,19 @@ const createManagedTeacherLesson = asyncHandler(async (req, res) => {
   }
 
   const normalizedSubjectCategory = getSubjectCategory(normalizedSubject);
-  const subjectRecord = await ensureTeacherSubject({
-    teacherId: teacher._id,
-    name: normalizedSubject,
-    track: normalizedTrack,
-    subjectCategory: normalizedSubjectCategory,
-    department,
-  });
 
   const attachmentsPayload = await buildLessonAttachmentPayload(uploadedFiles, {
     teacherId: teacher._id,
   });
   const primaryAttachment = attachmentsPayload[0];
 
-  const lesson = await Lesson.create({
+  const lesson = await createSupabaseLesson({
     title: normalizedTitle,
     description: normalizedDescription,
     track: normalizedTrack,
     subject: normalizedSubject,
-    subjectId: subjectRecord._id,
-    subjectCode: subjectRecord.code,
+    subjectId: null,
+    subjectCode: '',
     subjectCategory: normalizedSubjectCategory,
     pdfPath: primaryAttachment.storedPath,
     pdfOriginalName: primaryAttachment.originalName,
@@ -834,13 +823,6 @@ const createManagedTeacherLesson = asyncHandler(async (req, res) => {
     publishedBy: req.user._id,
   });
 
-  await lesson.populate('publishedBy', 'name role');
-
-  await safelyRunNotificationTask('head teacher lesson', () => notifyLessonPublished({
-    lesson,
-    publisher: req.user,
-  }));
-
   return sendSuccess(res, 201, 'Lesson created and assigned successfully', {
     lesson: headTeacherLessonToResponse(lesson, teacher),
   });
@@ -848,13 +830,12 @@ const createManagedTeacherLesson = asyncHandler(async (req, res) => {
 
 const getManagedTeacherAssessments = asyncHandler(async (req, res) => {
   const department = ensureHeadTeacher(req);
-  const teachers = await User.find({
-    role: ROLE_TEACHER,
-    department,
-    managedBy: req.user._id,
-  })
-    .select('_id name subject department')
-    .lean();
+  const accounts = await listSupabaseAccounts();
+  const teachers = accounts.filter((account) => (
+    String(account.role || '') === ROLE_TEACHER
+    && String(account.department || '') === department
+    && String(account.managedBy?._id || account.managedBy?.id || account.managedBy || '') === String(req.user._id || '')
+  ));
 
   if (teachers.length === 0) {
     return sendSuccess(res, 200, 'Managed assessments fetched successfully', {
@@ -867,27 +848,17 @@ const getManagedTeacherAssessments = asyncHandler(async (req, res) => {
   }
 
   const teacherMap = new Map(teachers.map((teacher) => [String(teacher._id), teacher]));
-  const assessments = await Assessment.find({
-    createdBy: { $in: teachers.map((teacher) => teacher._id) },
-  })
-    .populate('lessonId', 'title track subject subjectId subjectCode')
-    .populate('publishedBy', 'name role')
-    .populate('lastModifiedBy', 'name role')
-    .sort({ createdAt: -1 })
-    .lean();
-
-  const assessmentIds = assessments.map((assessment) => assessment._id);
-  let submissionCountsByAssessment = new Map();
-
-  if (assessmentIds.length > 0) {
-    const submissionCounts = await Submission.aggregate([
-      { $match: { assessmentId: { $in: assessmentIds } } },
-      { $group: { _id: '$assessmentId', count: { $sum: 1 } } },
-    ]);
-    submissionCountsByAssessment = new Map(
-      submissionCounts.map((row) => [String(row._id), Number(row.count || 0)])
-    );
-  }
+  const teacherIds = new Set(teachers.map((teacher) => String(teacher._id || teacher.id)));
+  const [allAssessments, allLessons] = await Promise.all([
+    listSupabaseAssessments(),
+    listSupabaseLessons(),
+  ]);
+  const lessonMap = new Map(allLessons.map((lesson) => [String(lesson._id), lesson]));
+  const assessments = allAssessments.filter((assessment) => teacherIds.has(String(assessment.createdBy)));
+  assessments.forEach((assessment) => {
+    if (assessment.lessonId) assessment.lessonId = lessonMap.get(String(assessment.lessonId)) || assessment.lessonId;
+  });
+  const submissionCountsByAssessment = new Map();
 
   return sendSuccess(res, 200, 'Managed assessments fetched successfully', {
     assessments: assessments.map((assessment) => headTeacherAssessmentToResponse(
@@ -931,7 +902,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
   }
 
   const teacher = await findManagedTeacherForHeadTeacher(req, teacherId, { department });
-  const lesson = await Lesson.findOne({ _id: lessonId, createdBy: teacher._id });
+  const lesson = await findSupabaseLesson(lessonId, teacher._id);
   if (!lesson) {
     const error = new Error('Lesson not found for the selected teacher');
     error.statusCode = 404;
@@ -952,12 +923,12 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const duplicateAssessment = await Assessment.findOne({
-    createdBy: teacher._id,
-    lessonId,
-    title: new RegExp(`^${normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-    examType,
-  }).select('_id');
+  const existingAssessments = await listSupabaseAssessments(teacher._id);
+  const duplicateAssessment = existingAssessments.find((item) => (
+    String(item.lessonId || '') === String(lessonId)
+    && String(item.title || '').trim().toLowerCase() === normalizedTitle.toLowerCase()
+    && String(item.examType || '') === String(examType)
+  ));
   if (duplicateAssessment) {
     const error = new Error('An assessment with the same title already exists for this lesson');
     error.statusCode = 409;
@@ -981,41 +952,28 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     assignmentScope,
   });
 
-  const subjectRecord = await ensureTeacherSubject({
-    teacherId: teacher._id,
-    name: lesson.subject || normalizedSubject,
-    track: lesson.track,
-    subjectCategory: lesson.subjectCategory || getSubjectCategory(normalizedSubject),
-    department,
-  });
-
-  if (!lesson.subjectId || String(lesson.subjectId) !== String(subjectRecord._id) || String(lesson.subjectCode || '') !== String(subjectRecord.code)) {
-    lesson.subjectId = subjectRecord._id;
-    lesson.subjectCode = subjectRecord.code;
-    await lesson.save();
-  }
-
   if (assessmentPolicy.countsTowardRecommendation) {
-    await assertUniqueGradingAssessment({
-      teacherId: teacher._id,
-      subjectId: subjectRecord._id,
-      gradingPeriod: assessmentPolicy.gradingPeriod,
-    });
+    const duplicateGradingAssessment = existingAssessments.find((item) => (
+      item.countsTowardRecommendation === true
+      && String(item.subjectId || '') === String(lesson.subjectId || '')
+      && String(item.gradingPeriod || '') === String(assessmentPolicy.gradingPeriod || '')
+    ));
+    if (duplicateGradingAssessment) {
+      const error = new Error('A grading assessment already exists for this class and grading period');
+      error.statusCode = 409;
+      throw error;
+    }
   }
 
-  const assignedStudentIds = await resolveAssignedStudentIds({
-    assignmentScope: assessmentPolicy.assignmentScope,
-    teacherId: teacher._id,
-    subjectId: subjectRecord._id,
-  });
+  const assignedStudentIds = Array.isArray(req.body?.assignedStudentIds) ? req.body.assignedStudentIds : [];
 
-  const assessment = await Assessment.create({
+  const assessment = await createSupabaseAssessment({
     lessonId,
     title: normalizedTitle,
     examType,
     subject: normalizedSubject,
-    subjectId: subjectRecord._id,
-    subjectCode: subjectRecord.code,
+    subjectId: lesson.subjectId || null,
+    subjectCode: lesson.subjectCode || '',
     subjectCategory: resolveAssessmentSubjectCategory({
       subjectCategory: subjectCategory || getSubjectCategory(normalizedSubject),
       examType,
@@ -1038,16 +996,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     lastModifiedBy: req.user._id,
   });
 
-  await safelyRunNotificationTask('head teacher assessment', () => notifyAssessmentAssigned({
-    assessment,
-    publisher: req.user,
-  }));
-
-  const hydratedAssessment = await Assessment.findById(assessment._id)
-    .populate('lessonId', 'title track subject subjectId subjectCode')
-    .populate('publishedBy', 'name role')
-    .populate('lastModifiedBy', 'name role')
-    .lean();
+  const hydratedAssessment = { ...assessment, lessonId: lesson };
 
   return sendSuccess(res, 201, 'Assessment created successfully', {
     assessment: headTeacherAssessmentToResponse(hydratedAssessment, teacher),

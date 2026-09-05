@@ -6,7 +6,6 @@ const Recommendation = require('../models/Recommendation');
 const Subject = require('../models/Subject');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
 const Settings = require('../models/Settings');
-const Notification = require('../models/Notification');
 const ExportApprovalRequest = require('../models/ExportApprovalRequest');
 const LoginAttempt = require('../models/LoginAttempt');
 const AuditLog = require('../models/AuditLog');
@@ -30,6 +29,7 @@ const {
   applyRoleScopedFields,
 } = require('../services/userManagementService');
 const { createAdminMessageNotification } = require('../services/notificationService');
+const { countUnreadNotifications } = require('../services/supabaseNotificationService');
 const {
   APPROVED_EXPORT_REQUEST_TTL_MINUTES,
   EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
@@ -44,6 +44,12 @@ const { formatRecommendationPayload } = require('../services/recommendationServi
 const { computeMasteryFromSubmissions } = require('../utils/studentProgress');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
+const {
+  createSupabaseAccount,
+  findSupabaseAccountByEmail,
+  findSupabaseHeadTeacherByDepartment,
+  listSupabaseAccounts,
+} = require('../services/supabaseAccountService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const ALLOWED_STRANDS = ['STEM', 'HUMSS', 'ABM', 'TVL'];
@@ -168,10 +174,6 @@ function normalizeSystemSettings(input = {}) {
       systemVersion,
     },
   };
-}
-
-async function ensureDirectory(dirPath) {
-  await fs.mkdir(dirPath, { recursive: true });
 }
 
 async function clearDirectoryContents(dirPath) {
@@ -737,16 +739,8 @@ async function ensureSingleHeadTeacherPerDepartment({ role, department, excludeU
   const normalizedDepartment = String(department || '').trim();
   if (!normalizedDepartment) return;
 
-  const query = {
-    role: ROLE_HEADTEACHER,
-    department: normalizedDepartment,
-  };
-  if (excludeUserId) {
-    query._id = { $ne: excludeUserId };
-  }
-
-  const existingHeadTeacher = await User.findOne(query).select('_id').lean();
-  if (existingHeadTeacher) {
+  const existingHeadTeacher = await findSupabaseHeadTeacherByDepartment(normalizedDepartment);
+  if (existingHeadTeacher && String(existingHeadTeacher._id) !== String(excludeUserId || '')) {
     const error = new Error('This department already has a Head Teacher assigned');
     error.statusCode = 409;
     throw error;
@@ -963,7 +957,7 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
 
   const normalizedEmail = String(email).toLowerCase().trim();
   const normalizedUsername = String(username).trim();
-  const existing = await User.findOne({ email: normalizedEmail });
+  const existing = await findSupabaseAccountByEmail(normalizedEmail);
   if (existing) {
     const error = new Error('Email already exists');
     error.statusCode = 409;
@@ -986,7 +980,7 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
     department: normalizedDepartment,
   });
 
-  const created = await User.create({
+  const created = await createSupabaseAccount({
     name: String(name).trim(),
     email: normalizedEmail,
     username: normalizedUsername,
@@ -1045,7 +1039,7 @@ const createUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const existing = await User.findOne({ email: String(email).toLowerCase().trim() });
+  const existing = await findSupabaseAccountByEmail(String(email).toLowerCase().trim());
   if (existing) {
     const error = new Error('Email already exists');
     error.statusCode = 409;
@@ -1079,7 +1073,7 @@ const createUser = asyncHandler(async (req, res) => {
 
   let created;
   try {
-    created = await User.create({
+    created = await createSupabaseAccount({
       name,
       email,
       username: normalizedUsername,
@@ -1170,29 +1164,14 @@ const sendUserInvite = asyncHandler(async (req, res) => {
 });
 
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find()
-    .select('-password +lastActivityAt +lastLoginAt')
-    .populate('managedBy', 'name email')
-    .sort({ createdAt: -1 });
+  const users = await listSupabaseAccounts();
   const dedupedUsers = uniqueBy(users, (user) => String(user?._id || '').trim() || String(user?.email || '').trim().toLowerCase());
-  const teacherIds = dedupedUsers
-    .filter((user) => String(user?.role || '') === ROLE_TEACHER)
-    .map((user) => user._id);
-  const lessonCounts = teacherIds.length
-    ? await Lesson.aggregate([
-        { $match: { createdBy: { $in: teacherIds } } },
-        { $group: { _id: '$createdBy', count: { $sum: 1 } } },
-      ])
-    : [];
-  const lessonCountsByTeacher = new Map(
-    lessonCounts.map((row) => [String(row._id), Number(row.count || 0)])
-  );
 
   return sendSuccess(res, 200, 'Users fetched successfully', {
     users: dedupedUsers.map((user) => {
       const mapped = mapUserResponse(user, req);
       if (String(user?.role || '') === ROLE_TEACHER) {
-        mapped.lessonsCreated = lessonCountsByTeacher.get(String(user._id)) || 0;
+        mapped.lessonsCreated = 0;
       }
       if (String(user?.role || '') === ROLE_STUDENT) {
         const progress = user?.enrollment?.progress || {};
@@ -1529,88 +1508,6 @@ const saveSystemSettings = asyncHandler(async (req, res) => {
     maintenance: {
       sessionsInvalidated,
     },
-  });
-});
-
-const backupDatabase = asyncHandler(async (req, res) => {
-  const backupDir = path.resolve(__dirname, '..', 'backups');
-  await ensureDirectory(backupDir);
-
-  const db = mongoose.connection?.db;
-  if (!db) {
-    const error = new Error('Database connection is not available');
-    error.statusCode = 503;
-    throw error;
-  }
-
-  const collections = await db.listCollections({}, { nameOnly: true }).toArray();
-  const filteredCollections = collections
-    .map((collection) => String(collection?.name || '').trim())
-    .filter((name) => name && !name.startsWith('system.'));
-
-  const backupPayload = {
-    generatedAt: new Date().toISOString(),
-    databaseName: db.databaseName,
-    collections: {},
-  };
-
-  await Promise.all(
-    filteredCollections.map(async (collectionName) => {
-      const documents = await db.collection(collectionName).find({}).toArray();
-      backupPayload.collections[collectionName] = documents;
-    })
-  );
-
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const fileName = `edumatch-backup-${timestamp}.json`;
-  const filePath = path.join(backupDir, fileName);
-  const serializedBackup = JSON.stringify(backupPayload, null, 2);
-  const generatedAt = new Date();
-  const sizeBytes = Buffer.byteLength(serializedBackup, 'utf8');
-  await fs.writeFile(filePath, serializedBackup, 'utf8');
-
-  const backupHistoryEntry = {
-    fileName,
-    generatedAt,
-    collectionCount: filteredCollections.length,
-    sizeBytes,
-  };
-
-  const updatedSettings = await Settings.findOneAndUpdate(
-    { key: 'global' },
-    {
-      $set: {
-        'maintenance.lastBackupAt': generatedAt,
-        'maintenance.lastBackupFileName': fileName,
-        updatedBy: req.user._id,
-      },
-      $push: {
-        'maintenance.backupHistory': {
-          $each: [backupHistoryEntry],
-          $position: 0,
-          $slice: 10,
-        },
-      },
-      $setOnInsert: {
-        key: 'global',
-      },
-    },
-    {
-      upsert: true,
-      returnDocument: 'after',
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
-
-  return sendSuccess(res, 200, 'Database backup completed successfully', {
-    backup: {
-      fileName,
-      collectionCount: filteredCollections.length,
-      sizeBytes,
-      generatedAt: updatedSettings?.maintenance?.lastBackupAt || generatedAt,
-    },
-    backupHistory: systemSettingsResponse(updatedSettings).maintenance.backupHistory,
   });
 });
 
@@ -2277,10 +2174,9 @@ const sendUserMessage = asyncHandler(async (req, res) => {
     urgent,
   });
 
-  const unreadCount = await Notification.countDocuments({
+  const unreadCount = await countUnreadNotifications({
     recipientId: recipient._id,
     recipientRole,
-    isViewed: false,
   });
 
   return sendSuccess(res, 201, 'Message sent successfully', {
@@ -2425,7 +2321,6 @@ module.exports = {
   getSecuritySettings,
   getSystemSettings,
   saveSystemSettings,
-  backupDatabase,
   clearSystemCache,
   getRawSettingsDebug,
   getAnalytics,

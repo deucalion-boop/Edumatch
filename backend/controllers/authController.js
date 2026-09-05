@@ -1,15 +1,26 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
-const LoginAttempt = require('../models/LoginAttempt');
-const Settings = require('../models/Settings');
-const Session = require('../models/Session');
-const OtpChallenge = require('../models/OtpChallenge');
 const { sendSuccess } = require('../utils/responseHelper');
 const { sendEmailViaGmail } = require('../services/gmailService');
 const { assertPasswordMeetsPolicy, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } = require('../utils/passwordPolicy');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
+const {
+  findSupabaseAccount,
+  findSupabaseAccountByEmail,
+  findSupabaseAccountByJsonToken,
+  findSupabaseAccountByUsername,
+} = require('../services/supabaseAccountService');
+const {
+  consumeOpenChallenges,
+  createChallenge,
+  createSession,
+  deleteChallenge,
+  findActiveChallenge,
+  recordLoginAttempt: persistLoginAttempt,
+  revokeUserSessions,
+  sessionExists,
+} = require('../services/supabaseAuthPersistenceService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const DEFAULT_MAX_LOGIN_ATTEMPTS = 5;
@@ -29,8 +40,8 @@ async function createSessionAndSignToken(user, req, remember = false) {
   const ttlMs = rememberSession ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
   const ipAddress = resolveClientIpAddress(req).slice(0, 120);
   const userAgent = resolveClientUserAgent(req);
-  const familiarDevice = await Session.exists({ userId: user._id, userAgent });
-  await Session.create({
+  const familiarDevice = await sessionExists(user._id, userAgent);
+  await createSession({
     userId: user._id,
     tokenId,
     ipAddress,
@@ -91,11 +102,8 @@ async function issueLoginOtp(user, req, remember) {
   const challengeTokenHash = crypto.createHash('sha256').update(challengeToken).digest('hex');
   const expiresAt = new Date(Date.now() + LOGIN_OTP_TTL_MINUTES * 60 * 1000);
 
-  await OtpChallenge.updateMany(
-    { userId: user._id, consumedAt: null },
-    { $set: { consumedAt: new Date() } }
-  );
-  await OtpChallenge.create({
+  await consumeOpenChallenges(user._id);
+  await createChallenge({
     userId: user._id,
     challengeTokenHash,
     otpHash: await bcrypt.hash(otpCode, 10),
@@ -112,7 +120,7 @@ async function issueLoginOtp(user, req, remember) {
     html: `<p>Your EduMatch verification code is:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${otpCode}</p><p>It expires in ${LOGIN_OTP_TTL_MINUTES} minutes. Do not share this code.</p>`,
   });
   if (!emailResult?.sent) {
-    await OtpChallenge.deleteOne({ challengeTokenHash });
+    await deleteChallenge(challengeTokenHash);
     const error = new Error('Unable to send the verification code. Please try again.');
     error.statusCode = 502;
     throw error;
@@ -167,7 +175,7 @@ function resolveClientUserAgent(req) {
 
 async function recordLoginAttempt(req, { username = '', user = null, outcome = 'failed', reason = '' } = {}) {
   try {
-    await LoginAttempt.create({
+    await persistLoginAttempt({
       userId: user?._id || null,
       username: String(username || user?.username || '').trim().slice(0, 120),
       name: String(user?.name || '').trim().slice(0, 200),
@@ -215,27 +223,21 @@ async function sendPasswordResetEmail({ email, name, resetLink }) {
 }
 
 async function getSecurityPolicy() {
-  const settings = await Settings.findOne({ key: 'global' }).select('security').lean();
   return {
-    maxLoginAttempts: Number(settings?.security?.maxLoginAttempts || DEFAULT_MAX_LOGIN_ATTEMPTS),
-    accountLockoutDurationMinutes: Number(
-      settings?.security?.accountLockoutDurationMinutes || DEFAULT_ACCOUNT_LOCKOUT_DURATION_MINUTES
-    ),
+    maxLoginAttempts: DEFAULT_MAX_LOGIN_ATTEMPTS,
+    accountLockoutDurationMinutes: DEFAULT_ACCOUNT_LOCKOUT_DURATION_MINUTES,
   };
 }
 
 async function getMaintenancePolicy() {
-  const settings = await Settings.findOne({ key: 'global' }).select('maintenance').lean();
   return {
-    maintenanceModeEnabled: settings?.maintenance?.maintenanceModeEnabled === true,
-    maintenanceMessage:
-      String(settings?.maintenance?.maintenanceMessage || DEFAULT_MAINTENANCE_MESSAGE).trim() || DEFAULT_MAINTENANCE_MESSAGE,
+    maintenanceModeEnabled: false,
+    maintenanceMessage: DEFAULT_MAINTENANCE_MESSAGE,
   };
 }
 
 async function getEmailVerificationPolicy() {
-  const settings = await Settings.findOne({ key: 'global' }).select('user.emailVerificationRequired').lean();
-  return settings?.user?.emailVerificationRequired ?? DEFAULT_EMAIL_VERIFICATION_REQUIRED;
+  return DEFAULT_EMAIL_VERIFICATION_REQUIRED;
 }
 
 async function verifyRecaptchaToken({ token, remoteIp }) {
@@ -306,9 +308,7 @@ const login = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const user = await User.findOne({ username: normalizedUsername }).select(
-    '+password +failedLoginAttempts +lockUntil +lastActivityAt +lastLoginAt +tokenVersion'
-  );
+  const user = await findSupabaseAccountByUsername(normalizedUsername);
 
   if (!user) {
     await recordLoginAttempt(req, {
@@ -461,11 +461,7 @@ const verifyLoginOtp = asyncHandler(async (req, res) => {
   }
 
   const challengeTokenHash = crypto.createHash('sha256').update(challengeToken).digest('hex');
-  const challenge = await OtpChallenge.findOne({
-    challengeTokenHash,
-    consumedAt: null,
-    expiresAt: { $gt: new Date() },
-  }).select('+otpHash');
+  const challenge = await findActiveChallenge(challengeTokenHash);
   if (!challenge || Number(challenge.failedAttempts || 0) >= LOGIN_OTP_MAX_ATTEMPTS) {
     const error = new Error('Verification challenge is invalid or expired');
     error.statusCode = 400;
@@ -480,7 +476,7 @@ const verifyLoginOtp = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const user = await User.findById(challenge.userId).select('+tokenVersion +lastActivityAt +lastLoginAt');
+  const user = await findSupabaseAccount('id', challenge.userId);
   if (!user || user.status !== 'active') {
     const error = new Error('Account is no longer available');
     error.statusCode = 403;
@@ -514,32 +510,16 @@ const syncPresence = asyncHandler(async (req, res) => {
   });
 });
 
-function resolveInviteError(hashedToken, now) {
-  return User.findOne({ 'invite.tokenHash': hashedToken })
-    .select('invite')
-    .then((candidate) => {
-      if (!candidate) {
-        const error = new Error('Invalid invite link');
-        error.statusCode = 400;
-        throw error;
-      }
-
-      if (candidate?.invite?.usedAt) {
-        const error = new Error('This invite link was already used');
-        error.statusCode = 400;
-        throw error;
-      }
-
-      if (!candidate?.invite?.expiresAt || new Date(candidate.invite.expiresAt).getTime() <= now.getTime()) {
-        const error = new Error('This invite link has expired');
-        error.statusCode = 400;
-        throw error;
-      }
-
-      const error = new Error('Invalid invite link');
-      error.statusCode = 400;
-      throw error;
-    });
+async function resolveInviteError(hashedToken, now) {
+  const candidate = await findSupabaseAccountByJsonToken('invite', hashedToken);
+  let message = 'Invalid invite link';
+  if (candidate?.invite?.usedAt) message = 'This invite link was already used';
+  else if (candidate && (!candidate?.invite?.expiresAt || new Date(candidate.invite.expiresAt).getTime() <= now.getTime())) {
+    message = 'This invite link has expired';
+  }
+  const error = new Error(message);
+  error.statusCode = 400;
+  throw error;
 }
 
 const validateInvite = asyncHandler(async (req, res) => {
@@ -553,11 +533,10 @@ const validateInvite = asyncHandler(async (req, res) => {
   const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
   const now = new Date();
 
-  const user = await User.findOne({
-    'invite.tokenHash': hashedToken,
-    'invite.usedAt': null,
-    'invite.expiresAt': { $gt: now },
-  }).select('name email role status invite.expiresAt');
+  const candidate = await findSupabaseAccountByJsonToken('invite', hashedToken);
+  const user = candidate && !candidate?.invite?.usedAt
+    && candidate?.invite?.expiresAt && new Date(candidate.invite.expiresAt).getTime() > now.getTime()
+    ? candidate : null;
 
   if (!user) {
     await resolveInviteError(hashedToken, now);
@@ -586,11 +565,10 @@ const completeInvite = asyncHandler(async (req, res) => {
 
   const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
   const now = new Date();
-  const user = await User.findOne({
-    'invite.tokenHash': hashedToken,
-    'invite.usedAt': null,
-    'invite.expiresAt': { $gt: now },
-  }).select('+password +invite.tokenHash');
+  const candidate = await findSupabaseAccountByJsonToken('invite', hashedToken);
+  const user = candidate && !candidate?.invite?.usedAt
+    && candidate?.invite?.expiresAt && new Date(candidate.invite.expiresAt).getTime() > now.getTime()
+    ? candidate : null;
 
   if (!user) {
     await resolveInviteError(hashedToken, now);
@@ -643,7 +621,7 @@ const requestPasswordReset = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const user = await User.findOne({ email }).select('name email status resetPassword');
+  const user = await findSupabaseAccountByEmail(email);
   if (user) {
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
@@ -686,11 +664,10 @@ const validatePasswordReset = asyncHandler(async (req, res) => {
 
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
   const now = new Date();
-  const user = await User.findOne({
-    'resetPassword.tokenHash': tokenHash,
-    'resetPassword.usedAt': null,
-    'resetPassword.expiresAt': { $gt: now },
-  }).select('email resetPassword.expiresAt');
+  const candidate = await findSupabaseAccountByJsonToken('reset_password', tokenHash);
+  const user = candidate && !candidate?.resetPassword?.usedAt
+    && candidate?.resetPassword?.expiresAt && new Date(candidate.resetPassword.expiresAt).getTime() > now.getTime()
+    ? candidate : null;
 
   if (!user) {
     const error = new Error('Reset link is invalid or expired');
@@ -720,11 +697,10 @@ const completePasswordReset = asyncHandler(async (req, res) => {
 
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
   const now = new Date();
-  const user = await User.findOne({
-    'resetPassword.tokenHash': tokenHash,
-    'resetPassword.usedAt': null,
-    'resetPassword.expiresAt': { $gt: now },
-  }).select('+password +resetPassword.tokenHash');
+  const candidate = await findSupabaseAccountByJsonToken('reset_password', tokenHash);
+  const user = candidate && !candidate?.resetPassword?.usedAt
+    && candidate?.resetPassword?.expiresAt && new Date(candidate.resetPassword.expiresAt).getTime() > now.getTime()
+    ? candidate : null;
 
   if (!user) {
     const error = new Error('Reset link is invalid or expired');
@@ -743,10 +719,7 @@ const completePasswordReset = asyncHandler(async (req, res) => {
   user.resetPassword.usedAt = now;
 
   await user.save();
-  await Session.updateMany(
-    { userId: user._id, revokedAt: null },
-    { $set: { revokedAt: now, revokedReason: 'Password reset' } }
-  );
+  await revokeUserSessions(user._id, 'Password reset');
 
   return sendSuccess(res, 200, 'Password reset successful. You can now sign in.');
 });
