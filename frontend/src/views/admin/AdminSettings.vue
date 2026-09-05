@@ -118,7 +118,7 @@
             <div>
               <span class="settings-eyebrow">Platform configuration</span>
               <h3>Manage system preferences</h3>
-              <p>Update account verification, security rules, backups, and maintenance access for all users.</p>
+              <p>Update account verification, security rules, and maintenance access for all users.</p>
             </div>
             <span class="change-status" :class="{ 'change-status--pending': hasUnsavedChanges }">
               <i :class="hasUnsavedChanges ? 'fas fa-circle' : 'fas fa-check-circle'"></i>
@@ -261,39 +261,6 @@
                     </div>
                   </div>
 
-                  <div class="settings-row settings-row--backup">
-                    <div class="settings-label">
-                      <label>Database backup</label>
-                      <span class="settings-desc">Create a server-side snapshot of the current EduMatch database.</span>
-                    </div>
-                    <div class="settings-input settings-input--stack">
-                      <button type="button" class="btn btn-outline" @click="confirmCreateBackup" :disabled="backupLoading">
-                        <i :class="backupLoading ? 'fas fa-spinner fa-spin' : 'fas fa-database'"></i>
-                        {{ backupLoading ? 'Creating Backup...' : 'Create Database Backup' }}
-                      </button>
-                      <span class="settings-meta" v-if="formattedLastBackupAt">Last backup {{ formattedLastBackupAt }}</span>
-
-                      <div class="backup-history" aria-label="Database backup history">
-                        <div class="backup-history__header">
-                          <strong>Recent backups</strong>
-                          <span>{{ settings.maintenance.backupHistory.length }}/10</span>
-                        </div>
-                        <p v-if="settings.maintenance.backupHistory.length === 0" class="backup-history__empty">
-                          No database backups have been recorded yet.
-                        </p>
-                        <ul v-else class="backup-history__list">
-                          <li v-for="backup in settings.maintenance.backupHistory" :key="`${backup.fileName}-${backup.generatedAt}`" class="backup-history__item">
-                            <i class="fas fa-file-code" aria-hidden="true"></i>
-                            <span class="backup-history__copy">
-                              <strong>{{ backup.fileName }}</strong>
-                              <small>{{ formatDateTime(backup.generatedAt) }} · {{ backup.collectionCount }} collections · {{ formatFileSize(backup.sizeBytes) }}</small>
-                            </span>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
                   <div class="settings-row settings-row--utility">
                     <div class="settings-label">
                       <label>Clear System Cache</label>
@@ -432,14 +399,6 @@ function formatDateTime(value) {
   })
 }
 
-function formatFileSize(value) {
-  const bytes = Number(value || 0)
-  if (!Number.isFinite(bytes) || bytes <= 0) return 'Size unavailable'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
 export default {
   name: 'AdminSettings',
   setup() {
@@ -464,7 +423,6 @@ export default {
     })
 
     const saving = ref(false)
-    const backupLoading = ref(false)
     const clearCacheLoading = ref(false)
     const activeSessions = ref([])
     const hasUnsavedChanges = ref(false)
@@ -499,7 +457,6 @@ export default {
     })
 
     const formattedUpdatedAt = computed(() => formatDateTime(settingsMeta.updatedAt))
-    const formattedLastBackupAt = computed(() => formatDateTime(settings.maintenance.lastBackupAt))
     const formattedLastCacheClearedAt = computed(() => formatDateTime(settings.maintenance.lastCacheClearedAt))
 
     const isActive = (path) => route.path === path
@@ -740,45 +697,6 @@ export default {
       showConfirmModal.value = true
     }
 
-    const confirmCreateBackup = () => {
-      confirmTitle.value = 'Create Database Backup'
-      confirmMessage.value = 'Create a new server-side backup of the current database?'
-      confirmButtonLabel.value = 'Create Backup'
-      confirmAction.value = async () => {
-        backupLoading.value = true
-        confirmSubmitting.value = true
-        confirmButtonLabel.value = 'Creating...'
-
-        try {
-          const response = await axios.post(`${apiBaseUrl}/admin/settings/system/backup`, {}, getAuthConfig())
-          const backup = response.data?.backup || {}
-          settings.maintenance.lastBackupAt = backup.generatedAt || new Date().toISOString()
-          settings.maintenance.lastBackupFileName = String(backup.fileName || '')
-          settings.maintenance.backupHistory = Array.isArray(response.data?.backupHistory)
-            ? response.data.backupHistory
-            : [backup, ...settings.maintenance.backupHistory].slice(0, 10)
-
-          if (originalSettings.value) {
-            originalSettings.value.maintenance.lastBackupAt = settings.maintenance.lastBackupAt
-            originalSettings.value.maintenance.lastBackupFileName = settings.maintenance.lastBackupFileName
-            originalSettings.value.maintenance.backupHistory = cloneSettings(settings.maintenance.backupHistory)
-          }
-
-          confirmSubmitting.value = false
-          closeConfirmModal()
-          showToastMessage(response.data?.message || 'Database backup completed successfully', 'success')
-        } catch (error) {
-          console.error('Failed to create database backup:', error)
-          showToastMessage(error.response?.data?.message || 'Failed to create database backup', 'error')
-        } finally {
-          backupLoading.value = false
-          confirmSubmitting.value = false
-          confirmButtonLabel.value = 'Confirm'
-        }
-      }
-      showConfirmModal.value = true
-    }
-
     const confirmClearCache = () => {
       confirmTitle.value = 'Clear System Cache'
       confirmMessage.value = 'Clear cached files and invalidate active non-admin sessions? Users may need to sign in again.'
@@ -908,7 +826,6 @@ export default {
       handleLogout,
       settings,
       saving,
-      backupLoading,
       clearCacheLoading,
       activeSessions,
       revokeSession,
@@ -927,7 +844,6 @@ export default {
       saveAllSettings,
       cancelChanges,
       resetToDefaults,
-      confirmCreateBackup,
       confirmClearCache,
       closeConfirmModal,
       executeConfirmAction,
@@ -935,10 +851,8 @@ export default {
       toggleSidebar,
       closeSidebar,
       formattedUpdatedAt,
-      formattedLastBackupAt,
       formattedLastCacheClearedAt,
       formatDateTime,
-      formatFileSize,
     }
   },
 }
@@ -1232,81 +1146,6 @@ body.admin-dashboard .settings-input--stack .btn {
   min-height: 42px;
   justify-content: center;
   border-radius: 10px !important;
-}
-
-.backup-history {
-  margin-top: 0.45rem;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #f8fafc;
-}
-
-.backup-history__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-  color: #334155;
-  font-size: 0.72rem;
-}
-
-.backup-history__header span {
-  color: #64748b;
-}
-
-.backup-history__empty {
-  margin: 0;
-  padding: 0.8rem 0.75rem;
-  color: #64748b;
-  font-size: 0.7rem;
-  line-height: 1.45;
-}
-
-.backup-history__list {
-  max-height: 210px;
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  list-style: none;
-}
-
-.backup-history__item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  padding: 0.7rem 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.backup-history__item:last-child {
-  border-bottom: 0;
-}
-
-.backup-history__item > i {
-  margin-top: 0.15rem;
-  color: #4f8a35;
-}
-
-.backup-history__copy {
-  display: grid;
-  min-width: 0;
-  gap: 0.2rem;
-}
-
-.backup-history__copy strong {
-  overflow-wrap: anywhere;
-  color: #334155;
-  font-size: 0.7rem;
-  line-height: 1.35;
-}
-
-.backup-history__copy small {
-  color: #64748b;
-  font-size: 0.64rem;
-  line-height: 1.4;
 }
 
 body.admin-dashboard .settings-actions {
