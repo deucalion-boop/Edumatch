@@ -1,4 +1,4 @@
-const AuditLog = require('../models/AuditLog');
+const { createAuditLog } = require('../services/supabaseAuditLogService');
 
 const AUDITED_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const CATEGORY_LABELS = {
@@ -254,7 +254,7 @@ function auditLogMiddleware(req, res, next) {
     };
 
     setImmediate(() => {
-      AuditLog.create(payload).catch((error) => {
+      createAuditLog(payload).catch((error) => {
         console.error('[auditLogMiddleware] Failed to record audit log:', error);
       });
     });

@@ -117,7 +117,96 @@ async function recordLoginAttempt(row) {
   if (error) throw normalizeError(error, 'Failed to record login attempt');
 }
 
+function applyLoginAttemptFilters(query, { search = '', outcome = '', role = '', createdSince = null } = {}) {
+  let filtered = query;
+  if (outcome === 'success' || outcome === 'failed') filtered = filtered.eq('outcome', outcome);
+  if (role) filtered = filtered.eq('role', role);
+  if (createdSince) filtered = filtered.gte('created_at', new Date(createdSince).toISOString());
+
+  const normalizedSearch = String(search || '')
+    .trim()
+    .slice(0, 100)
+    .replace(/[,().%_]/g, ' ')
+    .replace(/\s+/g, ' ');
+  if (normalizedSearch) {
+    const pattern = `*${normalizedSearch}*`;
+    filtered = filtered.or([
+      `username.ilike.${pattern}`,
+      `name.ilike.${pattern}`,
+      `email.ilike.${pattern}`,
+      `ip_address.ilike.${pattern}`,
+      `reason.ilike.${pattern}`,
+    ].join(','));
+  }
+  return filtered;
+}
+
+function mapLoginAttempt(row) {
+  return {
+    _id: row.id,
+    id: row.id,
+    userId: row.user_id || null,
+    username: row.username || '',
+    name: row.name || '',
+    email: row.email || '',
+    role: row.role || '',
+    outcome: row.outcome || 'failed',
+    reason: row.reason || '',
+    ipAddress: row.ip_address || '',
+    userAgent: row.user_agent || '',
+    createdAt: row.created_at || null,
+    updatedAt: row.created_at || null,
+  };
+}
+
+async function countLoginAttempts(filters = {}) {
+  const query = applyLoginAttemptFilters(
+    getSupabaseStorageClient().from('login_attempts').select('id', { count: 'exact', head: true }),
+    filters
+  );
+  const { count, error } = await query;
+  if (error) throw normalizeError(error, 'Failed to count login attempts');
+  return Number(count || 0);
+}
+
+async function listLoginAttempts({ search = '', outcome = '', role = '', page = 1, pageSize = 50 } = {}) {
+  const safePage = Math.max(1, Number(page) || 1);
+  const safePageSize = Math.min(100, Math.max(1, Number(pageSize) || 50));
+  const baseFilters = { search, outcome, role };
+  const last24Hours = new Date(Date.now() - (24 * 60 * 60 * 1000));
+
+  const [total, successCount, failedCount, recentAttempts] = await Promise.all([
+    countLoginAttempts(baseFilters),
+    countLoginAttempts({ ...baseFilters, outcome: 'success' }),
+    countLoginAttempts({ ...baseFilters, outcome: 'failed' }),
+    countLoginAttempts({ ...baseFilters, createdSince: last24Hours }),
+  ]);
+  const totalPages = Math.max(Math.ceil(total / safePageSize), 1);
+  const resolvedPage = Math.min(safePage, totalPages);
+  const offset = (resolvedPage - 1) * safePageSize;
+  const query = applyLoginAttemptFilters(
+    getSupabaseStorageClient().from('login_attempts').select('*'),
+    baseFilters
+  ).order('created_at', { ascending: false })
+    .range(offset, offset + safePageSize - 1);
+  const { data, error } = await query;
+  if (error) throw normalizeError(error, 'Failed to read login attempts');
+
+  return {
+    attempts: (data || []).map(mapLoginAttempt),
+    summary: { total, successCount, failedCount, recentAttempts },
+    pagination: {
+      page: resolvedPage,
+      pageSize: safePageSize,
+      totalItems: total,
+      totalPages,
+      hasPreviousPage: resolvedPage > 1,
+      hasNextPage: resolvedPage < totalPages,
+    },
+  };
+}
+
 module.exports = {
   consumeOpenChallenges, createChallenge, createSession, deleteChallenge, findActiveChallenge,
-  findActiveSession, recordLoginAttempt, revokeUserSessions, saveChallenge, sessionExists, touchSession,
+  findActiveSession, listLoginAttempts, recordLoginAttempt, revokeUserSessions, saveChallenge, sessionExists, touchSession,
 };

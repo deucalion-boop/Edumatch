@@ -124,7 +124,15 @@ export default {
 @import '/css/auth.css';
 
 .forgot-password-page {
-  background: #ffffff;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(105, 170, 71, 0.1), transparent 34%),
+    #ffffff;
+}
+
+.forgot-password-page .auth-floating-element,
+.forgot-password-page .auth-floating-element:nth-child(2),
+.forgot-password-page .auth-floating-element:nth-child(3) {
+  background: linear-gradient(135deg, #69aa47, #3f7f2a);
 }
 
 .forgot-password-page .auth-card-wrapper {
@@ -135,10 +143,10 @@ export default {
   position: relative;
   overflow: hidden;
   padding: 2.25rem;
-  border: 1px solid rgba(134, 239, 172, 0.78);
+  border: 1px solid rgba(105, 170, 71, 0.48);
   border-radius: 26px;
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 28px 70px rgba(20, 83, 45, 0.16);
+  box-shadow: 0 28px 70px rgba(63, 127, 42, 0.17);
   backdrop-filter: blur(16px);
 }
 
@@ -149,7 +157,7 @@ export default {
 
 .forgot-password-card .auth-card-title {
   margin-bottom: 0.55rem;
-  color: #14532d;
+  color: #3f7f2a;
   font-size: clamp(1.7rem, 5vw, 2.1rem);
   letter-spacing: -0.03em;
 }
@@ -162,7 +170,7 @@ export default {
 }
 
 .forgot-password-card .auth-form-label {
-  color: #166534;
+  color: #3f7f2a;
   font-weight: 700;
 }
 
@@ -178,31 +186,35 @@ export default {
 }
 
 .forgot-password-card .auth-form-input-wrapper:focus-within {
-  border-color: #22c55e;
+  border-color: #69aa47;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.13);
+  box-shadow: 0 0 0 4px rgba(105, 170, 71, 0.16);
 }
 
 .forgot-password-card .auth-form-icon {
-  color: #16a34a;
+  color: #69aa47;
 }
 
 .forgot-password-card .auth-submit-btn {
   min-height: 52px;
-  border: 1px solid #15803d !important;
+  border: 1px solid #3f7f2a !important;
   border-radius: 14px;
-  background: #16a34a !important;
-  background-image: none !important;
+  background: linear-gradient(135deg, #69aa47, #3f7f2a) !important;
   color: #ffffff !important;
-  box-shadow: 0 12px 25px rgba(21, 128, 61, 0.25);
+  box-shadow: 0 12px 25px rgba(63, 127, 42, 0.26);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .forgot-password-card .auth-submit-btn:not(:disabled):hover {
-  border-color: #166534 !important;
-  background: #15803d !important;
+  border-color: #3f7f2a !important;
+  background: linear-gradient(135deg, #3f7f2a, #69aa47) !important;
   transform: translateY(-2px);
-  box-shadow: 0 16px 30px rgba(21, 128, 61, 0.32);
+  box-shadow: 0 16px 30px rgba(63, 127, 42, 0.32);
+}
+
+.forgot-password-card .auth-submit-btn:focus-visible {
+  outline: 3px solid rgba(105, 170, 71, 0.34);
+  outline-offset: 3px;
 }
 
 .forgot-password-card .auth-submit-btn:disabled {
@@ -222,8 +234,16 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #15803d;
+  color: #3f7f2a;
   font-weight: 700;
+}
+
+.forgot-password-card .auth-footer a:hover {
+  color: #69aa47;
+}
+
+.forgot-password-card .auth-footer a::after {
+  background: #69aa47;
 }
 
 @media (max-width: 520px) {

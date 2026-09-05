@@ -7,8 +7,6 @@ const Subject = require('../models/Subject');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
 const Settings = require('../models/Settings');
 const ExportApprovalRequest = require('../models/ExportApprovalRequest');
-const LoginAttempt = require('../models/LoginAttempt');
-const AuditLog = require('../models/AuditLog');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs/promises');
@@ -31,6 +29,8 @@ const {
 const { createAdminMessageNotification } = require('../services/notificationService');
 const { countUnreadNotifications } = require('../services/supabaseNotificationService');
 const { getSupabaseAnalytics } = require('../services/supabaseAnalyticsService');
+const { listLoginAttempts } = require('../services/supabaseAuthPersistenceService');
+const { listAuditLogs } = require('../services/supabaseAuditLogService');
 const {
   APPROVED_EXPORT_REQUEST_TTL_MINUTES,
   EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
@@ -801,63 +801,28 @@ const getLoginAttempts = asyncHandler(async (req, res) => {
   const normalizedRole = String(req.query.role || '').trim().toLowerCase();
   const requestedPage = Number.parseInt(req.query.page, 10);
   const limit = 50;
-  const filters = {};
   const allowedRoles = new Set([ROLE_ADMIN, ROLE_SECRETARY, ROLE_HEADTEACHER, ROLE_TEACHER, ROLE_STUDENT]);
-
-  if (normalizedOutcome === 'success' || normalizedOutcome === 'failed') {
-    filters.outcome = normalizedOutcome;
-  }
-
-  if (allowedRoles.has(normalizedRole)) {
-    filters.role = normalizedRole;
-  }
-
-  if (search) {
-    const pattern = new RegExp(escapeRegex(search), 'i');
-    filters.$or = [
-      { username: pattern },
-      { name: pattern },
-      { email: pattern },
-      { ipAddress: pattern },
-      { reason: pattern },
-    ];
-  }
-
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [total, successCount, failedCount, recentAttempts] = await Promise.all([
-    LoginAttempt.countDocuments(filters),
-    LoginAttempt.countDocuments({ ...filters, outcome: 'success' }),
-    LoginAttempt.countDocuments({ ...filters, outcome: 'failed' }),
-    LoginAttempt.countDocuments({ ...filters, createdAt: { $gte: last24Hours } }),
-  ]);
-  const totalPages = Math.max(Math.ceil(total / limit), 1);
-  const page = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
-  const skip = (page - 1) * limit;
-  const attempts = await LoginAttempt.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+  const outcome = normalizedOutcome === 'success' || normalizedOutcome === 'failed' ? normalizedOutcome : '';
+  const role = allowedRoles.has(normalizedRole) ? normalizedRole : '';
+  const result = await listLoginAttempts({
+    search,
+    outcome,
+    role,
+    page: Number.isFinite(requestedPage) ? requestedPage : 1,
+    pageSize: limit,
+  });
 
   return sendSuccess(res, 200, 'Login attempts fetched successfully', {
-    attempts: attempts.map((entry) => normalizeLoginAttemptResponse(entry)),
-    summary: {
-      total,
-      successCount,
-      failedCount,
-      recentAttempts,
-    },
+    attempts: result.attempts.map((entry) => normalizeLoginAttemptResponse(entry)),
+    summary: result.summary,
     filters: {
       search,
       status: normalizedOutcome || 'all',
       role: normalizedRole || 'all',
-      page,
+      page: result.pagination.page,
       pageSize: limit,
     },
-    pagination: {
-      page,
-      pageSize: limit,
-      totalItems: total,
-      totalPages,
-      hasPreviousPage: page > 1,
-      hasNextPage: page < totalPages,
-    },
+    pagination: result.pagination,
   });
 });
 
@@ -869,61 +834,21 @@ const getAuditLogs = asyncHandler(async (req, res) => {
   const result = String(req.query.result || '').trim().toLowerCase();
   const requestedPage = Number.parseInt(req.query.page, 10);
   const limit = 50;
-  const filters = {};
-
-  if (category && category.toLowerCase() !== 'all') {
-    filters.category = category;
-  }
-
-  if (role && role !== 'all') {
-    filters.actorRole = role;
-  }
-
-  if (method && method !== 'ALL') {
-    filters.method = method;
-  }
-
-  if (result === 'success') {
-    filters.succeeded = true;
-  } else if (result === 'failed') {
-    filters.succeeded = false;
-  }
-
-  if (search) {
-    const pattern = new RegExp(escapeRegex(search), 'i');
-    filters.$or = [
-      { actorName: pattern },
-      { actorEmail: pattern },
-      { actorIdentifier: pattern },
-      { actionLabel: pattern },
-      { endpoint: pattern },
-      { targetLabel: pattern },
-      { ipAddress: pattern },
-    ];
-  }
-
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [total, successCount, failedCount, recentLogs, categories] = await Promise.all([
-    AuditLog.countDocuments(filters),
-    AuditLog.countDocuments({ ...filters, succeeded: true }),
-    AuditLog.countDocuments({ ...filters, succeeded: false }),
-    AuditLog.countDocuments({ ...filters, createdAt: { $gte: last24Hours } }),
-    AuditLog.distinct('category'),
-  ]);
-  const totalPages = Math.max(Math.ceil(total / limit), 1);
-  const page = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
-  const skip = (page - 1) * limit;
-  const logs = await AuditLog.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+  const succeeded = result === 'success' ? true : (result === 'failed' ? false : null);
+  const auditResult = await listAuditLogs({
+    search,
+    category: category && category.toLowerCase() !== 'all' ? category : '',
+    role: role && role !== 'all' ? role : '',
+    method: method && method !== 'ALL' ? method : '',
+    succeeded,
+    page: Number.isFinite(requestedPage) ? requestedPage : 1,
+    pageSize: limit,
+  });
 
   return sendSuccess(res, 200, 'Audit logs fetched successfully', {
-    logs: logs.map((entry) => normalizeAuditLogResponse(entry)),
-    summary: {
-      total,
-      successCount,
-      failedCount,
-      recentLogs,
-    },
-    categories: categories
+    logs: auditResult.logs.map((entry) => normalizeAuditLogResponse(entry)),
+    summary: auditResult.summary,
+    categories: auditResult.categories
       .map((value) => String(value || '').trim())
       .filter(Boolean)
       .sort((left, right) => left.localeCompare(right)),
@@ -933,17 +858,10 @@ const getAuditLogs = asyncHandler(async (req, res) => {
       role: role || 'all',
       method: method || 'ALL',
       result: result || 'all',
-      page,
+      page: auditResult.pagination.page,
       pageSize: limit,
     },
-    pagination: {
-      page,
-      pageSize: limit,
-      totalItems: total,
-      totalPages,
-      hasPreviousPage: page > 1,
-      hasNextPage: page < totalPages,
-    },
+    pagination: auditResult.pagination,
   });
 });
 
