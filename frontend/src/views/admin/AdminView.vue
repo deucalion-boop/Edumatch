@@ -387,10 +387,10 @@
           <div class="ai-analytics-grid">
             <div class="ai-analytics-card ai-chart-card">
               <h4 class="config-subtitle">
-                <i class="fas fa-chart-pie"></i> Difficulty Distribution
+                <i class="fas fa-chart-area"></i> Difficulty Distribution
               </h4>
-              <div class="chart-wrap chart-wrap--donut">
-                <canvas ref="aiUsageCanvas" aria-label="AI exam usage donut chart"></canvas>
+              <div class="chart-wrap chart-wrap--hexagon">
+                <canvas ref="aiUsageCanvas" aria-label="AI exam difficulty hexagon chart"></canvas>
               </div>
               <p class="ai-chart-caption">How many generated assessments fall under easy, medium, and hard difficulty.</p>
             </div>
@@ -1047,46 +1047,54 @@ export default {
       if (!aiUsageCanvas.value) return
 
       const ctx = aiUsageCanvas.value.getContext('2d')
+      const [easy = 0, medium = 0, hard = 0] = aiMetrics.usageDistribution.values
+      const hexagonValues = [easy, easy, medium, medium, hard, hard]
+      const difficultyLabels = ['Easy', '', 'Medium', '', 'Hard', '']
+      const tooltipLabels = ['Easy', 'Easy', 'Medium', 'Medium', 'Hard', 'Hard']
+
       aiUsageChart = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'radar',
         data: {
-          labels: aiMetrics.usageDistribution.labels,
+          labels: difficultyLabels,
           datasets: [
             {
-              data: aiMetrics.usageDistribution.values,
-              backgroundColor: (() => {
-                const { width = 320, height = 320 } = aiUsageCanvas.value?.getBoundingClientRect() || {}
-                const gradients = [
-                  ['#93c5fd', '#1d4ed8'],
-                  ['#99f6e4', '#0f766e'],
-                  ['#fde68a', '#ea580c'],
-                ]
-
-                return gradients.map(([startColor, endColor], index) => {
-                  const gradient = ctx.createLinearGradient(0, 0, width, height)
-                  const offsetStart = Math.min(index * 0.18, 0.45)
-                  const offsetEnd = Math.max(0.58, 1 - index * 0.08)
-                  gradient.addColorStop(offsetStart, startColor)
-                  gradient.addColorStop(offsetEnd, endColor)
-                  return gradient
-                })
-              })(),
-              borderColor: ['#ffffff', '#ffffff', '#ffffff'],
+              label: 'Generated assessments',
+              data: hexagonValues,
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              borderColor: '#2563eb',
               borderWidth: 3,
-              hoverOffset: 8,
+              pointBackgroundColor: ['#3b82f6', '#3b82f6', '#14b8a6', '#14b8a6', '#f59e0b', '#f59e0b'],
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 6,
             },
           ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '68%',
+          scales: {
+            r: {
+              beginAtZero: true,
+              angleLines: { color: 'rgba(100, 116, 139, 0.3)' },
+              grid: { circular: false, color: 'rgba(148, 163, 184, 0.35)' },
+              pointLabels: {
+                color: '#334155',
+                font: { size: 12, weight: '600' },
+              },
+              ticks: {
+                display: false,
+                precision: 0,
+              },
+            },
+          },
           plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                usePointStyle: true,
-                color: '#0f172a',
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => tooltipLabels[items[0]?.dataIndex] || '',
+                label: (context) => `${context.dataset.label}: ${context.raw}`,
               },
             },
           },
@@ -1456,7 +1464,7 @@ export default {
   min-height: 320px;
 }
 
-.chart-wrap--donut {
+.chart-wrap--hexagon {
   min-height: 320px;
 }
 
@@ -2020,7 +2028,7 @@ export default {
 
   .chart-wrap,
   .chart-wrap--lg,
-  .chart-wrap--donut {
+  .chart-wrap--hexagon {
     min-height: 260px;
   }
 
@@ -2056,7 +2064,7 @@ export default {
 
   .chart-wrap,
   .chart-wrap--lg,
-  .chart-wrap--donut {
+  .chart-wrap--hexagon {
     min-height: 220px;
     padding: 0.6rem;
   }
