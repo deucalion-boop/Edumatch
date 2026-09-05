@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
-const SubjectEnrollment = require('../models/SubjectEnrollment');
 const { sendSuccess } = require('../utils/responseHelper');
 const { ROLE_HEADTEACHER, ROLE_TEACHER, ROLE_STUDENT } = require('../constants/userRoles');
 const { ensureTeacherSubject } = require('../services/subjectService');
@@ -29,8 +28,11 @@ const {
   applyRoleScopedFields,
 } = require('../services/userManagementService');
 const { uploadFiles } = require('../services/storageService');
-const { getSectionOrThrow, syncTeacherAdvisoryAssignments } = require('../services/sectionService');
-const { resolveStoredFileUrl } = require('../utils/fileStorage');
+const {
+  findSectionById,
+  getSectionOrThrow,
+  syncTeacherAdvisoryAssignments,
+} = require('../services/sectionService');
 const {
   createSupabaseAccount,
   findSupabaseAccount,
@@ -45,7 +47,6 @@ const {
   createSupabaseAssessment,
   listSupabaseAssessments,
 } = require('../services/supabaseContentService');
-const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
 const { createAdminMessageNotification } = require('../services/notificationService');
 const {
   notifyAssessmentAssigned,
@@ -59,16 +60,6 @@ const DEFAULT_LESSON_ANALYTICS_MONTHS = 3;
 const MIN_LESSON_ANALYTICS_MONTHS = 1;
 const MAX_LESSON_ANALYTICS_MONTHS = 12;
 const RECENT_TEACHER_CONTENT_DAYS = 30;
-
-function uniqueBy(items, keyFn) {
-  const seen = new Set();
-  return (Array.isArray(items) ? items : []).filter((item) => {
-    const key = String(keyFn(item) || '').trim();
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
 
 function sanitizeAnalyticsMonthCount(value) {
   const parsed = Number.parseInt(value, 10);
@@ -543,25 +534,11 @@ const updateManagedTeacher = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, email, status, subject, contactNumber, advisorySectionId } = req.body || {};
 
-  const teacher = await User.findOne({
-    _id: id,
-    role: ROLE_TEACHER,
-    managedBy: req.user._id,
-    department,
-  }).select('-password');
-
-  if (!teacher) {
-    const error = new Error('Teacher not found');
-    error.statusCode = 404;
-    throw error;
-  }
+  const teacher = await findManagedTeacherForHeadTeacher(req, id, { department });
 
   if (email && String(email).toLowerCase().trim() !== teacher.email) {
-    const existing = await User.findOne({
-      email: String(email).toLowerCase().trim(),
-      _id: { $ne: teacher._id },
-    }).select('_id');
-    if (existing) {
+    const existing = await findSupabaseAccountByEmail(String(email).toLowerCase().trim());
+    if (existing && String(existing._id || existing.id) !== String(teacher._id || teacher.id)) {
       const error = new Error('Email already exists');
       error.statusCode = 409;
       throw error;
@@ -612,73 +589,24 @@ const updateManagedTeacher = asyncHandler(async (req, res) => {
 const getManagedTeacherStudents = asyncHandler(async (req, res) => {
   const department = ensureHeadTeacher(req);
   const { id } = req.params;
-
-  const teacher = await User.findOne({
-    _id: id,
-    role: ROLE_TEACHER,
-    managedBy: req.user._id,
-    department,
-  })
-    .select('_id name email department subject status profileImage advisorySectionId')
-    .populate('advisorySectionId', 'name')
-    .lean();
-
-  if (!teacher) {
-    const error = new Error('Teacher not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const [approvedEnrollments, managedStudents] = await Promise.all([
-    SubjectEnrollment.find({
-      teacherId: teacher._id,
-      status: 'approved',
-    })
-      .populate('studentId', '_id name email status gradeLevel profileImage createdAt enrollment sectionId archive')
-      .populate('sectionId', 'name')
-      .populate('subjectId', '_id name className code track')
-      .sort({ decidedAt: -1, createdAt: -1 })
-      .lean(),
-    User.find({
-      role: ROLE_STUDENT,
-      managedBy: teacher._id,
-      ...buildExcludeArchivedStudentsFilter(),
-    })
-      .select('_id name email status gradeLevel profileImage createdAt enrollment sectionId')
-      .populate('sectionId', 'name')
-      .sort({ createdAt: -1 })
-      .lean(),
-  ]);
-
-  const enrolledStudents = approvedEnrollments
-    .map((row) => {
-      const student = row?.studentId || null;
-      if (!student?._id || isArchivedStudent(student)) return null;
-      const subject = row?.subjectId || null;
-      return {
-        _id: student._id,
-        name: student.name,
-        email: student.email,
-        status: student.status,
-        gradeLevel: student.gradeLevel,
-        profileImage: resolveStoredFileUrl(req, student.profileImage),
-        createdAt: student.createdAt || row?.requestedAt || row?.createdAt || null,
-        enrollment: student.enrollment || {},
-        enrollmentTrack: String(subject?.track || '').trim(),
-        sectionId: row?.sectionId?._id || row?.sectionId || student?.sectionId?._id || student?.sectionId || '',
-        sectionName: row?.sectionId?.name || student?.sectionId?.name || row?.sectionName || '',
-      };
-    })
-    .filter(Boolean);
-
-  const enrolledStudentIds = new Set(enrolledStudents.map((student) => String(student?._id || '')));
-  const students = uniqueBy(
-    [
-      ...enrolledStudents,
-      ...managedStudents.filter((student) => student?._id && !enrolledStudentIds.has(String(student._id))),
-    ],
-    (student) => String(student?._id || '')
+  const teacher = await findManagedTeacherForHeadTeacher(req, id, { department });
+  const accounts = await listSupabaseAccounts();
+  const teacherId = String(teacher._id || teacher.id || '').trim();
+  const managedStudents = accounts.filter((account) => (
+    String(account?.role || '').trim() === ROLE_STUDENT
+    && String(account?.managedBy?._id || account?.managedBy?.id || account?.managedBy || '').trim() === teacherId
+    && account?.archive?.isArchived !== true
+  ));
+  const sectionIds = [...new Set(managedStudents
+    .map((student) => String(student?.sectionId?._id || student?.sectionId?.id || student?.sectionId || '').trim())
+    .filter(Boolean))];
+  const sectionRows = await Promise.all(sectionIds.map((sectionId) => (
+    findSectionById(sectionId, { includeInactive: true })
+  )));
+  const sectionNameById = new Map(
+    sectionRows.filter(Boolean).map((section) => [String(section._id || section.id), section.name])
   );
+  const students = managedStudents;
 
   const studentsPayload = students.map((student) => ({
     id: String(student._id),
@@ -686,9 +614,9 @@ const getManagedTeacherStudents = asyncHandler(async (req, res) => {
     email: String(student.email || '').trim(),
     status: String(student.status || 'active').trim().toLowerCase(),
     gradeLevel: String(student.gradeLevel || '').trim(),
-    sectionId: String(student.sectionId || '').trim(),
-    sectionName: String(student.sectionName || '').trim(),
-    track: String(student.enrollmentTrack || student.enrollment?.track || student.enrollment?.trackId || '').trim(),
+    sectionId: String(student?.sectionId?._id || student?.sectionId?.id || student.sectionId || '').trim(),
+    sectionName: sectionNameById.get(String(student?.sectionId?._id || student?.sectionId?.id || student.sectionId || '').trim()) || '',
+    track: String(student.enrollment?.track || student.enrollment?.trackId || '').trim(),
     createdAt: student.createdAt || null,
     avatar: String(student.profileImage || '').trim()
       || `https://ui-avatars.com/api/?name=${encodeURIComponent(String(student.name || 'Student').trim() || 'Student')}&background=334155&color=fff`,
@@ -702,7 +630,7 @@ const getManagedTeacherStudents = asyncHandler(async (req, res) => {
       department: String(teacher.department || department).trim() || department,
       subject: String(teacher.subject || teacher.department || department).trim() || department,
       advisorySectionId: String(teacher?.advisorySectionId?._id || teacher?.advisorySectionId || '').trim(),
-      advisorySectionName: String(teacher?.advisorySectionId?.name || '').trim(),
+      advisorySectionName: String((await findSectionById(teacher.advisorySectionId, { includeInactive: true }))?.name || '').trim(),
       status: String(teacher.status || 'active').trim().toLowerCase(),
       avatar: String(teacher.profileImage || '').trim()
         || `https://ui-avatars.com/api/?name=${encodeURIComponent(String(teacher.name || 'Teacher').trim() || 'Teacher')}&background=334155&color=fff`,
