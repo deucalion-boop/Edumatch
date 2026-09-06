@@ -18,7 +18,15 @@ const {
   resolveAssignedStudentIds,
   assertUniqueGradingAssessment,
 } = require('../services/assessmentPolicyService');
-const { ensureTeacherSubject } = require('../services/subjectService');
+const {
+  deleteTeacherSubject,
+  ensureTeacherSubject,
+  findTeacherSubject,
+  getTeacherSubjectCounts,
+  listTeacherSubjects,
+  updateAttendanceClassName,
+  updateTeacherSubject,
+} = require('../services/subjectService');
 const { uploadFile, uploadFiles } = require('../services/storageService');
 const { ROLE_STUDENT } = require('../constants/userRoles');
 const { normalizeContactNumber, issueInviteForUser, mapUserResponse } = require('../services/userManagementService');
@@ -309,11 +317,7 @@ async function findTeacherSubjectRecord(teacherId, subjectId) {
   const normalizedSubjectId = String(subjectId?._id || subjectId || '').trim();
   if (!normalizedTeacherId || !normalizedSubjectId) return null;
 
-  return Subject.findOne({
-    _id: normalizedSubjectId,
-    teacherId: normalizedTeacherId,
-    isActive: true,
-  });
+  return findTeacherSubject(normalizedTeacherId, normalizedSubjectId);
 }
 
 async function resolveTeacherSubjectRecord({
@@ -386,11 +390,7 @@ const updateTeacherClass = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const subjectRecord = await Subject.findOne({
-    _id: subjectId,
-    teacherId: req.user._id,
-    isActive: true,
-  });
+  const subjectRecord = await findTeacherSubject(req.user._id, subjectId);
 
   if (!subjectRecord) {
     const error = new Error('Class not found');
@@ -405,14 +405,12 @@ const updateTeacherClass = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const duplicateClass = await Subject.findOne({
-    _id: { $ne: subjectRecord._id },
-    teacherId: req.user._id,
-    name: subjectRecord.name,
-    track: subjectRecord.track,
-    className,
-    isActive: true,
-  }).select('_id');
+  const duplicateClass = (await listTeacherSubjects(req.user._id)).find((subject) => (
+    String(subject.id) !== subjectId
+    && String(subject.name).toLowerCase() === String(subjectRecord.name).toLowerCase()
+    && String(subject.track).toLowerCase() === String(subjectRecord.track).toLowerCase()
+    && String(subject.className).toLowerCase() === className.toLowerCase()
+  ));
 
   if (duplicateClass) {
     const error = new Error('A class with that name already exists');
@@ -420,33 +418,11 @@ const updateTeacherClass = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  subjectRecord.className = className;
-  try {
-    await subjectRecord.save();
-  } catch (saveError) {
-    if (saveError?.code === 11000) {
-      const error = new Error('A class with that name already exists');
-      error.statusCode = 409;
-      throw error;
-    }
-    throw saveError;
-  }
-
-  await Attendance.updateMany(
-    {
-      teacherId: req.user._id,
-      attendanceScope: 'handled_class',
-      subjectId: subjectRecord._id,
-    },
-    {
-      $set: {
-        className,
-      },
-    }
-  );
+  const updatedSubject = await updateTeacherSubject(req.user._id, subjectId, { className });
+  await updateAttendanceClassName(req.user._id, subjectId, className);
 
   return sendSuccess(res, 200, 'Class updated successfully', {
-    subject: subjectToResponse(subjectRecord),
+    subject: subjectToResponse(updatedSubject),
   });
 });
 
@@ -458,11 +434,7 @@ const deleteTeacherClass = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const subject = await Subject.findOne({
-    _id: subjectId,
-    teacherId: req.user._id,
-    isActive: true,
-  }).lean();
+  const subject = await findTeacherSubject(req.user._id, subjectId);
 
   if (!subject) {
     const error = new Error('Class not found');
@@ -470,23 +442,12 @@ const deleteTeacherClass = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const [
-    lessonCount,
-    assessmentCount,
-    approvedStudentsCount,
-    pendingRequestsCount,
-    attendanceRecordCount,
-  ] = await Promise.all([
-    Lesson.countDocuments({ createdBy: req.user._id, subjectId: subject._id }),
-    Assessment.countDocuments({ createdBy: req.user._id, subjectId: subject._id }),
-    SubjectEnrollment.countDocuments({ teacherId: req.user._id, subjectId: subject._id, status: 'approved' }),
-    SubjectEnrollment.countDocuments({ teacherId: req.user._id, subjectId: subject._id, status: 'pending' }),
-    Attendance.countDocuments({
-      teacherId: req.user._id,
-      attendanceScope: 'handled_class',
-      subjectId: subject._id,
-    }),
-  ]);
+  const counts = await getTeacherSubjectCounts(req.user._id);
+  const lessonCount = counts.lessons.get(subjectId) || 0;
+  const assessmentCount = counts.assessments.get(subjectId) || 0;
+  const approvedStudentsCount = counts.approvedEnrollments.get(subjectId) || 0;
+  const pendingRequestsCount = counts.pendingEnrollments.get(subjectId) || 0;
+  const attendanceRecordCount = counts.attendance.get(subjectId) || 0;
 
   const deletionBlockers = [];
   if (lessonCount > 0) deletionBlockers.push(formatCountLabel(lessonCount, 'lesson'));
@@ -501,8 +462,7 @@ const deleteTeacherClass = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  await SubjectEnrollment.deleteMany({ teacherId: req.user._id, subjectId: subject._id });
-  await Subject.deleteOne({ _id: subject._id, teacherId: req.user._id });
+  await deleteTeacherSubject(req.user._id, subjectId);
 
   return sendSuccess(res, 200, 'Class deleted successfully', {
     subject: subjectToResponse(subject),
@@ -510,93 +470,7 @@ const deleteTeacherClass = asyncHandler(async (req, res) => {
 });
 
 async function syncTeacherSubjects(teacherId) {
-  const teacher = await User.findById(teacherId).select('department').lean();
-  const teacherDepartment = String(teacher?.department || '').trim();
-  const lessons = await Lesson.find({ createdBy: teacherId })
-    .select('_id track subject subjectCategory subjectId subjectCode')
-    .lean();
-
-  const syncedSubjects = [];
-  const lessonUpdates = [];
-
-  for (const lesson of lessons) {
-    const normalizedSubject = String(lesson?.subject || '').trim();
-    const normalizedTrack = String(lesson?.track || '').trim();
-    if (!normalizedSubject || !normalizedTrack) continue;
-
-    const subjectRecord = await resolveTeacherSubjectRecord({
-      teacherId,
-      subjectId: lesson?.subjectId,
-      subjectName: normalizedSubject,
-      track: normalizedTrack,
-      subjectCategory: lesson?.subjectCategory || getSubjectCategory(normalizedSubject),
-      department: teacherDepartment,
-    });
-    if (!subjectRecord) continue;
-    syncedSubjects.push(subjectRecord);
-
-    if (String(lesson?.subjectId || '') !== String(subjectRecord._id) || String(lesson?.subjectCode || '') !== String(subjectRecord.code)) {
-      lessonUpdates.push({
-        updateOne: {
-          filter: { _id: lesson._id },
-          update: {
-            $set: {
-              subjectId: subjectRecord._id,
-              subjectCode: subjectRecord.code,
-            },
-          },
-        },
-      });
-    }
-  }
-
-  if (lessonUpdates.length > 0) {
-    await Lesson.bulkWrite(lessonUpdates, { ordered: false });
-  }
-
-  const assessments = await Assessment.find({ createdBy: teacherId })
-    .select('_id lessonId subject subjectId subjectCode subjectCategory')
-    .populate('lessonId', 'track subject subjectId subjectCode subjectCategory')
-    .lean();
-
-  const assessmentUpdates = [];
-  for (const assessment of assessments) {
-    const lesson = assessment?.lessonId;
-    const normalizedSubject = String(assessment?.subject || lesson?.subject || '').trim();
-    const normalizedTrack = String(lesson?.track || '').trim();
-    if (!normalizedSubject || !normalizedTrack) continue;
-
-    const subjectRecord = await resolveTeacherSubjectRecord({
-      teacherId,
-      subjectId: lesson?.subjectId?._id || lesson?.subjectId || assessment?.subjectId,
-      subjectName: normalizedSubject,
-      track: normalizedTrack,
-      subjectCategory: assessment?.subjectCategory || lesson?.subjectCategory || getSubjectCategory(normalizedSubject),
-      department: teacherDepartment,
-    });
-    if (!subjectRecord) continue;
-
-    if (String(assessment?.subjectId || '') !== String(subjectRecord._id) || String(assessment?.subjectCode || '') !== String(subjectRecord.code)) {
-      assessmentUpdates.push({
-        updateOne: {
-          filter: { _id: assessment._id },
-          update: {
-            $set: {
-              subjectId: subjectRecord._id,
-              subjectCode: subjectRecord.code,
-            },
-          },
-        },
-      });
-    }
-  }
-
-  if (assessmentUpdates.length > 0) {
-    await Assessment.bulkWrite(assessmentUpdates, { ordered: false });
-  }
-
-  const subjects = await Subject.find({ teacherId, isActive: true }).sort({ name: 1, createdAt: 1 }).lean();
-  return uniqueBy(subjects, (subject) => String(subject?._id || ''));
+  return listTeacherSubjects(teacherId);
 }
 
 function isPdfLikeAttachment(attachment) {
@@ -1027,43 +901,15 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
 
 const getTeacherSubjects = asyncHandler(async (req, res) => {
   const subjects = await syncTeacherSubjects(req.user._id);
-
-  const [lessonCounts, assessmentCounts, approvedCounts, pendingCounts, attendanceCounts] = await Promise.all([
-    Lesson.aggregate([
-      { $match: { createdBy: req.user._id, subjectId: { $ne: null } } },
-      { $group: { _id: '$subjectId', count: { $sum: 1 } } },
-    ]),
-    Assessment.aggregate([
-      { $match: { createdBy: req.user._id, subjectId: { $ne: null } } },
-      { $group: { _id: '$subjectId', count: { $sum: 1 } } },
-    ]),
-    SubjectEnrollment.aggregate([
-      { $match: { teacherId: req.user._id, status: 'approved' } },
-      { $group: { _id: '$subjectId', count: { $sum: 1 } } },
-    ]),
-    SubjectEnrollment.aggregate([
-      { $match: { teacherId: req.user._id, status: 'pending' } },
-      { $group: { _id: '$subjectId', count: { $sum: 1 } } },
-    ]),
-    Attendance.aggregate([
-      { $match: { teacherId: req.user._id, attendanceScope: 'handled_class', subjectId: { $ne: null } } },
-      { $group: { _id: '$subjectId', count: { $sum: 1 } } },
-    ]),
-  ]);
-
-  const lessonCountsBySubject = new Map(lessonCounts.map((row) => [String(row._id), Number(row.count || 0)]));
-  const assessmentCountsBySubject = new Map(assessmentCounts.map((row) => [String(row._id), Number(row.count || 0)]));
-  const approvedCountsBySubject = new Map(approvedCounts.map((row) => [String(row._id), Number(row.count || 0)]));
-  const pendingCountsBySubject = new Map(pendingCounts.map((row) => [String(row._id), Number(row.count || 0)]));
-  const attendanceCountsBySubject = new Map(attendanceCounts.map((row) => [String(row._id), Number(row.count || 0)]));
+  const counts = await getTeacherSubjectCounts(req.user._id);
 
   return sendSuccess(res, 200, 'Teacher subjects fetched successfully', {
     subjects: subjects.map((subject) => {
-      const lessonCount = lessonCountsBySubject.get(String(subject._id)) || 0;
-      const assessmentCount = assessmentCountsBySubject.get(String(subject._id)) || 0;
-      const approvedStudentsCount = approvedCountsBySubject.get(String(subject._id)) || 0;
-      const pendingRequestsCount = pendingCountsBySubject.get(String(subject._id)) || 0;
-      const attendanceRecordCount = attendanceCountsBySubject.get(String(subject._id)) || 0;
+      const lessonCount = counts.lessons.get(String(subject._id)) || 0;
+      const assessmentCount = counts.assessments.get(String(subject._id)) || 0;
+      const approvedStudentsCount = counts.approvedEnrollments.get(String(subject._id)) || 0;
+      const pendingRequestsCount = counts.pendingEnrollments.get(String(subject._id)) || 0;
+      const attendanceRecordCount = counts.attendance.get(String(subject._id)) || 0;
       const deletionBlockers = [];
 
       if (lessonCount > 0) deletionBlockers.push(formatCountLabel(lessonCount, 'lesson'));
