@@ -954,7 +954,7 @@ export default {
   height: 42px;
   border: 1px solid rgba(95, 116, 24, 0.32);
   border-radius: 999px;
-  background: linear-gradient(135deg, #1e4307 0%, #5f7418 100%);
+  background: linear-gradient(135deg, #4f8a35, #4f7d3a);
   color: #ffffff !important;
   display: inline-flex;
   align-items: center;
@@ -1420,6 +1420,15 @@ export default {
   padding: 1rem 1.15rem 1.15rem;
 }
 
+.join-class-dialog-actions .btn-primary,
+.join-class-dialog-actions .btn-primary:hover:not(:disabled),
+.join-class-dialog-actions .btn-outline,
+.join-class-dialog-actions .btn-outline:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f8a35, #4f7d3a) !important;
+  border-color: #4f8a35 !important;
+  color: #ffffff !important;
+}
+
 @media (max-width: 900px) {
   .lesson-feed-trigger {
     grid-template-columns: auto 1fr auto;
@@ -1589,8 +1598,8 @@ export default {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 20px;
   background:
-    radial-gradient(circle at 88% 10%, rgba(187, 255, 89, 0.18), transparent 15rem),
-    linear-gradient(135deg, #173806 0%, #1e4307 54%, #4f7d3a 100%);
+    radial-gradient(circle at 78% 15%, rgba(180, 216, 158, 0.23), transparent 18rem),
+    linear-gradient(128deg, #4f8a35 0%, #245f00 52%, #144300 100%);
   box-shadow: 0 18px 42px rgba(30, 67, 7, 0.18);
 }
 
@@ -1887,6 +1896,10 @@ export default {
   color: #ffffff;
   border-radius: 12px;
   background: #1e4307;
+}
+
+.feed-state-icon {
+  background: #4f8a35;
 }
 
 .active-subject-icon i,

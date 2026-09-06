@@ -1340,7 +1340,7 @@ export default {
 }
 
 .response-progress .is-current b {
-  background: #1e4307;
+  background: #4f8a35;
   color: #fff;
 }
 

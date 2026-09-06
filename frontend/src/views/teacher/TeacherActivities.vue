@@ -113,6 +113,7 @@
       <div class="sidebar-footer">
         <div class="teacher-profile">
           <div class="teacher-avatar">
+            <img v-if="teacherAvatarUrl" :src="teacherAvatarUrl" alt="" @error="$event.currentTarget.remove()">
             <i class="fas fa-user" aria-hidden="true"></i>
           </div>
           <div class="teacher-info">
@@ -2290,6 +2291,9 @@ onMounted(async () => {
   window.addEventListener("scroll", handleTourViewportChange, true);
   window.addEventListener("resize", syncMobileMenuBodyState);
 
+  await authStore.refreshProfile().catch((error) => {
+    console.error("Failed to refresh teacher profile:", error);
+  });
   const authUser = authStore.user || {};
   user.value.name = authUser.name || authUser.username || "Teacher";
   user.value.displayName = authUser.name || authUser.displayName || authUser.username || "Teacher";

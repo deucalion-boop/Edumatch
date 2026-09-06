@@ -7351,16 +7351,16 @@ body.student-dashboard .student-dashboard-page > .profile-content .profile-actio
 }
 
 body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-primary {
-    background: #1e4307 !important;
-    border: 1px solid #1e4307 !important;
+    background: #4f8a35 !important;
+    border: 1px solid #4f8a35 !important;
     color: #ffffff !important;
     background-image: none !important;
     box-shadow: 0 2px 5px rgba(30, 67, 7, 0.22) !important;
 }
 
 body.student-dashboard .student-dashboard-page > .profile-content .profile-actions .btn-primary:hover {
-    background: #173405 !important;
-    border-color: #173405 !important;
+    background: #4f7d3a !important;
+    border-color: #4f7d3a !important;
     box-shadow: 0 4px 8px rgba(23, 52, 5, 0.24) !important;
 }
 
@@ -7559,6 +7559,16 @@ body.student-dashboard .student-dashboard-page > .profile-content .form-actions 
 body.student-dashboard .student-dashboard-page > .profile-content .form-actions .btn {
     min-width: 130px;
     justify-content: center;
+    background: #4f8a35 !important;
+    background-image: none !important;
+    border-color: #4f8a35 !important;
+    color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard-page > .profile-content .form-actions .btn:hover:not(:disabled) {
+    background: #4f7d3a !important;
+    border-color: #4f7d3a !important;
+    color: #ffffff !important;
 }
 
 @media (min-width: 1101px) {
@@ -8169,4 +8179,11 @@ body.student-dashboard .nav-submenu-leave-to {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
     }
+}
+
+/* Preserve the Lessons hero CTA gradient over the global student button theme. */
+body.student-dashboard .lessons-page-hero .join-class-trigger,
+body.student-dashboard .lessons-page-hero .join-class-trigger:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4f8a35, #4f7d3a) !important;
+    border-color: #4f8a35 !important;
 }

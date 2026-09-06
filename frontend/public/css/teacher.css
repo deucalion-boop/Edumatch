@@ -5364,9 +5364,16 @@ body.teacher-dashboard .teacher-sidebar .sidebar-footer .teacher-profile {
 body.teacher-dashboard .teacher-sidebar .sidebar-footer .teacher-avatar {
     width: 48px !important;
     height: 48px !important;
+    position: relative !important;
     border: 2px solid #245b13 !important;
     background: #ffffff !important;
     box-shadow: none !important;
+}
+
+body.teacher-dashboard .teacher-sidebar .sidebar-footer .teacher-avatar > img {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
 }
 
 body.teacher-dashboard .teacher-sidebar .sidebar-footer .teacher-avatar > .fa-user {

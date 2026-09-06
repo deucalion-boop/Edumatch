@@ -530,6 +530,26 @@ export function useAuthStore() {
     persistUserStateToActiveStorage()
   }
 
+  const refreshProfile = async () => {
+    if (!state.token || !state.user) return null
+    const role = String(state.user.role || '').toLowerCase().trim()
+    if (role !== 'teacher' && role !== 'student') return state.user
+
+    const response = await axios.get(`${resolveApiBaseUrl()}/${role}/profile`, {
+      headers: buildAuthHeaders(),
+    })
+    const refreshedUser = response.data?.user
+    if (!refreshedUser) return state.user
+
+    state.user = {
+      ...state.user,
+      ...refreshedUser,
+      role,
+    }
+    persistUserStateToActiveStorage()
+    return state.user
+  }
+
   return {
     get error() {
       return state.error
@@ -547,6 +567,7 @@ export function useAuthStore() {
     isAdmin,
     getDashboardPath,
     setUser,
+    refreshProfile,
     logout,
     login,
     verifyLoginOtp,

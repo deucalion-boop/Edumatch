@@ -2289,7 +2289,7 @@ export default {
   border-radius: 20px;
   background:
     radial-gradient(circle at 78% 15%, rgba(180, 216, 158, 0.23), transparent 18rem),
-    linear-gradient(128deg, #173806 0%, var(--forest) 52%, #3f6e2c 100%);
+    linear-gradient(128deg, #4f8a35 0%, #245f00 52%, #144300 100%);
   box-shadow: 0 20px 48px rgba(30, 67, 7, 0.2);
   isolation: isolate;
 }
@@ -4161,7 +4161,7 @@ export default {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   border-radius: 12px;
-  background: linear-gradient(135deg, #1e4307, #4f7d3a);
+  background: linear-gradient(135deg, #4f8a35, #4f7d3a);
   box-shadow: 0 10px 24px rgba(30, 67, 7, 0.2);
   font-size: 0.8rem;
   font-weight: 800;
@@ -4349,9 +4349,8 @@ export default {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 20px;
   background:
-    radial-gradient(circle at 92% 10%, rgba(220, 234, 211, 0.24), transparent 19rem),
-    radial-gradient(circle at 5% 95%, rgba(111, 157, 88, 0.2), transparent 18rem),
-    linear-gradient(135deg, #153704 0%, #1e4307 48%, #4f7d3a 100%);
+    radial-gradient(circle at 78% 15%, rgba(180, 216, 158, 0.23), transparent 18rem),
+    linear-gradient(128deg, #4f8a35 0%, #245f00 52%, #144300 100%);
   box-shadow: 0 20px 46px rgba(30, 67, 7, 0.2);
 }
 

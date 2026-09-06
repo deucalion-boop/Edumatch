@@ -105,6 +105,7 @@
       <div class="sidebar-footer">
         <div class="teacher-profile">
           <div class="teacher-avatar">
+            <img v-if="teacherAvatarUrl" :src="teacherAvatarUrl" alt="" @error="$event.currentTarget.remove()">
             <i class="fas fa-user" aria-hidden="true"></i>
           </div>
           <div class="teacher-info">
@@ -3773,7 +3774,7 @@ watch(
   }
 )
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('keydown', handleEscape)
   document.addEventListener('click', handleAccountMenuClickOutside)
   document.addEventListener('visibilitychange', handleRecordsVisibilityChange)
@@ -3784,6 +3785,9 @@ onMounted(() => {
   window.addEventListener('teacher-assessment-created', handleAssessmentCreatedEvent)
   window.addEventListener('storage', handleRecordsStorageSignal)
 
+  await authStore.refreshProfile().catch((error) => {
+    console.error('Failed to refresh teacher profile:', error)
+  })
   const authUser = authStore.user || {}
   teacher.name = authUser.name || authUser.username || 'Teacher'
   teacher.displayName = authUser.name || authUser.displayName || authUser.username || 'Teacher'
