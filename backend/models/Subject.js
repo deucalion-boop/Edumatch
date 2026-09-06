@@ -50,9 +50,11 @@ const subjectSchema = new mongoose.Schema(
       trim: true,
     },
     teacherId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      // User accounts live in Supabase, where their primary keys are
+      // 32-character text values rather than MongoDB ObjectIds.
+      type: String,
       required: true,
+      trim: true,
       index: true,
     },
     isActive: {
