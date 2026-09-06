@@ -5,6 +5,7 @@ const { sendSuccess } = require('../utils/responseHelper');
 const { sendEmailViaGmail } = require('../services/gmailService');
 const { assertPasswordMeetsPolicy, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } = require('../utils/passwordPolicy');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
+const { getAppSettings } = require('../services/supabaseSettingsService');
 const {
   findSupabaseAccount,
   findSupabaseAccountByEmail,
@@ -23,12 +24,8 @@ const {
 } = require('../services/supabaseAuthPersistenceService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-const DEFAULT_MAX_LOGIN_ATTEMPTS = 5;
-const DEFAULT_ACCOUNT_LOCKOUT_DURATION_MINUTES = 30;
-const DEFAULT_EMAIL_VERIFICATION_REQUIRED = true;
 const RESET_TOKEN_TTL_MINUTES = 60;
 const APP_NAME = 'EduMatch';
-const DEFAULT_MAINTENANCE_MESSAGE = 'The system is currently under maintenance. Please check back later.';
 const DEFAULT_ACCESS_TOKEN_TTL = '1d';
 const DEFAULT_REMEMBER_ME_TOKEN_TTL = '30d';
 const LOGIN_OTP_TTL_MINUTES = 2;
@@ -222,24 +219,6 @@ async function sendPasswordResetEmail({ email, name, resetLink }) {
   });
 }
 
-async function getSecurityPolicy() {
-  return {
-    maxLoginAttempts: DEFAULT_MAX_LOGIN_ATTEMPTS,
-    accountLockoutDurationMinutes: DEFAULT_ACCOUNT_LOCKOUT_DURATION_MINUTES,
-  };
-}
-
-async function getMaintenancePolicy() {
-  return {
-    maintenanceModeEnabled: false,
-    maintenanceMessage: DEFAULT_MAINTENANCE_MESSAGE,
-  };
-}
-
-async function getEmailVerificationPolicy() {
-  return DEFAULT_EMAIL_VERIFICATION_REQUIRED;
-}
-
 async function verifyRecaptchaToken({ token, remoteIp }) {
   const recaptchaSecret = String(process.env.RECAPTCHA_SECRET_KEY || '').trim();
   const captchaToken = String(token || '').trim();
@@ -343,7 +322,8 @@ const login = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const { maxLoginAttempts, accountLockoutDurationMinutes } = await getSecurityPolicy();
+  const settings = await getAppSettings();
+  const { maxLoginAttempts, accountLockoutDurationMinutes } = settings.security;
   const now = new Date();
   if (user.lockUntil && new Date(user.lockUntil).getTime() > now.getTime()) {
     await recordLoginAttempt(req, {
@@ -399,7 +379,7 @@ const login = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const { maintenanceModeEnabled, maintenanceMessage } = await getMaintenancePolicy();
+  const { maintenanceModeEnabled, maintenanceMessage } = settings.maintenance;
   if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
     await recordLoginAttempt(req, {
       username: normalizedUsername,
@@ -416,7 +396,7 @@ const login = asyncHandler(async (req, res) => {
   user.lockUntil = null;
   await user.save();
 
-  const emailVerificationRequired = await getEmailVerificationPolicy();
+  const { emailVerificationRequired } = settings.user;
   if (!emailVerificationRequired || !requiresEmailOtp(user)) {
     user.lastLoginAt = now;
     user.lastActivityAt = now;
@@ -482,7 +462,7 @@ const verifyLoginOtp = asyncHandler(async (req, res) => {
     error.statusCode = 403;
     throw error;
   }
-  const { maintenanceModeEnabled, maintenanceMessage } = await getMaintenancePolicy();
+  const { maintenanceModeEnabled, maintenanceMessage } = (await getAppSettings()).maintenance;
   if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
     const error = new Error(maintenanceMessage);
     error.statusCode = 503;

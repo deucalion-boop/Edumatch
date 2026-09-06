@@ -1,14 +1,12 @@
 const crypto = require('crypto');
-const fs = require('fs/promises');
 const path = require('path');
 const {
   downloadSupabaseFile,
   getSignedUrlTtlSeconds,
-  getSupabasePublicUrl,
-  isBucketPublic,
   isSupabaseStoredPath,
   parseSupabaseStoredPath,
 } = require('../services/supabaseStorageService');
+const { normalizeLocalStoredPath, readLocalFileBuffer } = require('./localFileStorage');
 
 const STORAGE_PROXY_ROUTE = '/api/storage/file';
 
@@ -33,16 +31,37 @@ function getRequestOrigin(req) {
   return `${req.protocol}://${req.get('host')}`;
 }
 
-function normalizeLocalFileUrl(req, storedPath) {
+function normalizeStoredPath(storedPath) {
   const raw = String(storedPath || '').trim();
-  if (!raw) return '';
-  const normalizedPath = raw.startsWith('/') ? raw : `/${raw}`;
-  const origin = getRequestOrigin(req);
-  return origin ? `${origin}${normalizedPath}` : normalizedPath;
+  if (isRemoteFileUrl(raw)) {
+    // Older records may contain an absolute URL from an earlier API host.
+    // /uploads/ is the application's reserved local storage URL namespace.
+    const legacyUpload = raw.match(/^https?:\/\/[^/]+(\/uploads\/[^?#]*)(?:[?#].*)?$/i);
+    if (!legacyUpload) return raw;
+    try {
+      return normalizeLocalStoredPath(decodeURIComponent(legacyUpload[1]));
+    } catch (_error) {
+      const error = new Error('Stored file path is invalid');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+  if (isSupabaseStoredPath(raw)) {
+    parseSupabaseStoredPath(raw);
+    return raw;
+  }
+  return normalizeLocalStoredPath(raw);
 }
 
 function getStorageSigningSecret() {
-  return String(process.env.STORAGE_URL_SIGNING_SECRET || process.env.JWT_SECRET || 'edumatch-storage-signing-secret').trim();
+  const secret = String(process.env.STORAGE_URL_SIGNING_SECRET || '').trim()
+    || String(process.env.JWT_SECRET || '').trim();
+  if (!secret) {
+    const error = new Error('Storage URL signing is not configured');
+    error.statusCode = 503;
+    throw error;
+  }
+  return secret;
 }
 
 function encodeBase64Url(input) {
@@ -73,7 +92,7 @@ function buildStorageAccessToken({
   expiresIn = getSignedUrlTtlSeconds(),
 } = {}) {
   const payload = {
-    storedPath: String(storedPath || '').trim(),
+    storedPath: normalizeStoredPath(storedPath),
     download: normalizeBoolean(download),
     fileName: String(fileName || '').trim(),
     expiresAt: Date.now() + (normalizePositiveInteger(expiresIn, getSignedUrlTtlSeconds()) * 1000),
@@ -85,14 +104,14 @@ function buildStorageAccessToken({
 }
 
 function verifyStorageAccessToken(token) {
-  const raw = String(token || '').trim();
-  if (!raw || !raw.includes('.')) {
+  const raw = typeof token === 'string' ? token : '';
+  if (raw.length > 16384 || !/^[A-Za-z0-9_-]+\.[a-f0-9]{64}$/.test(raw)) {
     const error = new Error('Storage access token is invalid');
     error.statusCode = 400;
     throw error;
   }
 
-  const [encodedPayload, signature] = raw.split('.', 2);
+  const [encodedPayload, signature] = raw.split('.');
   const expectedSignature = signStoragePayload(encodedPayload);
   const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
   const signatureBuffer = Buffer.from(String(signature || ''), 'utf8');
@@ -112,21 +131,23 @@ function verifyStorageAccessToken(token) {
     throw error;
   }
 
-  if (!payload?.storedPath) {
+  if (!payload || typeof payload.storedPath !== 'string' || !payload.storedPath.trim()
+      || typeof payload.download !== 'boolean' || typeof payload.fileName !== 'string'
+      || !Number.isSafeInteger(payload.expiresAt)) {
     const error = new Error('Storage access token is invalid');
     error.statusCode = 400;
     throw error;
   }
 
-  const expiresAt = Number(payload.expiresAt || 0);
-  if (!expiresAt || expiresAt <= Date.now()) {
+  const expiresAt = payload.expiresAt;
+  if (expiresAt <= Date.now()) {
     const error = new Error('Storage access token has expired');
     error.statusCode = 410;
     throw error;
   }
 
   return {
-    storedPath: String(payload.storedPath || '').trim(),
+    storedPath: normalizeStoredPath(payload.storedPath),
     download: payload.download === true,
     fileName: String(payload.fileName || '').trim(),
     expiresAt,
@@ -135,40 +156,29 @@ function verifyStorageAccessToken(token) {
 
 function buildStorageProxyUrl(req, options = {}) {
   const origin = getRequestOrigin(req);
-  if (!origin) return '';
-
   const token = buildStorageAccessToken(options);
   return `${origin}${STORAGE_PROXY_ROUTE}?token=${encodeURIComponent(token)}`;
 }
 
 function resolveStoredFileUrl(req, storedPath, options = {}) {
-  const raw = String(storedPath || '').trim();
-  if (!raw) return '';
+  if (!String(storedPath || '').trim()) return '';
+  const raw = normalizeStoredPath(storedPath);
   if (isRemoteFileUrl(raw)) return raw;
-
-  if (isSupabaseStoredPath(raw)) {
-    const { bucket } = parseSupabaseStoredPath(raw);
-    if (isBucketPublic(bucket) && options.download !== true) {
-      return getSupabasePublicUrl(raw);
-    }
-    return buildStorageProxyUrl(req, {
-      storedPath: raw,
-      download: options.download === true,
-      fileName: options.fileName || '',
-      expiresIn: options.expiresIn,
-    });
-  }
-
-  return normalizeLocalFileUrl(req, raw);
+  return buildStorageProxyUrl(req, {
+    storedPath: raw,
+    download: options.download === true,
+    fileName: options.fileName || '',
+    expiresIn: options.expiresIn,
+  });
 }
 
 async function downloadOrRedirectStoredFile(req, res, storedPath, downloadName = '') {
-  const raw = String(storedPath || '').trim();
-  if (!raw) {
+  if (!String(storedPath || '').trim()) {
     const error = new Error('Stored file path is missing');
     error.statusCode = 404;
     throw error;
   }
+  const raw = normalizeStoredPath(storedPath);
 
   if (isRemoteFileUrl(raw)) {
     return res.redirect(raw);
@@ -181,8 +191,12 @@ async function downloadOrRedirectStoredFile(req, res, storedPath, downloadName =
     }));
   }
 
-  const absolutePath = path.resolve(__dirname, '..', raw);
-  return res.download(absolutePath, downloadName || undefined);
+  const buffer = await readLocalFileBuffer(raw);
+  return sendStoredFileBuffer(res, buffer, {
+    download: true,
+    fileName: downloadName || path.posix.basename(raw),
+    contentType: guessContentType(raw),
+  });
 }
 
 function guessContentType(fileName = '') {
@@ -199,8 +213,8 @@ function guessContentType(fileName = '') {
 }
 
 function sanitizeDownloadName(value, fallback = 'file') {
-  const baseName = path.basename(String(value || '').trim() || fallback);
-  return baseName.replace(/["\r\n]+/g, '').trim() || fallback;
+  const baseName = path.posix.basename(String(value || '').trim().replace(/\\/g, '/') || fallback);
+  return baseName.replace(/["\x00-\x1f\x7f]+/g, '').trim() || fallback;
 }
 
 function buildContentDisposition(type, fileName) {
@@ -223,12 +237,12 @@ async function toBuffer(data) {
 }
 
 async function readStoredFileBuffer(storedPath) {
-  const raw = String(storedPath || '').trim();
-  if (!raw) {
+  if (!String(storedPath || '').trim()) {
     const error = new Error('Stored file path is missing');
     error.statusCode = 404;
     throw error;
   }
+  const raw = normalizeStoredPath(storedPath);
 
   if (isRemoteFileUrl(raw)) {
     const response = await fetch(raw);
@@ -245,8 +259,40 @@ async function readStoredFileBuffer(storedPath) {
     return toBuffer(data);
   }
 
-  const absolutePath = path.resolve(__dirname, '..', raw);
-  return fs.readFile(absolutePath);
+  return readLocalFileBuffer(raw);
+}
+
+function storageContentSecurityPolicy(contentType) {
+  const frameOrigins = new Set(["'self'"]);
+  for (const value of String(process.env.CORS_ALLOWED_ORIGINS || process.env.FRONTEND_URL || '').split(',')) {
+    try {
+      const url = new URL(value.trim());
+      if (url.protocol === 'https:' || url.protocol === 'http:') frameOrigins.add(url.origin);
+    } catch (_error) {
+      // Ignore missing/invalid frontend origins; never interpolate raw headers.
+    }
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    frameOrigins.add('http://localhost:5173');
+    frameOrigins.add('http://127.0.0.1:5173');
+  }
+  const activeContent = /^(text\/html|application\/xhtml\+xml|image\/svg\+xml|text\/xml|application\/xml)(;|$)/i.test(contentType || '');
+  return `${activeContent ? 'sandbox; ' : ''}default-src 'none'; frame-ancestors ${[...frameOrigins].join(' ')}`;
+}
+
+function sendStoredFileBuffer(res, buffer, { download = false, fileName = 'file', contentType } = {}) {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  // The frontend can be hosted on a different origin. The signed URL controls
+  // access; frame-ancestors controls which configured frontends may embed it.
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.removeHeader('X-Frame-Options');
+  res.setHeader('Content-Security-Policy', storageContentSecurityPolicy(contentType));
+  res.setHeader('Content-Type', contentType || 'application/octet-stream');
+  res.setHeader('Content-Length', String(buffer.length));
+  res.setHeader('Content-Disposition', buildContentDisposition(download ? 'attachment' : 'inline', fileName));
+  return res.status(200).send(buffer);
 }
 
 async function streamSupabaseFile(res, storedPath, { download = false, fileName = '' } = {}) {
@@ -255,10 +301,7 @@ async function streamSupabaseFile(res, storedPath, { download = false, fileName 
   const buffer = await toBuffer(data);
   const contentType = String(data?.type || '').trim() || guessContentType(resolvedFileName);
 
-  res.setHeader('Content-Type', contentType);
-  res.setHeader('Content-Length', String(buffer.length));
-  res.setHeader('Content-Disposition', buildContentDisposition(download ? 'attachment' : 'inline', resolvedFileName));
-  return res.status(200).send(buffer);
+  return sendStoredFileBuffer(res, buffer, { download, fileName: resolvedFileName, contentType });
 }
 
 async function serveStoredFile(req, res) {
@@ -273,12 +316,12 @@ async function serveStoredFile(req, res) {
     return streamSupabaseFile(res, raw, payload);
   }
 
-  const absolutePath = path.resolve(__dirname, '..', raw);
-  if (payload.download) {
-    return res.download(absolutePath, payload.fileName || undefined);
-  }
-
-  return res.sendFile(absolutePath);
+  const buffer = await readLocalFileBuffer(raw);
+  return sendStoredFileBuffer(res, buffer, {
+    ...payload,
+    fileName: payload.fileName || path.posix.basename(raw),
+    contentType: guessContentType(raw),
+  });
 }
 
 module.exports = {

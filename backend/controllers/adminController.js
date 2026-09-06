@@ -5,7 +5,7 @@ const Submission = require('../models/Submission');
 const Recommendation = require('../models/Recommendation');
 const Subject = require('../models/Subject');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
-const Settings = require('../models/Settings');
+const { getAppSettings, saveAppSettings } = require('../services/supabaseSettingsService');
 const ExportApprovalRequest = require('../models/ExportApprovalRequest');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -29,7 +29,7 @@ const {
 const { createAdminMessageNotification } = require('../services/notificationService');
 const { countUnreadNotifications } = require('../services/supabaseNotificationService');
 const { getSupabaseAnalytics } = require('../services/supabaseAnalyticsService');
-const { listLoginAttempts } = require('../services/supabaseAuthPersistenceService');
+const { listLoginAttempts, revokeNonAdminSessions } = require('../services/supabaseAuthPersistenceService');
 const { listAuditLogs } = require('../services/supabaseAuditLogService');
 const {
   APPROVED_EXPORT_REQUEST_TTL_MINUTES,
@@ -66,7 +66,6 @@ const MAX_ACCOUNT_LOCKOUT_DURATION_MINUTES = 1440;
 const DEFAULT_EMAIL_VERIFICATION_REQUIRED = true;
 const DEFAULT_MAINTENANCE_MESSAGE = 'The system is currently under maintenance. Please check back later.';
 const DEFAULT_SYSTEM_VERSION = 'v1.0.0';
-const SYSTEM_MAINTENANCE_SESSION_LOGOUT_DATE = new Date(0);
 
 function buildRecentDayBuckets(dayCount = 30) {
   const buckets = [];
@@ -1306,7 +1305,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 });
 
 const getSecuritySettings = asyncHandler(async (_req, res) => {
-  const settings = await Settings.findOne({ key: 'global' });
+  const settings = await getAppSettings();
   const systemSettings = systemSettingsResponse(settings);
 
   return sendSuccess(res, 200, 'Security settings fetched successfully', {
@@ -1334,28 +1333,13 @@ const saveSecuritySettings = asyncHandler(async (req, res) => {
     fieldName: 'accountLockoutDurationMinutes',
   });
 
-  const settings = await Settings.findOneAndUpdate(
-    { key: 'global' },
-    {
-      $set: {
-        security: {
-          sessionTimeoutMinutes: parsedSessionTimeoutMinutes,
-          maxLoginAttempts: parsedMaxLoginAttempts,
-          accountLockoutDurationMinutes: parsedAccountLockoutDurationMinutes,
-        },
-        updatedBy: req.user._id,
-      },
-      $setOnInsert: {
-        key: 'global',
-      },
+  const settings = await saveAppSettings({
+    security: {
+      sessionTimeoutMinutes: parsedSessionTimeoutMinutes,
+      maxLoginAttempts: parsedMaxLoginAttempts,
+      accountLockoutDurationMinutes: parsedAccountLockoutDurationMinutes,
     },
-    {
-      upsert: true,
-      returnDocument: 'after',
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
+  }, req.user._id);
 
   return sendSuccess(res, 200, 'Security settings saved successfully', {
     settings: {
@@ -1368,7 +1352,7 @@ const saveSecuritySettings = asyncHandler(async (req, res) => {
 });
 
 const getSystemSettings = asyncHandler(async (_req, res) => {
-  const settings = await Settings.findOne({ key: 'global' });
+  const settings = await getAppSettings();
 
   return sendSuccess(res, 200, 'System settings fetched successfully', {
     settings: systemSettingsResponse(settings),
@@ -1377,49 +1361,11 @@ const getSystemSettings = asyncHandler(async (_req, res) => {
 
 const saveSystemSettings = asyncHandler(async (req, res) => {
   const normalizedSettings = normalizeSystemSettings(req.body || {});
-  const existingSettings = await Settings.findOne({ key: 'global' }).select('maintenance').lean();
-  const wasMaintenanceEnabled = existingSettings?.maintenance?.maintenanceModeEnabled === true;
-
-  const settings = await Settings.findOneAndUpdate(
-    { key: 'global' },
-    {
-      key: 'global',
-      user: {
-        emailVerificationRequired: normalizedSettings.user.emailVerificationRequired,
-      },
-      security: normalizedSettings.security,
-      maintenance: {
-        maintenanceModeEnabled: normalizedSettings.maintenance.maintenanceModeEnabled,
-        maintenanceMessage: normalizedSettings.maintenance.maintenanceMessage,
-        systemVersion: normalizedSettings.maintenance.systemVersion,
-        lastBackupAt: existingSettings?.maintenance?.lastBackupAt || null,
-        lastBackupFileName: existingSettings?.maintenance?.lastBackupFileName || '',
-        backupHistory: existingSettings?.maintenance?.backupHistory || [],
-        lastCacheClearedAt: existingSettings?.maintenance?.lastCacheClearedAt || null,
-      },
-      updatedBy: req.user._id,
-    },
-    {
-      upsert: true,
-      returnDocument: 'after',
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
+  const settings = await saveAppSettings(normalizedSettings, req.user._id);
 
   let sessionsInvalidated = 0;
-  if (normalizedSettings.maintenance.maintenanceModeEnabled && !wasMaintenanceEnabled) {
-    const nonAdminSessionResult = await User.updateMany(
-      {
-        role: { $in: [ROLE_STUDENT, ROLE_TEACHER, ROLE_HEADTEACHER, ROLE_SECRETARY] },
-      },
-      {
-        $set: {
-          lastActivityAt: SYSTEM_MAINTENANCE_SESSION_LOGOUT_DATE,
-        },
-      }
-    );
-    sessionsInvalidated = Number(nonAdminSessionResult?.modifiedCount || 0);
+  if (normalizedSettings.maintenance.maintenanceModeEnabled) {
+    sessionsInvalidated = await revokeNonAdminSessions('System maintenance');
   }
 
   return sendSuccess(res, 200, 'System settings saved successfully', {
@@ -1438,37 +1384,17 @@ const clearSystemCache = asyncHandler(async (req, res) => {
   ];
 
   const clearedEntries = await Promise.all(cacheDirectories.map((dirPath) => clearDirectoryContents(dirPath)));
-  const nonAdminSessionResult = await User.updateMany(
-    { role: { $ne: 'admin' } },
-    { $set: { lastActivityAt: SYSTEM_MAINTENANCE_SESSION_LOGOUT_DATE } }
-  );
+  const sessionsInvalidated = await revokeNonAdminSessions('System cache cleared');
   const clearedAt = new Date();
 
-  await Settings.findOneAndUpdate(
-    { key: 'global' },
-    {
-      $set: {
-        'maintenance.lastCacheClearedAt': clearedAt,
-        updatedBy: req.user._id,
-      },
-      $setOnInsert: {
-        key: 'global',
-      },
-    },
-    {
-      upsert: true,
-      returnDocument: 'after',
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
+  await saveAppSettings({ maintenance: { lastCacheClearedAt: clearedAt.toISOString() } }, req.user._id);
 
   return sendSuccess(res, 200, 'System cache cleared successfully', {
     cache: {
       clearedAt,
       directoriesChecked: cacheDirectories.length,
       filesRemoved: clearedEntries.reduce((sum, count) => sum + count, 0),
-      sessionsInvalidated: Number(nonAdminSessionResult?.modifiedCount || 0),
+      sessionsInvalidated,
     },
   });
 });
@@ -1480,7 +1406,7 @@ const getRawSettingsDebug = asyncHandler(async (_req, res) => {
     throw error;
   }
 
-  const settings = await Settings.findOne({ key: 'global' }).lean();
+  const settings = await getAppSettings();
 
   return sendSuccess(res, 200, 'Raw settings fetched (debug)', {
     settings: settings || null,

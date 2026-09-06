@@ -1,10 +1,9 @@
 const crypto = require('crypto');
-const fs = require('fs/promises');
 const path = require('path');
 const { isSupabaseStorageConfigured, uploadSupabaseFile } = require('./supabaseStorageService');
+const { LOCAL_UPLOADS_DIR, normalizeLocalStoredPath, writeLocalFileBuffer } = require('../utils/localFileStorage');
 
 const DEFAULT_STORAGE_ROOT = 'uploads';
-const LOCAL_UPLOADS_DIR = path.resolve(__dirname, '..', DEFAULT_STORAGE_ROOT);
 
 function sanitizeFileName(input) {
   const extension = path.extname(String(input || '')).toLowerCase();
@@ -29,7 +28,9 @@ function buildStoragePath({ folder = 'misc', originalName = 'file' } = {}) {
   const { baseName, extension } = sanitizeFileName(originalName);
   const datePrefix = new Date().toISOString().slice(0, 10);
   const uniqueSuffix = crypto.randomUUID();
-  return `${normalizedFolder}/${datePrefix}/${uniqueSuffix}-${baseName}${extension}`;
+  const storagePath = `${normalizedFolder}/${datePrefix}/${uniqueSuffix}-${baseName}${extension}`;
+  normalizeLocalStoredPath(`${DEFAULT_STORAGE_ROOT}/${storagePath}`);
+  return storagePath;
 }
 
 async function uploadFile({
@@ -58,8 +59,7 @@ async function uploadFile({
   };
 
   if (isSupabaseStorageConfigured()) {
-    // Keep a stable object path in MongoDB so URLs can stay public or be
-    // signed later depending on bucket visibility.
+    // Persist a stable object path; authorized responses generate signed URLs.
     const upload = await uploadSupabaseFile({
       file,
       objectPath: storagePath,
@@ -75,11 +75,8 @@ async function uploadFile({
     };
   }
 
-  const absoluteStoragePath = path.resolve(LOCAL_UPLOADS_DIR, ...storagePath.split('/'));
-  await fs.mkdir(path.dirname(absoluteStoragePath), { recursive: true });
-  await fs.writeFile(absoluteStoragePath, file.buffer);
-
   const publicPath = path.posix.join(DEFAULT_STORAGE_ROOT, storagePath);
+  await writeLocalFileBuffer(publicPath, file.buffer);
 
   return {
     ...basePayload,

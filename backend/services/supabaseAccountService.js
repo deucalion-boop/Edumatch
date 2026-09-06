@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { getSupabaseStorageClient } = require('./supabaseStorageService');
 const { USER_ROLES } = require('../constants/userRoles');
+const { assertPasswordMeetsPolicy } = require('../utils/passwordPolicy');
 
 const ACCOUNT_STATUSES = ['pending', 'active', 'inactive', 'suspended'];
 
@@ -136,6 +137,14 @@ async function createSupabaseAccount(payload) {
   return fromRow(data);
 }
 
+async function touchSupabaseAccountActivity(userId, lastActivityAt = new Date()) {
+  const client = getSupabaseStorageClient();
+  const { error } = await client.from('users').update({
+    last_activity_at: new Date(lastActivityAt).toISOString(),
+  }).eq('id', String(userId));
+  if (error) throw accountError(error, 'Failed to update account activity in Supabase');
+}
+
 async function findSupabaseAccount(field, value) {
   const allowedFields = new Set(['id', 'email', 'username', 'role', 'department']);
   if (!allowedFields.has(field)) throw accountError(null, 'Unsupported account lookup');
@@ -185,18 +194,36 @@ async function findSupabaseAccountByJsonToken(column, tokenHash) {
 }
 
 async function ensureDefaultSupabaseAdmin({ name, email, username, password }) {
-  let admin = await findSupabaseAccountByEmail(email);
-  if (!admin) admin = await findSupabaseAccount('role', 'admin');
-  if (!admin) {
-    return createSupabaseAccount({ name, email, username, password, role: 'admin', status: 'active' });
+  const existingAdmin = await findSupabaseAccount('role', 'admin');
+  if (existingAdmin) return existingAdmin;
+
+  const initialPassword = String(password || '').trim();
+  if (!initialPassword) {
+    throw accountError(null, 'ADMIN_PASSWORD must be explicitly configured to create the first administrator');
   }
-  admin.name = String(admin.name || name).trim() || name;
-  admin.email = String(email).trim().toLowerCase();
-  admin.username = String(username).trim();
-  admin.password = password;
-  admin.role = 'admin';
-  admin.status = 'active';
-  return admin.save();
+  assertPasswordMeetsPolicy(initialPassword);
+
+  const [emailAccount, usernameAccount] = await Promise.all([
+    findSupabaseAccountByEmail(email),
+    findSupabaseAccountByUsername(username),
+  ]);
+  if (emailAccount || usernameAccount) {
+    throw accountError({ code: '23505' }, 'Administrator bootstrap email or username is already assigned to an existing account');
+  }
+
+  try {
+    return await createSupabaseAccount({
+      name, email, username, password: initialPassword,
+      role: 'admin', status: 'active', forcePasswordChange: true,
+    });
+  } catch (error) {
+    // Concurrent server starts can race to insert the same initial account.
+    if (error.code === '23505') {
+      const concurrentAdmin = await findSupabaseAccount('role', 'admin');
+      if (concurrentAdmin) return concurrentAdmin;
+    }
+    throw error;
+  }
 }
 
 module.exports = {
@@ -209,4 +236,5 @@ module.exports = {
   findSupabaseAccountByJsonToken,
   listSupabaseAccounts,
   saveSupabaseAccount,
+  touchSupabaseAccountActivity,
 };

@@ -24,7 +24,7 @@ const {
 } = require('../controllers/adminController');
 const { getAdminAttendanceReport } = require('../controllers/attendanceController');
 const { getSectionDirectory } = require('../controllers/sectionController');
-const { uploadLimiter } = require('../middlewares/rateLimiters');
+const { inviteLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
 
 const router = express.Router();
 
@@ -37,7 +37,7 @@ router.get('/audit-logs', getAuditLogs);
 router.get('/login-attempts', getLoginAttempts);
 router.get('/export-requests/archived-pdf', getArchivedPdfExportRequests);
 router.patch('/export-requests/:id/review', reviewArchivedPdfExportRequest);
-router.post('/users/:id/send-invite', sendUserInvite);
+router.post('/users/:id/send-invite', inviteLimiter, sendUserInvite);
 router.get('/analytics', getAnalytics);
 router.get('/attendance/report', getAdminAttendanceReport);
 router.get('/sections', getSectionDirectory);

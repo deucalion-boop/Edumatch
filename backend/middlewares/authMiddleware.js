@@ -1,10 +1,7 @@
 const jwt = require('jsonwebtoken');
-const { findSupabaseAccount } = require('../services/supabaseAccountService');
-const { findActiveSession, touchSession } = require('../services/supabaseAuthPersistenceService');
-
-const DEFAULT_SESSION_TIMEOUT_MINUTES = 120;
-const DEFAULT_REMEMBERED_SESSION_TIMEOUT_DAYS = 30;
-const DEFAULT_MAINTENANCE_MESSAGE = 'The system is currently under maintenance. Please check back later.';
+const { findSupabaseAccount, touchSupabaseAccountActivity } = require('../services/supabaseAccountService');
+const { findActiveSession, revokeSession, touchSession } = require('../services/supabaseAuthPersistenceService');
+const { getAppSettings } = require('../services/supabaseSettingsService');
 
 async function authMiddleware(req, _res, next) {
   try {
@@ -22,7 +19,6 @@ async function authMiddleware(req, _res, next) {
       issuer: 'edumatch-api',
       audience: 'edumatch-web',
     });
-    const rememberSession = decoded?.remember === true;
 
     const user = await findSupabaseAccount('id', decoded.id);
 
@@ -56,36 +52,48 @@ async function authMiddleware(req, _res, next) {
       throw error;
     }
 
-    if (user.forcePasswordChange === true && !String(req.path || '').startsWith('/change-password')) {
+    const authRoute = String(req.baseUrl || '').replace(/\/+$/, '') === '/api/auth';
+    const routePath = String(req.path || '').replace(/\/+$/, '');
+    const isPresenceRequest = authRoute && req.method === 'POST' && routePath === '/presence';
+    const isAccountSecurityRequest = authRoute && (
+      (req.method === 'POST' && ['/change-password', '/logout'].includes(routePath))
+      || (req.method === 'GET' && routePath === '/sessions')
+      || (req.method === 'DELETE' && /^\/sessions\/[^/]+$/.test(routePath))
+    );
+
+    if (user.forcePasswordChange === true && !isAccountSecurityRequest && !isPresenceRequest) {
       const error = new Error('Password change required before continuing');
       error.statusCode = 403;
       throw error;
     }
 
-    const configuredSessionTimeoutMinutes = DEFAULT_SESSION_TIMEOUT_MINUTES;
-    const rememberedSessionTimeoutMinutes = DEFAULT_REMEMBERED_SESSION_TIMEOUT_DAYS * 24 * 60;
-    const sessionTimeoutMinutes = rememberSession
-      ? Math.max(configuredSessionTimeoutMinutes, rememberedSessionTimeoutMinutes)
-      : configuredSessionTimeoutMinutes;
-    const maintenanceModeEnabled = false;
-    const maintenanceMessage = DEFAULT_MAINTENANCE_MESSAGE;
+    const settings = await getAppSettings();
+    // Remember-me extends the absolute token lifetime, not the inactivity policy.
+    const { sessionTimeoutMinutes } = settings.security;
+    const { maintenanceModeEnabled, maintenanceMessage } = settings.maintenance;
     const now = new Date();
-    const lastActivityAt = user.lastActivityAt ? new Date(user.lastActivityAt) : null;
+    const lastSeenAt = new Date(session.lastSeenAt || session.last_seen_at || session.createdAt || session.created_at);
 
-    if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
+    if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin' && !isAccountSecurityRequest) {
       const error = new Error(maintenanceMessage);
       error.statusCode = 503;
       throw error;
     }
 
-    if (lastActivityAt && now.getTime() - lastActivityAt.getTime() > sessionTimeoutMinutes * 60 * 1000) {
+    if (!Number.isFinite(lastSeenAt.getTime()) || now.getTime() - lastSeenAt.getTime() >= sessionTimeoutMinutes * 60 * 1000) {
+      await revokeSession(user._id, session._id, 'Inactivity timeout');
       const error = new Error('Session expired due to inactivity. Please sign in again.');
       error.statusCode = 401;
       throw error;
     }
 
     user.lastActivityAt = now;
-    await Promise.all([user.save(), touchSession(session._id, now)]);
+    // A background presence heartbeat must not keep an otherwise idle session
+    // alive. Updating one presence column also avoids overwriting account changes.
+    await Promise.all([
+      touchSupabaseAccountActivity(user._id, now),
+      ...(isPresenceRequest ? [] : [touchSession(session._id, now)]),
+    ]);
 
     req.user = user;
     req.token = token;

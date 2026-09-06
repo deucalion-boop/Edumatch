@@ -7,6 +7,24 @@ function normalizeError(error, message) {
   return normalized;
 }
 
+function mapSession(row) {
+  if (!row) return null;
+  return {
+    _id: row.id,
+    id: row.id,
+    userId: row.user_id,
+    tokenId: row.token_id,
+    ipAddress: row.ip_address || '',
+    userAgent: row.user_agent || '',
+    remember: row.remember === true,
+    lastSeenAt: row.last_seen_at,
+    expiresAt: row.expires_at,
+    revokedAt: row.revoked_at || null,
+    revokedReason: row.revoked_reason || '',
+    createdAt: row.created_at,
+  };
+}
+
 async function createSession(payload) {
   const client = getSupabaseStorageClient();
   const { data, error } = await client.from('sessions').insert({
@@ -16,7 +34,7 @@ async function createSession(payload) {
     expires_at: new Date(payload.expiresAt).toISOString(),
   }).select('*').single();
   if (error) throw normalizeError(error, 'Failed to create session');
-  return { _id: data.id, userId: data.user_id, tokenId: data.token_id, ...data };
+  return mapSession(data);
 }
 
 async function sessionExists(userId, userAgent) {
@@ -33,7 +51,29 @@ async function findActiveSession(userId, tokenId) {
     .eq('user_id', String(userId)).eq('token_id', tokenId).is('revoked_at', null)
     .gt('expires_at', new Date().toISOString()).limit(1).maybeSingle();
   if (error) throw normalizeError(error, 'Failed to read session');
-  return data ? { _id: data.id, ...data } : null;
+  return mapSession(data);
+}
+
+async function listActiveSessions(userId) {
+  const client = getSupabaseStorageClient();
+  const { data, error } = await client.from('sessions').select('*')
+    .eq('user_id', String(userId)).is('revoked_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .order('last_seen_at', { ascending: false });
+  if (error) throw normalizeError(error, 'Failed to list sessions');
+  return (data || []).map(mapSession);
+}
+
+async function revokeSession(userId, sessionId, reason) {
+  const client = getSupabaseStorageClient();
+  const { data, error } = await client.from('sessions').update({
+    revoked_at: new Date().toISOString(), revoked_reason: String(reason || ''),
+  }).eq('id', String(sessionId)).eq('user_id', String(userId)).is('revoked_at', null)
+    .select('*').maybeSingle();
+  // Invalid UUIDs are unknown sessions, just like well-formed IDs with no match.
+  if (error?.code === '22P02') return null;
+  if (error) throw normalizeError(error, 'Failed to revoke session');
+  return mapSession(data);
 }
 
 async function touchSession(id, lastSeenAt = new Date()) {
@@ -48,6 +88,27 @@ async function revokeUserSessions(userId, reason) {
     revoked_at: new Date().toISOString(), revoked_reason: String(reason || ''),
   }).eq('user_id', String(userId)).is('revoked_at', null);
   if (error) throw normalizeError(error, 'Failed to revoke sessions');
+}
+
+async function revokeNonAdminSessions(reason) {
+  const client = getSupabaseStorageClient();
+  const revokedAt = new Date().toISOString();
+  const pageSize = 500;
+  let revokedCount = 0;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data: users, error: usersError } = await client.from('users').select('id')
+      .neq('role', 'admin').order('id').range(offset, offset + pageSize - 1);
+    if (usersError) throw normalizeError(usersError, 'Failed to read accounts for session revocation');
+    for (let index = 0; index < (users || []).length; index += 100) {
+      const userIds = users.slice(index, index + 100).map((user) => user.id);
+      const { count, error } = await client.from('sessions').update({
+        revoked_at: revokedAt, revoked_reason: String(reason || ''),
+      }, { count: 'exact' }).in('user_id', userIds).is('revoked_at', null);
+      if (error) throw normalizeError(error, 'Failed to revoke non-administrator sessions');
+      revokedCount += Number(count || 0);
+    }
+    if ((users || []).length < pageSize) return revokedCount;
+  }
 }
 
 function hydrateChallenge(data) {
@@ -208,5 +269,6 @@ async function listLoginAttempts({ search = '', outcome = '', role = '', page = 
 
 module.exports = {
   consumeOpenChallenges, createChallenge, createSession, deleteChallenge, findActiveChallenge,
-  findActiveSession, listLoginAttempts, recordLoginAttempt, revokeUserSessions, saveChallenge, sessionExists, touchSession,
+  findActiveSession, listActiveSessions, listLoginAttempts, recordLoginAttempt, revokeSession,
+  revokeNonAdminSessions, revokeUserSessions, saveChallenge, sessionExists, touchSession,
 };
