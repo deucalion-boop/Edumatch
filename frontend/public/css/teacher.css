@@ -5451,3 +5451,39 @@ body.teacher-dashboard .record-link-button .fa-pen {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
 }
+
+/* Class action menu: outlined semantic actions on a white surface. */
+body.teacher-dashboard .dashboard-panel .subject-actions-menu .record-link-button {
+    background: #ffffff !important;
+    background-image: none !important;
+}
+
+body.teacher-dashboard .dashboard-panel .subject-actions-menu .subject-students-btn {
+    border-color: #22c55e !important;
+    color: #166534 !important;
+}
+
+body.teacher-dashboard .dashboard-panel .subject-actions-menu .subject-copy-btn {
+    border-color: #94a3b8 !important;
+    color: #334155 !important;
+}
+
+body.teacher-dashboard .dashboard-panel .subject-actions-menu .subject-edit-btn {
+    border-color: #3b82f6 !important;
+    color: #1d4ed8 !important;
+}
+
+body.teacher-dashboard .dashboard-panel .subject-actions-menu .subject-delete-btn {
+    border-color: #ef4444 !important;
+    color: #b91c1c !important;
+}
+
+body.teacher-dashboard .dashboard-panel .subject-actions-menu .record-link-button i[class*="fa-"] {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+body.teacher-dashboard .dashboard-panel .subject-actions-menu .record-link-button:hover:not(:disabled) {
+    background: #ffffff !important;
+    filter: brightness(0.97);
+}
