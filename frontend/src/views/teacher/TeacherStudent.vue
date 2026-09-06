@@ -538,25 +538,6 @@
             </div>
             <p v-if="createClassMessage" class="class-form-feedback" :class="createClassMessageType">{{ createClassMessage }}</p>
             <div class="modal-panel-actions">
-              <button type="button" class="btn btn-outline" @click="closeCreateClassModal">Cancel</button>
-              <button
-                v-if="hasCreateClassReference"
-                type="button"
-                class="btn btn-outline"
-                @click="resetCreateClassWorkflow"
-                :disabled="isCreatingClass"
-              >
-                Reset Pattern
-              </button>
-              <button
-                v-if="canCreateAnotherClass"
-                type="button"
-                class="btn btn-outline"
-                @click="prepareNextClassFromReference"
-                :disabled="isCreatingClass"
-              >
-                Create Another Class
-              </button>
               <button type="submit" class="btn btn-primary" :disabled="isCreatingClass">
                 <i class="fas" :class="isCreatingClass ? 'fa-spinner fa-spin' : 'fa-plus-circle'"></i>
                 {{ isCreatingClass ? 'Creating...' : 'Create Class' }}
@@ -982,7 +963,6 @@ const teacherAvatarUrl = computed(() => {
 })
 const classNamePlaceholder = computed(() => `${teacherSubject.value || 'Subject'} 10`)
 const hasCreateClassReference = computed(() => createClassReference.hasReference)
-const canCreateAnotherClass = computed(() => createClassMessageType.value === 'success' && hasCreateClassReference.value)
 const ENROLLMENT_REQUESTS_PAGE_SIZE = 5
 const enrollmentRequestsPage = ref(1)
 const enrollmentRequestsTotalPages = computed(() => Math.max(1, Math.ceil(enrollmentRequests.value.length / ENROLLMENT_REQUESTS_PAGE_SIZE)))
@@ -1418,14 +1398,6 @@ const resetCreateClassForm = ({ preserveWorkflow = false } = {}) => {
   createClassForm.subject = teacherSubject.value || ''
   createClassMessage.value = ''
   createClassMessageType.value = 'success'
-}
-
-const prepareNextClassFromReference = () => {
-  resetCreateClassForm({ preserveWorkflow: true })
-}
-
-const resetCreateClassWorkflow = () => {
-  resetCreateClassForm({ preserveWorkflow: false })
 }
 
 const openCreateClassModal = () => {
