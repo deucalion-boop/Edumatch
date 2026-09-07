@@ -60,7 +60,7 @@
           </form>
 
           <div class="auth-footer">
-            <RouterLink to="/auth/login"><i class="fas fa-arrow-left"></i> Return to sign in</RouterLink>
+            <RouterLink to="/auth/login"><i class="fas fa-arrow-left return-arrow-icon"></i> Return to sign in</RouterLink>
           </div>
         </div>
       </div>
@@ -236,6 +236,10 @@ export default {
   gap: 0.5rem;
   color: #3f7f2a;
   font-weight: 700;
+}
+
+.forgot-password-card .auth-footer .return-arrow-icon {
+  color: #3f7f2a !important;
 }
 
 .forgot-password-card .auth-footer a:hover {
