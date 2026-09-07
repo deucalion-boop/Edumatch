@@ -251,10 +251,64 @@ export default {
 }
 
 @media (max-width: 520px) {
-  .forgot-password-card {
-    padding: 1.65rem 1.25rem;
-    border-radius: 22px;
+  .forgot-password-page .auth-card-wrapper {
+    width: min(100%, 360px);
   }
 
+  .forgot-password-card {
+    padding: 1.2rem 1rem;
+    border-radius: 18px;
+  }
+
+  .forgot-password-card .auth-card-header {
+    margin-bottom: 0.9rem;
+  }
+
+  .forgot-password-card .auth-card-title {
+    margin-bottom: 0.3rem;
+    font-size: 1.4rem;
+  }
+
+  .forgot-password-card .auth-card-subtitle {
+    max-width: 290px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .forgot-password-card .auth-form {
+    gap: 0.7rem;
+  }
+
+  .forgot-password-card .auth-form-label {
+    margin-bottom: 0.35rem;
+    font-size: 0.78rem;
+  }
+
+  .forgot-password-card .auth-form-input {
+    min-height: 42px;
+    padding-block: 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .forgot-password-card .auth-actions {
+    margin-top: 0.55rem;
+  }
+
+  .forgot-password-card .auth-submit-btn {
+    min-height: 44px;
+    padding: 0.65rem;
+    border-radius: 11px;
+    font-size: 0.8rem;
+  }
+
+  .forgot-password-card .auth-footer {
+    margin-top: 0.9rem;
+    padding-top: 0.75rem;
+  }
+
+  .forgot-password-card .auth-footer a {
+    gap: 0.4rem;
+    font-size: 0.8rem;
+  }
 }
 </style>
