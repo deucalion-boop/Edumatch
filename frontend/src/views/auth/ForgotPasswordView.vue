@@ -143,11 +143,11 @@ export default {
   position: relative;
   overflow: hidden;
   padding: 2.25rem;
-  border: 1px solid transparent;
+  border: 2px solid transparent !important;
   border-radius: 26px;
   background:
     linear-gradient(rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.94)) padding-box,
-    linear-gradient(135deg, #1e4307, #ffd542 42%, #bbff59) border-box;
+    linear-gradient(135deg, #1e4307, #ffd542 42%, #bbff59) border-box !important;
   box-shadow: 0 28px 70px rgba(63, 127, 42, 0.17);
   backdrop-filter: blur(16px);
 }
