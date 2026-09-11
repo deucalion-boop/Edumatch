@@ -1,3 +1,5 @@
+const { subjectStudents, removeSubjectStudent, requireTeacherSubject, saveStudentProgress } = require('../services/supabaseTeacherStudentsService');
+const { readProfileRows } = require('../services/supabaseUserProfileService');
 const { teacherRequests, decideTeacherRequest, teacherResultData } = require('../services/supabaseTeacherRecordsService');
 const { nameError, phoneError } = require('../utils/teacherValidation');
 const path = require('path');
@@ -5,9 +7,7 @@ const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
 const Subject = require('../models/Subject');
-const SubjectEnrollment = require('../models/SubjectEnrollment');
 const Attendance = require('../models/Attendance');
-const User = require('../models/User');
 const Recommendation = require('../models/Recommendation');
 const { sendSuccess } = require('../utils/responseHelper');
 const { computeMasteryFromSubmissions } = require('../utils/studentProgress');
@@ -1729,6 +1729,7 @@ const getAssessmentResultsSummary = asyncHandler(async (req, res) => {
 
 const getTeacherStudents = asyncHandler(async (req, res) => {
   const subjectFilter = String(req.query.subjectId || '').trim();
+  if (subjectFilter) await requireTeacherSubject(req.user._id, subjectFilter);
   const subjects = await syncTeacherSubjects(req.user._id);
   const allowedSubjectIds = subjects
     .filter((subject) => !subjectFilter || String(subject._id) === subjectFilter)
@@ -1738,25 +1739,12 @@ const getTeacherStudents = asyncHandler(async (req, res) => {
     return sendSuccess(res, 200, 'Students fetched successfully', { students: [] });
   }
 
-  const [approvedEnrollments, teacherAssessments] = await Promise.all([
-    allowedSubjectIds.length > 0
-      ? SubjectEnrollment.find({
-        teacherId: req.user._id,
-        subjectId: { $in: allowedSubjectIds },
-        status: 'approved',
-      })
-        .populate('studentId', '_id name email status profileImage gradeLevel department sectionId archive')
-        .populate('sectionId', 'name')
-        .populate('subjectId', 'name className code track')
-        .sort({ createdAt: -1 })
-        .lean()
-      : Promise.resolve([]),
-    Assessment.find(buildTeacherAssessmentAccessQuery({
-      teacherId: req.user._id,
-      allowedSubjectIds,
-      includeUnlinkedActivities: !subjectFilter,
-    })).select('_id subjectId').lean(),
+  const [approvedEnrollments, allAssessments] = await Promise.all([
+    teacherRequests(req.user._id, subjectFilter, 'approved'),
+    readProfileRows('assessments', 'created_by', req.user._id),
   ]);
+  const teacherAssessments = allAssessments.filter(row => allowedSubjectIds.includes(row.subjectId)
+    || (!subjectFilter && row.assessmentMode === 'activity' && !row.lessonId));
 
   const students = uniqueBy(
     approvedEnrollments
@@ -1771,9 +1759,7 @@ const getTeacherStudents = asyncHandler(async (req, res) => {
   const assessmentIds = teacherAssessments.map((assessment) => assessment._id);
   const totalChallenges = assessmentIds.length;
   const recommendationRows = students.length > 0
-    ? await Recommendation.find({ studentId: { $in: students.map((student) => student._id) } })
-      .select('studentId subjectPerformance strandScores recommendedStrand recommendationExplanation updatedAt')
-      .lean()
+    ? await readProfileRows('recommendations', 'student_id', students.map(student => student._id))
     : [];
   const recommendationsByStudentId = new Map(
     recommendationRows.map((row) => [String(row.studentId), row])
@@ -1806,10 +1792,8 @@ const getTeacherStudents = asyncHandler(async (req, res) => {
 
   const submissionStatsByStudent = new Map();
   if (assessmentIds.length > 0) {
-    const submissions = await Submission.find({ assessmentId: { $in: assessmentIds } })
-      .select('studentId assessmentId score totalPoints submittedAt')
-      .sort({ submittedAt: -1 })
-      .lean();
+    const submissions = (await readProfileRows('submissions', 'assessment_id', assessmentIds))
+      .sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt));
 
     const latestByStudentAndAssessment = new Map();
     for (const submission of submissions) {
@@ -1841,19 +1825,7 @@ const getTeacherStudents = asyncHandler(async (req, res) => {
     const averageScore = mastery.averageScore;
     const recommendation = recommendationsByStudentId.get(id) || null;
 
-    bulkProgressUpdates.push({
-      updateOne: {
-        filter: { _id: student._id },
-        update: {
-          $set: {
-            'enrollment.progress.masteryProgress': mastery.masteryProgress,
-            'enrollment.progress.averageScore': mastery.averageScore,
-            'enrollment.progress.completedAssessments': mastery.completedAssessments,
-            'enrollment.progress.lastCalculatedAt': mastery.lastCalculatedAt,
-          },
-        },
-      },
-    });
+    bulkProgressUpdates.push(() => saveStudentProgress(student, mastery));
 
     return {
       id,
@@ -1889,7 +1861,7 @@ const getTeacherStudents = asyncHandler(async (req, res) => {
   });
 
   if (bulkProgressUpdates.length > 0) {
-    await User.bulkWrite(bulkProgressUpdates, { ordered: false });
+    await Promise.all(bulkProgressUpdates.map(save => save()));
   }
 
   return sendSuccess(res, 200, 'Students fetched successfully', {
@@ -2021,22 +1993,7 @@ const getEnrollmentRequests = asyncHandler(async (req, res) => {
 
 const getTeacherSubjectStudents = asyncHandler(async (req, res) => {
   const { subjectId } = req.params;
-  const subject = await Subject.findOne({ _id: subjectId, teacherId: req.user._id }).lean();
-  if (!subject) {
-    const error = new Error('Subject not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const enrollments = await SubjectEnrollment.find({
-    teacherId: req.user._id,
-    subjectId,
-    status: 'approved',
-  })
-    .populate('studentId', '_id name email status profileImage sectionId gradeLevel department archive')
-    .populate('sectionId', 'name')
-    .sort({ createdAt: -1 })
-    .lean();
+  const { subject, enrollments } = await subjectStudents(req.user._id, subjectId);
 
   const students = uniqueBy(enrollments, (row) => String(row?.studentId?._id || ''))
     .filter((row) => !isArchivedStudent(row?.studentId))
@@ -2066,41 +2023,8 @@ const getTeacherSubjectStudents = asyncHandler(async (req, res) => {
 
 const removeTeacherSubjectStudent = asyncHandler(async (req, res) => {
   const { subjectId, studentId } = req.params;
-  const subject = await Subject.findOne({ _id: subjectId, teacherId: req.user._id }).lean();
-  if (!subject) {
-    const error = new Error('Subject not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const enrollment = await SubjectEnrollment.findOne({
-    teacherId: req.user._id,
-    subjectId,
-    studentId,
-    status: 'approved',
-  })
-    .populate('studentId', '_id name email profileImage sectionId')
-    .populate('sectionId', 'name');
-
-  if (!enrollment) {
-    const error = new Error('Approved student enrollment not found for this class');
-    error.statusCode = 404;
-    throw error;
-  }
-
+  const { subject, enrollment } = await removeSubjectStudent(req.user._id, subjectId, studentId);
   const student = enrollment.studentId || {};
-
-  await SubjectEnrollment.deleteOne({ _id: enrollment._id });
-  await Assessment.updateMany(
-    {
-      createdBy: req.user._id,
-      subjectId,
-      assignmentScope: 'handled_class',
-    },
-    {
-      $pull: { assignedStudentIds: student._id || studentId },
-    }
-  );
 
   return sendSuccess(res, 200, 'Student removed from class successfully', {
     subject: subjectToResponse(subject),

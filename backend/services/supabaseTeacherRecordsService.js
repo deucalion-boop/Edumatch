@@ -14,13 +14,13 @@ async function hydrateRequests(rows) {
     sectionId: sections.find(section => section.id === row.sectionId) || row.sectionId,
   }));
 }
-async function teacherRequests(teacherId, subjectFilter = '') {
+async function teacherRequests(teacherId, subjectFilter = '', status = 'pending') {
   const [rows, subjects] = await Promise.all([
     readProfileRows('subject_enrollments', 'teacher_id', teacherId),
     readProfileRows('subjects', 'teacher_id', teacherId),
   ]);
   const allowed = new Set(subjects.filter(s => !subjectFilter || s.id === subjectFilter).map(s => s.id));
-  return hydrateRequests(rows.filter(row => row.status === 'pending' && allowed.has(row.subjectId))
+  return hydrateRequests(rows.filter(row => row.status === status && allowed.has(row.subjectId))
     .sort((a, b) => Date.parse(b.requestedAt) - Date.parse(a.requestedAt)));
 }
 async function decideTeacherRequest(teacherId, requestId, status) {

@@ -1282,6 +1282,7 @@ const fetchStudents = async () => {
 const fetchSubjectStudents = async (subjectId = '') => {
   const normalizedSubjectId = String(subjectId || subjectPendingStudents.value?.id || '').trim()
   if (!normalizedSubjectId) {
+    showToast('error', 'Class ID is missing. Refresh the class list and try again.')
     subjectStudents.value = []
     return
   }
@@ -1496,8 +1497,9 @@ const removeStudentFromSubject = async (student) => {
       `${resolveApiBaseUrl()}/teacher/subjects/${encodeURIComponent(subjectId)}/students/${encodeURIComponent(studentId)}`,
       getAuthConfig()
     )
+    subjectStudents.value = subjectStudents.value.filter((row) => String(row.id) !== studentId)
     showToast('success', `${studentLabel} was removed from ${classLabel}.`)
-    await Promise.all([fetchSubjects(), fetchStudents()])
+    await Promise.allSettled([fetchSubjects(), fetchStudents()])
     subjectPendingStudents.value = subjects.value.find((subject) => subject.id === subjectId) || subjectPendingStudents.value
     await fetchSubjectStudents(subjectId)
   } catch (error) {
