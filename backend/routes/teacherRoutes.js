@@ -52,6 +52,7 @@ router.post(
   createLesson
 );
 router.post('/subjects', createTeacherClass);
+router.post('/subjects/:subjectId/announcements', require('../controllers/studentAnnouncementController').publishAnnouncement);
 router.get('/lessons', getTeacherLessons);
 router.patch('/lessons/:id', updateTeacherLesson);
 router.post('/lessons/:id/classes', copyTeacherLessonToClasses);

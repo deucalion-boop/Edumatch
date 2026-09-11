@@ -51,7 +51,7 @@ const markAllNotificationsViewed = asyncHandler(async (req, res) => {
   await markAllViewedInSupabase({ recipientId, recipientRole });
 
   return sendSuccess(res, 200, 'Notifications marked as viewed', {
-    unreadCount: 0,
+    unreadCount: await countUnreadNotifications({ recipientId, recipientRole }),
   });
 });
 
@@ -70,6 +70,7 @@ const markNotificationViewed = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, 200, 'Notification marked as viewed', {
     notification: normalizeNotification(notification),
+    unreadCount: await countUnreadNotifications({ recipientId: req.user._id, recipientRole: req.user.role }),
   });
 });
 

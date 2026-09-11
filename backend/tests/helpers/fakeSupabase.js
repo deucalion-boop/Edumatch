@@ -10,6 +10,7 @@ function createFakeSupabase(initialTables = {}) {
     const filters = [];
     let operation = 'select';
     let payload;
+    let upsertOptions = {};
     let sorting;
     let start = 0;
     let end = Infinity;
@@ -29,7 +30,7 @@ function createFakeSupabase(initialTables = {}) {
       insert(value) { operation = 'insert'; payload = value; return query; },
       delete() { operation = 'delete'; return query; },
       update(value) { operation = 'update'; payload = value; return query; },
-      upsert(value) { operation = 'upsert'; payload = value; return query; },
+      upsert(value, options = {}) { operation = 'upsert'; payload = value; upsertOptions = options; return query; },
       maybeSingle() { single = true; return query; },
       single() { single = true; return query; },
       then(resolve, reject) {
@@ -40,15 +41,18 @@ function createFakeSupabase(initialTables = {}) {
           }
           let rows = tables[table].filter((row) => filters.every((filter) => filter(row)));
           if (operation === 'insert' || operation === 'upsert') {
-            let row = operation === 'upsert' && tables[table].find((candidate) => candidate.id === payload.id);
-            if (row) {
-              Object.assign(row, structuredClone(payload));
-            } else {
-              const now = new Date().toISOString();
-              row = { id: randomUUID(), created_at: now, revoked_at: null, ...structuredClone(payload) };
-              tables[table].push(row);
+            rows = [];
+            for (const value of Array.isArray(payload) ? payload : [payload]) {
+              const fields = (upsertOptions.onConflict || 'id').split(',');
+              let row = operation === 'upsert' && tables[table].find(candidate => fields.every(field => candidate[field] === value[field]));
+              if (row && upsertOptions.ignoreDuplicates) continue;
+              if (row) Object.assign(row, structuredClone(value));
+              else {
+                row = { id: randomUUID(), created_at: new Date().toISOString(), revoked_at: null, ...structuredClone(value) };
+                tables[table].push(row);
+              }
+              rows.push(row);
             }
-            rows = [row];
           } else if (operation === 'update') {
             rows.forEach((row) => Object.assign(row, structuredClone(payload)));
           }

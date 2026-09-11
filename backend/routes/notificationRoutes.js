@@ -11,6 +11,7 @@ const router = express.Router();
 
 router.use(authMiddleware);
 router.get('/', getMyNotifications);
+router.get('/announcement', require('../controllers/studentAnnouncementController').getAnnouncement);
 router.delete('/', clearAllNotifications);
 router.patch('/view-all', markAllNotificationsViewed);
 router.patch('/:id/view', markNotificationViewed);

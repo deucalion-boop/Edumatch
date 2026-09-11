@@ -350,7 +350,14 @@ export default {
       return 'Lessons appear here after you join a class with a valid code.'
     }
   },
+  watch: {
+    '$route.query.lessonId'() { this.fetchLessons() }
+  },
   methods: {
+    openNotificationLesson() {
+      const lesson = this.lessons.find(row => String(row.id) === String(this.$route.query.lessonId || ''))
+      if (lesson) { this.selectedSubjectId = this.normalizeId(lesson.subjectId); this.selectedLessonId = lesson.id }
+    },
     handleTourFocus(event) {
       this.pendingTourAction = String(event?.detail?.action || '').trim()
       this.applyPendingTourAction()
@@ -511,6 +518,7 @@ export default {
         this.pendingSubjects = Array.isArray(response.data?.pendingSubjects) ? response.data.pendingSubjects : []
         this.syncSelectedSubject()
         this.syncSelectedLesson()
+        this.openNotificationLesson()
       } catch (error) {
         console.error('[StudentLessons] Failed to fetch classes:', error)
         this.subjects = []
@@ -574,6 +582,7 @@ export default {
         this.lessonsEmptyMessage = 'No lessons available yet. Join a class and wait for teacher approval to access lesson materials.'
         this.syncSelectedSubject()
         this.syncSelectedLesson()
+        this.openNotificationLesson()
         this.applyPendingTourAction()
       } catch (error) {
         console.error('[StudentLessons] Failed to fetch lessons:', error)

@@ -740,6 +740,7 @@ const createLesson = asyncHandler(async (req, res) => {
     throw saveError;
   }
 
+  await safelyRunNotificationTask('new lesson', () => notifyLessonPublished({ lesson, publisher: req.user }));
   return sendSuccess(res, 201, 'Lesson created successfully', {
     lesson: lessonToResponse(lesson, req),
   });
@@ -1539,6 +1540,7 @@ const createAssessment = asyncHandler(async (req, res) => {
     throw saveError;
   }
 
+  await safelyRunNotificationTask('new assessment', () => notifyAssessmentAssigned({ assessment, publisher: req.user }));
   return sendSuccess(res, 201, 'Assessment created successfully', { assessment });
 });
 

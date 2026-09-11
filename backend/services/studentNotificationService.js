@@ -1,9 +1,7 @@
+const { readProfileRows } = require('./supabaseUserProfileService');
+const { availableAssessments, studentSubmissions } = require('./supabaseStudentDashboardService');
 const crypto = require('crypto');
-const Assessment = require('../models/Assessment');
 const { upsertNotifications } = require('./supabaseNotificationService');
-const Recommendation = require('../models/Recommendation');
-const Submission = require('../models/Submission');
-const SubjectEnrollment = require('../models/SubjectEnrollment');
 
 const STUDENT_ROLE = 'student';
 const UPCOMING_DEADLINE_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -62,39 +60,48 @@ async function createStudentNotifications({
   })));
 }
 
-async function approvedStudentsForSubject(subjectId) {
-  if (!subjectId) return [];
-  const rows = await SubjectEnrollment.find({ subjectId, status: 'approved' })
-    .select('studentId')
-    .lean();
-  return rows.map((row) => row.studentId).filter(Boolean);
+async function approvedStudentsForSubject(subjectId, teacherId) {
+  const id = clean(subjectId?._id || subjectId?.id || subjectId);
+  if (!id) return [];
+  const subject = (await readProfileRows('subjects', 'id', id))[0];
+  if (!subject || String(subject.teacherId) !== String(teacherId)) return [];
+  const rows = await readProfileRows('subject_enrollments', 'subject_id', id);
+  const ids = rows.filter(row => row.status === 'approved' && String(row.teacherId) === String(teacherId)).map(row => row.studentId);
+  if (!ids.length) return [];
+  return (await readProfileRows('users', 'id', ids)).filter(row => row.role === 'student' && row.status === 'active' && row.archive?.isArchived !== true).map(row => row.id);
 }
-
-async function resolveAssessmentRecipients(assessment) {
-  const explicitlyAssigned = Array.isArray(assessment?.assignedStudentIds)
-    ? assessment.assignedStudentIds.filter(Boolean)
-    : [];
-  if (explicitlyAssigned.length > 0) return explicitlyAssigned;
-  return approvedStudentsForSubject(assessment?.subjectId || assessment?.lessonId?.subjectId);
+async function resolveAssessmentRecipients(assessment, publisher) {
+  const teacherId = publisher?._id || publisher?.id || assessment.createdBy;
+  let eligible;
+  if (assessment.assignmentScope === 'advisory_class') {
+    const teacher = (await readProfileRows('users', 'id', teacherId))[0];
+    eligible = teacher?.advisorySectionId ? (await readProfileRows('users', 'section_id', teacher.advisorySectionId))
+      .filter(row => row.role === 'student' && row.status === 'active' && row.archive?.isArchived !== true).map(row => row.id) : [];
+  } else {
+    eligible = await approvedStudentsForSubject(assessment.subjectId || assessment.lessonId?.subjectId, teacherId);
+  }
+  const assigned = Array.isArray(assessment.assignedStudentIds) ? assessment.assignedStudentIds.map(String) : [];
+  return assigned.length ? eligible.filter(id => assigned.includes(String(id))) : eligible;
 }
 
 async function notifyLessonPublished({ lesson, publisher }) {
-  const recipientIds = await approvedStudentsForSubject(lesson?.subjectId);
+  const recipientIds = await approvedStudentsForSubject(lesson?.subjectId, lesson?.createdBy?._id || lesson?.createdBy || publisher?._id);
   return createStudentNotifications({
     recipientIds,
     sender: publisher,
     type: 'lesson_published',
-    title: 'New lesson published',
-    subject: clean(lesson?.title, 'New lesson'),
+    title: clean(lesson?.title, 'New Lesson'),
+    subject: clean(lesson?.subject, 'your class'),
     preview: `${clean(publisher?.name, 'Your teacher')} published a new ${clean(lesson?.subject, 'class')} lesson.`,
     eventKey: `lesson:${clean(lesson?._id)}`,
-    meta: { route: '/student/lessons', entityType: 'lesson', entityId: clean(lesson?._id) },
+    meta: { route: '/student/lessons?lessonId=' + encodeURIComponent(clean(lesson?._id)), contentType: 'Lesson', entityType: 'lesson', entityId: clean(lesson?._id) },
   });
 }
 
 async function notifyAssessmentAssigned({ assessment, publisher }) {
-  const recipientIds = await resolveAssessmentRecipients(assessment);
+  const recipientIds = await resolveAssessmentRecipients(assessment, publisher);
   const isActivity = clean(assessment?.assessmentMode).toLowerCase() === 'activity';
+  const contentType = isActivity ? 'Activity' : clean(assessment?.assessmentMode).toLowerCase() === 'quiz' ? 'Quiz' : 'Exam';
   const deadline = assessment?.submissionDeadline ? new Date(assessment.submissionDeadline) : null;
   const deadlineText = deadline && !Number.isNaN(deadline.getTime())
     ? ` Due ${deadline.toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}.`
@@ -103,11 +110,11 @@ async function notifyAssessmentAssigned({ assessment, publisher }) {
     recipientIds,
     sender: publisher,
     type: isActivity ? 'activity_assigned' : 'assessment_assigned',
-    title: isActivity ? 'New activity assigned' : 'New assessment assigned',
-    subject: clean(assessment?.title, isActivity ? 'New activity' : 'New assessment'),
-    preview: `${clean(publisher?.name, 'Your teacher')} assigned new work in ${clean(assessment?.subject, 'your class')}.${deadlineText}`,
+    title: clean(assessment?.title, 'New ' + contentType),
+    subject: clean(assessment?.subject, 'your class'),
+    preview: `A new ${contentType} has been posted in ${clean(assessment?.subject, 'your class')}.${deadlineText}`,
     eventKey: `assessment:${clean(assessment?._id)}`,
-    meta: { route: '/student/activities', entityType: 'assessment', entityId: clean(assessment?._id) },
+    meta: { route: '/student/activities?assessmentId=' + encodeURIComponent(clean(assessment?._id)), contentType, entityType: 'assessment', entityId: clean(assessment?._id) },
   });
 }
 
@@ -144,25 +151,9 @@ async function notifyAutomatedGrade({ submission, assessment }) {
 async function syncUpcomingDeadlines(studentId) {
   const now = new Date();
   const deadlineLimit = new Date(now.getTime() + UPCOMING_DEADLINE_WINDOW_MS);
-  const approvedSubjectIds = (await SubjectEnrollment.find({ studentId, status: 'approved' })
-    .select('subjectId')
-    .lean()).map((row) => row.subjectId).filter(Boolean);
-
-  const assessments = await Assessment.find({
-    submissionDeadline: { $gt: now, $lte: deadlineLimit },
-    $or: [
-      { assignedStudentIds: studentId },
-      ...(approvedSubjectIds.length > 0 ? [{ assignedStudentIds: { $size: 0 }, subjectId: { $in: approvedSubjectIds } }] : []),
-    ],
-  }).select('_id title subject assessmentMode submissionDeadline').lean();
-  if (assessments.length === 0) return;
-
-  const submittedIds = new Set((await Submission.find({
-    studentId,
-    assessmentId: { $in: assessments.map((row) => row._id) },
-    status: { $in: ['completed', 'auto_submitted', 'terminated'] },
-  }).select('assessmentId').lean()).map((row) => clean(row.assessmentId)));
-
+  const approvedSubjectIds = (await readProfileRows('subject_enrollments', 'student_id', studentId)).filter(row => row.status === 'approved').map(row => row.subjectId);
+  const assessments = (await availableAssessments(studentId, approvedSubjectIds)).filter(row => new Date(row.submissionDeadline) > now && new Date(row.submissionDeadline) <= deadlineLimit);
+  const submittedIds = new Set((await studentSubmissions(studentId, true)).map(row => clean(row.assessmentId?._id)));
   await Promise.all(assessments
     .filter((assessment) => !submittedIds.has(clean(assessment._id)))
     .map((assessment) => createStudentNotifications({
@@ -178,14 +169,7 @@ async function syncUpcomingDeadlines(studentId) {
 }
 
 async function syncGradesAndFeedback(studentId) {
-  const submissions = await Submission.find({
-    studentId,
-    $or: [
-      { gradeValue: { $exists: true, $ne: null } },
-      { teacherFeedback: { $exists: true, $nin: ['', null] } },
-    ],
-  }).populate('assessmentId', 'title assessmentMode').sort({ updatedAt: -1 }).limit(50).lean();
-
+  const submissions = (await studentSubmissions(studentId)).filter(row => row.gradeValue != null || clean(row.teacherFeedback) || row.gradedAt).slice(0, 60);
   const tasks = [];
   submissions.forEach((submission) => {
     const assessmentTitle = clean(submission?.assessmentId?.title, 'Activity');
@@ -217,7 +201,7 @@ async function syncGradesAndFeedback(studentId) {
 }
 
 async function syncRecommendation(studentId) {
-  const recommendation = await Recommendation.findOne({ studentId }).lean();
+  const recommendation = (await readProfileRows('recommendations', 'student_id', studentId))[0];
   const attempts = Array.isArray(recommendation?.assessmentAttempts) ? recommendation.assessmentAttempts : [];
   if (attempts.length === 0) return;
   const strand = clean(recommendation?.recommendedStrand?.name);
@@ -254,6 +238,8 @@ async function safelyRunNotificationTask(label, task) {
 }
 
 module.exports = {
+  approvedStudentsForSubject,
+  createStudentNotifications,
   notifyAssessmentAssigned,
   notifyAutomatedGrade,
   notifyLessonPublished,

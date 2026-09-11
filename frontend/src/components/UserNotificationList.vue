@@ -29,8 +29,10 @@
             <span class="user-notification-title">{{ notification.title }}</span>
             <span v-if="notification.urgent" class="user-notification-badge">Urgent</span>
           </div>
+          <span v-if="showReadActions" class="user-notification-meta">{{ notification.meta?.contentType || notification.type.replaceAll('_', ' ') }} &middot; {{ notification.isViewed ? 'Read' : 'Unread' }}</span>
           <p class="user-notification-subject">{{ notification.subject }}</p>
           <p class="user-notification-preview">{{ notification.preview }}</p>
+          <button v-if="showReadActions && !notification.isViewed" type="button" class="notification-read-action" @click.stop="emit('mark-read', notification)" @keydown.stop>Mark as Read</button>
           <div class="user-notification-meta">
             <span>{{ notification.senderName || 'EduMatch' }}</span>
             <span>{{ formatTimestamp(notification.createdAt) }}</span>
@@ -48,6 +50,8 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const props = defineProps({
+  manualNavigation: Boolean,
+  showReadActions: Boolean,
   notifications: {
     type: Array,
     default: () => [],
@@ -62,7 +66,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['select'])
+const emit = defineEmits(['select', 'mark-read'])
 
 const ICONS_BY_TYPE = {
   lesson_published: 'fas fa-book-open',
@@ -98,7 +102,7 @@ function isClickable(notification) {
 function selectNotification(notification) {
   if (!isClickable(notification)) return
   emit('select', notification)
-  router.push(String(notification.meta.route)).catch(() => {})
+  if (!props.manualNavigation) router.push(String(notification.meta.route)).catch(() => {})
 }
 
 function formatTimestamp(value) {
@@ -117,6 +121,7 @@ function formatTimestamp(value) {
 </script>
 
 <style scoped>
+.notification-read-action { margin-top: .6rem; border: 1px solid #cbd5e1; border-radius: 6px; padding: .3rem .6rem; background: white; color: #2563eb; cursor: pointer; }
 .user-notification-state {
   padding: 1rem;
   text-align: center;
@@ -147,7 +152,7 @@ function formatTimestamp(value) {
 }
 
 .user-notification-item.unread {
-  border-color: #cfd9ea;
+  border-left: 4px solid #2563eb;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 

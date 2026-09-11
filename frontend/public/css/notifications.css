@@ -166,3 +166,8 @@
         max-height: calc(100vh - 96px);
     }
 }
+
+/* Keep the student read controls within the existing dropdown on small screens. */
+body.student-dashboard .notification-dropdown-header,
+body.student-dashboard .notification-dropdown-actions { flex-wrap: wrap; }
+body.student-dashboard .notification-count { width: auto; min-width: 20px; padding: 0 4px; }

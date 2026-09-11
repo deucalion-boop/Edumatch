@@ -170,15 +170,19 @@
                     >
                       Clear all
                     </button>
+                    <button type="button" class="notification-dropdown-clear" :disabled="!unreadNotificationCount" @click="markAllViewed">Mark All as Read</button>
                     <button type="button" class="notification-dropdown-close" @click="closeNotificationsPanel" aria-label="Close notifications">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
                 </div>
+                <p v-if="notificationError" role="alert">{{ notificationError }}</p>
                 <UserNotificationList
                   :notifications="notifications"
                   :loading="isNotificationsLoading"
-                  @select="closeNotificationsPanel"
+                  manual-navigation show-read-actions
+                  @mark-read="markNotificationViewed"
+                  @select="openNotification"
                 />
               </div>
             </div>
@@ -289,7 +293,15 @@ export default {
       toggleNotificationsPanel,
       closeNotificationsPanel,
       clearAllNotifications,
-    } = useUserNotifications({ limit: 8, pollIntervalMs: 15000 })
+      markAllViewed, markNotificationViewed, notificationError,
+    } = useUserNotifications({ limit: 50, pollIntervalMs: 5000, markViewedOnOpen: false })
+    const openNotification = async (notification) => {
+      if (!await markNotificationViewed(notification)) return
+      const route = String(notification.meta?.route || '')
+      if (!route.startsWith('/student/')) return
+      await router.push(route)
+      closeNotificationsPanel()
+    }
 
     const isTourActive = ref(false)
     const tourStepIndex = ref(0)
@@ -860,6 +872,7 @@ export default {
       handleLogout,
       toggleNotificationsPanel,
       closeNotificationsPanel,
+      openNotification, markAllViewed, markNotificationViewed, notificationError,
       clearAllNotifications,
       isTourActive,
       tourSteps,

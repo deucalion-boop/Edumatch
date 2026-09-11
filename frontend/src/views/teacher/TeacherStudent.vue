@@ -258,6 +258,7 @@
                     <i class="fas fa-users-gear"></i>
                     Manage Students
                   </button>
+                  <button type="button" role="menuitem" class="record-link record-link-button" @click="openAnnouncement(subject)"><i class="fas fa-bullhorn"></i> Post Announcement</button>
                   <button type="button" role="menuitem" class="record-link record-link-button subject-copy-btn" @click="subjectActionsMenuId = ''; copySubjectCode(subject)">
                     <i class="fas fa-copy"></i>
                     Copy Code
@@ -630,6 +631,18 @@
         </div>
       </div>
 
+      <div v-if="announcementSubject" class="modal-shell" @click.self="!announcementSaving && (announcementSubject = null)">
+        <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="announcement-title">
+          <div class="modal-panel-head"><h3 id="announcement-title">Post Announcement</h3><button type="button" class="modal-close-btn" :disabled="announcementSaving" @click="announcementSubject = null" aria-label="Close announcement">&times;</button></div>
+          <form class="class-form" @submit.prevent="postAnnouncement">
+            <p>Send to approved students in {{ announcementSubject.className || announcementSubject.name }}.</p>
+            <label class="class-form-group">Title<input v-model="announcementTitle" required maxlength="200" /></label>
+            <label class="class-form-group">Message<textarea v-model="announcementContent" required maxlength="5000" rows="6" style="width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:.75rem"></textarea></label>
+            <p v-if="announcementError" class="class-form-feedback error" role="alert">{{ announcementError }}</p>
+            <div class="modal-panel-actions"><button type="button" class="btn btn-outline" :disabled="announcementSaving" @click="announcementSubject = null">Cancel</button><button class="btn btn-primary" :disabled="announcementSaving">{{ announcementSaving ? 'Posting...' : 'Post Announcement' }}</button></div>
+          </form>
+        </section>
+      </div>
       <div v-if="isSubjectStudentsModalOpen && subjectPendingStudents" class="modal-shell" @click.self="closeSubjectStudentsModal">
         <div class="modal-panel subject-students-modal">
           <div class="modal-panel-head">
@@ -854,6 +867,31 @@ const classPendingEdit = ref(null)
 const classPendingDeletion = ref(null)
 const subjectPendingStudents = ref(null)
 const subjectStudents = ref([])
+const announcementSubject = ref(null)
+const announcementTitle = ref('')
+const announcementContent = ref('')
+const announcementError = ref('')
+const announcementSaving = ref(false)
+let announcementRequestId = ''
+function openAnnouncement(subject) {
+  subjectActionsMenuId.value = ''
+  announcementSubject.value = subject
+  announcementTitle.value = ''
+  announcementContent.value = ''
+  announcementError.value = ''
+  announcementRequestId = crypto.randomUUID()
+}
+async function postAnnouncement() {
+  if (announcementSaving.value) return
+  if (!announcementTitle.value.trim() || !announcementContent.value.trim()) { announcementError.value = 'Enter a title and message.'; return }
+  announcementSaving.value = true
+  try {
+    await axios.post(resolveApiBaseUrl() + '/teacher/subjects/' + encodeURIComponent(announcementSubject.value.id) + '/announcements', { title: announcementTitle.value, content: announcementContent.value, requestId: announcementRequestId }, getAuthConfig())
+    announcementSubject.value = null
+    showToast('success', 'Announcement posted.')
+  } catch (error) { announcementError.value = error.response?.data?.message || 'Unable to post announcement. Please try again.' }
+  finally { announcementSaving.value = false }
+}
 const toast = reactive({
   show: false,
   type: 'success',

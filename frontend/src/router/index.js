@@ -178,6 +178,7 @@ const routes = [
       { path: 'courses', redirect: '/student/lessons' },
       { path: 'challenges', redirect: '/student/activities' },
       { path: 'activities', name: 'student-activities', component: StudentActivities },
+      { path: 'announcements', name: 'student-announcements', component: () => import('../views/student/StudentAnnouncements.vue') },
       { path: 'profile', name: 'student-profile', component: StudentProfile },
       { path: 'settings', name: 'student-settings', component: StudentSettings },
       { path: 'schedule', redirect: '/student/dashboard' },

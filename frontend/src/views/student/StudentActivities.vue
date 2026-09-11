@@ -510,11 +510,16 @@ export default {
     }
   },
   watch: {
+    '$route.query.assessmentId'() { this.fetchChallenges() },
     selectedAssessmentId() {
       this.syncActivityFormFromSelection()
     }
   },
   methods: {
+    openNotificationAssessment() {
+      const assessment = this.assessments.find(row => String(row.id) === String(this.$route.query.assessmentId || ''))
+      if (assessment) this.selectAssessment(assessment)
+    },
     handleTourFocus(event) {
       this.pendingTourAction = String(event?.detail?.action || '').trim()
       this.applyPendingTourAction()
@@ -1199,6 +1204,7 @@ export default {
         if (!this.selectedAssessmentId && this.assessments[0]?.id) {
           this.selectedAssessmentId = this.assessments[0].id
         }
+        this.openNotificationAssessment()
         this.applyPendingTourAction()
         this.syncActivityFormFromSelection()
       } catch (error) {
