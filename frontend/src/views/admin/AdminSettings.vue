@@ -191,7 +191,7 @@
                     </div>
                   </div>
 
-                  <div class="settings-row">
+                  <div class="settings-row settings-row--sessions">
                     <div class="settings-label">
                       <label>Active sessions</label>
                       <span class="settings-desc">Review signed-in devices and revoke any session you do not recognize.</span>
@@ -460,7 +460,7 @@ export default {
       const platform = /iPad/.test(agent) ? 'iPad' : /iPhone|iPod/.test(agent) ? 'iPhone'
         : /Android/.test(agent) ? 'Android' : /Windows/.test(agent) ? 'Windows'
           : /Macintosh|Mac OS X/.test(agent) ? 'macOS' : /Linux/.test(agent) ? 'Linux' : ''
-      return platform ? browser + ' ? ' + platform : browser
+      return platform ? browser + ' on ' + platform : browser
     }
     const hasUnsavedChanges = ref(false)
     const originalSettings = ref(null)
@@ -1326,10 +1326,15 @@ body.admin-dashboard .settings-actions .reset-settings-btn {
   }
 }
 
+body.admin-dashboard .settings-body--security .settings-row.settings-row--sessions {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) !important;
+  border-right: 0 !important;
+}
 body.admin-dashboard .active-sessions { min-width: 0; }
 .active-sessions-list {
   width: 100%;
-  max-height: 320px;
+  max-height: 260px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -1342,11 +1347,20 @@ body.admin-dashboard .session-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
+  padding: 0.55rem 0.75rem;
+  min-width: 460px;
+  box-sizing: border-box;
 }
 .session-row + .session-row { border-top: 1px solid #eef2f7; }
 .session-row--current { background: #f8fafc; }
-.session-details { flex: 1; min-width: 0; display: grid; gap: 0.15rem; }
+.session-details {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 100px minmax(110px, 1fr) minmax(95px, 0.8fr);
+  align-items: center;
+  gap: 0.75rem;
+}
 .session-details strong { color: #334155; }
 .session-device, .session-ip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 body.admin-dashboard .active-sessions .session-revoke {
@@ -1356,6 +1370,6 @@ body.admin-dashboard .active-sessions .session-revoke {
   padding: 0.35rem 0.65rem;
   font-size: 0.7rem;
 }
-body.admin-dashboard .active-sessions .sessions-toggle { min-height: 36px; font-size: 0.75rem; }
+body.admin-dashboard .active-sessions .sessions-toggle { width: auto; align-self: flex-end; min-height: 36px; font-size: 0.75rem; }
 
 </style>
