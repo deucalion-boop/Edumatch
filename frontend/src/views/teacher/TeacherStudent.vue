@@ -1345,7 +1345,7 @@ const fetchEnrollmentRequests = async () => {
     }))
   } catch (error) {
     console.error('Failed to fetch enrollment requests:', error)
-    enrollmentRequests.value = []
+    showToast('error', error.response?.data?.message || 'Failed to load student requests. Please refresh to retry.')
   } finally {
     isEnrollmentRequestsLoading.value = false
   }
@@ -1359,8 +1359,9 @@ const updateEnrollmentRequest = async (request, action) => {
   try {
     const actionPath = action === 'reject' ? 'reject' : 'accept'
     await axios.patch(`${resolveApiBaseUrl()}/teacher/enrollment-requests/${requestId}/${actionPath}`, {}, getAuthConfig())
+    enrollmentRequests.value = enrollmentRequests.value.filter((row) => String(row.id) !== requestId)
     showToast('success', action === 'reject' ? 'Enrollment request rejected.' : 'Enrollment request approved.')
-    await Promise.all([fetchEnrollmentRequests(), fetchSubjects(), fetchStudents()])
+    await Promise.allSettled([fetchEnrollmentRequests(), fetchSubjects(), fetchStudents()])
   } catch (error) {
     console.error(`Failed to ${action} enrollment request:`, error)
     showToast('error', error.response?.data?.message || 'Failed to update enrollment request.')

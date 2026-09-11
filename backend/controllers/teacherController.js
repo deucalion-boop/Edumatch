@@ -1,3 +1,4 @@
+const { teacherRequests, decideTeacherRequest, teacherResultData } = require('../services/supabaseTeacherRecordsService');
 const { nameError, phoneError } = require('../utils/teacherValidation');
 const path = require('path');
 const Lesson = require('../models/Lesson');
@@ -1902,69 +1903,7 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
   const subjectFilter = String(req.query.subjectId || '').trim();
   const passFailFilter = String(req.query.passFail || '').trim().toLowerCase();
 
-  const subjects = await syncTeacherSubjects(req.user._id);
-  const allowedSubjectIds = subjects
-    .filter((subject) => !subjectFilter || String(subject._id) === subjectFilter)
-    .map((subject) => subject._id);
-  if (allowedSubjectIds.length === 0) {
-    return sendSuccess(res, 200, 'Student assessment results fetched successfully', { results: [] });
-  }
-
-  const approvedEnrollments = await SubjectEnrollment.find({
-    teacherId: req.user._id,
-    subjectId: { $in: allowedSubjectIds },
-    status: 'approved',
-  })
-    .select('studentId subjectId')
-    .lean();
-
-  let classStudentIds = uniqueBy(
-    approvedEnrollments.map((row) => row.studentId).filter(Boolean),
-    (id) => String(id || '')
-  );
-  if (studentFilter) {
-    classStudentIds = classStudentIds.filter((id) => String(id) === studentFilter);
-  }
-  if (classStudentIds.length > 0) {
-    const eligibleStudents = await User.find({
-      _id: { $in: classStudentIds },
-      ...buildExcludeArchivedStudentsFilter(),
-    })
-      .select('_id')
-      .lean();
-    const eligibleStudentIds = new Set(eligibleStudents.map((student) => String(student?._id || '')));
-    classStudentIds = classStudentIds.filter((id) => eligibleStudentIds.has(String(id)));
-  }
-  if (classStudentIds.length === 0) {
-    return sendSuccess(res, 200, 'Student assessment results fetched successfully', { results: [] });
-  }
-
-  const teacherAssessments = await Assessment.find(buildTeacherAssessmentAccessQuery({
-    teacherId: req.user._id,
-    allowedSubjectIds,
-    includeUnlinkedActivities: !subjectFilter,
-  }))
-    .select('_id title numberOfItems lessonId subjectId subjectCode subject assessmentMode gradingPeriod countsTowardRecommendation assignmentScope')
-    .populate('lessonId', 'title track subject')
-    .lean();
-
-  const assessmentIds = teacherAssessments.map((assessment) => assessment._id);
-  if (assessmentIds.length === 0) {
-    return sendSuccess(res, 200, 'Student assessment results fetched successfully', { results: [] });
-  }
-
-  const assessmentsById = new Map(
-    teacherAssessments.map((assessment) => [String(assessment._id), assessment])
-  );
-
-  const submissions = await Submission.find({
-    studentId: { $in: classStudentIds },
-    assessmentId: { $in: assessmentIds },
-    status: { $in: ['completed', 'auto_submitted', 'terminated'] },
-  })
-    .populate('studentId', 'name email profileImage status enrollment')
-    .sort({ submittedAt: -1 })
-    .lean();
+  const { assessmentsById, submissions } = await teacherResultData(req.user._id, subjectFilter, studentFilter);
 
   let results = submissions.map((submission) => {
     const score = Number(submission?.score || 0);
@@ -2049,21 +1988,7 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
 
 const getEnrollmentRequests = asyncHandler(async (req, res) => {
   const subjectFilter = String(req.query.subjectId || '').trim();
-  const subjects = await syncTeacherSubjects(req.user._id);
-  const allowedSubjectIds = subjects
-    .filter((subject) => !subjectFilter || String(subject._id) === subjectFilter)
-    .map((subject) => subject._id);
-
-  const pendingRequests = await SubjectEnrollment.find({
-    teacherId: req.user._id,
-    subjectId: { $in: allowedSubjectIds },
-    status: 'pending',
-  })
-    .populate('studentId', '_id name email status profileImage sectionId gradeLevel department')
-    .populate('sectionId', 'name')
-    .populate('subjectId', '_id name className code track')
-    .sort({ requestedAt: -1 })
-    .lean();
+  const pendingRequests = await teacherRequests(req.user._id, subjectFilter);
 
   const requests = uniqueBy(pendingRequests, (row) => String(row?._id || '')).map((row) => {
     const student = row.studentId || {};
@@ -2193,31 +2118,7 @@ const removeTeacherSubjectStudent = asyncHandler(async (req, res) => {
 const approveEnrollmentRequest = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
-  const requestRow = await SubjectEnrollment.findOne({
-    _id: studentId,
-    teacherId: req.user._id,
-  })
-    .populate('studentId', '_id name email profileImage sectionId')
-    .populate('sectionId', 'name')
-    .populate('subjectId', '_id name className code track');
-
-  if (!requestRow) {
-    const error = new Error('Enrollment request not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  if (requestRow.status !== 'pending') {
-    const error = new Error('Enrollment request is not pending');
-    error.statusCode = 409;
-    throw error;
-  }
-
-  requestRow.status = 'approved';
-  requestRow.sectionId = requestRow.sectionId || requestRow?.studentId?.sectionId || undefined;
-  requestRow.sectionName = String(requestRow?.sectionId?.name || requestRow.sectionName || '').trim();
-  requestRow.decidedAt = new Date();
-  await requestRow.save();
+  const requestRow = await decideTeacherRequest(req.user._id, studentId, 'approved');
 
   const student = requestRow.studentId || {};
   const subject = requestRow.subjectId || {};
@@ -2245,29 +2146,7 @@ const approveEnrollmentRequest = asyncHandler(async (req, res) => {
 const rejectEnrollmentRequest = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
-  const requestRow = await SubjectEnrollment.findOne({
-    _id: studentId,
-    teacherId: req.user._id,
-  })
-    .populate('studentId', '_id name email profileImage sectionId')
-    .populate('sectionId', 'name')
-    .populate('subjectId', '_id name className code track');
-
-  if (!requestRow) {
-    const error = new Error('Enrollment request not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  if (requestRow.status !== 'pending') {
-    const error = new Error('Enrollment request is not pending');
-    error.statusCode = 409;
-    throw error;
-  }
-
-  requestRow.status = 'rejected';
-  requestRow.decidedAt = new Date();
-  await requestRow.save();
+  const requestRow = await decideTeacherRequest(req.user._id, studentId, 'rejected');
 
   const student = requestRow.studentId || {};
   const subject = requestRow.subjectId || {};

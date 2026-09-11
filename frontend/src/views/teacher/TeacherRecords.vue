@@ -2787,7 +2787,7 @@ const fetchRecords = async () => {
   isLoading.value = true
   try {
     const apiBaseUrl = resolveApiBaseUrl()
-    const [lessonsResponse, assessmentsResponse, resultsResponse, subjectsResponse, sectionsResponse] = await Promise.all([
+    const recordResponses = await Promise.allSettled([
       axios.get(`${apiBaseUrl}/teacher/lessons`, getAuthConfig()),
       axios.get(`${apiBaseUrl}/teacher/assessments`, getAuthConfig()),
       axios.get(`${apiBaseUrl}/teacher/students/assessment-results?sort=recent`, getAuthConfig()),
@@ -2795,6 +2795,11 @@ const fetchRecords = async () => {
       axios.get(`${apiBaseUrl}/teacher/sections`, getAuthConfig()),
     ])
 
+    const [lessonsResponse, assessmentsResponse, resultsResponse, subjectsResponse, sectionsResponse] = recordResponses.map((result, index) => {
+      if (result.status === 'fulfilled') return result.value
+      console.error('Failed to load Records source ' + ['lessons', 'assessments', 'results', 'subjects', 'sections'][index], result.reason)
+      return { data: {} }
+    })
     lessons.value = Array.isArray(lessonsResponse.data?.lessons) ? lessonsResponse.data.lessons : []
     assessments.value = Array.isArray(assessmentsResponse.data?.assessments) ? assessmentsResponse.data.assessments : []
     teacherSubjects.value = (Array.isArray(subjectsResponse.data?.subjects) ? subjectsResponse.data.subjects : []).map((subject) => ({
@@ -2847,14 +2852,6 @@ const fetchRecords = async () => {
     await fetchAttendanceRoster()
   } catch (error) {
     console.error('Failed to fetch teacher records:', error)
-    lessons.value = []
-    assessments.value = []
-    assessmentResults.value = []
-    teacherSubjects.value = []
-    teacherAdvisorySection.value = null
-    attendanceRecords.value = []
-    attendanceRoster.value = []
-    attendanceCurrentRecord.value = null
   } finally {
     isLoading.value = false
   }
