@@ -1,3 +1,4 @@
+const { studentAttendance } = require('../services/supabaseStudentDashboardService');
 const Attendance = require('../models/Attendance');
 const mongoose = require('mongoose');
 const Subject = require('../models/Subject');
@@ -589,11 +590,7 @@ const lockTeacherAttendance = asyncHandler(async (req, res) => {
 });
 
 const getStudentAttendanceHistory = asyncHandler(async (req, res) => {
-  const records = await Attendance.find({
-    'entries.studentId': req.user._id,
-  })
-    .sort({ dateKey: -1, createdAt: -1 })
-    .lean();
+  const records = await studentAttendance(req.user._id);
 
   const attendanceRecords = records.map((record) => {
     const mapped = mapAttendanceRecord(record);

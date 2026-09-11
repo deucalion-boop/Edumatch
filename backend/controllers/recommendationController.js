@@ -1,6 +1,4 @@
-const User = require('../models/User');
-const Recommendation = require('../models/Recommendation');
-const SubjectEnrollment = require('../models/SubjectEnrollment');
+const { readProfileRows } = require('../services/supabaseUserProfileService');
 const { sendSuccess } = require('../utils/responseHelper');
 const { formatRecommendationPayload, recomputeStudentRecommendation } = require('../services/recommendationService');
 
@@ -21,13 +19,8 @@ async function assertRecommendationAccess(req, studentId) {
     return;
   }
   if (role === 'teacher') {
-    const student = await SubjectEnrollment.findOne({
-      teacherId: req.user._id,
-      studentId: targetStudentId,
-      status: { $in: ['approved', 'pending'] },
-    })
-      .select('_id studentId')
-      .lean();
+    const student = (await readProfileRows('subject_enrollments', 'teacher_id', req.user._id))
+      .find(row => String(row.studentId) === targetStudentId && ['approved', 'pending'].includes(row.status));
 
     if (!student) {
       const error = new Error('Forbidden: student is not under this teacher');
@@ -51,13 +44,7 @@ const getRecommendation = asyncHandler(async (req, res) => {
   }
   await assertRecommendationAccess(req, studentId);
 
-  let recommendation = await Recommendation.findOne({ studentId }).lean();
-  if (!recommendation) {
-    recommendation = await recomputeStudentRecommendation({
-      studentId,
-      reason: 'Initial recommendation generated',
-    });
-  }
+  const recommendation = (await readProfileRows('recommendations', 'student_id', studentId))[0] || null;
 
   return sendSuccess(res, 200, 'Recommendation fetched successfully', {
     recommendation: formatRecommendationPayload(recommendation),

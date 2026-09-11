@@ -1,3 +1,4 @@
+const { publishedLessons, availableAssessments, studentSubmissions } = require('../services/supabaseStudentDashboardService');
 const path = require('path');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
@@ -8,9 +9,9 @@ const { computeMasteryFromSubmissions, recalculateStudentMasteryProgress } = req
 const { formatRecommendationPayload, recomputeStudentRecommendation } = require('../services/recommendationService');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
-const { findSectionById } = require('../services/sectionService');
+const { findSectionById, normalizeSectionId } = require('../services/sectionService');
 const { findSupabaseAccount, listSupabaseAccounts } = require('../services/supabaseAccountService');
-const { listSupabaseAssessments, listSupabaseLessons } = require('../services/supabaseContentService');
+const { listSupabaseAssessments, listSupabaseLessons, findSupabaseLesson } = require('../services/supabaseContentService');
 const { findSubjectByCode } = require('../services/subjectService');
 const {
   findEnrollment,
@@ -170,9 +171,10 @@ function subjectResponse(subject, enrollment = null) {
 
 async function resolveStudentSectionContext(studentId, req) {
   const student = await findSupabaseAccount('id', String(studentId || '').trim());
-  const sectionRow = student?.sectionId ? await findSectionById(student.sectionId) : null;
+  const sectionId = normalizeSectionId(student?.sectionId);
+  const sectionRow = sectionId ? await findSectionById(sectionId) : null;
   const section = sectionRow
-    ? { id: String(sectionRow.id || ''), name: String(sectionRow.name || '').trim() }
+    ? { id: String(sectionRow.id || '').trim(), name: String(sectionRow.name || '').trim() }
     : null;
 
   if (!section?.id) {
@@ -185,7 +187,7 @@ async function resolveStudentSectionContext(studentId, req) {
   const accounts = await listSupabaseAccounts();
   const adviser = accounts.find((account) => (
     String(account?.role || '').trim() === 'teacher'
-    && String(account?.advisorySectionId || '').trim() === section.id
+    && normalizeSectionId(account?.advisorySectionId) === section.id
   )) || null;
 
   return {
@@ -414,10 +416,7 @@ function toActivitySubmissionResponse(submission, req) {
 }
 
 async function findPublishedLessons() {
-  return Lesson.find({})
-    .populate('subjectId', 'name className code track')
-    .populate('createdBy', 'name email role strand profileImage')
-    .sort({ createdAt: -1 });
+  return publishedLessons();
 }
 
 async function getStudentApprovedEnrollments(studentId) {
@@ -696,7 +695,7 @@ const getStudentTeachers = asyncHandler(async (_req, res) => {
 
 const downloadStudentLessonPdf = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
-  const lesson = await Lesson.findById(req.params.id);
+  const lesson = await findSupabaseLesson(req.params.id);
 
   if (!lesson) {
     const error = new Error('Lesson not found');
@@ -732,7 +731,7 @@ const downloadStudentLessonPdf = asyncHandler(async (req, res) => {
 
 const downloadStudentLessonAttachment = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
-  const lesson = await Lesson.findById(req.params.id);
+  const lesson = await findSupabaseLesson(req.params.id);
 
   if (!lesson) {
     const error = new Error('Lesson not found');
@@ -765,26 +764,7 @@ const downloadStudentLessonAttachment = asyncHandler(async (req, res) => {
 const getAvailableAssessments = asyncHandler(async (_req, res) => {
   assertGradeTenStudentAccess(_req);
   const approvedSubjectIds = await getStudentApprovedSubjectIds(_req.user._id);
-  const lessons = (await findPublishedLessons())
-    .filter((lesson) => {
-      const lessonSubjectId = String(lesson?.subjectId?._id || lesson?.subjectId || '').trim();
-      return approvedSubjectIds.some((subjectId) => String(subjectId) === lessonSubjectId);
-    })
-    .map((lesson) => ({
-      _id: lesson._id,
-      track: lesson.track,
-    }));
-
-  const lessonIds = lessons.map((lesson) => lesson._id);
-  const assessments = await Assessment.find({
-    $or: [
-      ...(lessonIds.length > 0 ? [{ lessonId: { $in: lessonIds } }] : []),
-      { assignedStudentIds: _req.user._id },
-    ],
-  })
-    .populate('lessonId', 'title track subject subjectId subjectCode')
-    .populate('createdBy', 'name email')
-    .sort({ createdAt: -1 });
+  const assessments = await availableAssessments(_req.user._id, approvedSubjectIds);
   const dedupedAssessments = uniqueBy(assessments, (item) => String(item?._id || ''));
   const filteredAssessments = dedupedAssessments.filter((item) => {
     const assignedStudentIds = getAssessmentAssignedStudentIds(item);
@@ -1356,12 +1336,7 @@ const submitAssessment = asyncHandler(async (req, res) => {
 
 const getMySubmissions = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
-  const submissions = await Submission.find({
-    studentId: req.user._id,
-    status: { $in: ['completed', 'auto_submitted', 'terminated'] },
-  })
-    .populate('assessmentId', 'title examType difficulty numberOfItems questions assessmentMode')
-    .sort({ submittedAt: -1 });
+  const submissions = await studentSubmissions(req.user._id, true);
   const dedupedSubmissions = uniqueBy(
     submissions,
     (submission) => `${String(submission?.studentId || '')}:${String(submission?.assessmentId?._id || submission?.assessmentId || '')}`
@@ -1382,7 +1357,7 @@ const getMySubmissions = asyncHandler(async (req, res) => {
         : Number(submission?.assessmentId?.numberOfItems || 0);
 
       return {
-        ...submission.toObject(),
+        ...submission,
         percentage,
         totalItems,
         status: submission?.status || 'completed',
@@ -1395,11 +1370,7 @@ const getMySubmissions = asyncHandler(async (req, res) => {
 
 const getMyActivitySubmissions = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
-  const submissions = await Submission.find({
-    studentId: req.user._id,
-  })
-    .populate('assessmentId', 'title assessmentMode lessonId submissionDeadline')
-    .sort({ updatedAt: -1 });
+  const submissions = await studentSubmissions(req.user._id, false);
 
   const activitySubmissions = submissions.filter((submission) => (
     String(submission?.assessmentId?.assessmentMode || '').trim().toLowerCase() === 'activity'
@@ -1508,10 +1479,15 @@ const getMySubjects = asyncHandler(async (req, res) => {
     .filter(Boolean);
 
   const approvedSubjectIdSet = new Set(approvedSubjectIds.map(String));
-  const [allLessons, allAssessments] = await Promise.all([
+  const contentResults = await Promise.allSettled([
     listSupabaseLessons(),
     listSupabaseAssessments(),
   ]);
+  const [allLessons, allAssessments] = contentResults.map((result, index) => {
+    if (result.status === 'fulfilled') return result.value;
+    console.error('[student subjects] Failed to load content counts:', index === 0 ? 'lessons' : 'assessments', result.reason?.code || 'unavailable');
+    return [];
+  });
   const lessons = allLessons.filter((lesson) => approvedSubjectIdSet.has(String(lesson.subjectId || '')));
   const assessments = allAssessments.filter((assessment) => approvedSubjectIdSet.has(String(assessment.subjectId || '')));
   const recommendation = null;

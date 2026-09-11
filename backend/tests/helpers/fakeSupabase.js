@@ -21,6 +21,7 @@ function createFakeSupabase(initialTables = {}) {
       neq(field, value) { filters.push((row) => row[field] !== value); return query; },
       is(field, value) { filters.push((row) => row[field] === value); return query; },
       gt(field, value) { filters.push((row) => row[field] > value); return query; },
+      contains(field, values) { filters.push(row => values.every(value => (row[field] || []).some(item => Object.entries(value).every(([key, expected]) => item[key] === expected)))); return query; },
       in(field, values) { filters.push((row) => values.includes(row[field])); return query; },
       limit(value) { maximum = value; return query; },
       range(first, last) { start = first; end = last; return query; },

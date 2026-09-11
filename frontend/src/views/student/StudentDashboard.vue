@@ -383,6 +383,8 @@ export default {
       recommendation: null,
       subjectInsights: {},
       studentContext: { section: null, adviser: null },
+      studentContextLoaded: false,
+      studentContextFailed: false,
       attendanceRecords: [],
       attendanceSummary: { totalRecords: 0, presentCount: 0, lateCount: 0, absentCount: 0, excusedCount: 0 },
       highlightResetTimer: null,
@@ -399,9 +401,11 @@ export default {
       return new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date(this.nowMs))
     },
     sectionLabel() {
+      if (!this.studentContextLoaded) return this.studentContextFailed ? 'Section unavailable' : 'Loading section...'
       return this.studentContext.section?.name ? `Section ${this.studentContext.section.name}` : 'Section not assigned'
     },
     adviserLabel() {
+      if (!this.studentContextLoaded) return this.studentContextFailed ? 'Adviser unavailable' : 'Loading adviser...'
       return this.studentContext.adviser?.name ? `Adviser: ${this.studentContext.adviser.name}` : 'No adviser assigned'
     },
     summary() {
@@ -829,8 +833,8 @@ export default {
         if (!studentId) return null
         const response = await axios.get(`${this.resolveApiBaseUrl()}/recommendation/${studentId}`, this.getAuthConfig())
         return response.data?.recommendation || null
-      } catch (_error) {
-        return null
+      } catch (error) {
+        throw error
       }
     },
     async fetchDashboardData() {
@@ -838,7 +842,7 @@ export default {
         this.loadError = ''
         const base = this.resolveApiBaseUrl()
         const auth = this.getAuthConfig()
-        const [lessonsRes, assessmentsRes, submissionsRes, activityRes, subjectsRes, recommendationRes, attendanceRes] = await Promise.all([
+        const responses = await Promise.allSettled([
           axios.get(`${base}/student/lessons`, auth),
           axios.get(`${base}/student/assessments`, auth),
           axios.get(`${base}/student/submissions/me`, auth),
@@ -848,18 +852,33 @@ export default {
           axios.get(`${base}/student/attendance`, auth)
         ])
 
-        this.lessons = this.uniqueBy(lessonsRes.data?.lessons || [], (item, index) => item.id || item._id || `${item.title || ''}-${index}`).map((item, index) => ({ id: String(item.id || item._id || `lesson-${index + 1}`), title: item.title || 'Untitled Lesson', teacherName: item.teacher?.name || '', createdAt: item.createdAt || item.postedAt || null }))
-        this.assessments = this.uniqueBy(assessmentsRes.data?.assessments || [], (item, index) => item.id || item._id || `${item.title || ''}-${index}`).map((item, index) => ({ id: String(item.id || item._id || `assessment-${index + 1}`), title: item.title || 'Untitled Assessment', lessonTitle: item.lessonTitle || '', lessonSubject: item.lessonSubject || item.subject || '', teacherName: item.teacherName || item.createdBy?.name || '', assessmentMode: String(item.assessmentMode || 'activity').trim().toLowerCase(), strand: item.strand || item.track || '', submissionDeadline: item.submissionDeadline || null, createdAt: item.createdAt || null }))
-        this.finalizedSubmissions = (submissionsRes.data?.submissions || []).map((item, index) => ({ id: String(item._id || `submission-${index + 1}`), assessmentId: String(item.assessmentId?._id || item.assessmentId || ''), title: item.assessmentId?.title || item.assessmentTitle || 'Assessment', assessmentMode: String(item.assessmentId?.assessmentMode || item.assessmentMode || 'activity').trim().toLowerCase(), score: Number(item.score || 0), totalPoints: Number(item.totalPoints || 0), percentage: Number(item.percentage || 0), submittedAt: item.submittedAt || item.createdAt || null, createdAt: item.createdAt || null }))
-        this.activitySubmissions = (activityRes.data?.submissions || []).map((item, index) => ({ id: String(item.id || `activity-${index + 1}`), assessmentId: String(item.assessmentId || ''), status: String(item.status || 'in_progress').trim().toLowerCase(), hasContent: Boolean(item.hasContent), gradedAt: item.gradedAt || null, submittedAt: item.submittedAt || null, createdAt: item.createdAt || null, gradeValue: item.gradeValue ?? null, score: Number(item.score || 0), totalPoints: Number(item.totalPoints || 0), percentage: Number(item.percentage || 0) }))
-        this.subjects = subjectsRes.data?.subjects || []
-        this.pendingSubjects = subjectsRes.data?.pendingSubjects || []
-        this.studentContext = subjectsRes.data?.studentContext || { section: null, adviser: null }
-        this.subjectInsights = subjectsRes.data?.insights || recommendationRes || {}
-        this.recommendation = recommendationRes
-        this.attendanceRecords = attendanceRes.data?.records || []
-        this.attendanceSummary = attendanceRes.data?.summary || this.attendanceSummary
-        this.scoredAverageScore = Number(submissionsRes.data?.summary?.averageScore || 0)
+        const names = ['lessons', 'assessments', 'submissions', 'activities', 'subjects', 'recommendation', 'attendance']
+        responses.forEach((result, index) => {
+          if (result.status === 'rejected') console.error('Student dashboard request failed:', names[index], result.reason?.response?.status || result.reason?.message)
+        })
+        const [lessonsRes, assessmentsRes, submissionsRes, activityRes, subjectsRes, recommendationRes, attendanceRes] = responses.map(result => result.status === 'fulfilled' ? result.value : null)
+        this.studentContextFailed = responses[4].status === 'rejected'
+        if (responses.some(result => result.status === 'rejected')) this.loadError = 'Some dashboard information could not be refreshed. Showing the most recent information available.'
+        const context = subjectsRes?.data?.studentContext
+        if (context && Object.hasOwn(context, 'section') && Object.hasOwn(context, 'adviser')) {
+          this.studentContext = context
+          this.studentContextLoaded = true
+          this.studentContextFailed = false
+        } else {
+          this.studentContextFailed = true
+        }
+        if (lessonsRes) this.lessons = this.uniqueBy(lessonsRes.data?.lessons || [], (item, index) => item.id || item._id || `${item.title || ''}-${index}`).map((item, index) => ({ id: String(item.id || item._id || `lesson-${index + 1}`), title: item.title || 'Untitled Lesson', teacherName: item.teacher?.name || '', createdAt: item.createdAt || item.postedAt || null }))
+        if (assessmentsRes) this.assessments = this.uniqueBy(assessmentsRes.data?.assessments || [], (item, index) => item.id || item._id || `${item.title || ''}-${index}`).map((item, index) => ({ id: String(item.id || item._id || `assessment-${index + 1}`), title: item.title || 'Untitled Assessment', lessonTitle: item.lessonTitle || '', lessonSubject: item.lessonSubject || item.subject || '', teacherName: item.teacherName || item.createdBy?.name || '', assessmentMode: String(item.assessmentMode || 'activity').trim().toLowerCase(), strand: item.strand || item.track || '', submissionDeadline: item.submissionDeadline || null, createdAt: item.createdAt || null }))
+        if (submissionsRes) this.finalizedSubmissions = (submissionsRes.data?.submissions || []).map((item, index) => ({ id: String(item._id || `submission-${index + 1}`), assessmentId: String(item.assessmentId?._id || item.assessmentId || ''), title: item.assessmentId?.title || item.assessmentTitle || 'Assessment', assessmentMode: String(item.assessmentId?.assessmentMode || item.assessmentMode || 'activity').trim().toLowerCase(), score: Number(item.score || 0), totalPoints: Number(item.totalPoints || 0), percentage: Number(item.percentage || 0), submittedAt: item.submittedAt || item.createdAt || null, createdAt: item.createdAt || null }))
+        if (activityRes) this.activitySubmissions = (activityRes.data?.submissions || []).map((item, index) => ({ id: String(item.id || `activity-${index + 1}`), assessmentId: String(item.assessmentId || ''), status: String(item.status || 'in_progress').trim().toLowerCase(), hasContent: Boolean(item.hasContent), gradedAt: item.gradedAt || null, submittedAt: item.submittedAt || null, createdAt: item.createdAt || null, gradeValue: item.gradeValue ?? null, score: Number(item.score || 0), totalPoints: Number(item.totalPoints || 0), percentage: Number(item.percentage || 0) }))
+        if (subjectsRes) this.subjects = subjectsRes.data?.subjects || []
+        if (subjectsRes) this.pendingSubjects = subjectsRes.data?.pendingSubjects || []
+
+        if (subjectsRes) this.subjectInsights = subjectsRes.data?.insights || recommendationRes || {}
+        if (responses[5].status === 'fulfilled') this.recommendation = recommendationRes
+        if (attendanceRes) this.attendanceRecords = attendanceRes.data?.records || []
+        if (attendanceRes) this.attendanceSummary = attendanceRes.data?.summary || this.attendanceSummary
+        if (submissionsRes) this.scoredAverageScore = Number(submissionsRes.data?.summary?.averageScore || 0)
       } catch (error) {
         console.error('Failed to fetch student dashboard data:', error)
         this.loadError = 'We could not refresh the latest dashboard data right now. Showing the most recent information available.'
