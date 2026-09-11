@@ -436,7 +436,7 @@
                 type="button" 
                 class="form-tab" 
                 :class="{ active: addUserTab === 'role' }"
-                @click="addUserTab = 'role'"
+                @click="goToAddUserTab('role')"
               >
                 Role & Permissions
               </button>
@@ -444,7 +444,7 @@
                 type="button" 
                 class="form-tab" 
                 :class="{ active: addUserTab === 'additional' }"
-                @click="addUserTab = 'additional'"
+                @click="goToAddUserTab('additional')"
               >
                 Additional Info
               </button>
@@ -477,6 +477,8 @@
                   type="email" 
                   id="email" 
                   v-model="newUser.email"
+                  :class="{ 'email-invalid': addUserEmailError }"
+                  :aria-invalid="addUserEmailError ? 'true' : undefined"
                   required
                   placeholder="user@example.com"
                 >
@@ -1424,6 +1426,7 @@ export default {
     
     // Form data
     const addUserTab = ref('basic')
+    const addUserEmailError = ref(false)
     const newUser = reactive({
       fullName: '',
       username: '',
@@ -2349,6 +2352,7 @@ export default {
     
     // Modal controls
     const openAddUserModal = () => {
+      addUserEmailError.value = false
       modals.addUser = true
       isCreateInviteLoading.value = false
       addUserTab.value = 'basic'
@@ -2408,9 +2412,28 @@ export default {
     }
     
     // Tab navigation
+    const isValidAddUserEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim())
+
+    watch(() => newUser.email, (email) => {
+      if (isValidAddUserEmail(email)) addUserEmailError.value = false
+    })
+
+    const validateAddUserEmail = () => {
+      addUserEmailError.value = !isValidAddUserEmail(newUser.email)
+      if (!addUserEmailError.value) return true
+      addUserTab.value = 'basic'
+      window.alert('Please enter a valid email address (e.g., user@example.com).')
+      return false
+    }
+
+    const goToAddUserTab = (tab) => {
+      if (!validateAddUserEmail()) return
+      addUserTab.value = tab
+    }
+
     const nextTab = () => {
-      if (addUserTab.value === 'basic') addUserTab.value = 'role'
-      else if (addUserTab.value === 'role') addUserTab.value = 'additional'
+      if (addUserTab.value === 'basic') goToAddUserTab('role')
+      else if (addUserTab.value === 'role') goToAddUserTab('additional')
     }
     
     const prevTab = () => {
@@ -2421,6 +2444,7 @@ export default {
     // Create user
     const createUser = async () => {
       if (isCreateInviteLoading.value) return
+      if (!validateAddUserEmail()) return
 
       if (!newUser.fullName || !newUser.email || !String(newUser.username || '').trim()) {
         showToastMessage('Name, email, and username are required', 'error')
@@ -3097,6 +3121,8 @@ export default {
       closeEditUserModal,
       handleEditAvatarChange,
       onEditRoleChange,
+      addUserEmailError,
+      goToAddUserTab,
       nextTab,
       prevTab,
       createUser,
@@ -6356,4 +6382,10 @@ body.admin-dashboard .modal.edit-user-modal .modal-actions .btn-success:focus {
   }
 }
 
+</style>
+
+<style scoped>
+#addUserForm #email.email-invalid {
+  border-color: #dc2626;
+}
 </style>
