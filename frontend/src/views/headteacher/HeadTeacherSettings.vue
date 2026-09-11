@@ -11,6 +11,7 @@
           </div>
 
           <div class="headteacher-header-tools">
+            <HeadTeacherNotifications />
             <button
               type="button"
               class="headteacher-header-settings-button headteacher-account-menu-trigger"
@@ -167,6 +168,7 @@
 </template>
 
 <script setup>
+import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'

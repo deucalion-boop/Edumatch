@@ -3927,3 +3927,63 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .head
     animation: none;
   }
 }
+
+/* Let overview content determine page height instead of compressing it into 100vh. */
+body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  height: auto;
+  min-height: 100vh;
+  max-height: none;
+  overflow: visible;
+}
+.headteacher-overview-page .headteacher-dashboard-overview {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+.headteacher-overview-page .headteacher-radial-section,
+.headteacher-overview-page .headteacher-analytics-panel {
+  height: auto;
+  min-width: 0;
+  overflow: visible;
+}
+.headteacher-overview-page .headteacher-radial-grid {
+  height: auto;
+  grid-template-rows: auto;
+  gap: 1rem;
+}
+.headteacher-overview-page .headteacher-radial-card { min-height: 120px; height: auto; }
+.headteacher-overview-page .headteacher-analytics-head { display: flex; flex-wrap: wrap; gap: 1rem; }
+.headteacher-overview-page .headteacher-analytics-copy { flex: 1 1 260px; min-width: 0; }
+.headteacher-overview-page .headteacher-analytics-actions { flex: 0 1 auto; flex-wrap: wrap; }
+.headteacher-overview-page .headteacher-analytics-highlights { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.headteacher-overview-page .headteacher-highlight-pill { flex: 1 1 140px; min-width: 0; height: auto; }
+.headteacher-overview-page .headteacher-chart-shell { position: relative; height: 300px; min-height: 260px; width: 100%; box-sizing: border-box; }
+.headteacher-overview-page .headteacher-chart-shell canvas { max-width: 100%; max-height: 100%; }
+.headteacher-overview-page .headteacher-stat-copy,
+.headteacher-overview-page .headteacher-radial-copy { min-width: 0; overflow-wrap: anywhere; }
+.headteacher-overview-page .headteacher-analytics-legend { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+.headteacher-field-error { display: block; color: #b91c1c; font-size: 0.75rem; line-height: 1.4; }
+.headteacher-form input[aria-invalid="true"] { border-color: #b91c1c; }
+.headteacher-workspace .headteacher-top-header { overflow: visible; z-index: 30; }
+@media (max-width: 1200px) {
+  .headteacher-overview-page .headteacher-dashboard-overview { grid-template-columns: minmax(0, 1fr); }
+  .headteacher-overview-page .headteacher-radial-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .headteacher-overview-page .headteacher-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .headteacher-overview-page .headteacher-stat-grid,
+  .headteacher-overview-page .headteacher-radial-grid { grid-template-columns: minmax(0, 1fr); }
+  .headteacher-overview-page .headteacher-chart-shell { height: 260px; }
+}
+@media (max-width: 900px) {
+  body.headteacher-dashboard .headteacher-workspace .headteacher-header-tools {
+    position: static;
+    width: auto;
+    margin-left: auto;
+    justify-content: flex-end;
+    pointer-events: auto;
+  }
+}

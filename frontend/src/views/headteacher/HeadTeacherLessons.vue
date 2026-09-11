@@ -69,6 +69,7 @@
           </div>
 
           <div class="headteacher-header-tools">
+            <HeadTeacherNotifications />
             <div ref="accountMenuRef" class="headteacher-account-menu">
               <button
                 type="button"
@@ -615,6 +616,7 @@
 </template>
 
 <script setup>
+import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'

@@ -1,3 +1,4 @@
+const { nameError, phoneError } = require('../utils/teacherValidation');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const Lesson = require('../models/Lesson');
@@ -463,6 +464,9 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  const validationMessage = nameError(name, 'Full name', 100) || phoneError(contactNumber)
+    || (/\p{N}/u.test(String(username)) ? 'Username must not contain numbers.' : '');
+  if (validationMessage) throw Object.assign(new Error(validationMessage), { statusCode: 400 });
   const normalizedEmail = String(email).toLowerCase().trim();
   const normalizedUsername = String(username || '').trim();
   const existing = await findSupabaseAccountByEmail(normalizedEmail);

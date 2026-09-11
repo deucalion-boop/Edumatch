@@ -69,6 +69,7 @@
           </div>
 
           <div class="headteacher-header-tools">
+            <HeadTeacherNotifications />
             <div ref="accountMenuRef" class="headteacher-account-menu">
               <button
                 type="button"
@@ -672,19 +673,22 @@
             </button>
           </div>
 
-          <form class="headteacher-form" @submit.prevent="createTeacher">
+          <form class="headteacher-form" novalidate @submit.prevent="createTeacher">
             <div class="headteacher-form-grid">
               <label class="headteacher-form-group">
                 <span>Full Name</span>
-                <input v-model.trim="form.name" type="text" required placeholder="Enter teacher name">
+                <input v-model.trim="form.name" type="text" required placeholder="Enter teacher name" :aria-invalid="Boolean(teacherErrors.name)" @input="validateTeacherForm" maxlength="100">
+                <small v-if="teacherErrors.name" class="headteacher-field-error" role="alert">{{ teacherErrors.name }}</small>
               </label>
               <label class="headteacher-form-group">
                 <span>Email</span>
-                <input v-model.trim="form.email" type="email" required placeholder="Enter teacher email">
+                <input v-model.trim="form.email" type="email" required placeholder="Enter teacher email" :aria-invalid="Boolean(teacherErrors.email)" @input="validateTeacherForm">
+                <small v-if="teacherErrors.email" class="headteacher-field-error" role="alert">{{ teacherErrors.email }}</small>
               </label>
               <label class="headteacher-form-group">
                 <span>Username</span>
-                <input v-model.trim="form.username" type="text" required placeholder="Enter teacher username">
+                <input v-model.trim="form.username" type="text" required placeholder="Enter teacher username" :aria-invalid="Boolean(teacherErrors.username)" @input="validateTeacherForm" maxlength="50">
+                <small v-if="teacherErrors.username" class="headteacher-field-error" role="alert">{{ teacherErrors.username }}</small>
               </label>
               <label class="headteacher-form-group">
                 <span>Department</span>
@@ -692,7 +696,8 @@
               </label>
               <label class="headteacher-form-group">
                 <span>Contact Number</span>
-                <input v-model.trim="form.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789">
+                <input v-model.trim="form.contactNumber" type="tel" inputmode="tel" placeholder="09123456789 or +639123456789" :aria-invalid="Boolean(teacherErrors.contactNumber)" @input="validateTeacherForm">
+                <small v-if="teacherErrors.contactNumber" class="headteacher-field-error" role="alert">{{ teacherErrors.contactNumber }}</small>
               </label>
               <label class="headteacher-form-group">
                 <span>Access</span>
@@ -885,6 +890,8 @@
 </template>
 
 <script setup>
+import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
+import { nameError, phoneError } from '../../utils/teacherValidation.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
@@ -1229,6 +1236,7 @@ const closeSidebar = () => { isSidebarOpen.value = false }
 const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.value }
 
 const resetForm = () => {
+  Object.keys(teacherErrors).forEach((field) => { teacherErrors[field] = '' })
   form.name = ''
   form.email = ''
   form.username = ''
@@ -1456,7 +1464,19 @@ const openTeacherStudents = async (teacher) => {
   }
 }
 
+const teacherErrors = reactive({ name: '', username: '', email: '', contactNumber: '' })
+const validateTeacherForm = () => {
+  teacherErrors.name = nameError(form.name, 'Full name', 100)
+  teacherErrors.username = !String(form.username || '').trim() ? 'Username is required.'
+    : form.username.length > 50 ? 'Username must be 50 characters or fewer.'
+      : /\p{N}/u.test(form.username) ? 'Username must not contain numbers.' : ''
+  teacherErrors.contactNumber = phoneError(form.contactNumber)
+  teacherErrors.email = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(form.email)
+    ? '' : 'Enter a valid Gmail address (e.g., user@gmail.com).'
+  return !Object.values(teacherErrors).some(Boolean)
+}
 const createTeacher = async () => {
+  if (isSubmitting.value || !validateTeacherForm()) return
   isSubmitting.value = true
   formMessage.value = ''
   try {
@@ -3371,5 +3391,24 @@ body.headteacher-dashboard .headteacher-management-page .headteacher-sidebar .he
   border-color: rgba(255, 255, 255, 0.16) !important;
   background: rgba(255, 255, 255, 0.14) !important;
   color: #fff !important;
+}
+
+.headteacher-management-page .headteacher-students-modal { width: min(1100px, calc(100vw - 32px)); max-width: calc(100vw - 32px); min-width: 0; box-sizing: border-box; }
+.headteacher-management-page .headteacher-students-table-shell,
+.headteacher-management-page .headteacher-students-table-wrap { min-width: 0; width: 100%; }
+.headteacher-management-page .headteacher-students-table { table-layout: fixed; width: 100%; min-width: 0; }
+.headteacher-management-page .headteacher-students-table th,
+.headteacher-management-page .headteacher-students-table td { white-space: normal; overflow-wrap: anywhere; padding: 0.75rem 0.5rem; }
+.headteacher-management-page .headteacher-students-table th:first-child { width: 24%; }
+.headteacher-management-page .headteacher-students-table th:nth-child(2) { width: 24%; }
+.headteacher-management-page .headteacher-student-copy { min-width: 0; overflow-wrap: anywhere; }
+.headteacher-management-page .headteacher-students-modal .headteacher-email-link { white-space: normal; overflow-wrap: anywhere; }
+.headteacher-management-page .headteacher-students-modal .headteacher-badge { white-space: normal; max-width: 100%; }
+@media (max-width: 900px) {
+  .headteacher-management-page .headteacher-students-table-wrap { display: none; }
+  .headteacher-management-page .headteacher-students-mobile-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+}
+@media (max-width: 600px) {
+  .headteacher-management-page .headteacher-students-mobile-list { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
