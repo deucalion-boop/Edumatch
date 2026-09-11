@@ -129,7 +129,7 @@
 
         <div v-else class="lessons-feed">
           <article
-            v-for="lesson in visibleLessons"
+            v-for="lesson in paginatedLessons"
             :key="lesson.id"
             class="lesson-feed-card"
             :class="{ active: selectedLessonId === lesson.id }"
@@ -204,6 +204,14 @@
             </div>
           </article>
         </div>
+        <nav v-if="!isLessonsLoading && visibleLessons.length > 10" class="lesson-pagination" aria-label="Lesson pages">
+          <span aria-live="polite">Showing {{ (lessonPage - 1) * 10 + 1 }}&ndash;{{ Math.min(lessonPage * 10, visibleLessons.length) }} of {{ visibleLessons.length }} lessons</span>
+          <div class="lesson-pagination-controls">
+            <button type="button" :disabled="lessonPage === 1" @click="changeLessonPage(lessonPage - 1)">Previous</button>
+            <span aria-live="polite">Page {{ lessonPage }} of {{ lessonPageCount }}</span>
+            <button type="button" :disabled="lessonPage === lessonPageCount" @click="changeLessonPage(lessonPage + 1)">Next</button>
+          </div>
+        </nav>
       </div>
     </section>
     </div>
@@ -313,6 +321,7 @@ export default {
       pendingSubjects: [],
       selectedSubjectId: '',
       selectedLessonId: null,
+      lessonPage: 1,
       previewAttachment: null,
       isLessonsLoading: false,
       lessonsEmptyMessage: 'No lessons available yet. Join a class and wait for teacher approval to access lesson materials.',
@@ -336,6 +345,12 @@ export default {
       if (!selectedId) return this.lessons
       return this.lessons.filter((lesson) => this.normalizeId(lesson?.subjectId) === selectedId)
     },
+    lessonPageCount() {
+      return Math.max(1, Math.ceil(this.visibleLessons.length / 10))
+    },
+    paginatedLessons() {
+      return this.visibleLessons.slice((this.lessonPage - 1) * 10, this.lessonPage * 10)
+    },
     currentLessonsEmptyMessage() {
       if (this.hasLessonsLoadError) return this.lessonsEmptyMessage
       if (this.selectedSubject) {
@@ -351,12 +366,26 @@ export default {
     }
   },
   watch: {
-    '$route.query.lessonId'() { this.fetchLessons() }
+    '$route.query.lessonId'() { this.fetchLessons() },
+    selectedSubjectId: {
+      flush: 'sync',
+      handler() { this.lessonPage = 1 }
+    },
+    lessonPageCount(count) { this.lessonPage = Math.min(this.lessonPage, count) },
+    selectedLessonId() { this.revealSelectedLesson() }
   },
   methods: {
+    changeLessonPage(page) {
+      this.lessonPage = Math.max(1, Math.min(page, this.lessonPageCount))
+      this.selectedLessonId = null
+    },
+    revealSelectedLesson() {
+      const index = this.visibleLessons.findIndex(lesson => lesson.id === this.selectedLessonId)
+      if (index >= 0) this.lessonPage = Math.floor(index / 10) + 1
+    },
     openNotificationLesson() {
       const lesson = this.lessons.find(row => String(row.id) === String(this.$route.query.lessonId || ''))
-      if (lesson) { this.selectedSubjectId = this.normalizeId(lesson.subjectId); this.selectedLessonId = lesson.id }
+      if (lesson) { this.selectedSubjectId = this.normalizeId(lesson.subjectId); this.selectedLessonId = lesson.id; this.revealSelectedLesson() }
     },
     handleTourFocus(event) {
       this.pendingTourAction = String(event?.detail?.action || '').trim()
@@ -629,6 +658,27 @@ export default {
 </script>
 
 <style scoped>
+.lesson-pagination, .lesson-pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+.lesson-pagination { margin-top: 1rem; color: #64748b; font-size: .875rem; }
+.lesson-pagination-controls button {
+  padding: .5rem .85rem;
+  border: 1px solid #d8e1ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #2563eb;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lesson-pagination-controls button:disabled { opacity: .45; cursor: default; }
+.lesson-pagination-controls button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
 .section-card {
   margin-bottom: 1rem;
   border: 1px solid transparent;
