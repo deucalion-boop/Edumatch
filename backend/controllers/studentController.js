@@ -2,15 +2,21 @@ const path = require('path');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
-const Subject = require('../models/Subject');
-const SubjectEnrollment = require('../models/SubjectEnrollment');
-const Section = require('../models/Section');
 const User = require('../models/User');
 const { sendSuccess } = require('../utils/responseHelper');
 const { computeMasteryFromSubmissions, recalculateStudentMasteryProgress } = require('../utils/studentProgress');
 const { formatRecommendationPayload, recomputeStudentRecommendation } = require('../services/recommendationService');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
+const { findSectionById } = require('../services/sectionService');
+const { findSupabaseAccount, listSupabaseAccounts } = require('../services/supabaseAccountService');
+const { listSupabaseAssessments, listSupabaseLessons } = require('../services/supabaseContentService');
+const { findSubjectByCode } = require('../services/subjectService');
+const {
+  findEnrollment,
+  listHydratedStudentEnrollments,
+  saveEnrollmentRequest,
+} = require('../services/supabaseEnrollmentService');
 const {
   notifyAutomatedGrade,
   notifySubmissionCompleted,
@@ -163,16 +169,10 @@ function subjectResponse(subject, enrollment = null) {
 }
 
 async function resolveStudentSectionContext(studentId, req) {
-  const student = await User.findById(studentId)
-    .select('sectionId')
-    .populate('sectionId', 'name')
-    .lean();
-
-  const section = student?.sectionId
-    ? {
-      id: String(student.sectionId._id || ''),
-      name: String(student.sectionId.name || '').trim(),
-    }
+  const student = await findSupabaseAccount('id', String(studentId || '').trim());
+  const sectionRow = student?.sectionId ? await findSectionById(student.sectionId) : null;
+  const section = sectionRow
+    ? { id: String(sectionRow.id || ''), name: String(sectionRow.name || '').trim() }
     : null;
 
   if (!section?.id) {
@@ -182,12 +182,11 @@ async function resolveStudentSectionContext(studentId, req) {
     };
   }
 
-  const adviser = await User.findOne({
-    role: 'teacher',
-    advisorySectionId: section.id,
-  })
-    .select('_id name email department subject profileImage')
-    .lean();
+  const accounts = await listSupabaseAccounts();
+  const adviser = accounts.find((account) => (
+    String(account?.role || '').trim() === 'teacher'
+    && String(account?.advisorySectionId || '').trim() === section.id
+  )) || null;
 
   return {
     section,
@@ -422,13 +421,7 @@ async function findPublishedLessons() {
 }
 
 async function getStudentApprovedEnrollments(studentId) {
-  return SubjectEnrollment.find({
-    studentId,
-    status: 'approved',
-  })
-    .populate('subjectId', 'name code track subjectCategory teacherId')
-    .sort({ createdAt: -1 })
-    .lean();
+  return listHydratedStudentEnrollments(studentId, 'approved');
 }
 
 async function getStudentApprovedSubjectIds(studentId) {
@@ -463,11 +456,11 @@ async function assertStudentAssessmentAccess(studentId, assessmentId) {
     throw error;
   }
 
-  const enrollment = await SubjectEnrollment.findOne({
+  const enrollment = await findEnrollment({
     studentId,
     subjectId: effectiveSubjectId,
     status: 'approved',
-  }).select('_id status').lean();
+  });
 
   if (!enrollment) {
     const error = new Error('You must be enrolled in this subject before accessing its assessments');
@@ -711,11 +704,11 @@ const downloadStudentLessonPdf = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const enrollment = await SubjectEnrollment.findOne({
+  const enrollment = await findEnrollment({
     studentId: req.user._id,
     subjectId: lesson.subjectId,
     status: 'approved',
-  }).select('_id').lean();
+  });
   if (!enrollment) {
     const error = new Error('You must be enrolled in this subject before downloading lessons');
     error.statusCode = 403;
@@ -747,11 +740,11 @@ const downloadStudentLessonAttachment = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const enrollment = await SubjectEnrollment.findOne({
+  const enrollment = await findEnrollment({
     studentId: req.user._id,
     subjectId: lesson.subjectId,
     status: 'approved',
-  }).select('_id').lean();
+  });
   if (!enrollment) {
     const error = new Error('You must be enrolled in this subject before downloading attachments');
     error.statusCode = 403;
@@ -1506,34 +1499,22 @@ const getMySubjects = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
 
   const [approvedEnrollments, pendingEnrollments] = await Promise.all([
-    SubjectEnrollment.find({ studentId: req.user._id, status: 'approved' })
-      .populate('subjectId', 'name className code track subjectCategory description teacherId createdAt')
-      .populate('teacherId', 'name email profileImage')
-      .sort({ createdAt: -1 })
-      .lean(),
-    SubjectEnrollment.find({ studentId: req.user._id, status: 'pending' })
-      .populate('subjectId', 'name className code track subjectCategory description teacherId createdAt')
-      .populate('teacherId', 'name email profileImage')
-      .sort({ createdAt: -1 })
-      .lean(),
+    listHydratedStudentEnrollments(req.user._id, 'approved'),
+    listHydratedStudentEnrollments(req.user._id, 'pending'),
   ]);
 
   const approvedSubjectIds = approvedEnrollments
     .map((row) => row?.subjectId?._id || null)
     .filter(Boolean);
 
-  const [lessons, assessments, recommendation] = await Promise.all([
-    approvedSubjectIds.length > 0
-      ? Lesson.find({ subjectId: { $in: approvedSubjectIds } }).select('_id title subjectId createdAt').lean()
-      : [],
-    approvedSubjectIds.length > 0
-      ? Assessment.find({ subjectId: { $in: approvedSubjectIds } }).select('_id title subjectId createdAt').lean()
-      : [],
-    recomputeStudentRecommendation({
-      studentId: req.user._id,
-      reason: 'Student insights refreshed',
-    }).catch(() => null),
+  const approvedSubjectIdSet = new Set(approvedSubjectIds.map(String));
+  const [allLessons, allAssessments] = await Promise.all([
+    listSupabaseLessons(),
+    listSupabaseAssessments(),
   ]);
+  const lessons = allLessons.filter((lesson) => approvedSubjectIdSet.has(String(lesson.subjectId || '')));
+  const assessments = allAssessments.filter((assessment) => approvedSubjectIdSet.has(String(assessment.subjectId || '')));
+  const recommendation = null;
 
   const lessonCounts = new Map();
   lessons.forEach((lesson) => {
@@ -1604,14 +1585,14 @@ const joinSubjectByCode = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const subject = await Subject.findOne({ code, isActive: true }).lean();
+  const subject = await findSubjectByCode(code);
   if (!subject) {
     const error = new Error('Subject code is invalid');
     error.statusCode = 404;
     throw error;
   }
 
-  const existing = await SubjectEnrollment.findOne({
+  const existing = await findEnrollment({
     studentId: req.user._id,
     subjectId: subject._id,
   });
@@ -1628,20 +1609,16 @@ const joinSubjectByCode = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const enrollment = existing || new SubjectEnrollment({
+  const section = req.user?.sectionId
+    ? await findSectionById(req.user.sectionId)
+    : null;
+  const enrollment = await saveEnrollmentRequest({
     studentId: req.user._id,
     subjectId: subject._id,
     teacherId: subject.teacherId,
+    sectionId: req.user?.sectionId || null,
+    sectionName: String(section?.name || '').trim(),
   });
-  const section = req.user?.sectionId
-    ? await Section.findById(req.user.sectionId).select('name').lean()
-    : null;
-  enrollment.sectionId = req.user?.sectionId || undefined;
-  enrollment.sectionName = String(section?.name || '').trim();
-  enrollment.status = 'pending';
-  enrollment.requestedAt = new Date();
-  enrollment.decidedAt = null;
-  await enrollment.save();
 
   await safelyRunNotificationTask('enrollment request', () => notifyEnrollmentRequest({
     enrollment,

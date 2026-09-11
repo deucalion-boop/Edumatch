@@ -58,7 +58,7 @@ function getSupabaseStorageConfig() {
     publishableKey: normalizeString(process.env.SUPABASE_PUBLISHABLE_KEY),
     serviceRoleKey: normalizeString(process.env.SUPABASE_SERVICE_ROLE_KEY),
     bucket: normalizeBucketName(process.env.SUPABASE_STORAGE_BUCKET),
-    bucketPublic: normalizeBoolean(process.env.SUPABASE_STORAGE_PUBLIC, true),
+    bucketPublic: normalizeBoolean(process.env.SUPABASE_STORAGE_PUBLIC, false),
     signedUrlTtlSeconds: normalizePositiveInteger(
       process.env.SUPABASE_STORAGE_SIGNED_URL_TTL_SECONDS,
       DEFAULT_SIGNED_URL_TTL_SECONDS
@@ -67,8 +67,7 @@ function getSupabaseStorageConfig() {
 }
 
 function getSupabaseStorageKey() {
-  const { serviceRoleKey, publishableKey } = getSupabaseStorageConfig();
-  return serviceRoleKey || publishableKey;
+  return getSupabaseStorageConfig().serviceRoleKey;
 }
 
 function getDefaultBucketName() {
@@ -109,6 +108,15 @@ function getSupabaseStorageClient() {
   }
 
   return supabaseClient;
+}
+
+async function verifyPrivateStorageBucket() {
+  const { bucket, bucketPublic } = getSupabaseStorageConfig();
+  if (bucketPublic) throw new Error('SUPABASE_STORAGE_PUBLIC must be false for application files');
+  const { data, error } = await getSupabaseStorageClient().storage.getBucket(bucket);
+  if (error || !data) throw new Error('Cannot verify the private storage bucket; check its existence and backend service credentials');
+  if (data.public !== false) throw new Error('The Supabase application storage bucket is public; make it private before starting the backend');
+  return data;
 }
 
 function isSupabaseStoredPath(value) {
@@ -297,4 +305,5 @@ module.exports = {
   resolveSupabaseLocation,
   toSupabaseStoredPath,
   uploadSupabaseFile,
+  verifyPrivateStorageBucket,
 };

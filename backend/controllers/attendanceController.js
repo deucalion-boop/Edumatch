@@ -1,4 +1,5 @@
 const Attendance = require('../models/Attendance');
+const mongoose = require('mongoose');
 const Subject = require('../models/Subject');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
 const User = require('../models/User');
@@ -6,6 +7,7 @@ const { ROLE_TEACHER } = require('../constants/userRoles');
 const { sendSuccess } = require('../utils/responseHelper');
 const { getSectionOrThrow, normalizeSectionId } = require('../services/sectionService');
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
+const { listSupabaseAccounts } = require('../services/supabaseAccountService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const ATTENDANCE_STATUS_MAP = {
@@ -695,19 +697,19 @@ const getHeadTeacherAttendanceOverview = asyncHandler(async (req, res) => {
     throwHttpError('Your HeadTeacher account is missing a department assignment', 400);
   }
 
-  const teachers = await User.find({
-    role: ROLE_TEACHER,
-    department,
-    managedBy: req.user._id,
-  })
-    .select('_id name email subject department status advisorySectionId')
-    .populate('advisorySectionId', 'name')
-    .lean();
-
-  const teacherIds = teachers.map((teacher) => teacher._id);
-  const records = teacherIds.length > 0
+  const headTeacherId = String(req.user?._id || req.user?.id || '').trim();
+  const accounts = await listSupabaseAccounts();
+  const teachers = accounts.filter((account) => (
+    String(account?.role || '').trim() === ROLE_TEACHER
+    && String(account?.department || '').trim() === department
+    && String(account?.managedBy?._id || account?.managedBy?.id || account?.managedBy || '').trim() === headTeacherId
+  ));
+  const mongoTeacherIds = teachers
+    .map((teacher) => String(teacher?._id || teacher?.id || '').trim())
+    .filter((id) => mongoose.Types.ObjectId.isValid(id));
+  const records = mongoTeacherIds.length > 0
     ? await Attendance.find({
-      teacherId: { $in: teacherIds },
+      teacherId: { $in: mongoTeacherIds },
     })
       .sort({ dateKey: -1, createdAt: -1 })
       .limit(200)
@@ -715,13 +717,13 @@ const getHeadTeacherAttendanceOverview = asyncHandler(async (req, res) => {
     : [];
 
   const teacherSummaryMap = new Map(
-    teachers.map((teacher) => [String(teacher._id), {
-      teacherId: String(teacher._id),
+    teachers.map((teacher) => [String(teacher._id || teacher.id), {
+      teacherId: String(teacher._id || teacher.id),
       name: String(teacher.name || 'Teacher').trim() || 'Teacher',
       email: String(teacher.email || '').trim(),
       subject: String(teacher.subject || teacher.department || '').trim(),
       department: String(teacher.department || '').trim(),
-      advisorySectionName: String(teacher?.advisorySectionId?.name || '').trim(),
+      advisorySectionName: String(teacher?.advisorySection?.name || '').trim(),
       status: String(teacher.status || 'active').trim().toLowerCase(),
       totalRecords: 0,
       handledRecordCount: 0,

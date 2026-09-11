@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const Assessment = require('../models/Assessment');
-const Notification = require('../models/Notification');
+const { upsertNotifications } = require('./supabaseNotificationService');
 const Recommendation = require('../models/Recommendation');
 const Submission = require('../models/Submission');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
@@ -47,43 +47,19 @@ async function createStudentNotifications({
 
   const senderPayload = senderDetails(sender);
   const normalizedEventKey = clean(eventKey);
-  const now = new Date();
-  const operations = uniqueRecipientIds.map((recipientId) => ({
-    updateOne: {
-      filter: {
-        recipientId,
-        recipientRole: STUDENT_ROLE,
-        type: clean(type).toLowerCase(),
-        'meta.eventKey': normalizedEventKey,
-      },
-      update: {
-        $setOnInsert: {
-          recipientId,
-          recipientRole: STUDENT_ROLE,
-          ...senderPayload,
-          type: clean(type, 'student_update').toLowerCase(),
-          title: truncate(title, 220),
-          message: truncate(message || subject || title, 400),
-          subject: truncate(subject || title, 200),
-          preview: truncate(preview || message || subject || title, 220),
-          urgent: urgent === true,
-          isViewed: false,
-          isCleared: false,
-          viewedAt: null,
-          meta: {
-            ...meta,
-            eventKey: normalizedEventKey,
-          },
-          createdAt: now,
-          updatedAt: now,
-        },
-      },
-      upsert: true,
-    },
-  }));
-
-  const result = await Notification.bulkWrite(operations, { ordered: false });
-  return Number(result?.upsertedCount || 0);
+  return upsertNotifications(uniqueRecipientIds.map((recipientId) => ({
+    recipientId,
+    recipientRole: STUDENT_ROLE,
+    ...senderPayload,
+    type: clean(type, 'student_update').toLowerCase(),
+    title: truncate(title, 220),
+    message: truncate(message || subject || title, 400),
+    subject: truncate(subject || title, 200),
+    preview: truncate(preview || message || subject || title, 220),
+    urgent: urgent === true,
+    eventKey: normalizedEventKey,
+    meta,
+  })));
 }
 
 async function approvedStudentsForSubject(subjectId) {

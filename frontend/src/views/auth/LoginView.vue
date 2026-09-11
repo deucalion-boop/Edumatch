@@ -143,9 +143,6 @@
                 <input type="checkbox" v-model="form.remember" />
                 <span>Keep me signed in on this device</span>
               </label>
-              <RouterLink to="/auth/forgot-password" class="forgot-password">
-                Forgot password
-              </RouterLink>
             </div>
 
             <div class="auth-actions">
@@ -153,6 +150,9 @@
                 <i class="fas login-submit-icon" :class="otpRequired ? 'fa-shield-halved' : 'fa-sign-in-alt'"></i>
                 <span>{{ isLoading ? (otpRequired ? 'Verifying...' : 'Signing In...') : (otpRequired ? 'Verify OTP' : 'Sign In') }}</span>
               </button>
+              <RouterLink v-if="!otpRequired" to="/auth/forgot-password" class="forgot-password forgot-password--below-submit">
+                Forgot password
+              </RouterLink>
               <button v-if="otpRequired" type="button" class="auth-submit-btn auth-submit-btn--secondary" :disabled="isLoading" @click="backToCredentials">
                 <i class="fas fa-arrow-left login-submit-icon"></i>
                 <span>Back to sign in</span>
@@ -699,6 +699,13 @@ export default {
   color: #ffffff !important;
   border: 1px solid #d1d5db !important;
   box-shadow: none !important;
+}
+
+.auth-actions .forgot-password--below-submit {
+  display: block;
+  width: fit-content;
+  margin: 0.75rem auto 0;
+  text-align: center;
 }
 
 .auth-actions .auth-submit-btn--secondary span,

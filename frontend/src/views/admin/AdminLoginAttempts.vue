@@ -268,6 +268,7 @@
             </div>
           </div>
         </section>
+        <footer>© 2026 EduMatch</footer>
       </main>
     </div>
   </div>

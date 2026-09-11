@@ -1,5 +1,7 @@
-const AdminMessage = require('../models/AdminMessage');
-const Notification = require('../models/Notification');
+const {
+  createAdminMessage,
+  createNotification,
+} = require('./supabaseNotificationService');
 
 function buildMessagePreview(content, maxLength = 120) {
   const normalized = String(content || '')
@@ -23,7 +25,7 @@ async function createAdminMessageNotification({
   const senderRole = String(sender?.role || 'admin').trim().toLowerCase();
   const senderLabel = senderRole === 'headteacher' ? 'Head Teacher' : 'Admin';
 
-  const messageRecord = await AdminMessage.create({
+  const messageRecord = await createAdminMessage({
     senderId: sender?._id,
     senderRole,
     senderName,
@@ -35,7 +37,7 @@ async function createAdminMessageNotification({
     urgent: urgent === true,
   });
 
-  const notificationRecord = await Notification.create({
+  const notificationRecord = await createNotification({
     recipientId: recipient?._id,
     recipientRole: String(recipient?.role || '').trim().toLowerCase(),
     senderId: sender?._id || null,
@@ -50,6 +52,7 @@ async function createAdminMessageNotification({
     isViewed: false,
     viewedAt: null,
     messageId: messageRecord._id,
+    eventKey: `admin-message:${messageRecord._id}`,
     meta: {
       source: senderRole === 'headteacher' ? 'headteacher_announcement' : 'admin_messaging_modal',
     },

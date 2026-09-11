@@ -9807,6 +9807,11 @@ body.admin-dashboard .admin-main > * {
     max-width: 100%;
 }
 
+body.admin-dashboard .admin-main > footer {
+    margin: 3rem 0 1rem;
+    text-align: center;
+}
+
 body.admin-dashboard .analytics-grid,
 body.admin-dashboard .ai-analytics-grid,
 body.admin-dashboard .stats-grid,

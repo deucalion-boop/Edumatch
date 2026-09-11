@@ -39,7 +39,7 @@ const {
   lockTeacherAttendance,
 } = require('../controllers/attendanceController');
 const { getSectionDirectory } = require('../controllers/sectionController');
-const { aiLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
+const { aiLimiter, inviteLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
 
 const router = express.Router();
 
@@ -74,7 +74,7 @@ router.post('/assessments/:id/classes', copyTeacherAssessmentToClasses);
 router.put('/assessments/:id/questions', updateAssessmentQuestions);
 router.get('/assessments/:id/results', getAssessmentResultsSummary);
 router.get('/students', getTeacherStudents);
-router.post('/students', createStudentInvite);
+router.post('/students', inviteLimiter, createStudentInvite);
 router.get('/subjects/:subjectId/students', getTeacherSubjectStudents);
 router.delete('/subjects/:subjectId/students/:studentId', removeTeacherSubjectStudent);
 router.get('/students/assessment-results', getTeacherStudentAssessmentResults);

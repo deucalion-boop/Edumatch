@@ -26,7 +26,7 @@
             <div class="profile-header">
               <div class="profile-avatar">
                 <div class="profile-avatar-placeholder" id="profile-image" aria-hidden="true">
-                  <img v-if="user.profile?.avatar" :src="user.profile.avatar" alt="Profile avatar">
+                  <img v-if="user.profile?.avatar" :src="user.profile.avatar" alt="Profile avatar" @error="handleAvatarImageError">
                   <i v-else class="fas fa-user icon-sem-profile"></i>
                 </div>
                 <div class="avatar-actions">
@@ -280,6 +280,21 @@ export default {
       const raw = String(value || '').trim()
       if (!raw) return ''
       if (/^blob:/i.test(raw)) return raw
+
+      // Private Supabase files are returned by the API through /api/storage.
+      // Do not retain an absolute localhost backend URL here: it points to the
+      // viewer's device when the frontend is opened from a LAN/deployed URL.
+      // A relative API URL is handled by Vite's proxy in development and the
+      // application's reverse proxy in production.
+      try {
+        const parsed = new URL(raw, window.location.origin)
+        if (parsed.pathname.startsWith('/api/storage/')) {
+          return `${parsed.pathname}${parsed.search}${parsed.hash}`
+        }
+      } catch (_error) {
+        // Use the normal relative-path fallback below for malformed values.
+      }
+
       if (/^https?:\/\//i.test(raw)) return raw
 
       const normalizedPath = raw.startsWith('/') ? raw : `/${raw}`
@@ -368,6 +383,11 @@ export default {
     },
     triggerAvatarUpload() {
       this.$refs.avatarUpload.click()
+    },
+    handleAvatarImageError() {
+      // Avoid leaving broken-image alt text in the avatar while retaining the
+      // standard user-icon fallback if an old/missing image is encountered.
+      this.user.profile.avatar = null
     },
     async handleAvatarUpload(event) {
       const file = event.target.files[0]

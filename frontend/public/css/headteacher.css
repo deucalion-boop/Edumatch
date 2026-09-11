@@ -3594,21 +3594,25 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .head
 }
 
 .headteacher-overview-page .headteacher-create-teacher-cta {
-  min-height: 44px;
-  padding: 0.72rem 1rem;
+  min-height: 36px;
+  padding: 0.48rem 0.72rem;
   border: 1px solid rgba(30, 67, 7, 0.25);
-  border-radius: 14px;
+  border-radius: 10px;
   background: linear-gradient(135deg, var(--ht-forest), #3f751d);
   color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
-  font-size: 0.86rem;
+  gap: 0.4rem;
+  font-size: 0.76rem;
   font-weight: 750;
   white-space: nowrap;
-  box-shadow: 0 10px 22px rgba(30, 67, 7, 0.2);
+  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.18);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.headteacher-overview-page .headteacher-create-teacher-cta i {
+  font-size: 0.72rem;
 }
 
 .headteacher-overview-page .headteacher-create-teacher-cta:hover {
@@ -3870,10 +3874,10 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .head
   }
 
   .headteacher-overview-page .headteacher-create-teacher-cta {
-    min-height: 38px;
-    padding: 0.58rem 0.8rem;
-    border-radius: 12px;
-    font-size: 0.76rem;
+    min-height: 34px;
+    padding: 0.42rem 0.65rem;
+    border-radius: 9px;
+    font-size: 0.72rem;
   }
 }
 
@@ -3898,9 +3902,9 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .head
   .headteacher-overview-page .headteacher-create-teacher-cta {
     width: 100%;
     min-width: 0;
-    min-height: 42px;
-    padding: 0.65rem 0.85rem;
-    border-radius: 12px;
+    min-height: 36px;
+    padding: 0.48rem 0.7rem;
+    border-radius: 10px;
   }
 
   .headteacher-overview-page .headteacher-attention-chip {

@@ -15,6 +15,8 @@ const {
 } = require('../services/assessmentPolicyService');
 const { ROLE_HEADTEACHER, ROLE_TEACHER } = require('../constants/userRoles');
 const { normalizeStrand, getSubjectsByStrand, isSubjectAllowedForStrand, getSubjectCategory } = require('../constants/strandSubjects');
+const { findSupabaseAccount } = require('../services/supabaseAccountService');
+const { findSupabaseLesson } = require('../services/supabaseContentService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -40,23 +42,21 @@ async function resolveAssessmentOwnerContext(req, lessonId, teacherId) {
       throw error;
     }
 
-    const teacher = await User.findOne({
-      _id: normalizedTeacherId,
-      role: ROLE_TEACHER,
-      managedBy: req.user._id,
-      department: String(req.user?.department || '').trim(),
-    })
-      .select('_id name subject department')
-      .lean();
+    const teacher = await findSupabaseAccount('id', normalizedTeacherId);
 
-    if (!teacher) {
+    if (
+      !teacher
+      || String(teacher.role || '') !== ROLE_TEACHER
+      || String(teacher.managedBy || '') !== String(req.user._id || '')
+      || String(teacher.department || '') !== String(req.user?.department || '')
+    ) {
       const error = new Error('The selected teacher is not managed by this Head Teacher');
       error.statusCode = 404;
       throw error;
     }
 
     const lesson = lessonId
-      ? await Lesson.findOne({ _id: lessonId, createdBy: teacher._id }).lean()
+      ? await findSupabaseLesson(lessonId, teacher._id)
       : null;
     if (lessonId && !lesson) {
       const error = new Error('Lesson not found for the selected teacher');
@@ -68,7 +68,7 @@ async function resolveAssessmentOwnerContext(req, lessonId, teacherId) {
   }
 
   const lesson = lessonId
-    ? await Lesson.findOne({ _id: lessonId, createdBy: req.user._id }).lean()
+    ? await findSupabaseLesson(lessonId, req.user._id)
     : null;
   if (lessonId && !lesson) {
     const error = new Error('Lesson not found for this teacher');
@@ -527,11 +527,14 @@ const generateAssessmentWithAi = asyncHandler(async (req, res) => {
 
   const { ownerTeacher, lesson } = await resolveAssessmentOwnerContext(req, lessonId, teacherId);
   const selectedClass = !lessonId && subjectId
-    ? await Subject.findOne({
-      _id: subjectId,
-      teacherId: ownerTeacher?._id || req.user?._id,
-      isActive: true,
-    }).lean()
+    ? {
+      _id: String(subjectId),
+      id: String(subjectId),
+      name: String(subject || ownerTeacher?.subject || '').trim(),
+      className: String(topic || '').trim(),
+      code: '',
+      track: normalizeStrand(ownerTeacher?.strand || '') || 'GENERAL',
+    }
     : null;
   if (!lessonId && !selectedClass) {
     const error = new Error('Selected class was not found');

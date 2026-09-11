@@ -1,11 +1,13 @@
-const Session = require('../models/Session');
+const {
+  listActiveSessions,
+  revokeSession: revokePersistedSession,
+} = require('../services/supabaseAuthPersistenceService');
 const { sendSuccess } = require('../utils/responseHelper');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 const listSessions = asyncHandler(async (req, res) => {
-  const sessions = await Session.find({ userId: req.user._id, revokedAt: null, expiresAt: { $gt: new Date() } })
-    .sort({ lastSeenAt: -1 }).lean();
+  const sessions = await listActiveSessions(req.user._id);
   return sendSuccess(res, 200, 'Active sessions fetched', {
     sessions: sessions.map((session) => ({
       id: session._id,
@@ -21,11 +23,7 @@ const listSessions = asyncHandler(async (req, res) => {
 });
 
 const revokeSession = asyncHandler(async (req, res) => {
-  const session = await Session.findOneAndUpdate(
-    { _id: req.params.id, userId: req.user._id, revokedAt: null },
-    { $set: { revokedAt: new Date(), revokedReason: 'Revoked by user' } },
-    { returnDocument: 'after' }
-  );
+  const session = await revokePersistedSession(req.user._id, req.params.id, 'Revoked by user');
   if (!session) {
     const error = new Error('Session not found');
     error.statusCode = 404;
@@ -36,7 +34,7 @@ const revokeSession = asyncHandler(async (req, res) => {
 
 const logout = asyncHandler(async (req, res) => {
   if (req.session?._id) {
-    await Session.updateOne({ _id: req.session._id }, { $set: { revokedAt: new Date(), revokedReason: 'Logout' } });
+    await revokePersistedSession(req.user._id, req.session._id, 'Logout');
   }
   return sendSuccess(res, 200, 'Logged out successfully');
 });

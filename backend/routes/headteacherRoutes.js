@@ -17,7 +17,7 @@ const {
 const { getAiStatus, generateAssessmentWithAi } = require('../controllers/aiController');
 const { getHeadTeacherAttendanceOverview } = require('../controllers/attendanceController');
 const { getSectionDirectory } = require('../controllers/sectionController');
-const { aiLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
+const { aiLimiter, inviteLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
 
 const router = express.Router();
 
@@ -34,7 +34,7 @@ router.post('/assessments', createManagedTeacherAssessment);
 router.put('/assessments/:id', updateManagedTeacherAssessment);
 router.get('/ai/status', getAiStatus);
 router.post('/assessments/ai-generate', aiLimiter, generateAssessmentWithAi);
-router.post('/teachers', createTeacherAccount);
+router.post('/teachers', inviteLimiter, createTeacherAccount);
 router.put('/teachers/:id', updateManagedTeacher);
 router.post('/teachers/:id/announcements', sendManagedTeacherAnnouncement);
 

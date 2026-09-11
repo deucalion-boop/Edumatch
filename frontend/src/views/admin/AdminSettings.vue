@@ -118,7 +118,7 @@
             <div>
               <span class="settings-eyebrow">Platform configuration</span>
               <h3>Manage system preferences</h3>
-              <p>Update account security rules and control maintenance access for all users.</p>
+              <p>Update account verification, security rules, and maintenance access for all users.</p>
             </div>
             <span class="change-status" :class="{ 'change-status--pending': hasUnsavedChanges }">
               <i :class="hasUnsavedChanges ? 'fas fa-circle' : 'fas fa-check-circle'"></i>
@@ -172,6 +172,22 @@
                         <input id="lockout-duration" type="number" class="form-control" v-model="settings.security.accountLockoutDuration" min="1" max="1440" @change="markAsUnsaved">
                         <span>minutes</span>
                       </div>
+                    </div>
+                  </div>
+
+                  <div class="settings-row settings-row--toggle">
+                    <div class="settings-label">
+                      <label id="email-verification-label">Email verification required</label>
+                      <span class="settings-desc">Require users to verify their email address before account access is activated.</span>
+                    </div>
+                    <div class="settings-input settings-input--toggle">
+                      <span class="mode-state" :class="{ 'mode-state--active': settings.user.emailVerificationRequired }">
+                        {{ settings.user.emailVerificationRequired ? 'Required' : 'Optional' }}
+                      </span>
+                      <label class="toggle-switch">
+                        <input type="checkbox" v-model="settings.user.emailVerificationRequired" @change="markAsUnsaved" aria-labelledby="email-verification-label">
+                        <span class="toggle-slider"></span>
+                      </label>
                     </div>
                   </div>
 
@@ -285,6 +301,7 @@
             </div>
           </div>
         </section>
+        <footer>© 2026 EduMatch</footer>
       </main>
     </div>
 
@@ -324,7 +341,7 @@
           </button>
           <button
             class="btn btn-danger"
-            :style="confirmButtonLabel === 'Reset Settings'
+            :style="['Reset Settings', 'Create Backup', 'Creating...'].includes(confirmButtonLabel)
               ? 'background: #4f8a35 !important; background-image: none !important; border-color: #4f8a35 !important; color: #ffffff !important; box-shadow: none !important;'
               : ''"
             @click="executeConfirmAction"
@@ -346,6 +363,9 @@ import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 
 const DEFAULT_SETTINGS = {
+  user: {
+    emailVerificationRequired: true,
+  },
   security: {
     sessionTimeout: 120,
     maxLoginAttempts: 5,
@@ -357,6 +377,7 @@ const DEFAULT_SETTINGS = {
     systemVersion: 'v1.0.0',
     lastBackupAt: null,
     lastBackupFileName: '',
+    backupHistory: [],
     lastCacheClearedAt: null,
   },
 }
@@ -520,6 +541,7 @@ export default {
     }
 
     const applySettingsSnapshot = (snapshot) => {
+      settings.user.emailVerificationRequired = snapshot.user.emailVerificationRequired
       settings.security.sessionTimeout = snapshot.security.sessionTimeout
       settings.security.maxLoginAttempts = snapshot.security.maxLoginAttempts
       settings.security.accountLockoutDuration = snapshot.security.accountLockoutDuration
@@ -528,10 +550,14 @@ export default {
       settings.maintenance.systemVersion = snapshot.maintenance.systemVersion
       settings.maintenance.lastBackupAt = snapshot.maintenance.lastBackupAt
       settings.maintenance.lastBackupFileName = snapshot.maintenance.lastBackupFileName
+      settings.maintenance.backupHistory = snapshot.maintenance.backupHistory
       settings.maintenance.lastCacheClearedAt = snapshot.maintenance.lastCacheClearedAt
     }
 
     const buildSnapshotFromResponse = (systemSettings = {}) => ({
+      user: {
+        emailVerificationRequired: systemSettings.user?.emailVerificationRequired !== false,
+      },
       security: {
         sessionTimeout: Number(systemSettings.security?.sessionTimeoutMinutes || DEFAULT_SETTINGS.security.sessionTimeout),
         maxLoginAttempts: Number(systemSettings.security?.maxLoginAttempts || DEFAULT_SETTINGS.security.maxLoginAttempts),
@@ -547,6 +573,14 @@ export default {
         systemVersion: String(systemSettings.maintenance?.systemVersion || DEFAULT_SETTINGS.maintenance.systemVersion),
         lastBackupAt: systemSettings.maintenance?.lastBackupAt || null,
         lastBackupFileName: String(systemSettings.maintenance?.lastBackupFileName || ''),
+        backupHistory: Array.isArray(systemSettings.maintenance?.backupHistory)
+          ? systemSettings.maintenance.backupHistory.map((backup) => ({
+            fileName: String(backup?.fileName || ''),
+            generatedAt: backup?.generatedAt || null,
+            collectionCount: Number(backup?.collectionCount || 0),
+            sizeBytes: Number(backup?.sizeBytes || 0),
+          }))
+          : [],
         lastCacheClearedAt: systemSettings.maintenance?.lastCacheClearedAt || null,
       },
     })
@@ -576,6 +610,9 @@ export default {
       }
 
       return {
+        user: {
+          emailVerificationRequired: settings.user.emailVerificationRequired,
+        },
         security: {
           sessionTimeoutMinutes,
           maxLoginAttempts,
@@ -650,6 +687,7 @@ export default {
         resetSnapshot.maintenance.systemVersion = settings.maintenance.systemVersion || DEFAULT_SETTINGS.maintenance.systemVersion
         resetSnapshot.maintenance.lastBackupAt = settings.maintenance.lastBackupAt
         resetSnapshot.maintenance.lastBackupFileName = settings.maintenance.lastBackupFileName
+        resetSnapshot.maintenance.backupHistory = cloneSettings(settings.maintenance.backupHistory)
         resetSnapshot.maintenance.lastCacheClearedAt = settings.maintenance.lastCacheClearedAt
         applySettingsSnapshot(resetSnapshot)
         hasUnsavedChanges.value = true
@@ -814,6 +852,7 @@ export default {
       closeSidebar,
       formattedUpdatedAt,
       formattedLastCacheClearedAt,
+      formatDateTime,
     }
   },
 }

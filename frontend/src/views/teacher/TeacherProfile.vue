@@ -1124,6 +1124,11 @@ onBeforeUnmount(() => {
   transform: scale(1.1);
 }
 
+.avatar-action-btn .student-avatar-camera-icon {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 .profile-info h2 {
   font-size: 1.35rem;
   line-height: 1.3;
@@ -1150,8 +1155,8 @@ onBeforeUnmount(() => {
   width: 100%;
   min-height: 40px;
   padding: 10px 16px;
-  background: #1e4307 !important;
-  border: 1px solid #1e4307 !important;
+  background: #4f8a35 !important;
+  border: 1px solid #4f8a35 !important;
   border-radius: 11px;
   color: #ffffff !important;
   background-image: none !important;
@@ -1159,8 +1164,8 @@ onBeforeUnmount(() => {
 }
 
 .profile-actions .btn-primary:hover {
-  background: #173405 !important;
-  border-color: #173405 !important;
+  background: #3f702b !important;
+  border-color: #3f702b !important;
   box-shadow: 0 4px 8px rgba(23, 52, 5, 0.24);
 }
 

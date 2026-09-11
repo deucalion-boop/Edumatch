@@ -11,8 +11,6 @@ require('dotenv').config({
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const fs = require('fs');
-const { connectDatabase } = require('./config/database');
 const User = require('./models/User');
 const Lesson = require('./models/Lesson');
 const Assessment = require('./models/Assessment');
@@ -23,9 +21,7 @@ const UserModel = require('./models/User');
 const SubjectEnrollment = require('./models/SubjectEnrollment');
 const Attendance = require('./models/Attendance');
 const Section = require('./models/Section');
-const Notification = require('./models/Notification');
 const Recommendation = require('./models/Recommendation');
-const AdminMessage = require('./models/AdminMessage');
 const Session = require('./models/Session');
 const OtpChallenge = require('./models/OtpChallenge');
 const authRoutes = require('./routes/authRoutes');
@@ -44,14 +40,16 @@ const { validateMailApiEnvironment } = require('./services/gmailService');
 const { ensureDefaultSections } = require('./services/sectionService');
 const { isSupabaseStorageConfigured, getSupabaseStorageConfig } = require('./services/supabaseStorageService');
 const { apiLimiter, redisReady } = require('./middlewares/rateLimiters');
+const { ensureDefaultSupabaseAdmin } = require('./services/supabaseAccountService');
+const { resolveTrustProxy, validateRuntimeSecurity } = require('./utils/securityConfig');
+const { verifyPrivateStorageBucket } = require('./services/supabaseStorageService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const DEFAULT_ADMIN_NAME = String(process.env.ADMIN_NAME || 'EduMatch Administrator').trim() || 'EduMatch Administrator';
 const DEFAULT_ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || 'admin@edumatch.local').trim().toLowerCase() || 'admin@edumatch.local';
 const DEFAULT_ADMIN_USERNAME = String(process.env.ADMIN_USERNAME || 'admin').trim() || 'admin';
-const DEFAULT_ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || 'Admin123!').trim() || 'Admin123!';
-const uploadsDir = path.resolve(__dirname, 'uploads');
+const DEFAULT_ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || '').trim();
 const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = new Set(
   String(process.env.CORS_ALLOWED_ORIGINS || process.env.FRONTEND_URL || '')
@@ -64,14 +62,6 @@ if (!isProduction) {
   allowedOrigins.add('http://127.0.0.1:5173');
 }
 
-function resolveTrustProxy() {
-  const configured = String(process.env.TRUST_PROXY || '').trim();
-  if (!configured) return false;
-  if (/^\d+$/.test(configured)) return Number(configured);
-  if (['loopback', 'linklocal', 'uniquelocal'].includes(configured)) return configured;
-  throw new Error('TRUST_PROXY must be a hop count or a trusted Express subnet name');
-}
-
 app.set('trust proxy', resolveTrustProxy());
 const supabaseOrigin = (() => {
   try {
@@ -81,10 +71,6 @@ const supabaseOrigin = (() => {
     return '';
   }
 })();
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
 app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: true,
@@ -106,6 +92,11 @@ app.use(cors({
   allowedHeaders: ['Authorization', 'Content-Type'],
   maxAge: 600,
 }));
+// Both `node server.js` and imported Express hosts must complete the same
+// startup checks before handling requests. Concurrent cold-start requests share it.
+app.use((_req, _res, next) => {
+  initializeApplication().then(() => next(), next);
+});
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use((req, _res, next) => {
@@ -117,7 +108,7 @@ app.use((req, _res, next) => {
 
 app.use('/api', apiLimiter);
 app.use('/api', auditLogMiddleware);
-app.use('/uploads', express.static(uploadsDir));
+// Local uploads are served only through the expiring signed storage route.
 
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ success: true, message: 'EduMatch backend is running' });
@@ -270,47 +261,13 @@ async function cleanupDuplicateData() {
 }
 
 async function ensureDefaultAdminAccount() {
-  const adminByEmail = await User.findOne({ email: DEFAULT_ADMIN_EMAIL }).select('+password');
-  if (adminByEmail) {
-    adminByEmail.role = 'admin';
-    adminByEmail.status = 'active';
-    adminByEmail.username = DEFAULT_ADMIN_USERNAME;
-    adminByEmail.password = DEFAULT_ADMIN_PASSWORD;
-    if (!String(adminByEmail.name || '').trim()) {
-      adminByEmail.name = DEFAULT_ADMIN_NAME;
-    }
-    await adminByEmail.save();
-
-    console.log(`[BOOTSTRAP] Default admin normalized: ${DEFAULT_ADMIN_EMAIL}`);
-    return;
-  }
-
-  const adminUser = await User.findOne({ role: 'admin' }).sort({ createdAt: 1 }).select('+password');
-
-  if (adminUser) {
-    adminUser.email = DEFAULT_ADMIN_EMAIL;
-    adminUser.username = DEFAULT_ADMIN_USERNAME;
-    adminUser.password = DEFAULT_ADMIN_PASSWORD;
-    adminUser.status = 'active';
-    if (!String(adminUser.name || '').trim()) {
-      adminUser.name = DEFAULT_ADMIN_NAME;
-    }
-    await adminUser.save();
-
-    console.log(`[BOOTSTRAP] Default admin updated: ${DEFAULT_ADMIN_EMAIL}`);
-    return;
-  }
-
-  await User.create({
+  await ensureDefaultSupabaseAdmin({
     name: DEFAULT_ADMIN_NAME,
     email: DEFAULT_ADMIN_EMAIL,
     username: DEFAULT_ADMIN_USERNAME,
     password: DEFAULT_ADMIN_PASSWORD,
-    role: 'admin',
-    status: 'active',
   });
-
-  console.log(`[BOOTSTRAP] Default admin created: ${DEFAULT_ADMIN_EMAIL}`);
+  console.log('[BOOTSTRAP] Administrator account is available; existing accounts are preserved.');
 }
 
 async function cleanupLegacyAiSettingsFields() {
@@ -415,9 +372,7 @@ async function syncApplicationIndexes() {
     SubjectEnrollment,
     Attendance,
     Section,
-    Notification,
     Recommendation,
-    AdminMessage,
     Session,
     OtpChallenge,
   ];
@@ -429,14 +384,24 @@ async function syncApplicationIndexes() {
   console.log('[BOOTSTRAP] Application indexes synced.');
 }
 
-async function bootstrap() {
-  if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not configured in .env');
+let applicationReady;
+
+function initializeApplication() {
+  if (!applicationReady) {
+    applicationReady = prepareApplication().catch((error) => {
+      applicationReady = undefined;
+      error.statusCode = 503;
+      throw error;
+    });
   }
+  return applicationReady;
+}
+
+async function prepareApplication() {
+  validateRuntimeSecurity();
 
   console.log(`[ENV] NODE_ENV=${process.env.NODE_ENV || 'development'}`);
   console.log(`[ENV] PORT=${PORT}`);
-  console.log(`[ENV] MONGODB_URI_SET=${Boolean(process.env.MONGODB_URI)}`);
   const mailValidation = validateMailApiEnvironment();
   if (!mailValidation.ok) {
     console.warn(`[MAIL] ${mailValidation.reason}`);
@@ -450,24 +415,25 @@ async function bootstrap() {
     console.log('[STORAGE] Using local uploads in backend/uploads.');
   }
 
-  await connectDatabase();
   await redisReady;
-  await reconcileCriticalIndexes();
-  await cleanupDuplicateData();
-  await cleanupLegacyAiSettingsFields();
-  await normalizeLegacyAttendanceScopes();
-  await syncApplicationIndexes();
+  await verifyPrivateStorageBucket();
   await ensureDefaultAdminAccount();
-  await ensureDefaultSections();
+}
 
-  app.listen(PORT, () => {
+async function bootstrap() {
+  await initializeApplication();
+  return app.listen(PORT, () => {
     // eslint-disable-next-line no-console
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
-bootstrap().catch((error) => {
+if (require.main === module) bootstrap().catch((error) => {
   // eslint-disable-next-line no-console
   console.error('Failed to start server:', error.message);
   process.exit(1);
 });
+
+module.exports = app;
+module.exports.app = app;
+module.exports.bootstrap = bootstrap;

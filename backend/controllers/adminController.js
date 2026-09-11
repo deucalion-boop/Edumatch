@@ -5,11 +5,8 @@ const Submission = require('../models/Submission');
 const Recommendation = require('../models/Recommendation');
 const Subject = require('../models/Subject');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
-const Settings = require('../models/Settings');
-const Notification = require('../models/Notification');
+const { getAppSettings, saveAppSettings } = require('../services/supabaseSettingsService');
 const ExportApprovalRequest = require('../models/ExportApprovalRequest');
-const LoginAttempt = require('../models/LoginAttempt');
-const AuditLog = require('../models/AuditLog');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs/promises');
@@ -30,6 +27,10 @@ const {
   applyRoleScopedFields,
 } = require('../services/userManagementService');
 const { createAdminMessageNotification } = require('../services/notificationService');
+const { countUnreadNotifications } = require('../services/supabaseNotificationService');
+const { getSupabaseAnalytics } = require('../services/supabaseAnalyticsService');
+const { listLoginAttempts, revokeNonAdminSessions } = require('../services/supabaseAuthPersistenceService');
+const { listAuditLogs } = require('../services/supabaseAuditLogService');
 const {
   APPROVED_EXPORT_REQUEST_TTL_MINUTES,
   EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
@@ -44,6 +45,12 @@ const { formatRecommendationPayload } = require('../services/recommendationServi
 const { computeMasteryFromSubmissions } = require('../utils/studentProgress');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
+const {
+  createSupabaseAccount,
+  findSupabaseAccountByEmail,
+  findSupabaseHeadTeacherByDepartment,
+  listSupabaseAccounts,
+} = require('../services/supabaseAccountService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const ALLOWED_STRANDS = ['STEM', 'HUMSS', 'ABM', 'TVL'];
@@ -59,7 +66,6 @@ const MAX_ACCOUNT_LOCKOUT_DURATION_MINUTES = 1440;
 const DEFAULT_EMAIL_VERIFICATION_REQUIRED = true;
 const DEFAULT_MAINTENANCE_MESSAGE = 'The system is currently under maintenance. Please check back later.';
 const DEFAULT_SYSTEM_VERSION = 'v1.0.0';
-const SYSTEM_MAINTENANCE_SESSION_LOGOUT_DATE = new Date(0);
 
 function buildRecentDayBuckets(dayCount = 30) {
   const buckets = [];
@@ -101,6 +107,14 @@ function systemSettingsResponse(settings) {
       systemVersion: String(settings?.maintenance?.systemVersion || DEFAULT_SYSTEM_VERSION).trim() || DEFAULT_SYSTEM_VERSION,
       lastBackupAt: settings?.maintenance?.lastBackupAt || null,
       lastBackupFileName: String(settings?.maintenance?.lastBackupFileName || '').trim(),
+      backupHistory: Array.isArray(settings?.maintenance?.backupHistory)
+        ? settings.maintenance.backupHistory.map((backup) => ({
+          fileName: String(backup?.fileName || '').trim(),
+          generatedAt: backup?.generatedAt || null,
+          collectionCount: Number(backup?.collectionCount || 0),
+          sizeBytes: Number(backup?.sizeBytes || 0),
+        }))
+        : [],
       lastCacheClearedAt: settings?.maintenance?.lastCacheClearedAt || null,
     },
     updatedAt: settings?.updatedAt || null,
@@ -160,10 +174,6 @@ function normalizeSystemSettings(input = {}) {
       systemVersion,
     },
   };
-}
-
-async function ensureDirectory(dirPath) {
-  await fs.mkdir(dirPath, { recursive: true });
 }
 
 async function clearDirectoryContents(dirPath) {
@@ -729,16 +739,8 @@ async function ensureSingleHeadTeacherPerDepartment({ role, department, excludeU
   const normalizedDepartment = String(department || '').trim();
   if (!normalizedDepartment) return;
 
-  const query = {
-    role: ROLE_HEADTEACHER,
-    department: normalizedDepartment,
-  };
-  if (excludeUserId) {
-    query._id = { $ne: excludeUserId };
-  }
-
-  const existingHeadTeacher = await User.findOne(query).select('_id').lean();
-  if (existingHeadTeacher) {
+  const existingHeadTeacher = await findSupabaseHeadTeacherByDepartment(normalizedDepartment);
+  if (existingHeadTeacher && String(existingHeadTeacher._id) !== String(excludeUserId || '')) {
     const error = new Error('This department already has a Head Teacher assigned');
     error.statusCode = 409;
     throw error;
@@ -798,63 +800,28 @@ const getLoginAttempts = asyncHandler(async (req, res) => {
   const normalizedRole = String(req.query.role || '').trim().toLowerCase();
   const requestedPage = Number.parseInt(req.query.page, 10);
   const limit = 50;
-  const filters = {};
   const allowedRoles = new Set([ROLE_ADMIN, ROLE_SECRETARY, ROLE_HEADTEACHER, ROLE_TEACHER, ROLE_STUDENT]);
-
-  if (normalizedOutcome === 'success' || normalizedOutcome === 'failed') {
-    filters.outcome = normalizedOutcome;
-  }
-
-  if (allowedRoles.has(normalizedRole)) {
-    filters.role = normalizedRole;
-  }
-
-  if (search) {
-    const pattern = new RegExp(escapeRegex(search), 'i');
-    filters.$or = [
-      { username: pattern },
-      { name: pattern },
-      { email: pattern },
-      { ipAddress: pattern },
-      { reason: pattern },
-    ];
-  }
-
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [total, successCount, failedCount, recentAttempts] = await Promise.all([
-    LoginAttempt.countDocuments(filters),
-    LoginAttempt.countDocuments({ ...filters, outcome: 'success' }),
-    LoginAttempt.countDocuments({ ...filters, outcome: 'failed' }),
-    LoginAttempt.countDocuments({ ...filters, createdAt: { $gte: last24Hours } }),
-  ]);
-  const totalPages = Math.max(Math.ceil(total / limit), 1);
-  const page = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
-  const skip = (page - 1) * limit;
-  const attempts = await LoginAttempt.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+  const outcome = normalizedOutcome === 'success' || normalizedOutcome === 'failed' ? normalizedOutcome : '';
+  const role = allowedRoles.has(normalizedRole) ? normalizedRole : '';
+  const result = await listLoginAttempts({
+    search,
+    outcome,
+    role,
+    page: Number.isFinite(requestedPage) ? requestedPage : 1,
+    pageSize: limit,
+  });
 
   return sendSuccess(res, 200, 'Login attempts fetched successfully', {
-    attempts: attempts.map((entry) => normalizeLoginAttemptResponse(entry)),
-    summary: {
-      total,
-      successCount,
-      failedCount,
-      recentAttempts,
-    },
+    attempts: result.attempts.map((entry) => normalizeLoginAttemptResponse(entry)),
+    summary: result.summary,
     filters: {
       search,
       status: normalizedOutcome || 'all',
       role: normalizedRole || 'all',
-      page,
+      page: result.pagination.page,
       pageSize: limit,
     },
-    pagination: {
-      page,
-      pageSize: limit,
-      totalItems: total,
-      totalPages,
-      hasPreviousPage: page > 1,
-      hasNextPage: page < totalPages,
-    },
+    pagination: result.pagination,
   });
 });
 
@@ -866,61 +833,21 @@ const getAuditLogs = asyncHandler(async (req, res) => {
   const result = String(req.query.result || '').trim().toLowerCase();
   const requestedPage = Number.parseInt(req.query.page, 10);
   const limit = 50;
-  const filters = {};
-
-  if (category && category.toLowerCase() !== 'all') {
-    filters.category = category;
-  }
-
-  if (role && role !== 'all') {
-    filters.actorRole = role;
-  }
-
-  if (method && method !== 'ALL') {
-    filters.method = method;
-  }
-
-  if (result === 'success') {
-    filters.succeeded = true;
-  } else if (result === 'failed') {
-    filters.succeeded = false;
-  }
-
-  if (search) {
-    const pattern = new RegExp(escapeRegex(search), 'i');
-    filters.$or = [
-      { actorName: pattern },
-      { actorEmail: pattern },
-      { actorIdentifier: pattern },
-      { actionLabel: pattern },
-      { endpoint: pattern },
-      { targetLabel: pattern },
-      { ipAddress: pattern },
-    ];
-  }
-
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [total, successCount, failedCount, recentLogs, categories] = await Promise.all([
-    AuditLog.countDocuments(filters),
-    AuditLog.countDocuments({ ...filters, succeeded: true }),
-    AuditLog.countDocuments({ ...filters, succeeded: false }),
-    AuditLog.countDocuments({ ...filters, createdAt: { $gte: last24Hours } }),
-    AuditLog.distinct('category'),
-  ]);
-  const totalPages = Math.max(Math.ceil(total / limit), 1);
-  const page = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
-  const skip = (page - 1) * limit;
-  const logs = await AuditLog.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+  const succeeded = result === 'success' ? true : (result === 'failed' ? false : null);
+  const auditResult = await listAuditLogs({
+    search,
+    category: category && category.toLowerCase() !== 'all' ? category : '',
+    role: role && role !== 'all' ? role : '',
+    method: method && method !== 'ALL' ? method : '',
+    succeeded,
+    page: Number.isFinite(requestedPage) ? requestedPage : 1,
+    pageSize: limit,
+  });
 
   return sendSuccess(res, 200, 'Audit logs fetched successfully', {
-    logs: logs.map((entry) => normalizeAuditLogResponse(entry)),
-    summary: {
-      total,
-      successCount,
-      failedCount,
-      recentLogs,
-    },
-    categories: categories
+    logs: auditResult.logs.map((entry) => normalizeAuditLogResponse(entry)),
+    summary: auditResult.summary,
+    categories: auditResult.categories
       .map((value) => String(value || '').trim())
       .filter(Boolean)
       .sort((left, right) => left.localeCompare(right)),
@@ -930,17 +857,10 @@ const getAuditLogs = asyncHandler(async (req, res) => {
       role: role || 'all',
       method: method || 'ALL',
       result: result || 'all',
-      page,
+      page: auditResult.pagination.page,
       pageSize: limit,
     },
-    pagination: {
-      page,
-      pageSize: limit,
-      totalItems: total,
-      totalPages,
-      hasPreviousPage: page > 1,
-      hasNextPage: page < totalPages,
-    },
+    pagination: auditResult.pagination,
   });
 });
 
@@ -955,7 +875,7 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
 
   const normalizedEmail = String(email).toLowerCase().trim();
   const normalizedUsername = String(username).trim();
-  const existing = await User.findOne({ email: normalizedEmail });
+  const existing = await findSupabaseAccountByEmail(normalizedEmail);
   if (existing) {
     const error = new Error('Email already exists');
     error.statusCode = 409;
@@ -978,7 +898,7 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
     department: normalizedDepartment,
   });
 
-  const created = await User.create({
+  const created = await createSupabaseAccount({
     name: String(name).trim(),
     email: normalizedEmail,
     username: normalizedUsername,
@@ -1037,7 +957,7 @@ const createUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const existing = await User.findOne({ email: String(email).toLowerCase().trim() });
+  const existing = await findSupabaseAccountByEmail(String(email).toLowerCase().trim());
   if (existing) {
     const error = new Error('Email already exists');
     error.statusCode = 409;
@@ -1071,7 +991,7 @@ const createUser = asyncHandler(async (req, res) => {
 
   let created;
   try {
-    created = await User.create({
+    created = await createSupabaseAccount({
       name,
       email,
       username: normalizedUsername,
@@ -1162,29 +1082,14 @@ const sendUserInvite = asyncHandler(async (req, res) => {
 });
 
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find()
-    .select('-password +lastActivityAt +lastLoginAt')
-    .populate('managedBy', 'name email')
-    .sort({ createdAt: -1 });
+  const users = await listSupabaseAccounts();
   const dedupedUsers = uniqueBy(users, (user) => String(user?._id || '').trim() || String(user?.email || '').trim().toLowerCase());
-  const teacherIds = dedupedUsers
-    .filter((user) => String(user?.role || '') === ROLE_TEACHER)
-    .map((user) => user._id);
-  const lessonCounts = teacherIds.length
-    ? await Lesson.aggregate([
-        { $match: { createdBy: { $in: teacherIds } } },
-        { $group: { _id: '$createdBy', count: { $sum: 1 } } },
-      ])
-    : [];
-  const lessonCountsByTeacher = new Map(
-    lessonCounts.map((row) => [String(row._id), Number(row.count || 0)])
-  );
 
   return sendSuccess(res, 200, 'Users fetched successfully', {
     users: dedupedUsers.map((user) => {
       const mapped = mapUserResponse(user, req);
       if (String(user?.role || '') === ROLE_TEACHER) {
-        mapped.lessonsCreated = lessonCountsByTeacher.get(String(user._id)) || 0;
+        mapped.lessonsCreated = 0;
       }
       if (String(user?.role || '') === ROLE_STUDENT) {
         const progress = user?.enrollment?.progress || {};
@@ -1252,7 +1157,7 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, email, password, role, status, subject, contactNumber, department } = req.body;
+  const { name, email, username, password, role, status, subject, contactNumber, department } = req.body;
 
   const user = await User.findById(id).select('+password');
   if (!user) {
@@ -1273,6 +1178,21 @@ const updateUser = asyncHandler(async (req, res) => {
 
   if (name !== undefined) user.name = name;
   if (email !== undefined) user.email = String(email).toLowerCase().trim();
+  if (username !== undefined) {
+    const normalizedUsername = String(username).trim();
+    if (!normalizedUsername || normalizedUsername.length > 50) {
+      const error = new Error('Username must be between 1 and 50 characters');
+      error.statusCode = 400;
+      throw error;
+    }
+    const usernameExists = await User.findOne({ username: normalizedUsername, _id: { $ne: id } }).select('_id');
+    if (usernameExists) {
+      const error = new Error('Username already exists');
+      error.statusCode = 409;
+      throw error;
+    }
+    user.username = normalizedUsername;
+  }
   if (password !== undefined && String(password).trim()) {
     const normalizedPassword = String(password).trim();
     assertPasswordMeetsPolicy(normalizedPassword);
@@ -1329,6 +1249,7 @@ const updateUser = asyncHandler(async (req, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      username: user.username || '',
       role: user.role,
       status: user.status,
       strand: user.strand,
@@ -1384,7 +1305,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 });
 
 const getSecuritySettings = asyncHandler(async (_req, res) => {
-  const settings = await Settings.findOne({ key: 'global' });
+  const settings = await getAppSettings();
   const systemSettings = systemSettingsResponse(settings);
 
   return sendSuccess(res, 200, 'Security settings fetched successfully', {
@@ -1412,28 +1333,13 @@ const saveSecuritySettings = asyncHandler(async (req, res) => {
     fieldName: 'accountLockoutDurationMinutes',
   });
 
-  const settings = await Settings.findOneAndUpdate(
-    { key: 'global' },
-    {
-      $set: {
-        security: {
-          sessionTimeoutMinutes: parsedSessionTimeoutMinutes,
-          maxLoginAttempts: parsedMaxLoginAttempts,
-          accountLockoutDurationMinutes: parsedAccountLockoutDurationMinutes,
-        },
-        updatedBy: req.user._id,
-      },
-      $setOnInsert: {
-        key: 'global',
-      },
+  const settings = await saveAppSettings({
+    security: {
+      sessionTimeoutMinutes: parsedSessionTimeoutMinutes,
+      maxLoginAttempts: parsedMaxLoginAttempts,
+      accountLockoutDurationMinutes: parsedAccountLockoutDurationMinutes,
     },
-    {
-      upsert: true,
-      returnDocument: 'after',
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
+  }, req.user._id);
 
   return sendSuccess(res, 200, 'Security settings saved successfully', {
     settings: {
@@ -1446,7 +1352,7 @@ const saveSecuritySettings = asyncHandler(async (req, res) => {
 });
 
 const getSystemSettings = asyncHandler(async (_req, res) => {
-  const settings = await Settings.findOne({ key: 'global' });
+  const settings = await getAppSettings();
 
   return sendSuccess(res, 200, 'System settings fetched successfully', {
     settings: systemSettingsResponse(settings),
@@ -1455,118 +1361,17 @@ const getSystemSettings = asyncHandler(async (_req, res) => {
 
 const saveSystemSettings = asyncHandler(async (req, res) => {
   const normalizedSettings = normalizeSystemSettings(req.body || {});
-  const existingSettings = await Settings.findOne({ key: 'global' }).select('maintenance').lean();
-  const wasMaintenanceEnabled = existingSettings?.maintenance?.maintenanceModeEnabled === true;
-
-  const settings = await Settings.findOneAndUpdate(
-    { key: 'global' },
-    {
-      key: 'global',
-      user: {
-        emailVerificationRequired: normalizedSettings.user.emailVerificationRequired,
-      },
-      security: normalizedSettings.security,
-      maintenance: {
-        maintenanceModeEnabled: normalizedSettings.maintenance.maintenanceModeEnabled,
-        maintenanceMessage: normalizedSettings.maintenance.maintenanceMessage,
-        systemVersion: normalizedSettings.maintenance.systemVersion,
-        lastBackupAt: existingSettings?.maintenance?.lastBackupAt || null,
-        lastBackupFileName: existingSettings?.maintenance?.lastBackupFileName || '',
-        lastCacheClearedAt: existingSettings?.maintenance?.lastCacheClearedAt || null,
-      },
-      updatedBy: req.user._id,
-    },
-    {
-      upsert: true,
-      returnDocument: 'after',
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
+  const settings = await saveAppSettings(normalizedSettings, req.user._id);
 
   let sessionsInvalidated = 0;
-  if (normalizedSettings.maintenance.maintenanceModeEnabled && !wasMaintenanceEnabled) {
-    const nonAdminSessionResult = await User.updateMany(
-      {
-        role: { $in: [ROLE_STUDENT, ROLE_TEACHER, ROLE_HEADTEACHER, ROLE_SECRETARY] },
-      },
-      {
-        $set: {
-          lastActivityAt: SYSTEM_MAINTENANCE_SESSION_LOGOUT_DATE,
-        },
-      }
-    );
-    sessionsInvalidated = Number(nonAdminSessionResult?.modifiedCount || 0);
+  if (normalizedSettings.maintenance.maintenanceModeEnabled) {
+    sessionsInvalidated = await revokeNonAdminSessions('System maintenance');
   }
 
   return sendSuccess(res, 200, 'System settings saved successfully', {
     settings: systemSettingsResponse(settings),
     maintenance: {
       sessionsInvalidated,
-    },
-  });
-});
-
-const backupDatabase = asyncHandler(async (req, res) => {
-  const backupDir = path.resolve(__dirname, '..', 'backups');
-  await ensureDirectory(backupDir);
-
-  const db = mongoose.connection?.db;
-  if (!db) {
-    const error = new Error('Database connection is not available');
-    error.statusCode = 503;
-    throw error;
-  }
-
-  const collections = await db.listCollections({}, { nameOnly: true }).toArray();
-  const filteredCollections = collections
-    .map((collection) => String(collection?.name || '').trim())
-    .filter((name) => name && !name.startsWith('system.'));
-
-  const backupPayload = {
-    generatedAt: new Date().toISOString(),
-    databaseName: db.databaseName,
-    collections: {},
-  };
-
-  await Promise.all(
-    filteredCollections.map(async (collectionName) => {
-      const documents = await db.collection(collectionName).find({}).toArray();
-      backupPayload.collections[collectionName] = documents;
-    })
-  );
-
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const fileName = `edumatch-backup-${timestamp}.json`;
-  const filePath = path.join(backupDir, fileName);
-  await fs.writeFile(filePath, JSON.stringify(backupPayload, null, 2), 'utf8');
-
-  const updatedSettings = await Settings.findOneAndUpdate(
-    { key: 'global' },
-    {
-      $set: {
-        'maintenance.lastBackupAt': new Date(),
-        'maintenance.lastBackupFileName': fileName,
-        updatedBy: req.user._id,
-      },
-      $setOnInsert: {
-        key: 'global',
-      },
-    },
-    {
-      upsert: true,
-      returnDocument: 'after',
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
-
-  return sendSuccess(res, 200, 'Database backup completed successfully', {
-    backup: {
-      fileName,
-      filePath,
-      collectionCount: filteredCollections.length,
-      generatedAt: updatedSettings?.maintenance?.lastBackupAt || new Date(),
     },
   });
 });
@@ -1579,37 +1384,17 @@ const clearSystemCache = asyncHandler(async (req, res) => {
   ];
 
   const clearedEntries = await Promise.all(cacheDirectories.map((dirPath) => clearDirectoryContents(dirPath)));
-  const nonAdminSessionResult = await User.updateMany(
-    { role: { $ne: 'admin' } },
-    { $set: { lastActivityAt: SYSTEM_MAINTENANCE_SESSION_LOGOUT_DATE } }
-  );
+  const sessionsInvalidated = await revokeNonAdminSessions('System cache cleared');
   const clearedAt = new Date();
 
-  await Settings.findOneAndUpdate(
-    { key: 'global' },
-    {
-      $set: {
-        'maintenance.lastCacheClearedAt': clearedAt,
-        updatedBy: req.user._id,
-      },
-      $setOnInsert: {
-        key: 'global',
-      },
-    },
-    {
-      upsert: true,
-      returnDocument: 'after',
-      setDefaultsOnInsert: true,
-      runValidators: true,
-    }
-  );
+  await saveAppSettings({ maintenance: { lastCacheClearedAt: clearedAt.toISOString() } }, req.user._id);
 
   return sendSuccess(res, 200, 'System cache cleared successfully', {
     cache: {
       clearedAt,
       directoriesChecked: cacheDirectories.length,
       filesRemoved: clearedEntries.reduce((sum, count) => sum + count, 0),
-      sessionsInvalidated: Number(nonAdminSessionResult?.modifiedCount || 0),
+      sessionsInvalidated,
     },
   });
 });
@@ -1621,14 +1406,14 @@ const getRawSettingsDebug = asyncHandler(async (_req, res) => {
     throw error;
   }
 
-  const settings = await Settings.findOne({ key: 'global' }).lean();
+  const settings = await getAppSettings();
 
   return sendSuccess(res, 200, 'Raw settings fetched (debug)', {
     settings: settings || null,
   });
 });
 
-const getAnalytics = asyncHandler(async (_req, res) => {
+const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
   const now = new Date();
   const periodStart = new Date(now);
   periodStart.setDate(periodStart.getDate() - 30);
@@ -2182,6 +1967,11 @@ const getAnalytics = asyncHandler(async (_req, res) => {
   });
 });
 
+const getAnalytics = asyncHandler(async (_req, res) => {
+  const payload = await getSupabaseAnalytics();
+  return sendSuccess(res, 200, 'Analytics fetched successfully', payload);
+});
+
 const sendUserMessage = asyncHandler(async (req, res) => {
   const recipientId = String(req.params.id || '').trim();
   if (!mongoose.Types.ObjectId.isValid(recipientId)) {
@@ -2234,10 +2024,9 @@ const sendUserMessage = asyncHandler(async (req, res) => {
     urgent,
   });
 
-  const unreadCount = await Notification.countDocuments({
+  const unreadCount = await countUnreadNotifications({
     recipientId: recipient._id,
     recipientRole,
-    isViewed: false,
   });
 
   return sendSuccess(res, 201, 'Message sent successfully', {
@@ -2382,7 +2171,6 @@ module.exports = {
   getSecuritySettings,
   getSystemSettings,
   saveSystemSettings,
-  backupDatabase,
   clearSystemCache,
   getRawSettingsDebug,
   getAnalytics,

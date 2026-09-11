@@ -390,14 +390,23 @@ onBeforeUnmount(() => {
 }
 
 .secretary-update-password-btn {
-  border-color: #245b13;
-  background: #245b13;
+  border-color: #4f8a35;
+  background: #4f8a35;
+  background-image: none;
   color: #ffffff;
 }
 
-.secretary-update-password-btn:hover:not(:disabled) {
-  border-color: #1b460e;
-  background: #1b460e;
+.secretary-update-password-btn:hover:not(:disabled),
+.secretary-update-password-btn:focus:not(:disabled) {
+  border-color: #416f2c;
+  background: #416f2c;
+  background-image: none;
+}
+
+.secretary-update-password-btn:active:not(:disabled) {
+  border-color: #365d25;
+  background: #365d25;
+  background-image: none;
 }
 
 @media (max-width: 768px) {
