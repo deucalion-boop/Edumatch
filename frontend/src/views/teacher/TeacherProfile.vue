@@ -201,7 +201,7 @@
                   <p>Manage your personal details and contact information</p>
                 </div>
 
-                <form class="profile-form" @submit.prevent="savePersonalInfo" data-tour="profile-personal-form">
+                <form class="profile-form" novalidate @submit.prevent="savePersonalInfo" data-tour="profile-personal-form">
                   <div class="profile-form-section">
                     <h4 class="form-section-title">Basic Information</h4>
                     <div class="form-row">
@@ -212,7 +212,8 @@
                           v-model="formData.firstName"
                           type="text"
                           :readonly="!isEditing"
-                        >
+                         :aria-invalid="Boolean(fieldErrors.firstName)" :aria-describedby="fieldErrors.firstName ? 'firstName-error' : undefined" @input="validateCommonFields" maxlength="50">
+                        <small v-if="fieldErrors.firstName" id="firstName-error" class="field-error" role="alert">{{ fieldErrors.firstName }}</small>
                       </div>
                       <div class="form-group">
                         <label for="last-name">Last Name</label>
@@ -221,7 +222,8 @@
                           v-model="formData.lastName"
                           type="text"
                           :readonly="!isEditing"
-                        >
+                         :aria-invalid="Boolean(fieldErrors.lastName)" :aria-describedby="fieldErrors.lastName ? 'lastName-error' : undefined" @input="validateCommonFields" maxlength="50">
+                        <small v-if="fieldErrors.lastName" id="lastName-error" class="field-error" role="alert">{{ fieldErrors.lastName }}</small>
                       </div>
                     </div>
 
@@ -232,7 +234,8 @@
                         v-model="formData.email"
                         type="email"
                         :readonly="!isEditing"
-                      >
+                       :aria-invalid="Boolean(fieldErrors.email)" :aria-describedby="fieldErrors.email ? 'email-error' : undefined" @input="validateCommonFields">
+                        <small v-if="fieldErrors.email" id="email-error" class="field-error" role="alert">{{ fieldErrors.email }}</small>
                     </div>
 
                     <div class="form-group">
@@ -256,9 +259,10 @@
                           v-model="formData.phone"
                           type="tel"
                           inputmode="tel"
-                          placeholder="+63 912 345 6789"
+                          placeholder="09123456789 or +639123456789"
                           :readonly="!isEditing"
-                        >
+                         :aria-invalid="Boolean(fieldErrors.phone)" :aria-describedby="fieldErrors.phone ? 'phone-error' : undefined" @input="validateCommonFields">
+                        <small v-if="fieldErrors.phone" id="phone-error" class="field-error" role="alert">{{ fieldErrors.phone }}</small>
                       </div>
                     </div>
                   </div>
@@ -305,6 +309,7 @@
 </template>
 
 <script setup>
+import { nameError, phoneError } from '../../utils/teacherValidation.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
@@ -491,6 +496,7 @@ const enableEditMode = () => {
 }
 
 const cancelEdit = () => {
+  Object.keys(fieldErrors).forEach((field) => { fieldErrors[field] = '' })
   isEditing.value = false
   if (originalFormData.value) {
     Object.assign(formData, originalFormData.value)
@@ -531,18 +537,22 @@ const handleAvatarUpload = (event) => {
   showToast('success', 'Profile picture ready. Click Save Changes to apply.')
 }
 
+const fieldErrors = reactive({ firstName: '', lastName: '', email: '', phone: '' })
 const validateCommonFields = () => {
   const fullName = `${formData.firstName} ${formData.lastName}`.trim()
   const email = String(formData.email || '').trim()
   const contactNumber = normalizePhilippinePhone(formData.phone)
 
-  if (!fullName) return { error: 'Full name is required' }
-  if (!email) return { error: 'Email is required' }
+  fieldErrors.firstName = nameError(formData.firstName, 'First name')
+  fieldErrors.lastName = nameError(formData.lastName, 'Last name')
+  fieldErrors.phone = phoneError(formData.phone)
+  fieldErrors.email = ''
+  if (!email) fieldErrors.email = 'Email is required'
 
   const emailRegex = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i
-  if (!emailRegex.test(email)) return { error: 'Please enter a valid Gmail address (e.g., user@gmail.com)' }
+  if (!emailRegex.test(email)) fieldErrors.email = 'Please enter a valid Gmail address (e.g., user@gmail.com)'
 
-  if (!isValidPhilippinePhone(contactNumber)) return { error: 'Please enter a valid Philippine contact number beginning with +63' }
+  if (Object.values(fieldErrors).some(Boolean)) return { error: 'Please correct the highlighted fields.' }
 
   return { fullName, email, contactNumber }
 }
@@ -1586,6 +1596,8 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
 }
+.profile-form .field-error { display: block; color: #dc2626; font-size: 0.75rem; margin-top: 0.3rem; }
+.profile-form input[aria-invalid="true"] { border-color: #dc2626; }
 </style>
 
 

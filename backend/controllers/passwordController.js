@@ -1,3 +1,4 @@
+const { passwordLengthError } = require('../utils/teacherValidation');
 const { findSupabaseAccount } = require('../services/supabaseAccountService');
 const { revokeUserSessions } = require('../services/supabaseAuthPersistenceService');
 const { sendSuccess } = require('../utils/responseHelper');
@@ -22,7 +23,11 @@ const changePassword = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  assertPasswordMeetsPolicy(newPassword);
+  if (req.user?.role === 'teacher' && passwordLengthError(currentPassword)) {
+    throw Object.assign(new Error('Current password must be 8-17 characters.'), { statusCode: 400 });
+  }
+
+  assertPasswordMeetsPolicy(newPassword, req.user?.role === 'teacher' ? 17 : undefined);
 
   const user = await findSupabaseAccount('id', req.user?._id);
   if (!user) {

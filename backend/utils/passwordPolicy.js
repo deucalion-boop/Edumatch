@@ -39,15 +39,15 @@ function generateTemporaryPassword(length = TEMP_PASSWORD_LENGTH) {
   return shuffleCharacters(requiredCharacters);
 }
 
-function getPasswordValidationErrors(password) {
+function getPasswordValidationErrors(password, maxLength = PASSWORD_MAX_LENGTH) {
   const normalizedPassword = String(password || '');
   const errors = [];
 
   if (normalizedPassword.length < PASSWORD_MIN_LENGTH) {
     errors.push(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
   }
-  if (normalizedPassword.length > PASSWORD_MAX_LENGTH) {
-    errors.push(`Password must be no more than ${PASSWORD_MAX_LENGTH} characters long`);
+  if (normalizedPassword.length > maxLength) {
+    errors.push(`Password must be no more than ${maxLength} characters long`);
   }
   if (!/[A-Z]/.test(normalizedPassword)) {
     errors.push('Password must include at least one uppercase letter');
@@ -62,8 +62,8 @@ function getPasswordValidationErrors(password) {
   return errors;
 }
 
-function assertPasswordMeetsPolicy(password) {
-  const errors = getPasswordValidationErrors(password);
+function assertPasswordMeetsPolicy(password, maxLength = PASSWORD_MAX_LENGTH) {
+  const errors = getPasswordValidationErrors(password, maxLength);
   if (errors.length === 0) return;
 
   const error = new Error(errors[0]);

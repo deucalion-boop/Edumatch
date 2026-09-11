@@ -1,3 +1,4 @@
+const { nameError, phoneError } = require('../utils/teacherValidation');
 const path = require('path');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
@@ -2315,6 +2316,8 @@ const updateTeacherProfile = asyncHandler(async (req, res) => {
       : null,
   });
 
+  const profileError = nameError(name, 'Name', 101) || phoneError(contactNumberRaw);
+  if (profileError) throw Object.assign(new Error(profileError), { statusCode: 400 });
   if (!name) {
     const error = new Error('Name is required');
     error.statusCode = 400;
@@ -2335,7 +2338,7 @@ const updateTeacherProfile = asyncHandler(async (req, res) => {
   }
 
   if (email !== String(req.user.email || '').toLowerCase()) {
-    const existing = await User.findOne({ email, _id: { $ne: req.user._id } }).select('_id');
+    const existing = await findSupabaseAccountByEmail(email);
     if (existing) {
       const error = new Error('Email already exists');
       error.statusCode = 409;
@@ -2358,7 +2361,7 @@ const updateTeacherProfile = asyncHandler(async (req, res) => {
       error.statusCode = 400;
       throw error;
     }
-    req.user.contactNumber = normalizedContact;
+    req.user.contactNumber = normalizedContact.startsWith('09') ? '+63' + normalizedContact.slice(1) : normalizedContact;
   } else {
     req.user.contactNumber = '';
   }

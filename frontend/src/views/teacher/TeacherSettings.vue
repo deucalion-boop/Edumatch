@@ -104,7 +104,7 @@
             </div>
 
             <div class="teacher-security-card">
-              <form class="panel-form teacher-security-form" @submit.prevent="saveSecuritySettings">
+              <form novalidate class="panel-form teacher-security-form" @submit.prevent="saveSecuritySettings">
                 <div class="teacher-security-main">
                   <div class="teacher-security-banner">
                     <div class="teacher-security-banner-icon">
@@ -122,7 +122,7 @@
                       <small>Required</small>
                     </label>
                     <div class="password-wrap">
-                      <input :type="showCurrentPassword ? 'text' : 'password'" id="security-current-password" v-model="securityForm.currentPassword" class="settings-input" placeholder="Enter current password">
+                      <input :type="showCurrentPassword ? 'text' : 'password'" id="security-current-password" v-model="securityForm.currentPassword" minlength="8" maxlength="17" :aria-invalid="Boolean(validationErrors.currentPassword)" @input="validateSecurityFields" class="settings-input" placeholder="Enter current password">
                       <button type="button" class="password-toggle" @click="showCurrentPassword = !showCurrentPassword">
                         <i class="fas" :class="showCurrentPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                       </button>
@@ -137,12 +137,12 @@
                       <small>Live feedback</small>
                     </label>
                     <div class="password-wrap">
-                      <input :type="showNewPassword ? 'text' : 'password'" id="security-new-password" v-model="securityForm.newPassword" class="settings-input" placeholder="Enter new password">
+                      <input :type="showNewPassword ? 'text' : 'password'" id="security-new-password" v-model="securityForm.newPassword" minlength="8" maxlength="17" :aria-invalid="Boolean(validationErrors.newPassword)" @input="validateSecurityFields" class="settings-input" placeholder="Enter new password">
                       <button type="button" class="password-toggle" @click="showNewPassword = !showNewPassword">
                         <i class="fas" :class="showNewPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                       </button>
                     </div>
-                    <p class="teacher-security-field-help">Use 8 or more characters with uppercase, lowercase, a number, and a symbol.</p>
+                    <p class="teacher-security-field-help">Use 8-17 characters with uppercase, lowercase, a number, and a symbol.</p>
                     <small v-if="validationErrors.newPassword" class="field-error teacher-security-error">{{ validationErrors.newPassword }}</small>
                   </div>
 
@@ -152,7 +152,7 @@
                       <small>Match exactly</small>
                     </label>
                     <div class="password-wrap">
-                      <input :type="showConfirmPassword ? 'text' : 'password'" id="security-confirm-password" v-model="securityForm.confirmPassword" class="settings-input" placeholder="Re-enter new password">
+                      <input :type="showConfirmPassword ? 'text' : 'password'" id="security-confirm-password" v-model="securityForm.confirmPassword" minlength="8" maxlength="17" :aria-invalid="Boolean(validationErrors.confirmPassword)" @input="validateSecurityFields" class="settings-input" placeholder="Re-enter new password">
                       <button type="button" class="password-toggle" @click="showConfirmPassword = !showConfirmPassword">
                         <i class="fas" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                       </button>
@@ -251,6 +251,8 @@
 </template>
 
 <script setup>
+import axios from 'axios'
+import { nameError, phoneError, passwordLengthError } from '../../utils/teacherValidation.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
@@ -314,6 +316,7 @@ const validationErrors = reactive({
   newPassword: '',
   confirmPassword: ''
 })
+const savingPassword = ref(false)
 const showCurrentPassword = ref(false)
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
@@ -366,7 +369,7 @@ const syncMobileMenuBodyState = () => {
 const passwordRules = computed(() => {
   const password = String(securityForm.newPassword || '')
   return {
-    minLength: password.length >= 8,
+    minLength: password.length >= 8 && password.length <= 17,
     hasUpper: /[A-Z]/.test(password),
     hasLower: /[a-z]/.test(password),
     hasNumber: /[0-9]/.test(password),
@@ -374,7 +377,7 @@ const passwordRules = computed(() => {
   }
 })
 const passwordRuleItems = computed(() => [
-  { key: 'minLength', label: 'At least 8 characters', met: passwordRules.value.minLength },
+  { key: 'minLength', label: '8-17 characters', met: passwordRules.value.minLength },
   { key: 'hasUpper', label: 'One uppercase letter', met: passwordRules.value.hasUpper },
   { key: 'hasLower', label: 'One lowercase letter', met: passwordRules.value.hasLower },
   { key: 'hasNumber', label: 'One number', met: passwordRules.value.hasNumber },
@@ -446,7 +449,8 @@ const passwordActionMessage = computed(() => {
   return 'Everything looks ready. You can update your password now.'
 })
 const isSecurityFormReady = computed(() =>
-  String(securityForm.currentPassword || '').trim().length >= 8 &&
+  !savingPassword.value &&
+  !passwordLengthError(securityForm.currentPassword) &&
   String(securityForm.newPassword || '').length > 0 &&
   String(securityForm.confirmPassword || '').length > 0 &&
   passwordsMatch.value &&
@@ -471,9 +475,7 @@ const resetValidationErrors = () => {
 const isValidEmail = (value) => /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(String(value || '').trim())
 const saveProfileInfo = async () => {
   resetValidationErrors()
-  if (!String(profileForm.displayName || '').trim()) {
-    validationErrors.displayName = 'Display name is required.'
-  }
+  validationErrors.displayName = nameError(profileForm.displayName, 'Display name', 101)
   if (!isValidEmail(profileForm.email)) {
     validationErrors.email = 'Enter a valid Gmail address (e.g., user@gmail.com).'
   }
@@ -481,7 +483,7 @@ const saveProfileInfo = async () => {
     showToast('error', 'Please resolve the highlighted profile fields.')
     return
   }
-  if (!isValidPhilippinePhone(profileForm.contactNumber)) {
+  if (phoneError(profileForm.contactNumber)) {
     showToast('error', 'Please enter a valid Philippine contact number beginning with +63.')
     return
   }
@@ -490,14 +492,16 @@ const saveProfileInfo = async () => {
   settings.contactNumber = normalizePhilippinePhone(profileForm.contactNumber)
   showToast('success', 'Profile information updated.')
 }
-const saveSecuritySettings = async () => {
+const validateSecurityFields = () => {
   resetValidationErrors()
   if (!String(securityForm.currentPassword || '').trim()) {
     validationErrors.currentPassword = 'Current password is required.'
-  } else if (String(securityForm.currentPassword || '').trim().length < 8) {
-    validationErrors.currentPassword = 'Current password must be at least 8 characters.'
+  } else if (passwordLengthError(securityForm.currentPassword)) {
+    validationErrors.currentPassword = 'Current password must be 8-17 characters.'
   }
-  if (!hasStrongPassword.value) {
+  if (passwordLengthError(securityForm.newPassword)) {
+    validationErrors.newPassword = passwordLengthError(securityForm.newPassword)
+  } else if (!hasStrongPassword.value) {
     validationErrors.newPassword = 'New password does not meet security requirements.'
   }
   if (!String(securityForm.confirmPassword || '')) {
@@ -505,15 +509,38 @@ const saveSecuritySettings = async () => {
   } else if (!passwordsMatch.value) {
     validationErrors.confirmPassword = 'Confirmation password does not match.'
   }
-  if (validationErrors.currentPassword || validationErrors.newPassword || validationErrors.confirmPassword) {
+  return !validationErrors.currentPassword && !validationErrors.newPassword && !validationErrors.confirmPassword
+}
+const saveSecuritySettings = async () => {
+  if (savingPassword.value) return
+  if (!validateSecurityFields()) {
     showToast('error', 'Please fix the security form errors.')
     return
   }
-  settings.passwordUpdatedAt = new Date().toLocaleDateString()
-  securityForm.currentPassword = ''
-  securityForm.newPassword = ''
-  securityForm.confirmPassword = ''
-  showToast('success', 'Password updated successfully.')
+  savingPassword.value = true
+  try {
+    const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+    const baseUrl = configured ? (configured.endsWith('/api') ? configured : configured + '/api') : '/api'
+    await axios.post(baseUrl + '/auth/change-password', {
+      currentPassword: securityForm.currentPassword,
+      newPassword: securityForm.newPassword,
+      confirmNewPassword: securityForm.confirmPassword,
+    }, { headers: { Authorization: 'Bearer ' + authStore.token } })
+    settings.passwordUpdatedAt = new Date().toLocaleDateString()
+    securityForm.currentPassword = ''
+    securityForm.newPassword = ''
+    securityForm.confirmPassword = ''
+    showToast('success', 'Password updated. Please sign in with your new password.')
+    authStore.logout()
+    router.push('/auth/login')
+  } catch (error) {
+    const message = error.response?.data?.message || 'Failed to update password. Please try again.'
+    if (error.response?.status === 401) validationErrors.currentPassword = message
+    else validationErrors.newPassword = message
+    showToast('error', message)
+  } finally {
+    savingPassword.value = false
+  }
 }
 
 const handleEscape = (event) => {
@@ -1563,6 +1590,7 @@ onBeforeUnmount(() => {
     padding: 0.85rem;
   }
 }
+.teacher-security-form input[aria-invalid="true"] { border-color: #dc2626; }
 </style>
 
 
