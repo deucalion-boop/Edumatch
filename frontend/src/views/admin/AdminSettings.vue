@@ -196,12 +196,20 @@
                       <label>Active sessions</label>
                       <span class="settings-desc">Review signed-in devices and revoke any session you do not recognize.</span>
                     </div>
-                    <div class="settings-input settings-input--stack">
-                      <div v-for="session in activeSessions" :key="session.id" class="settings-meta">
-                        <strong>{{ session.current ? 'Current device' : 'Other device' }}</strong>
-                        <span>{{ session.ipAddress || 'Unknown IP' }} · {{ session.userAgent || 'Unknown browser' }}</span>
-                        <button v-if="!session.current" type="button" class="btn btn-outline" @click="revokeSession(session.id)">Revoke</button>
+                    <div class="settings-input settings-input--stack active-sessions">
+                      <div id="active-sessions-list" class="active-sessions-list" tabindex="0" role="region" aria-label="Signed-in sessions">
+                        <div v-for="session in visibleSessions" :key="session.id" class="settings-meta session-row" :class="{ 'session-row--current': session.current }">
+                          <div class="session-details">
+                            <strong>{{ session.current ? 'Current device' : 'Other device' }}</strong>
+                            <span class="session-device" :title="session.userAgent || 'Unknown browser'">{{ formatSessionDevice(session.userAgent) }}</span>
+                            <span class="session-ip" :title="session.ipAddress || 'Unknown IP'">{{ session.ipAddress || 'Unknown IP' }}</span>
+                          </div>
+                          <button v-if="!session.current" type="button" class="btn btn-outline session-revoke" :aria-label="'Revoke ' + formatSessionDevice(session.userAgent) + ' session at ' + (session.ipAddress || 'unknown IP')" @click="revokeSession(session.id)">Revoke</button>
+                        </div>
                       </div>
+                      <button v-if="otherSessions.length > 3" type="button" class="btn btn-outline sessions-toggle" :aria-expanded="showAllSessions" aria-controls="active-sessions-list" @click="showAllSessions = !showAllSessions">
+                        {{ showAllSessions ? 'Show Less' : 'View All Sessions' }}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -425,6 +433,35 @@ export default {
     const saving = ref(false)
     const clearCacheLoading = ref(false)
     const activeSessions = ref([])
+    const showAllSessions = ref(false)
+    const sessionActivityTime = (session) => Date.parse(session.lastSeenAt) || Date.parse(session.createdAt) || 0
+    const otherSessions = computed(() => activeSessions.value
+      .filter((session) => !session.current)
+      .sort((left, right) => sessionActivityTime(right) - sessionActivityTime(left)))
+    const visibleSessions = computed(() => [
+      ...activeSessions.value.filter((session) => session.current),
+      ...(showAllSessions.value ? otherSessions.value : otherSessions.value.slice(0, 3)),
+    ])
+    watch(() => otherSessions.value.length, (count) => {
+      if (count <= 3) showAllSessions.value = false
+    })
+    const formatSessionDevice = (userAgent) => {
+      const agent = String(userAgent || '')
+      const browsers = [
+        [/Edg(?:e|A|iOS)?\/(\d+)/, 'Edge'],
+        [/OPR\/(\d+)/, 'Opera'],
+        [/SamsungBrowser\/(\d+)/, 'Samsung Internet'],
+        [/(?:Chrome|CriOS)\/(\d+)/, 'Chrome'],
+        [/(?:Firefox|FxiOS)\/(\d+)/, 'Firefox'],
+        [/Version\/(\d+).*Safari/, 'Safari'],
+      ]
+      const match = browsers.find(([pattern]) => pattern.test(agent))
+      const browser = match ? match[1] + ' ' + agent.match(match[0])[1] : 'Unknown browser'
+      const platform = /iPad/.test(agent) ? 'iPad' : /iPhone|iPod/.test(agent) ? 'iPhone'
+        : /Android/.test(agent) ? 'Android' : /Windows/.test(agent) ? 'Windows'
+          : /Macintosh|Mac OS X/.test(agent) ? 'macOS' : /Linux/.test(agent) ? 'Linux' : ''
+      return platform ? browser + ' ? ' + platform : browser
+    }
     const hasUnsavedChanges = ref(false)
     const originalSettings = ref(null)
     const settingsMeta = reactive({
@@ -827,7 +864,10 @@ export default {
       settings,
       saving,
       clearCacheLoading,
-      activeSessions,
+      visibleSessions,
+      otherSessions,
+      showAllSessions,
+      formatSessionDevice,
       revokeSession,
       hasUnsavedChanges,
       showToast,
@@ -1285,4 +1325,37 @@ body.admin-dashboard .settings-actions .reset-settings-btn {
     width: 100%;
   }
 }
+
+body.admin-dashboard .active-sessions { min-width: 0; }
+.active-sessions-list {
+  width: 100%;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+.active-sessions-list:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+body.admin-dashboard .session-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+}
+.session-row + .session-row { border-top: 1px solid #eef2f7; }
+.session-row--current { background: #f8fafc; }
+.session-details { flex: 1; min-width: 0; display: grid; gap: 0.15rem; }
+.session-details strong { color: #334155; }
+.session-device, .session-ip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.admin-dashboard .active-sessions .session-revoke {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 32px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.7rem;
+}
+body.admin-dashboard .active-sessions .sessions-toggle { min-height: 36px; font-size: 0.75rem; }
+
 </style>
