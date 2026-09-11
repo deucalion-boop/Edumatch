@@ -178,14 +178,14 @@
                   <div class="settings-row settings-row--toggle">
                     <div class="settings-label">
                       <label id="email-verification-label">Email verification required</label>
-                      <span class="settings-desc">Require users to verify their email address before account access is activated.</span>
+                      <span class="settings-desc">Gmail verification is mandatory. Users must enter the code sent to their Gmail address to sign in.</span>
                     </div>
                     <div class="settings-input settings-input--toggle">
                       <span class="mode-state" :class="{ 'mode-state--active': settings.user.emailVerificationRequired }">
                         {{ settings.user.emailVerificationRequired ? 'Required' : 'Optional' }}
                       </span>
                       <label class="toggle-switch">
-                        <input type="checkbox" v-model="settings.user.emailVerificationRequired" @change="markAsUnsaved" aria-labelledby="email-verification-label">
+                        <input type="checkbox" :checked="true" disabled title="Gmail verification is required to sign in" aria-labelledby="email-verification-label">
                         <span class="toggle-slider"></span>
                       </label>
                     </div>

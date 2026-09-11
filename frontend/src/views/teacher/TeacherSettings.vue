@@ -468,14 +468,14 @@ const resetValidationErrors = () => {
   validationErrors.newPassword = ''
   validationErrors.confirmPassword = ''
 }
-const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim())
+const isValidEmail = (value) => /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(String(value || '').trim())
 const saveProfileInfo = async () => {
   resetValidationErrors()
   if (!String(profileForm.displayName || '').trim()) {
     validationErrors.displayName = 'Display name is required.'
   }
   if (!isValidEmail(profileForm.email)) {
-    validationErrors.email = 'Enter a valid email address.'
+    validationErrors.email = 'Enter a valid Gmail address (e.g., user@gmail.com).'
   }
   if (validationErrors.displayName || validationErrors.email) {
     showToast('error', 'Please resolve the highlighted profile fields.')

@@ -18,7 +18,7 @@ function hydrateSettings(row) {
   const value = row?.value || {};
   return {
     key: 'global',
-    user: { emailVerificationRequired: value.user?.emailVerificationRequired !== false },
+    user: { emailVerificationRequired: true },
     security: {
       sessionTimeoutMinutes: boundedInteger(value.security?.sessionTimeoutMinutes, 120, 5, 1440),
       maxLoginAttempts: boundedInteger(value.security?.maxLoginAttempts, 5, 3, 10),
@@ -60,6 +60,7 @@ async function saveAppSettings(patch, updatedBy) {
     for (const section of ['user', 'security', 'maintenance']) {
       value[section] = { ...current[section], ...(patch[section] || {}) };
     }
+    value.user.emailVerificationRequired = true;
     const row = {
       key: 'global', value, updated_by: String(updatedBy || '') || null,
       updated_at: new Date(Math.max(Date.now(), Date.parse(previous?.updated_at || '') + 1 || 0)).toISOString(),

@@ -1,3 +1,4 @@
+const { assertGmailEmail } = require('../utils/emailPolicy');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
@@ -80,17 +81,6 @@ async function sendAdminLoginAlert(user, { ipAddress, userAgent }) {
 function maskEmail(email) {
   const [local = '', domain = ''] = String(email || '').split('@');
   return `${local.slice(0, 2)}${'*'.repeat(Math.max(2, local.length - 2))}@${domain}`;
-}
-
-function requiresEmailOtp(user) {
-  if (String(user?.role || '').trim().toLowerCase() !== 'admin') return true;
-
-  const email = String(user?.email || '').trim().toLowerCase();
-  if (!email) return false;
-  const domain = email.split('@')[1] || '';
-  const isSampleAddress = domain.endsWith('.local')
-    || ['example.com', 'example.org', 'example.net'].includes(domain);
-  return !isSampleAddress;
 }
 
 async function issueLoginOtp(user, req, remember) {
@@ -396,26 +386,7 @@ const login = asyncHandler(async (req, res) => {
   user.lockUntil = null;
   await user.save();
 
-  const { emailVerificationRequired } = settings.user;
-  if (!emailVerificationRequired || !requiresEmailOtp(user)) {
-    user.lastLoginAt = now;
-    user.lastActivityAt = now;
-    await user.save();
-    await recordLoginAttempt(req, {
-      username: normalizedUsername,
-      user,
-      outcome: 'success',
-      reason: emailVerificationRequired
-        ? 'Login successful; OTP bypassed for administrator sample email'
-        : 'Login successful; email verification is disabled by system settings',
-    });
-    const token = await createSessionAndSignToken(user, req, rememberSession);
-    return sendSuccess(res, 200, 'Login successful', {
-      token,
-      redirectPath: user.forcePasswordChange ? '/auth/change-password' : undefined,
-      user: buildLoginUser(user, req),
-    });
-  }
+  assertGmailEmail(user.email);
 
   const challenge = await issueLoginOtp(user, req, rememberSession);
   return sendSuccess(res, 202, 'Verification code sent', {
@@ -462,6 +433,7 @@ const verifyLoginOtp = asyncHandler(async (req, res) => {
     error.statusCode = 403;
     throw error;
   }
+  assertGmailEmail(user.email);
   const { maintenanceModeEnabled, maintenanceMessage } = (await getAppSettings()).maintenance;
   if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
     const error = new Error(maintenanceMessage);

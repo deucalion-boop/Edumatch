@@ -1,3 +1,5 @@
+const { assertGmailEmail } = require('../utils/emailPolicy');
+const { revokeUserSessions, consumeOpenChallenges } = require('./supabaseAuthPersistenceService');
 const bcrypt = require('bcryptjs');
 const { getSupabaseStorageClient } = require('./supabaseStorageService');
 const { USER_ROLES } = require('../constants/userRoles');
@@ -33,7 +35,7 @@ function toRow(account, passwordHash) {
   return {
     ...(account._id || account.id ? { id: String(account._id || account.id) } : {}),
     name: String(account.name || '').trim(),
-    email: String(account.email || '').trim().toLowerCase(),
+    email: assertGmailEmail(account.email),
     username: String(account.username || '').trim(),
     password_hash: passwordHash || null,
     role,
@@ -118,6 +120,11 @@ async function saveSupabaseAccount(account) {
     passwordHash = await bcrypt.hash(passwordHash, 10);
   }
   const row = toRow(account, passwordHash);
+  const existing = row.id ? await findSupabaseAccount('id', row.id) : null;
+  if (existing && existing.email !== row.email) {
+    row.token_version = Math.max(row.token_version, existing.tokenVersion) + 1;
+    await Promise.all([revokeUserSessions(row.id, 'Email address changed; verification required'), consumeOpenChallenges(row.id)]);
+  }
   const client = getSupabaseStorageClient();
   const { data, error } = await client.from('users').upsert(row, { onConflict: 'id' }).select('*').single();
   if (error) throw accountError(error, 'Failed to save account in Supabase');

@@ -7,7 +7,7 @@ let client;
 storage.getSupabaseStorageClient = () => client;
 const controller = require('../controllers/adminController');
 const id = 'b6d565d69a7f4db1bd6f1ebfcc1a6444';
-const account = { id, name: 'Test user', email: 'user@example.test', username: 'user', role: 'secretary', status: 'active' };
+const account = { id, name: 'Test user', email: 'user@gmail.com', username: 'user', role: 'secretary', status: 'active' };
 async function invoke(action, req = {}) {
   let body;
   await controller[action]({ params: { id }, body: {}, ...req }, {
@@ -28,8 +28,8 @@ test('admin updates Supabase account and permits its existing username', async (
   client = createFakeSupabase({ users: [account] });
   await invoke('updateUser', { body: { name: 'Updated', username: 'user' } });
   assert.equal(client.tables.users[0].name, 'Updated');
-  client.tables.users.push({ ...account, id: 'other', email: 'other@example.test', username: 'other' });
-  await assert.rejects(invoke('updateUser', { body: { email: 'other@example.test' } }), { statusCode: 409 });
+  client.tables.users.push({ ...account, id: 'other', email: 'other@gmail.com', username: 'other' });
+  await assert.rejects(invoke('updateUser', { body: { email: 'other@gmail.com' } }), { statusCode: 409 });
   await assert.rejects(invoke('updateUser', { body: { username: 'other' } }), { statusCode: 409 });
 });
 test('missing Supabase profile returns 404', async () => {

@@ -480,7 +480,7 @@
                   :class="{ 'email-invalid': addUserEmailError }"
                   :aria-invalid="addUserEmailError ? 'true' : undefined"
                   required
-                  placeholder="user@example.com"
+                  placeholder="user@gmail.com"
                 >
               </div>
               <div class="form-group">
@@ -2412,7 +2412,7 @@ export default {
     }
     
     // Tab navigation
-    const isValidAddUserEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim())
+    const isValidAddUserEmail = (email) => /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(String(email || '').trim())
 
     watch(() => newUser.email, (email) => {
       if (isValidAddUserEmail(email)) addUserEmailError.value = false
@@ -2422,7 +2422,7 @@ export default {
       addUserEmailError.value = !isValidAddUserEmail(newUser.email)
       if (!addUserEmailError.value) return true
       addUserTab.value = 'basic'
-      window.alert('Please enter a valid email address (e.g., user@example.com).')
+      window.alert('Please enter a valid Gmail address (e.g., user@gmail.com).')
       return false
     }
 
@@ -2515,7 +2515,7 @@ export default {
     const saveUserEdit = async () => {
       const allowedRoles = ['secretary', 'headteacher']
       const allowedStatuses = ['pending', 'active', 'inactive', 'suspended']
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const emailRegex = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i
 
       const fullName = String(editUserData.value.fullName || '').trim()
       const email = String(editUserData.value.email || '').trim()
@@ -2533,7 +2533,7 @@ export default {
         return
       }
       if (!email || !emailRegex.test(email)) {
-        showToastMessage('Please enter a valid email address', 'error')
+        showToastMessage('Please enter a valid Gmail address (e.g., user@gmail.com)', 'error')
         return
       }
       if (!allowedRoles.includes(role)) {

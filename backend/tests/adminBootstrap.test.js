@@ -10,13 +10,13 @@ const { ensureDefaultSupabaseAdmin, touchSupabaseAccountActivity } = require('..
 test.after(() => { storage.getSupabaseStorageClient = originalGetClient; });
 
 const bootstrap = {
-  name: 'Initial administrator', email: 'bootstrap@example.test', username: 'bootstrap-admin', password: 'SetupPass123!',
+  name: 'Initial administrator', email: 'bootstrap@gmail.com', username: 'bootstrap-admin', password: 'SetupPass123!',
 };
 
 test('startup preserves an existing suspended administrator and credentials without requiring a bootstrap password', async () => {
   const existing = {
     id: 'existing-admin', role: 'admin', status: 'suspended', name: 'Existing admin',
-    email: 'existing@example.test', username: 'existing', password_hash: 'existing-hash',
+    email: 'existing@gmail.com', username: 'existing', password_hash: 'existing-hash',
     token_version: 8, force_password_change: false,
   };
   client = createFakeSupabase({ users: [existing] });
@@ -32,7 +32,7 @@ test('bootstrap cannot promote an existing account with the configured email or 
   for (const collisionField of ['email', 'username']) {
     const student = {
       id: 'student', role: 'student', status: 'inactive', password_hash: 'student-hash',
-      email: 'student@example.test', username: 'student', [collisionField]: bootstrap[collisionField],
+      email: 'student@gmail.com', username: 'student', [collisionField]: bootstrap[collisionField],
     };
     client = createFakeSupabase({ users: [student] });
     await assert.rejects(ensureDefaultSupabaseAdmin(bootstrap), { statusCode: 409 });

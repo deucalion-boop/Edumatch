@@ -457,9 +457,9 @@ export default {
           this.showToast('error', 'Email is required')
           return
         }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        const emailRegex = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i
         if (!emailRegex.test(email)) {
-          this.showToast('error', 'Please enter a valid email address')
+          this.showToast('error', 'Please enter a valid Gmail address (e.g., user@gmail.com)')
           return
         }
         if (!isValidPhilippinePhone(contactNumber)) {

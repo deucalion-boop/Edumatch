@@ -187,8 +187,8 @@ const validateProfile = () => {
   const emailValue = String(profileForm.email || '').trim()
   if (!emailValue) {
     errors.email = 'Email address is required.'
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
-    errors.email = 'Enter a valid email address.'
+  } else if (!/^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(emailValue)) {
+    errors.email = 'Enter a valid Gmail address (e.g., user@gmail.com).'
   }
   if (!isValidPhilippinePhone(profileForm.contactNumber)) {
     errors.contactNumber = 'Enter a valid Philippine number beginning with +63.'

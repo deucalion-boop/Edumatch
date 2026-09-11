@@ -539,8 +539,8 @@ const validateCommonFields = () => {
   if (!fullName) return { error: 'Full name is required' }
   if (!email) return { error: 'Email is required' }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email)) return { error: 'Please enter a valid email address' }
+  const emailRegex = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i
+  if (!emailRegex.test(email)) return { error: 'Please enter a valid Gmail address (e.g., user@gmail.com)' }
 
   if (!isValidPhilippinePhone(contactNumber)) return { error: 'Please enter a valid Philippine contact number beginning with +63' }
 
