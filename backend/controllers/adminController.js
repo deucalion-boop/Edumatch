@@ -1,3 +1,5 @@
+const { readProfileRows } = require('../services/supabaseUserProfileService');
+const { listHydratedStudentEnrollments, listStudentEnrollments } = require('../services/supabaseEnrollmentService');
 ﻿const User = require('../models/User');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
@@ -47,6 +49,9 @@ const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
 const {
   createSupabaseAccount,
+  findSupabaseAccount,
+  findSupabaseAccountByUsername,
+  deleteSupabaseAccount,
   findSupabaseAccountByEmail,
   findSupabaseHeadTeacherByDepartment,
   listSupabaseAccounts,
@@ -453,14 +458,9 @@ async function buildStudentLearningInsights(student) {
   const fallbackProgress = student?.enrollment?.progress || {};
 
   const [approvedEnrollments, pendingSubjects, recommendationRow] = await Promise.all([
-    SubjectEnrollment.find({ studentId, status: 'approved' })
-      .populate('subjectId', 'name code className track description')
-      .populate('teacherId', 'name email')
-      .lean(),
-    SubjectEnrollment.countDocuments({ studentId, status: 'pending' }),
-    Recommendation.findOne({ studentId })
-      .select('studentId assessmentAttempts recommendedStrand recommendationExplanation updatedAt lastReason')
-      .lean(),
+    listHydratedStudentEnrollments(studentId, 'approved'),
+    listStudentEnrollments(studentId, 'pending').then((rows) => rows.length),
+    readProfileRows('recommendations', 'student_id', studentId).then((rows) => rows[0] || null),
   ]);
   const recommendationSnapshot = buildRecommendationSnapshot(studentId, recommendationRow);
 
@@ -495,12 +495,8 @@ async function buildStudentLearningInsights(student) {
   }
 
   const [lessons, assessments] = await Promise.all([
-    Lesson.find({ subjectId: { $in: subjectIds } })
-      .select('_id subjectId')
-      .lean(),
-    Assessment.find({ subjectId: { $in: subjectIds } })
-      .select('_id title examType assessmentMode gradingPeriod subjectId submissionDeadline createdAt assignedStudentIds')
-      .lean(),
+    readProfileRows('lessons', 'subject_id', subjectIds),
+    readProfileRows('assessments', 'subject_id', subjectIds),
   ]);
 
   const eligibleAssessments = assessments.filter((assessment) => {
@@ -515,14 +511,9 @@ async function buildStudentLearningInsights(student) {
 
   const assessmentIds = eligibleAssessments.map((assessment) => assessment._id);
   const submissions = assessmentIds.length > 0
-    ? await Submission.find({
-      studentId,
-      assessmentId: { $in: assessmentIds },
-      status: { $in: finalizedStatuses },
-    })
-      .select('_id assessmentId score totalPoints submittedAt createdAt status')
-      .populate('assessmentId', 'title examType assessmentMode gradingPeriod subjectId submissionDeadline')
-      .lean()
+    ? (await readProfileRows('submissions', 'student_id', studentId))
+      .filter((row) => assessmentIds.includes(row.assessmentId) && finalizedStatuses.includes(row.status))
+      .map((row) => ({ ...row, assessmentId: eligibleAssessments.find((assessment) => assessment._id === row.assessmentId) }))
     : [];
 
   const latestSubmissions = getLatestSubmissionsByAssessment(submissions);
@@ -1055,7 +1046,7 @@ const sendUserInvite = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { expiresInHours } = req.body || {};
 
-  const user = await User.findById(id).select('+invite.tokenHash');
+  const user = await findSupabaseAccount('id', id);
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
@@ -1109,7 +1100,7 @@ const getUsers = asyncHandler(async (req, res) => {
 
 const getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const user = await User.findById(id).select('-password +lastActivityAt +lastLoginAt').populate('managedBy', 'name email');
+  const user = await findSupabaseAccount('id', id);
 
   if (!user) {
     const error = new Error('User not found');
@@ -1117,18 +1108,21 @@ const getUserById = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  if (user.managedBy) {
+    const manager = await findSupabaseAccount('id', user.managedBy);
+    if (manager) user.managedBy = { _id: manager._id, name: manager.name, email: manager.email };
+  }
   const responseUser = mapUserResponse(user, req);
 
   if (user.role === 'teacher') {
     const approvedEnrollmentStatuses = ['approved', 'accepted'];
-    const [lessonsCreated, students] = await Promise.all([
-      Lesson.countDocuments({ createdBy: user._id }),
-      User.countDocuments({
-        role: 'student',
-        'enrollment.teacherId': user._id,
-        'enrollment.status': { $in: approvedEnrollmentStatuses },
-      }),
+    const [lessons, accounts] = await Promise.all([
+      readProfileRows('lessons', 'created_by', user._id), listSupabaseAccounts(),
     ]);
+    const lessonsCreated = lessons.length;
+    const students = accounts.filter((account) => account.role === 'student'
+      && String(account.enrollment?.teacherId || '') === String(user._id)
+      && approvedEnrollmentStatuses.includes(account.enrollment?.status)).length;
 
     responseUser.lessonsCreated = lessonsCreated;
     responseUser.students = students;
@@ -1159,7 +1153,7 @@ const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, email, username, password, role, status, subject, contactNumber, department } = req.body;
 
-  const user = await User.findById(id).select('+password');
+  const user = await findSupabaseAccount('id', id);
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
@@ -1167,8 +1161,8 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 
   if (email && String(email).toLowerCase().trim() !== user.email) {
-    const emailExists = await User.findOne({ email: String(email).toLowerCase().trim(), _id: { $ne: id } });
-    if (emailExists) {
+    const emailExists = await findSupabaseAccountByEmail(email);
+    if (emailExists && String(emailExists._id) !== String(id)) {
       const error = new Error('Email already exists');
       error.statusCode = 409;
       throw error;
@@ -1185,8 +1179,8 @@ const updateUser = asyncHandler(async (req, res) => {
       error.statusCode = 400;
       throw error;
     }
-    const usernameExists = await User.findOne({ username: normalizedUsername, _id: { $ne: id } }).select('_id');
-    if (usernameExists) {
+    const usernameExists = await findSupabaseAccountByUsername(normalizedUsername);
+    if (usernameExists && String(usernameExists._id) !== String(id)) {
       const error = new Error('Username already exists');
       error.statusCode = 409;
       throw error;
@@ -1273,7 +1267,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const actingAdmin = await User.findById(req.user._id).select('+password');
+  const actingAdmin = await findSupabaseAccount('id', req.user._id);
   if (!actingAdmin) {
     const error = new Error('Admin account not found');
     error.statusCode = 401;
@@ -1287,7 +1281,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const user = await User.findById(id);
+  const user = await findSupabaseAccount('id', id);
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
@@ -1300,7 +1294,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  await user.deleteOne();
+  await deleteSupabaseAccount(user._id);
   return sendSuccess(res, 200, 'User deleted successfully');
 });
 
@@ -1996,7 +1990,7 @@ const sendUserMessage = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const recipient = await User.findById(recipientId).select('name username role status');
+  const recipient = await findSupabaseAccount('id', recipientId);
   if (!recipient) {
     const error = new Error('Recipient not found');
     error.statusCode = 404;

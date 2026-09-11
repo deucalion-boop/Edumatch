@@ -226,7 +226,13 @@ async function ensureDefaultSupabaseAdmin({ name, email, username, password }) {
   }
 }
 
+async function deleteSupabaseAccount(id) {
+  const { error } = await getSupabaseStorageClient().from('users').delete().eq('id', String(id));
+  if (error) throw accountError(error, 'Failed to delete account from Supabase');
+}
+
 module.exports = {
+  deleteSupabaseAccount,
   createSupabaseAccount,
   ensureDefaultSupabaseAdmin,
   findSupabaseAccount,

@@ -26,6 +26,7 @@ function createFakeSupabase(initialTables = {}) {
       range(first, last) { start = first; end = last; return query; },
       order(field, options = {}) { sorting = { field, ascending: options.ascending !== false }; return query; },
       insert(value) { operation = 'insert'; payload = value; return query; },
+      delete() { operation = 'delete'; return query; },
       update(value) { operation = 'update'; payload = value; return query; },
       upsert(value) { operation = 'upsert'; payload = value; return query; },
       maybeSingle() { single = true; return query; },
@@ -50,6 +51,7 @@ function createFakeSupabase(initialTables = {}) {
           } else if (operation === 'update') {
             rows.forEach((row) => Object.assign(row, structuredClone(payload)));
           }
+          if (operation === 'delete') tables[table] = tables[table].filter((row) => !rows.includes(row));
           if (operation !== 'select') writes.push({ table, operation, payload: structuredClone(payload), ids: rows.map((row) => row.id) });
           const count = rows.length;
           if (sorting) {
