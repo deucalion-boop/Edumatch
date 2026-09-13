@@ -6,7 +6,6 @@ const path = require('path');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
-const Attendance = require('../models/Attendance');
 const Recommendation = require('../models/Recommendation');
 const { sendSuccess } = require('../utils/responseHelper');
 const { computeMasteryFromSubmissions } = require('../utils/studentProgress');

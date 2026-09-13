@@ -19,7 +19,6 @@ const Settings = require('./models/Settings');
 const Subject = require('./models/Subject');
 const UserModel = require('./models/User');
 const SubjectEnrollment = require('./models/SubjectEnrollment');
-const Attendance = require('./models/Attendance');
 const Section = require('./models/Section');
 const Recommendation = require('./models/Recommendation');
 const Session = require('./models/Session');
@@ -306,24 +305,6 @@ async function cleanupLegacyAiSettingsFields() {
   }
 }
 
-async function normalizeLegacyAttendanceScopes() {
-  const result = await Attendance.updateMany(
-    {
-      attendanceScope: { $exists: false },
-    },
-    {
-      $set: {
-        attendanceScope: 'handled_class',
-      },
-    }
-  );
-
-  const modifiedCount = Number(result?.modifiedCount || 0);
-  if (modifiedCount > 0) {
-    console.log(`[CLEANUP] Normalized attendance scope for ${modifiedCount} legacy attendance record(s).`);
-  }
-}
-
 async function listCollectionIndexes(model) {
   try {
     return await model.collection.indexes();
@@ -370,7 +351,6 @@ async function syncApplicationIndexes() {
     Submission,
     Subject,
     SubjectEnrollment,
-    Attendance,
     Section,
     Recommendation,
     Session,

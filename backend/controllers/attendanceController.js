@@ -1,14 +1,11 @@
 const { studentAttendance } = require('../services/supabaseStudentDashboardService');
-const Attendance = require('../models/Attendance');
-const mongoose = require('mongoose');
-const SubjectEnrollment = require('../models/SubjectEnrollment');
-const User = require('../models/User');
 const { ROLE_TEACHER } = require('../constants/userRoles');
 const { sendSuccess } = require('../utils/responseHelper');
 const { getSectionOrThrow, normalizeSectionId } = require('../services/sectionService');
-const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
 const { listSupabaseAccounts } = require('../services/supabaseAccountService');
 const { findTeacherSubject } = require('../services/subjectService');
+const { getSupabaseStorageClient } = require('../services/supabaseStorageService');
+const { readProfileRows } = require('../services/supabaseUserProfileService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const ATTENDANCE_STATUS_MAP = {
@@ -18,6 +15,85 @@ const ATTENDANCE_STATUS_MAP = {
   excused: 'Excused',
 };
 const ATTENDANCE_SCOPES = ['handled_class', 'advisory_class'];
+
+function hydrateAttendanceRow(row) {
+  if (!row) return null;
+  return Object.fromEntries([
+    ['_id', row.id],
+    ...Object.entries(row).map(([key, value]) => [key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()), value]),
+  ]);
+}
+
+function attendanceDatabaseRow(record) {
+  return {
+    attendance_scope: record.attendanceScope,
+    subject_id: record.subjectId || null,
+    section_id: record.sectionId || null,
+    teacher_id: String(record.teacherId),
+    date_key: record.dateKey,
+    attendance_date: new Date(record.attendanceDate).toISOString(),
+    subject_name: record.subjectName || '',
+    subject_code: record.subjectCode || '',
+    class_name: record.className || '',
+    section_name: record.sectionName || '',
+    track: record.track || '',
+    teacher_name: record.teacherName || '',
+    teacher_subject: record.teacherSubject || '',
+    teacher_department: record.teacherDepartment || '',
+    entries: Array.isArray(record.entries) ? record.entries : [],
+    summary: record.summary || {},
+    is_locked: record.isLocked === true,
+    locked_at: record.lockedAt ? new Date(record.lockedAt).toISOString() : null,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function applyAttendanceQueryFilters(query, filters = {}) {
+  let filtered = query;
+  const columnByField = {
+    id: 'id', attendanceScope: 'attendance_scope', subjectId: 'subject_id', sectionId: 'section_id',
+    teacherId: 'teacher_id', dateKey: 'date_key', isLocked: 'is_locked',
+  };
+  Object.entries(filters).forEach(([field, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    const column = columnByField[field];
+    if (column) filtered = filtered.eq(column, typeof value === 'boolean' ? value : String(value));
+  });
+  return filtered;
+}
+
+async function findAttendanceRecord(filters) {
+  const query = applyAttendanceQueryFilters(
+    getSupabaseStorageClient().from('attendance_records').select('*'),
+    filters
+  );
+  const { data, error } = await query.limit(1).maybeSingle();
+  if (error) throw Object.assign(new Error(error.message || 'Unable to read attendance'), { statusCode: 500 });
+  return hydrateAttendanceRow(data);
+}
+
+async function listAttendanceRecords(filters = {}, limit = 200) {
+  const query = applyAttendanceQueryFilters(
+    getSupabaseStorageClient().from('attendance_records').select('*'),
+    filters
+  ).order('date_key', { ascending: false }).order('created_at', { ascending: false }).limit(limit);
+  const { data, error } = await query;
+  if (error) throw Object.assign(new Error(error.message || 'Unable to read attendance'), { statusCode: 500 });
+  return (data || []).map(hydrateAttendanceRow);
+}
+
+async function persistAttendanceRecord(record) {
+  const row = attendanceDatabaseRow(record);
+  const table = getSupabaseStorageClient().from('attendance_records');
+  const { data, error } = record._id
+    ? await table.update(row).eq('id', String(record._id)).select('*').single()
+    : await table.insert(row).select('*').single();
+  if (error) {
+    const statusCode = error.code === '23505' ? 409 : 500;
+    throw Object.assign(new Error(error.message || 'Unable to save attendance'), { statusCode, code: error.code });
+  }
+  return hydrateAttendanceRow(data);
+}
 
 function throwHttpError(message, statusCode = 400) {
   const error = new Error(message);
@@ -211,15 +287,16 @@ async function resolveTeacherAttendanceContext({ teacher, attendanceScope, subje
 
 async function getApprovedRoster({ teacherId, subjectId, attendanceScope = 'handled_class', sectionId = '' }) {
   if (attendanceScope === 'advisory_class') {
-    const students = await User.find({
-      sectionId,
-      role: 'student',
-      ...buildExcludeArchivedStudentsFilter(),
-    })
-      .select('_id name email status gradeLevel department sectionId')
-      .populate('sectionId', 'name')
-      .sort({ name: 1 })
-      .lean();
+    const [accounts, sections] = await Promise.all([
+      listSupabaseAccounts(),
+      readProfileRows('sections', 'id', sectionId),
+    ]);
+    const sectionName = String(sections[0]?.name || '').trim();
+    const students = accounts.filter((student) => (
+      String(student?.role || '') === 'student'
+      && normalizeSectionId(student?.sectionId) === normalizeSectionId(sectionId)
+      && student?.archive?.isArchived !== true
+    ));
 
     return uniqueBy(students, (student) => String(student?._id || ''))
       .map((student) => ({
@@ -229,30 +306,24 @@ async function getApprovedRoster({ teacherId, subjectId, attendanceScope = 'hand
         status: String(student?.status || 'active').trim().toLowerCase(),
         gradeLevel: String(student?.gradeLevel || '').trim(),
         department: String(student?.department || '').trim(),
-        sectionId: normalizeSectionId(student?.sectionId?._id || student?.sectionId || ''),
-        sectionName: String(student?.sectionId?.name || '').trim(),
+        sectionId: normalizeSectionId(student?.sectionId || ''),
+        sectionName,
       }))
       .sort((left, right) => String(left.name || '').localeCompare(String(right.name || '')));
   }
 
-  const rows = await SubjectEnrollment.find({
-    teacherId,
-    subjectId,
-    status: 'approved',
-  })
-    .populate('studentId', '_id name email status gradeLevel department sectionId archive')
-    .populate('sectionId', 'name')
-    .sort({ createdAt: 1 })
-    .lean();
+  const enrollments = (await readProfileRows('subject_enrollments', 'subject_id', subjectId))
+    .filter((row) => String(row.teacherId) === String(teacherId) && row.status === 'approved');
+  const studentIds = [...new Set(enrollments.map((row) => String(row.studentId || '')).filter(Boolean))];
+  if (studentIds.length === 0) return [];
+  const students = await readProfileRows('users', 'id', studentIds);
+  const sectionIds = [...new Set(students.map((student) => normalizeSectionId(student.sectionId)).filter(Boolean))];
+  const sections = sectionIds.length > 0 ? await readProfileRows('sections', 'id', sectionIds) : [];
+  const sectionNameById = new Map(sections.map((section) => [String(section.id), String(section.name || '')]));
 
   return uniqueBy(
-    rows
-      .map((row) => ({
-        ...(row?.studentId || {}),
-        enrollmentSectionId: row?.sectionId?._id || row?.sectionId || row?.studentId?.sectionId || '',
-        enrollmentSectionName: row?.sectionId?.name || row?.studentId?.sectionId?.name || row?.sectionName || '',
-      }))
-      .filter((student) => student?._id && !isArchivedStudent(student)),
+    students.filter((student) => student?._id && student.role === 'student' && student.status === 'active'
+      && student?.archive?.isArchived !== true),
     (student) => String(student?._id || '')
   )
     .map((student) => ({
@@ -262,8 +333,8 @@ async function getApprovedRoster({ teacherId, subjectId, attendanceScope = 'hand
       status: String(student?.status || 'active').trim().toLowerCase(),
       gradeLevel: String(student?.gradeLevel || '').trim(),
       department: String(student?.department || '').trim(),
-      sectionId: normalizeSectionId(student?.enrollmentSectionId || ''),
-      sectionName: String(student?.enrollmentSectionName || '').trim(),
+      sectionId: normalizeSectionId(student?.sectionId || ''),
+      sectionName: sectionNameById.get(normalizeSectionId(student?.sectionId)) || '',
     }))
     .sort((left, right) => String(left.name || '').localeCompare(String(right.name || '')));
 }
@@ -369,7 +440,7 @@ async function saveAttendanceRecord({ teacher, attendanceScope, subject, section
       dateKey,
     };
 
-  let attendance = await Attendance.findOne(attendanceLookup);
+  let attendance = await findAttendanceRecord(attendanceLookup);
 
   const isNewRecord = !attendance;
   if (attendance && String(attendance.teacherId || '') !== String(teacher._id || '')) {
@@ -384,9 +455,7 @@ async function saveAttendanceRecord({ teacher, attendanceScope, subject, section
     );
   }
 
-  if (!attendance) {
-    attendance = new Attendance(attendanceLookup);
-  }
+  if (!attendance) attendance = { ...attendanceLookup };
 
   attendance.attendanceScope = attendanceScope;
   attendance.subjectId = subject?._id || undefined;
@@ -412,9 +481,9 @@ async function saveAttendanceRecord({ teacher, attendanceScope, subject, section
   attendance.lockedAt = null;
 
   try {
-    await attendance.save();
+    attendance = await persistAttendanceRecord(attendance);
   } catch (error) {
-    if (error?.code === 11000) {
+    if (error?.code === '23505' || error?.statusCode === 409) {
       throwHttpError(
         attendanceScope === 'advisory_class'
           ? 'Attendance already exists for this advisory section and date'
@@ -476,11 +545,11 @@ const getTeacherAttendanceRoster = asyncHandler(async (req, res) => {
       attendanceScope,
       sectionId: section?._id,
     }),
-    Attendance.findOne(
+    findAttendanceRecord(
       attendanceScope === 'advisory_class'
         ? { attendanceScope, teacherId: req.user._id, sectionId: section._id, dateKey }
         : { attendanceScope, subjectId: subject._id, dateKey }
-    ).lean(),
+    ),
   ]);
 
   return sendSuccess(res, 200, 'Attendance roster fetched successfully', buildTeacherRosterPayload({
@@ -509,10 +578,7 @@ const listTeacherAttendanceRecords = asyncHandler(async (req, res) => {
     query = { ...query, sectionId: section._id };
   }
 
-  const records = await Attendance.find(query)
-    .sort({ dateKey: -1, createdAt: -1 })
-    .limit(limit)
-    .lean();
+  const records = await listAttendanceRecords(query, limit);
 
   const filtered = applyDateRange(records, { from: dateFrom, to: dateTo });
 
@@ -564,8 +630,8 @@ const lockTeacherAttendance = asyncHandler(async (req, res) => {
     throwHttpError('Attendance record id is required');
   }
 
-  const attendance = await Attendance.findOne({
-    _id: attendanceId,
+  let attendance = await findAttendanceRecord({
+    id: attendanceId,
     teacherId: req.user._id,
   });
 
@@ -578,7 +644,7 @@ const lockTeacherAttendance = asyncHandler(async (req, res) => {
 
   attendance.isLocked = true;
   attendance.lockedAt = new Date();
-  await attendance.save();
+  attendance = await persistAttendanceRecord(attendance);
 
   return sendSuccess(res, 200, 'Attendance locked successfully', {
     record: mapAttendanceRecord(attendance),
@@ -632,10 +698,7 @@ const getSecretaryAttendanceOverview = asyncHandler(async (req, res) => {
   const dateFrom = String(req.query?.from || '').trim();
   const dateTo = String(req.query?.to || '').trim();
   const records = applyDateRange(
-    await Attendance.find({})
-      .sort({ dateKey: -1, createdAt: -1 })
-      .limit(200)
-      .lean(),
+    await listAttendanceRecords({}, 200),
     { from: dateFrom, to: dateTo }
   );
 
@@ -697,16 +760,9 @@ const getHeadTeacherAttendanceOverview = asyncHandler(async (req, res) => {
     && String(account?.department || '').trim() === department
     && String(account?.managedBy?._id || account?.managedBy?.id || account?.managedBy || '').trim() === headTeacherId
   ));
-  const mongoTeacherIds = teachers
-    .map((teacher) => String(teacher?._id || teacher?.id || '').trim())
-    .filter((id) => mongoose.Types.ObjectId.isValid(id));
-  const records = mongoTeacherIds.length > 0
-    ? await Attendance.find({
-      teacherId: { $in: mongoTeacherIds },
-    })
-      .sort({ dateKey: -1, createdAt: -1 })
-      .limit(200)
-      .lean()
+  const teacherIds = new Set(teachers.map((teacher) => String(teacher?._id || teacher?.id || '').trim()).filter(Boolean));
+  const records = teacherIds.size > 0
+    ? (await listAttendanceRecords({}, 200)).filter((record) => teacherIds.has(String(record.teacherId || '')))
     : [];
 
   const teacherSummaryMap = new Map(
@@ -769,16 +825,11 @@ const getHeadTeacherAttendanceOverview = asyncHandler(async (req, res) => {
 const getAdminAttendanceReport = asyncHandler(async (req, res) => {
   const dateFrom = String(req.query?.from || '').trim();
   const dateTo = String(req.query?.to || '').trim();
-  const teachers = await User.find({ role: ROLE_TEACHER })
-    .select('_id name email subject department status advisorySectionId')
-    .populate('advisorySectionId', 'name')
-    .lean();
+  const accounts = await listSupabaseAccounts();
+  const teachers = accounts.filter((account) => String(account?.role || '') === ROLE_TEACHER);
 
   const teacherMap = new Map(teachers.map((teacher) => [String(teacher._id), teacher]));
-  const allRecords = await Attendance.find({})
-    .sort({ dateKey: -1, createdAt: -1 })
-    .limit(400)
-    .lean();
+  const allRecords = await listAttendanceRecords({}, 400);
   const records = applyDateRange(allRecords, { from: dateFrom, to: dateTo });
 
   const teacherSummariesMap = new Map();
