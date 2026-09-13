@@ -61,3 +61,23 @@ test('announcement retries deduplicate and full message is only retrievable by i
  await assert.rejects(invoke(announcements.getAnnouncement, { user: { _id: 'other', role: 'student' }, query: { event } }), { statusCode: 404 });
  await assert.rejects(invoke(announcements.publishAnnouncement, { ...req, user: { _id: 'other' } }), { statusCode: 404 });
 });
+test('announcement list is recipient scoped and includes cleared announcements', async () => {
+ fixture();
+ const req = { user: publisher, params: { subjectId: 'subject' }, body: { title: 'Reminder', content: 'Bring your workbook.', requestId: 'request-1234567890' } };
+ await invoke(announcements.publishAnnouncement, req);
+ const row = client.tables.notifications[0];
+ row.is_cleared = true;
+ const result = await invoke(announcements.listAnnouncements, { user: { _id: 'approved', role: 'student' }, query: {} });
+ assert.equal(result.announcements.length, 1);
+ assert.equal(result.announcements[0].title, 'Reminder');
+ assert.equal(result.announcements[0].eventKey, row.event_key);
+ const other = await invoke(announcements.listAnnouncements, { user: { _id: 'other', role: 'student' }, query: {} });
+ assert.deepEqual(other.announcements, []);
+});
+test('posting an announcement without approved students returns a clear error', async () => {
+ fixture();
+ client.tables.subject_enrollments.forEach(row => { row.status = 'pending'; });
+ const req = { user: publisher, params: { subjectId: 'subject' }, body: { title: 'Reminder', content: 'Bring your workbook.', requestId: 'request-1234567890' } };
+ await assert.rejects(invoke(announcements.publishAnnouncement, req), { statusCode: 409 });
+ assert.equal(client.tables.notifications?.length || 0, 0);
+});

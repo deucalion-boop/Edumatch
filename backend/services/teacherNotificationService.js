@@ -75,7 +75,11 @@ async function notifyEnrollmentRequest({ enrollment, student, subject }) {
     subject: clean(subject?.className || subject?.name, 'Class enrollment'),
     preview: `${clean(sender?.name, 'A student')} requested to join your class.`,
     eventKey: `enrollment:${clean(enrollment?._id)}`,
-    meta: { route: '/teacher/students', entityType: 'enrollment', entityId: clean(enrollment?._id) },
+    meta: {
+      route: '/teacher/students?request=' + encodeURIComponent(clean(enrollment?._id)),
+      entityType: 'enrollment',
+      entityId: clean(enrollment?._id),
+    },
   });
 }
 

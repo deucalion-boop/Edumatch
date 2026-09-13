@@ -76,6 +76,10 @@
             <i class="fas fa-tasks"></i>
             <span>Activities</span>
           </router-link>
+          <router-link to="/student/announcements" class="nav-link" :class="{ active: isActiveRoute('/student/announcements') }" @click="closeSidebar">
+            <i class="fas fa-bullhorn"></i>
+            <span>Announcements</span>
+          </router-link>
         </div>
       </nav>
       <div class="sidebar-footer">
@@ -319,7 +323,7 @@ export default {
       {
         key: 'sidebar',
         title: 'Navigation Overview',
-        description: 'Use this navigation menu to move between your Dashboard, Lessons, and Activities.',
+        description: 'Use this navigation menu to move between your Dashboard, Lessons, Activities, and Announcements.',
         selector: '[data-tour="sidebar"]',
         route: '/student/dashboard',
         openSidebar: true

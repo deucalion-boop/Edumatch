@@ -316,7 +316,13 @@
           <div><strong>You're all caught up</strong><p>New class enrollment requests will appear here.</p></div>
         </div>
         <div v-else class="enrollment-request-list">
-          <article v-for="request in paginatedEnrollmentRequests" :key="request.id" class="enrollment-request-card">
+          <article
+            v-for="request in paginatedEnrollmentRequests"
+            :id="`enrollment-request-${request.id}`"
+            :key="request.id"
+            class="enrollment-request-card"
+            :class="{ 'is-notification-target': focusedEnrollmentRequestId === String(request.id) }"
+          >
             <div class="request-student-row">
               <div class="student-identity">
                 <span class="student-avatar student-avatar-icon" aria-hidden="true">
@@ -854,6 +860,7 @@ const isStudentInviteModalOpen = ref(false)
 const isSubmittingStudentInvite = ref(false)
 const isEnrollmentRequestsLoading = ref(false)
 const requestActionId = ref('')
+const focusedEnrollmentRequestId = computed(() => String(route.query.request || '').trim())
 const removingSubjectStudentId = ref('')
 const createClassMessage = ref('')
 const createClassMessageType = ref('success')
@@ -1382,12 +1389,23 @@ const fetchEnrollmentRequests = async () => {
       sectionName: request.sectionName || '',
       avatar: request.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(request.name || 'Student')}&background=334155&color=fff`,
     }))
+    await focusEnrollmentRequest()
   } catch (error) {
     console.error('Failed to fetch enrollment requests:', error)
     showToast('error', error.response?.data?.message || 'Failed to load student requests. Please refresh to retry.')
   } finally {
     isEnrollmentRequestsLoading.value = false
   }
+}
+
+const focusEnrollmentRequest = async () => {
+  const requestId = focusedEnrollmentRequestId.value
+  if (!requestId) return
+  const requestIndex = enrollmentRequests.value.findIndex(request => String(request.id) === requestId)
+  if (requestIndex < 0) return
+  enrollmentRequestsPage.value = Math.floor(requestIndex / ENROLLMENT_REQUESTS_PAGE_SIZE) + 1
+  await nextTick()
+  document.getElementById(`enrollment-request-${requestId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
 const updateEnrollmentRequest = async (request, action) => {
@@ -2012,6 +2030,11 @@ watch(
       enrollmentRequestsPage.value = enrollmentRequestsTotalPages.value
     }
   }
+)
+
+watch(
+  () => route.query.request,
+  () => { void focusEnrollmentRequest() }
 )
 
 onMounted(async () => {
@@ -3645,6 +3668,17 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: #c7d9bc;
   box-shadow: 0 10px 22px rgba(30, 67, 7, 0.08);
+}
+
+.enrollment-request-card.is-notification-target {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), 0 14px 30px rgba(37, 99, 235, 0.12);
+  animation: notification-target-pulse 1.4s ease-out;
+}
+
+@keyframes notification-target-pulse {
+  0% { transform: scale(0.985); background: #dbeafe; }
+  100% { transform: scale(1); background: #fff; }
 }
 
 .request-student-row,

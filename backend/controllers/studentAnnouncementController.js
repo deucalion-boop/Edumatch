@@ -17,10 +17,39 @@ exports.publishAnnouncement = wrap(async (req, res) => {
   // A retry has the same event key; distinct posts get new request IDs.
   const eventKey = 'announcement:' + createHash('sha256').update(JSON.stringify([req.user._id, subject.id, requestId, title, content])).digest('hex');
   const recipientIds = await approvedStudentsForSubject(subject.id, req.user._id);
+  if (recipientIds.length === 0) {
+    throw fail('This subject has no approved students to receive the announcement.', 409);
+  }
   await createStudentNotifications({ recipientIds, sender: req.user, type: 'announcement_published', title,
     subject: subject.name, preview: 'A new Announcement has been posted in ' + subject.name + '.', message: content, eventKey,
     meta: { contentType: 'Announcement', content, subjectId: subject.id, route: '/student/announcements?event=' + encodeURIComponent(eventKey) } });
   return sendSuccess(res, 201, 'Announcement posted', { recipientCount: recipientIds.length });
+});
+
+function mapAnnouncement(data) {
+  return {
+    id: data.id,
+    eventKey: data.event_key,
+    title: data.title,
+    content: data.meta?.content || data.message,
+    subject: data.subject,
+    teacher: data.sender_name,
+    createdAt: data.created_at,
+  };
+}
+
+exports.listAnnouncements = wrap(async (req, res) => {
+  if (req.user.role !== 'student') throw fail('Student access required', 403);
+  const requestedLimit = Number(req.query.limit || 100);
+  const limit = Math.min(100, Math.max(1, Number.isFinite(requestedLimit) ? requestedLimit : 100));
+  const { data, error } = await getSupabaseStorageClient().from('notifications').select('*')
+    .eq('recipient_id', String(req.user._id)).eq('recipient_role', 'student')
+    .eq('type', 'announcement_published')
+    .order('created_at', { ascending: false }).limit(limit);
+  if (error) throw fail('Unable to load announcements', 500);
+  return sendSuccess(res, 200, 'Announcements loaded', {
+    announcements: (data || []).map(mapAnnouncement),
+  });
 });
 
 exports.getAnnouncement = wrap(async (req, res) => {
@@ -32,8 +61,5 @@ exports.getAnnouncement = wrap(async (req, res) => {
     .eq('type', 'announcement_published').eq('event_key', eventKey).maybeSingle();
   if (error) throw fail('Unable to load announcement', 500);
   if (!data) throw fail('Announcement not found', 404);
-  return sendSuccess(res, 200, 'Announcement loaded', { announcement: {
-    id: data.id, title: data.title, content: data.meta?.content || data.message,
-    subject: data.subject, teacher: data.sender_name, createdAt: data.created_at,
-  } });
+  return sendSuccess(res, 200, 'Announcement loaded', { announcement: mapAnnouncement(data) });
 });

@@ -95,14 +95,23 @@ function notificationIcon(type) {
 }
 
 function isClickable(notification) {
-  const route = String(notification?.meta?.route || '')
+  const route = resolveNotificationRoute(notification)
   return route.startsWith('/student/') || route.startsWith('/teacher/')
+}
+
+function resolveNotificationRoute(notification) {
+  const route = String(notification?.meta?.route || '')
+  const entityId = String(notification?.meta?.entityId || '').trim()
+  if (notification?.type === 'enrollment_request' && route === '/teacher/students' && entityId) {
+    return `/teacher/students?request=${encodeURIComponent(entityId)}`
+  }
+  return route
 }
 
 function selectNotification(notification) {
   if (!isClickable(notification)) return
   emit('select', notification)
-  if (!props.manualNavigation) router.push(String(notification.meta.route)).catch(() => {})
+  if (!props.manualNavigation) router.push(resolveNotificationRoute(notification)).catch(() => {})
 }
 
 function formatTimestamp(value) {
