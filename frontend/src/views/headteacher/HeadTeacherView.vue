@@ -300,8 +300,20 @@
             </div>
           </div>
 
-          <div class="headteacher-chart-shell">
-            <canvas ref="lessonTrendCanvas" aria-label="Lesson creation analytics chart"></canvas>
+          <div class="headteacher-chart-shell" :class="{ 'is-empty': hasLoaded && !dashboardError && analyticsContentInRange === 0 }">
+            <canvas ref="lessonTrendCanvas" aria-label="Lesson and assessment creation trend chart"></canvas>
+            <div
+              v-if="hasLoaded && !dashboardError && analyticsContentInRange === 0"
+              class="headteacher-chart-empty"
+              role="status"
+              aria-live="polite"
+            >
+              <span class="headteacher-chart-empty-icon" aria-hidden="true">
+                <i class="fas fa-chart-line"></i>
+              </span>
+              <strong>No content created in this range</strong>
+              <span>Choose another range to review earlier lesson and assessment activity.</span>
+            </div>
           </div>
           <div class="headteacher-analytics-legend">
             <div class="headteacher-legend-item">
@@ -760,6 +772,9 @@ const createLessonTrendChart = () => {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      onResize(chart, size) {
+        chart.options.scales.x.ticks.maxTicksLimit = size.width < 480 ? 4 : 8
+      },
       plugins: {
         legend: {
           display: false,
@@ -786,10 +801,14 @@ const createLessonTrendChart = () => {
           },
           ticks: {
             color: '#64748b',
-            font: {
-              size: 12,
+            autoSkip: true,
+            maxRotation: 0,
+            padding: 8,
+            maxTicksLimit: 8,
+            font: (context) => ({
+              size: context.chart.width < 480 ? 10 : 12,
               weight: 500,
-            },
+            }),
           },
         },
         y: {
@@ -797,9 +816,11 @@ const createLessonTrendChart = () => {
           ticks: {
             precision: 0,
             color: '#64748b',
-            font: {
-              size: 12,
-            },
+            padding: 6,
+            maxTicksLimit: 6,
+            font: (context) => ({
+              size: context.chart.width < 480 ? 10 : 12,
+            }),
           },
           grid: {
             color: 'rgba(148, 163, 184, 0.14)',

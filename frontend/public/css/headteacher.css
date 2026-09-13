@@ -3987,3 +3987,482 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     pointer-events: auto;
   }
 }
+
+/* Responsive content overview and analytics --------------------------------
+   These final, page-scoped rules intentionally own the dashboard breakpoints.
+   They replace older viewport-height compression without affecting data logic. */
+.headteacher-overview-page,
+.headteacher-overview-page *,
+.headteacher-overview-page *::before,
+.headteacher-overview-page *::after {
+  box-sizing: border-box;
+}
+
+body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.headteacher-overview-page .headteacher-dashboard-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 5fr);
+  align-items: start;
+  gap: clamp(1rem, 1.5vw, 1.5rem);
+  width: 100%;
+  min-width: 0;
+}
+
+.headteacher-overview-page .headteacher-panel {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: clamp(1rem, 1.35vw, 1.35rem);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.headteacher-overview-page .headteacher-section-head {
+  margin-bottom: 1rem;
+}
+
+.headteacher-overview-page .headteacher-section-title {
+  font-size: clamp(1.05rem, 1.15vw, 1.3rem);
+  line-height: 1.25;
+}
+
+.headteacher-overview-page .headteacher-section-subtitle {
+  max-width: 62ch;
+  margin-top: 0.3rem;
+  font-size: clamp(0.76rem, 0.75vw, 0.86rem);
+  line-height: 1.5;
+}
+
+.headteacher-overview-page .headteacher-radial-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: none;
+  gap: 0.8rem;
+  height: auto;
+}
+
+.headteacher-overview-page .headteacher-radial-card {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 112px;
+  padding: 0.85rem;
+  border-radius: 18px;
+  text-align: left;
+}
+
+.headteacher-overview-page .headteacher-radial-chart {
+  width: 82px;
+  height: 82px;
+  margin: 0;
+  filter: drop-shadow(0 7px 9px rgba(30, 67, 7, 0.1));
+}
+
+.headteacher-overview-page .headteacher-radial-chart::before {
+  inset: 8px;
+}
+
+.headteacher-overview-page .headteacher-radial-center {
+  gap: 0.08rem;
+}
+
+.headteacher-overview-page .headteacher-radial-center strong {
+  font-size: clamp(1.35rem, 1.6vw, 1.65rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.headteacher-overview-page .headteacher-radial-center span {
+  font-size: 0.48rem;
+  letter-spacing: 0.055em;
+}
+
+.headteacher-overview-page .headteacher-radial-copy {
+  min-width: 0;
+}
+
+.headteacher-overview-page .headteacher-radial-copy h3 {
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.headteacher-overview-page .headteacher-radial-copy p {
+  margin-top: 0.28rem;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}
+
+.headteacher-overview-page .headteacher-analytics-panel {
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  align-content: start;
+  container-type: inline-size;
+}
+
+.headteacher-overview-page .headteacher-analytics-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.headteacher-overview-page .headteacher-analytics-copy {
+  min-width: 0;
+}
+
+.headteacher-overview-page .headteacher-analytics-kicker {
+  margin-bottom: 0.25rem;
+  font-size: 0.64rem;
+}
+
+.headteacher-overview-page .headteacher-analytics-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.headteacher-overview-page .headteacher-highlight-pill {
+  display: grid;
+  align-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+  min-height: 72px;
+  padding: 0.65rem 0.75rem;
+  border-radius: 14px;
+}
+
+.headteacher-overview-page .headteacher-highlight-pill span {
+  font-size: 0.58rem;
+  line-height: 1.3;
+  letter-spacing: 0.065em;
+}
+
+.headteacher-overview-page .headteacher-highlight-pill strong {
+  font-size: clamp(0.72rem, 0.75vw, 0.84rem);
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+.headteacher-overview-page .headteacher-activity-highlight {
+  min-width: 0;
+}
+
+.headteacher-overview-page .headteacher-analytics-actions {
+  display: grid;
+  grid-template-columns: auto minmax(132px, 150px);
+  align-items: end;
+  gap: 0.65rem;
+  width: auto;
+}
+
+.headteacher-overview-page .headteacher-create-teacher-cta,
+.headteacher-overview-page .headteacher-analytics-filter select {
+  min-height: 44px;
+}
+
+.headteacher-overview-page .headteacher-create-teacher-cta {
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.78rem;
+}
+
+.headteacher-overview-page .headteacher-analytics-filter {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+}
+
+.headteacher-overview-page .headteacher-analytics-filter select {
+  width: 100%;
+  padding: 0.6rem 2rem 0.6rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.headteacher-overview-page .headteacher-chart-shell {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: clamp(280px, 24vw, 340px);
+  min-height: 280px;
+  padding: 0.8rem 0.7rem 0.45rem;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.headteacher-overview-page .headteacher-chart-shell canvas {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+.headteacher-overview-page .headteacher-chart-shell.is-empty canvas {
+  opacity: 0.28;
+}
+
+.headteacher-overview-page .headteacher-chart-empty {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(88%, 360px);
+  padding: 1rem;
+  border: 1px solid rgba(30, 67, 7, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ht-muted);
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 12px 28px rgba(30, 67, 7, 0.08);
+}
+
+.headteacher-overview-page .headteacher-chart-empty-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--ht-forest-soft);
+  color: var(--ht-forest);
+  display: inline-grid;
+  place-items: center;
+}
+
+.headteacher-overview-page .headteacher-chart-empty strong {
+  color: var(--ht-ink);
+  font-size: 0.9rem;
+}
+
+.headteacher-overview-page .headteacher-chart-empty > span:last-child {
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.headteacher-overview-page .headteacher-analytics-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.headteacher-overview-page .headteacher-legend-item {
+  flex: 1 1 210px;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 13px;
+  flex-wrap: wrap;
+}
+
+.headteacher-overview-page .headteacher-legend-item strong {
+  font-size: 0.76rem;
+}
+
+.headteacher-overview-page .headteacher-legend-item small {
+  margin-left: auto;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.headteacher-overview-page .headteacher-chart-caption {
+  margin-top: 0.65rem;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.headteacher-overview-page .headteacher-create-teacher-cta:focus-visible,
+.headteacher-overview-page .headteacher-analytics-filter select:focus-visible {
+  outline: 3px solid rgba(212, 170, 47, 0.42);
+  outline-offset: 2px;
+}
+
+/* Keep the analytics header usable when the persistent sidebar narrows the
+   card even though the browser itself is technically desktop-sized. */
+@container (max-width: 620px) {
+  .headteacher-overview-page .headteacher-analytics-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .headteacher-overview-page .headteacher-analytics-actions {
+    grid-template-columns: auto minmax(132px, 160px);
+    width: 100%;
+    justify-content: start;
+  }
+
+  .headteacher-overview-page .headteacher-analytics-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .headteacher-overview-page .headteacher-activity-highlight {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Tablet: stack the two primary panels and use denser two-column cards. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .headteacher-overview-page .headteacher-dashboard-overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .headteacher-overview-page .headteacher-panel {
+    padding: 1rem;
+  }
+
+  .headteacher-overview-page .headteacher-radial-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .headteacher-overview-page .headteacher-analytics-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .headteacher-overview-page .headteacher-activity-highlight {
+    grid-column: 1 / -1;
+  }
+
+  .headteacher-overview-page .headteacher-chart-shell {
+    height: 300px;
+  }
+}
+
+/* Mobile: one column throughout with viewport-safe controls and chart. */
+@media (max-width: 768px) {
+  body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
+    gap: 1rem;
+    width: 100%;
+    padding: 0.875rem;
+  }
+
+  .headteacher-overview-page .headteacher-summary-stack {
+    margin-bottom: 0.25rem;
+  }
+
+  .headteacher-overview-page .headteacher-dashboard-overview,
+  .headteacher-overview-page .headteacher-radial-grid,
+  .headteacher-overview-page .headteacher-analytics-highlights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .headteacher-overview-page .headteacher-dashboard-overview {
+    gap: 1rem;
+  }
+
+  .headteacher-overview-page .headteacher-panel {
+    padding: 1rem;
+    border-radius: 18px;
+  }
+
+  .headteacher-overview-page .headteacher-radial-card {
+    grid-template-columns: 84px minmax(0, 1fr);
+    justify-items: stretch;
+    gap: 0.8rem;
+    min-height: 106px;
+    padding: 0.75rem;
+    text-align: left;
+  }
+
+  .headteacher-overview-page .headteacher-radial-chart {
+    width: 78px;
+    height: 78px;
+  }
+
+  .headteacher-overview-page .headteacher-analytics-head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
+  }
+
+  .headteacher-overview-page .headteacher-analytics-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(132px, 0.75fr);
+    width: 100%;
+  }
+
+  .headteacher-overview-page .headteacher-highlight-pill {
+    min-height: 68px;
+  }
+
+  .headteacher-overview-page .headteacher-chart-shell {
+    height: clamp(250px, 72vw, 290px);
+    min-height: 250px;
+    padding: 0.65rem 0.35rem 0.35rem;
+    border-radius: 15px;
+  }
+
+  .headteacher-overview-page .headteacher-analytics-legend {
+    display: flex;
+  }
+
+  .headteacher-overview-page .headteacher-legend-item {
+    flex: 1 1 100%;
+  }
+}
+
+/* Small mobile: controls become full-width and spacing tightens gently. */
+@media (max-width: 480px) {
+  body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
+    padding: 0.75rem;
+  }
+
+  .headteacher-overview-page .headteacher-panel {
+    padding: 0.85rem;
+    border-radius: 16px;
+  }
+
+  .headteacher-overview-page .headteacher-radial-card {
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+
+  .headteacher-overview-page .headteacher-radial-chart {
+    width: 70px;
+    height: 70px;
+  }
+
+  .headteacher-overview-page .headteacher-radial-chart::before {
+    inset: 7px;
+  }
+
+  .headteacher-overview-page .headteacher-radial-center strong {
+    font-size: 1.2rem;
+  }
+
+  .headteacher-overview-page .headteacher-analytics-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .headteacher-overview-page .headteacher-create-teacher-cta,
+  .headteacher-overview-page .headteacher-analytics-filter,
+  .headteacher-overview-page .headteacher-analytics-filter select {
+    width: 100%;
+  }
+
+  .headteacher-overview-page .headteacher-create-teacher-cta,
+  .headteacher-overview-page .headteacher-analytics-filter select {
+    min-height: 44px;
+  }
+
+  .headteacher-overview-page .headteacher-chart-shell {
+    height: 260px;
+  }
+
+  .headteacher-overview-page .headteacher-legend-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.25rem 0.55rem;
+  }
+
+  .headteacher-overview-page .headteacher-legend-item small {
+    grid-column: 2;
+    margin-left: 0;
+    white-space: normal;
+  }
+}
