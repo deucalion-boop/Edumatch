@@ -3928,15 +3928,28 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-sidebar .head
   }
 }
 
-/* Let overview content determine page height instead of compressing it into 100vh. */
+/* Keep the dashboard inside the viewport shell while allowing its main column
+   to scroll. dvh prevents mobile browser chrome from clipping the last card. */
+body.headteacher-dashboard .headteacher-overview-page {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  height: auto;
-  min-height: 100vh;
-  max-height: none;
-  overflow: visible;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .headteacher-overview-page .headteacher-dashboard-overview {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
