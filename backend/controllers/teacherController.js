@@ -6,7 +6,6 @@ const path = require('path');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
-const Subject = require('../models/Subject');
 const Attendance = require('../models/Attendance');
 const Recommendation = require('../models/Recommendation');
 const { sendSuccess } = require('../utils/responseHelper');
@@ -44,12 +43,14 @@ const {
   createSupabaseLesson,
   listSupabaseLessons,
   findSupabaseLesson,
+  findSupabaseAssessment,
   createSupabaseAssessment,
   listSupabaseAssessments,
 } = require('../services/supabaseContentService');
 const {
   notifyAssessmentAssigned,
   notifyLessonPublished,
+  approvedStudentsForSubject,
   safelyRunNotificationTask,
 } = require('../services/studentNotificationService');
 const {
@@ -810,7 +811,7 @@ const updateTeacherLesson = asyncHandler(async (req, res) => {
 });
 
 const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
-  const sourceLesson = await Lesson.findOne({ _id: req.params.id, createdBy: req.user._id });
+  const sourceLesson = await findSupabaseLesson(req.params.id, req.user._id);
   if (!sourceLesson) {
     const error = new Error('Lesson not found');
     error.statusCode = 404;
@@ -834,11 +835,9 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const targetSubjects = await Subject.find({
-    _id: { $in: requestedSubjectIds },
-    teacherId: req.user._id,
-    isActive: true,
-  }).select('_id name className track code subjectCategory');
+  const subjectsById = new Map((await listTeacherSubjects(req.user._id))
+    .map((subject) => [String(subject._id), subject]));
+  const targetSubjects = requestedSubjectIds.map((subjectId) => subjectsById.get(subjectId)).filter(Boolean);
   if (targetSubjects.length !== requestedSubjectIds.length) {
     const error = new Error('One or more selected classes were not found');
     error.statusCode = 404;
@@ -846,6 +845,7 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
   }
 
   const sourceSubjectId = String(sourceLesson.subjectId || '').trim();
+  const existingLessons = await listSupabaseLessons(req.user._id);
   const createdLessons = [];
   const skippedClasses = [];
   for (const subjectRecord of targetSubjects) {
@@ -855,11 +855,10 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
     }
 
     const normalizedSubject = ensureTeacherSubjectAccess(req.user, subjectRecord.name);
-    const existingLesson = await Lesson.findOne({
-      createdBy: req.user._id,
-      subjectId: subjectRecord._id,
-      title: new RegExp(`^${String(sourceLesson.title).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-    }).select('_id');
+    const existingLesson = existingLessons.find((lesson) => (
+      String(lesson.subjectId || '') === String(subjectRecord._id)
+      && normalizeKeyPart(lesson.title) === normalizeKeyPart(sourceLesson.title)
+    ));
     if (existingLesson) {
       skippedClasses.push(subjectRecord.className || subjectRecord.name || 'Class');
       continue;
@@ -873,7 +872,7 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
       size: attachment.size,
       uploadedAt: attachment.uploadedAt,
     }));
-    const copiedLesson = await Lesson.create({
+    const copiedLesson = await createSupabaseLesson({
       title: sourceLesson.title,
       description: sourceLesson.description,
       track: normalizeLessonStrand(subjectRecord.track || sourceLesson.track) || sourceLesson.track,
@@ -885,8 +884,8 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
       pdfOriginalName: sourceLesson.pdfOriginalName,
       attachments: copiedAttachments,
       createdBy: req.user._id,
+      publishedBy: req.user._id,
     });
-    await copiedLesson.populate('subjectId', 'className code track');
     createdLessons.push(copiedLesson);
     await safelyRunNotificationTask('copied lesson', () => notifyLessonPublished({
       lesson: copiedLesson,
@@ -1115,7 +1114,7 @@ const updateTeacherAssessment = asyncHandler(async (req, res) => {
 });
 
 const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
-  const sourceAssessment = await Assessment.findOne({ _id: req.params.id, createdBy: req.user._id });
+  const sourceAssessment = await findSupabaseAssessment(req.params.id, req.user._id);
   if (!sourceAssessment) {
     const error = new Error('Assessment not found');
     error.statusCode = 404;
@@ -1139,20 +1138,20 @@ const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const targetSubjects = await Subject.find({
-    _id: { $in: requestedSubjectIds },
-    teacherId: req.user._id,
-    isActive: true,
-  }).select('_id name className track code subjectCategory');
+  const subjectsById = new Map((await listTeacherSubjects(req.user._id))
+    .map((subject) => [String(subject._id), subject]));
+  const targetSubjects = requestedSubjectIds.map((subjectId) => subjectsById.get(subjectId)).filter(Boolean);
   if (targetSubjects.length !== requestedSubjectIds.length) {
     const error = new Error('One or more selected classes were not found');
     error.statusCode = 404;
     throw error;
   }
 
-  const sourceLesson = sourceAssessment.lessonId
-    ? await Lesson.findOne({ _id: sourceAssessment.lessonId, createdBy: req.user._id }).select('title')
-    : null;
+  const [sourceLesson, existingAssessments, existingLessons] = await Promise.all([
+    sourceAssessment.lessonId ? findSupabaseLesson(sourceAssessment.lessonId, req.user._id) : null,
+    listSupabaseAssessments(req.user._id),
+    listSupabaseLessons(req.user._id),
+  ]);
   const sourceSubjectId = String(sourceAssessment.subjectId || '').trim();
   const createdAssessments = [];
   const skippedClasses = [];
@@ -1165,11 +1164,10 @@ const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
     }
     ensureTeacherSubjectAccess(req.user, subjectRecord.name);
 
-    const existingAssessment = await Assessment.findOne({
-      createdBy: req.user._id,
-      subjectId: subjectRecord._id,
-      title: new RegExp(`^${String(sourceAssessment.title).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-    }).select('_id');
+    const existingAssessment = existingAssessments.find((assessment) => (
+      String(assessment.subjectId || '') === String(subjectRecord._id)
+      && normalizeKeyPart(assessment.title) === normalizeKeyPart(sourceAssessment.title)
+    ));
     if (existingAssessment) {
       skippedClasses.push(classLabel);
       continue;
@@ -1177,11 +1175,16 @@ const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
 
     if (sourceAssessment.countsTowardRecommendation) {
       try {
-        await assertUniqueGradingAssessment({
-          teacherId: req.user._id,
-          subjectId: subjectRecord._id,
-          gradingPeriod: sourceAssessment.gradingPeriod,
-        });
+        const gradingConflict = existingAssessments.some((assessment) => (
+          String(assessment.subjectId || '') === String(subjectRecord._id)
+          && assessment.countsTowardRecommendation === true
+          && String(assessment.gradingPeriod || '') === String(sourceAssessment.gradingPeriod || '')
+        ));
+        if (gradingConflict) {
+          const conflict = new Error('A grading assessment for this grading period already exists for this class.');
+          conflict.statusCode = 409;
+          throw conflict;
+        }
       } catch (error) {
         if (error.statusCode === 409) {
           skippedClasses.push(classLabel);
@@ -1192,17 +1195,14 @@ const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
     }
 
     const linkedLesson = sourceLesson
-      ? await Lesson.findOne({
-        createdBy: req.user._id,
-        subjectId: subjectRecord._id,
-        title: sourceLesson.title,
-      }).select('_id')
+      ? existingLessons.find((lesson) => (
+        String(lesson.subjectId || '') === String(subjectRecord._id)
+        && normalizeKeyPart(lesson.title) === normalizeKeyPart(sourceLesson.title)
+      ))
       : null;
-    const assignedStudentIds = await resolveAssignedStudentIds({
-      assignmentScope: sourceAssessment.assignmentScope,
-      teacherId: req.user._id,
-      subjectId: subjectRecord._id,
-    });
+    const assignedStudentIds = sourceAssessment.assignmentScope === 'handled_class'
+      ? await approvedStudentsForSubject(subjectRecord._id, req.user._id)
+      : [...new Set((sourceAssessment.assignedStudentIds || []).map(String).filter(Boolean))];
     const copiedAttachments = normalizeAssessmentAttachments(sourceAssessment).map((attachment) => ({
       originalName: attachment.originalName,
       storedPath: attachment.storedPath,
@@ -1221,7 +1221,7 @@ const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
         explanation: question.explanation,
       }));
 
-    const copiedAssessment = await Assessment.create({
+    const copiedAssessment = await createSupabaseAssessment({
       lessonId: linkedLesson?._id || null,
       title: sourceAssessment.title,
       examType: sourceAssessment.examType,
@@ -1584,11 +1584,7 @@ const updateAssessmentQuestions = asyncHandler(async (req, res) => {
     ? await Lesson.findById(assessment.lessonId).select('track subject subjectId subjectCode subjectCategory').lean()
     : null;
   const selectedClass = !lesson && assessment.subjectId
-    ? await Subject.findOne({
-      _id: assessment.subjectId,
-      teacherId: req.user._id,
-      isActive: true,
-    }).lean()
+    ? await findTeacherSubject(req.user._id, assessment.subjectId)
     : null;
   const nextPolicy = buildAssessmentPolicy({
     assessmentMode: assessmentMode !== undefined ? assessmentMode : assessment.assessmentMode,

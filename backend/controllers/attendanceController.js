@@ -1,7 +1,6 @@
 const { studentAttendance } = require('../services/supabaseStudentDashboardService');
 const Attendance = require('../models/Attendance');
 const mongoose = require('mongoose');
-const Subject = require('../models/Subject');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
 const User = require('../models/User');
 const { ROLE_TEACHER } = require('../constants/userRoles');
@@ -9,6 +8,7 @@ const { sendSuccess } = require('../utils/responseHelper');
 const { getSectionOrThrow, normalizeSectionId } = require('../services/sectionService');
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
 const { listSupabaseAccounts } = require('../services/supabaseAccountService');
+const { findTeacherSubject } = require('../services/subjectService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const ATTENDANCE_STATUS_MAP = {
@@ -167,11 +167,7 @@ async function findTeacherSubjectOrThrow({ teacherId, subjectId }) {
     throwHttpError('subjectId is required');
   }
 
-  const subject = await Subject.findOne({
-    _id: normalizedSubjectId,
-    teacherId,
-    isActive: true,
-  }).lean();
+  const subject = await findTeacherSubject(teacherId, normalizedSubjectId);
 
   if (!subject) {
     throwHttpError('Subject not found', 404);

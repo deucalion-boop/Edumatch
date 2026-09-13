@@ -60,3 +60,39 @@ test('failed assignment cleanup leaves the enrollment available for retry', asyn
   await assert.rejects(call('removeTeacherSubjectStudent', { subjectId, studentId: 'student' }), /Unavailable/);
   assert.equal(client.tables.subject_enrollments[0].id, 'enrollment');
 });
+
+test('Add to Classes accepts Supabase text subject IDs without using Mongoose ObjectId casts', async () => {
+  const sourceSubjectId = 'source-subject-id';
+  client = createFakeSupabase({
+    subjects: [
+      { id: sourceSubjectId, teacher_id: 'teacher', name: 'Math', class_name: 'Math A', code: 'MATH-A', track: 'STEM', is_active: true },
+      { id: subjectId, teacher_id: 'teacher', name: 'Math', class_name: 'Math B', code: 'MATH-B', track: 'STEM', is_active: true },
+    ],
+    users: [{ id: 'student', name: 'Student', role: 'student', status: 'active', archive: {} }],
+    subject_enrollments: [{ id: 'target-enrollment', subject_id: subjectId, teacher_id: 'teacher', student_id: 'student', status: 'approved' }],
+    lessons: [],
+    assessments: [{
+      id: 'source-assessment', created_by: 'teacher', subject_id: sourceSubjectId,
+      title: 'Algebra Quiz', exam_type: 'Quiz', subject: 'Math', subject_code: 'MATH-A',
+      subject_category: 'Math', difficulty: 'medium', number_of_items: 1,
+      exam_duration_minutes: 30, max_violations: 3, violation_action: 'auto-submit',
+      attachments: [], assessment_mode: 'quiz', assignment_scope: 'handled_class',
+      assigned_student_ids: [], questions: [{ questionText: '1 + 1?', correctAnswer: '2', points: 1 }],
+    }],
+  });
+
+  let response;
+  await controller.copyTeacherAssessmentToClasses({
+    params: { id: 'source-assessment' },
+    body: { subjectIds: [subjectId] },
+    user: { _id: 'teacher', subject: 'Math', name: 'Teacher', role: 'teacher' },
+  }, {
+    status() { return this; },
+    json(body) { response = body; },
+  }, error => { throw error; });
+
+  assert.equal(response.assessments.length, 1);
+  assert.equal(client.tables.assessments.length, 2);
+  assert.equal(client.tables.assessments[1].subject_id, subjectId);
+  assert.deepEqual(client.tables.assessments[1].assigned_student_ids, ['student']);
+});

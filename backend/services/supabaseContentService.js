@@ -163,10 +163,21 @@ async function listSupabaseAssessments(createdBy) {
   return (data || []).map(mapAssessment);
 }
 
+async function findSupabaseAssessment(id, createdBy = null) {
+  const normalizedId = referenceId(id);
+  if (!normalizedId) return null;
+  let query = getSupabaseStorageClient().from('assessments').select('*').eq('id', normalizedId);
+  if (referenceId(createdBy)) query = query.eq('created_by', referenceId(createdBy));
+  const { data, error } = await query.limit(1).maybeSingle();
+  if (error) throw contentError(error, 'Failed to read assessment from Supabase');
+  return mapAssessment(data);
+}
+
 module.exports = {
   createSupabaseLesson,
   listSupabaseLessons,
   findSupabaseLesson,
   createSupabaseAssessment,
+  findSupabaseAssessment,
   listSupabaseAssessments,
 };
