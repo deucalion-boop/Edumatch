@@ -5249,7 +5249,13 @@ onBeforeUnmount(() => {
 }
 
 #teacherRecordsAssessmentsPanel .assessment-action-secondary i {
-  color: #4f7d3a !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+#teacherRecordsAssessmentsPanel .assessment-action-primary i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 #teacherRecordsAssessmentsPanel .assessment-action-secondary:hover {
