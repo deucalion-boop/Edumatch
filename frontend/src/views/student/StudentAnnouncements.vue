@@ -6,9 +6,9 @@
         <h1>Announcements</h1>
         <p>Important messages posted by your teachers appear here.</p>
       </div>
-      <button v-if="selectedAnnouncement" type="button" class="back-button" @click="showAll">
+      <button v-if="selectedAnnouncement" type="button" class="back-button" aria-label="Back to announcements" @click="showAll">
         <i class="fas fa-arrow-left" aria-hidden="true"></i>
-        All announcements
+        Back
       </button>
     </header>
 
@@ -112,7 +112,21 @@ watch(() => route.query.event, (eventKey, previousEventKey) => {
 </script>
 <style scoped>
 .announcement-page { max-width: 980px; margin: 0 auto; padding: 2rem; color: #0f172a; }
-.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.announcement-page .page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  overflow: visible;
+}
+.announcement-page .page-header::before,
+.announcement-page .page-header::after { display: none; content: none; }
 .page-header h1 { margin: .15rem 0 .35rem; font-size: clamp(1.8rem, 3vw, 2.4rem); }
 .page-header p { margin: 0; color: #64748b; }
 .eyebrow { margin: 0; color: #2563eb !important; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
