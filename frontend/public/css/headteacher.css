@@ -4356,7 +4356,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     padding: 0.875rem;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-top-header {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-top-header {
     position: relative;
     width: 100%;
     min-width: 0;
@@ -4365,7 +4365,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     border-radius: 17px;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-header-content {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-header-content {
     display: grid !important;
     grid-template-columns: 44px minmax(0, 1fr) auto;
     grid-template-rows: auto auto;
@@ -4375,12 +4375,12 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     min-width: 0;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-header-copy,
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-header-copy > .headteacher-matched-header-copy {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-header-copy,
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-header-copy > .headteacher-matched-header-copy {
     display: contents !important;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-mobile-menu-toggle {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-mobile-menu-toggle {
     grid-column: 1;
     grid-row: 1;
     width: 44px;
@@ -4391,7 +4391,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     border-radius: 13px;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-matched-header-copy h1 {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-matched-header-copy h1 {
     grid-column: 2;
     grid-row: 1;
     min-width: 0;
@@ -4401,7 +4401,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     overflow-wrap: break-word;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-matched-header-copy .headteacher-header-subtitle {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-matched-header-copy .headteacher-header-subtitle {
     grid-column: 1 / -1;
     grid-row: 2;
     width: 100%;
@@ -4412,7 +4412,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     overflow-wrap: break-word;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-header-tools {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-header-tools {
     position: static;
     grid-column: 3;
     grid-row: 1;
@@ -4428,8 +4428,8 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     pointer-events: auto;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-notifications,
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-account-menu {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-notifications,
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-account-menu {
     position: relative;
     top: auto;
     right: auto;
@@ -4439,7 +4439,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     flex: 0 0 44px;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-header-tools .headteacher-header-settings-button {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-header-tools .headteacher-header-settings-button {
     width: 44px !important;
     height: 44px !important;
     min-width: 44px !important;
@@ -4447,7 +4447,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     padding: 0 !important;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .notification-panel {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .notification-panel {
     position: fixed;
     top: 5rem;
     right: 0.75rem;
@@ -4457,7 +4457,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     max-height: min(480px, calc(100dvh - 6rem));
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-account-menu-dropdown {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-account-menu-dropdown {
     top: calc(100% + 0.6rem);
     right: 0;
     width: min(220px, calc(100vw - 1.5rem));
@@ -4537,23 +4537,23 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
     border-radius: 16px;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-header-content {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-header-content {
     grid-template-columns: 44px minmax(0, 1fr) auto;
     column-gap: 0.55rem !important;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-header-tools {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-header-tools {
     gap: 0.3rem;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-notifications,
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-account-menu {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-notifications,
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-account-menu {
     width: 42px;
     min-width: 42px;
     flex-basis: 42px;
   }
 
-  body.headteacher-dashboard .headteacher-overview-page .headteacher-header-tools .headteacher-header-settings-button {
+  body.headteacher-dashboard :is(.headteacher-overview-page, .headteacher-content-page) .headteacher-header-tools .headteacher-header-settings-button {
     width: 42px !important;
     min-width: 42px !important;
   }
