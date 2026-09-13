@@ -4630,7 +4630,7 @@ body.headteacher-dashboard .headteacher-sidebar-header {
 
 body.headteacher-dashboard .headteacher-brand {
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
   flex: 1;
   min-width: 0;
 }
@@ -4639,7 +4639,7 @@ body.headteacher-dashboard .headteacher-brand-icon {
   width: 48px;
   height: 48px;
   flex: 0 0 48px;
-  margin-left: -1rem;
+  margin-left: 0;
 }
 
 body.headteacher-dashboard .headteacher-sidebar .headteacher-brand-image {
