@@ -175,53 +175,29 @@
                 <div class="lesson-progress-meter" role="progressbar" :aria-valuenow="Number(lesson.progress?.progressPercent || 0)" aria-valuemin="0" aria-valuemax="100">
                   <span :style="{ width: `${Number(lesson.progress?.progressPercent || 0)}%` }"></span>
                 </div>
-                <button
-                  v-if="lesson.progress?.status !== 'completed'"
-                  type="button"
-                  class="lesson-complete-button"
-                  :disabled="isSavingLessonProgress || lessonEngagementSeconds(lesson) < 20"
-                  @click="completeLesson(lesson)"
-                >
-                  <i class="fas" :class="isSavingLessonProgress ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-                  {{ lessonEngagementSeconds(lesson) < 20 ? `Keep studying (${20 - lessonEngagementSeconds(lesson)}s)` : 'I reached the end — complete lesson' }}
-                </button>
+                <span v-if="lesson.progress?.status !== 'completed'" class="lesson-reader-hint">
+                  <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                  Open the lesson reader to begin
+                </span>
                 <p v-if="lessonProgressMessage && selectedLessonId === lesson.id" class="lesson-progress-message">{{ lessonProgressMessage }}</p>
               </section>
 
               <div v-if="Array.isArray(lesson.attachments) && lesson.attachments.length" class="lesson-detail-attachments">
-                <h4>Attachments</h4>
+                <h4>Lesson material</h4>
                 <div class="lesson-attachment-list">
                   <article
                     v-for="attachment in lesson.attachments"
                     :key="attachment.id"
                     class="lesson-attachment-card"
                   >
-                    <button
-                      type="button"
-                      class="lesson-attachment-link"
-                      @click="handleAttachmentAction(attachment)"
-                    >
+                    <div class="lesson-attachment-link">
                       <i class="fas" :class="attachment.canPreviewInline ? 'fa-file-pdf' : 'fa-paperclip'"></i>
-                      <span>{{ attachment.fileName || 'Attachment' }}</span>
-                    </button>
-                    <div class="lesson-attachment-actions">
-                      <button
-                        v-if="attachment.canPreviewInline && attachment.url"
-                        type="button"
-                        class="lesson-attachment-action secondary"
-                        @click="openAttachmentPreview(attachment)"
-                      >
-                        Preview
-                      </button>
-                      <button
-                        v-if="attachment.downloadUrl"
-                        type="button"
-                        class="lesson-attachment-action"
-                        @click="downloadAttachment(attachment)"
-                      >
-                        Download
-                      </button>
+                      <span><strong>{{ attachment.fileName || 'Lesson material' }}</strong><small>Lesson material</small></span>
                     </div>
+                    <button type="button" class="lesson-read-action" :disabled="!attachment.url" @click="openLessonReader(lesson, attachment)">
+                      <i class="fas fa-book-open" aria-hidden="true"></i>
+                      Read the Lesson
+                    </button>
                   </article>
                 </div>
               </div>
@@ -243,26 +219,21 @@
     <div
       v-if="previewAttachment"
       class="lesson-preview-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Lesson reader"
       @click.self="closeAttachmentPreview"
     >
       <div class="lesson-preview-dialog">
         <div class="lesson-preview-head">
           <div class="lesson-preview-copy">
-            <span class="lesson-preview-label">Attachment Preview</span>
+            <span class="lesson-preview-label">Lesson Reader</span>
             <h3>{{ previewAttachment.fileName || 'Attachment' }}</h3>
-            <p>{{ previewAttachment.fileType || 'Preview available' }}</p>
+            <p>{{ readingLesson?.title || 'Learning material' }}</p>
           </div>
-          <div class="lesson-preview-actions">
-            <a
-              v-if="previewAttachment.url"
-              class="lesson-preview-action-link"
-              :href="previewAttachment.url"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Open in new tab
-            </a>
-          </div>
+          <button type="button" class="lesson-reader-close" aria-label="Close lesson reader" @click="closeAttachmentPreview">
+            <i class="fas fa-xmark" aria-hidden="true"></i>
+          </button>
         </div>
 
         <div class="lesson-preview-body">
@@ -280,19 +251,25 @@
           >
           <div v-else class="lesson-preview-empty">
             <i class="fas fa-file-alt"></i>
-            <span>Preview is not available for this file.</span>
+            <span>This lesson material cannot be displayed in the reader.</span>
           </div>
         </div>
 
         <div class="lesson-preview-footer">
+          <div v-if="readingLesson" class="lesson-reader-progress">
+            <strong>{{ lessonProgressLabel(readingLesson) }}</strong>
+            <span>{{ lessonEngagementSeconds(readingLesson) < 20 ? `Continue reading for ${20 - lessonEngagementSeconds(readingLesson)} more seconds.` : 'When you reach the end, mark this lesson complete.' }}</span>
+            <small v-if="lessonProgressMessage">{{ lessonProgressMessage }}</small>
+          </div>
           <button
-            v-if="previewAttachment.downloadUrl"
+            v-if="readingLesson?.progress?.status !== 'completed'"
             type="button"
-            class="lesson-preview-download"
-            @click="downloadAttachment(previewAttachment)"
+            class="lesson-complete-button"
+            :disabled="isSavingLessonProgress || !readingLesson || lessonEngagementSeconds(readingLesson) < 20"
+            @click="completeLesson(readingLesson)"
           >
-            <i class="fas fa-download"></i>
-            Download file
+            <i class="fas" :class="isSavingLessonProgress ? 'fa-spinner fa-spin' : 'fa-circle-check'"></i>
+            {{ lessonEngagementSeconds(readingLesson) < 20 ? 'Keep Reading' : 'Complete Lesson' }}
           </button>
         </div>
       </div>
@@ -347,6 +324,7 @@ export default {
       selectedLessonId: null,
       lessonPage: 1,
       previewAttachment: null,
+      activeReadingLessonId: null,
       isLessonsLoading: false,
       lessonsEmptyMessage: 'No lessons available yet. Join a class and wait for teacher approval to access lesson materials.',
       hasLessonsLoadError: false,
@@ -379,6 +357,9 @@ export default {
     paginatedLessons() {
       return this.visibleLessons.slice((this.lessonPage - 1) * 10, this.lessonPage * 10)
     },
+    readingLesson() {
+      return this.lessons.find((lesson) => lesson.id === this.activeReadingLessonId) || null
+    },
     currentLessonsEmptyMessage() {
       if (this.hasLessonsLoadError) return this.lessonsEmptyMessage
       if (this.selectedSubject) {
@@ -400,14 +381,10 @@ export default {
       handler() { this.lessonPage = 1 }
     },
     lessonPageCount(count) { this.lessonPage = Math.min(this.lessonPage, count) },
-    selectedLessonId(nextId, previousId) {
+    selectedLessonId(nextId) {
       this.revealSelectedLesson()
-      if (!nextId) {
-        this.stopLessonEngagement()
-        return
-      }
-      if (nextId !== previousId) {
-        this.startLessonEngagement(this.lessons.find((lesson) => lesson.id === nextId) || null)
+      if (!nextId || (this.activeReadingLessonId && this.activeReadingLessonId !== nextId)) {
+        void this.closeAttachmentPreview()
       }
     }
   },
@@ -565,7 +542,7 @@ export default {
       return `is-${String(lesson?.progress?.status || 'not_started').replace(/_/g, '-')}`
     },
     lessonEngagementSeconds(lesson) {
-      return Number(lesson?.progress?.engagementSeconds || 0) + (this.selectedLessonId === lesson?.id ? this.activeLessonSeconds : 0)
+      return Number(lesson?.progress?.engagementSeconds || 0) + (this.activeReadingLessonId === lesson?.id ? this.activeLessonSeconds : 0)
     },
     stopLessonEngagement() {
       if (this.lessonEngagementTimer) window.clearInterval(this.lessonEngagementTimer)
@@ -619,19 +596,29 @@ export default {
         this.isSavingLessonProgress = false
       }
     },
-    handleAttachmentAction(attachment) {
-      if (attachment?.canPreviewInline && attachment?.url) {
-        this.openAttachmentPreview(attachment)
-        return
-      }
-      this.downloadAttachment(attachment)
-    },
-    openAttachmentPreview(attachment) {
-      if (!attachment?.url) return
+    openLessonReader(lesson, attachment) {
+      if (!lesson?.id || !attachment?.url) return
+      this.activeReadingLessonId = lesson.id
       this.previewAttachment = attachment
+      this.startLessonEngagement(lesson)
     },
-    closeAttachmentPreview() {
+    async closeAttachmentPreview() {
+      const lesson = this.readingLesson
+      const pendingSeconds = this.activeLessonSeconds
+      this.stopLessonEngagement()
       this.previewAttachment = null
+      this.activeReadingLessonId = null
+      if (lesson?.id && lesson.progress?.status !== 'completed' && pendingSeconds > 0) {
+        const percent = Math.min(90, Math.max(Number(lesson.progress?.progressPercent || 0), Math.round((Number(lesson.progress?.engagementSeconds || 0) + pendingSeconds) / 60 * 90)))
+        try {
+          await this.saveLessonProgress(lesson, false, pendingSeconds, percent)
+        } catch (error) {
+          this.lessonProgressMessage = error.response?.data?.message || 'Your latest reading progress could not be saved.'
+        }
+      }
+    },
+    handleReaderKeydown(event) {
+      if (event.key === 'Escape' && this.previewAttachment) void this.closeAttachmentPreview()
     },
     openJoinClassModal() {
       this.isJoinClassModalOpen = true
@@ -727,38 +714,19 @@ export default {
       } finally {
         this.setPageLoading(false)
       }
-    },
-    async downloadAttachment(attachment) {
-      if (!attachment?.downloadUrl) return
-      try {
-        const response = await axios.get(attachment.downloadUrl, {
-          ...this.getAuthConfig(),
-          responseType: 'blob'
-        })
-        const fileName = attachment.fileName || 'attachment'
-        const mimeType = attachment.fileType || 'application/octet-stream'
-        const blobUrl = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }))
-        const link = document.createElement('a')
-        link.href = blobUrl
-        link.download = fileName
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        window.URL.revokeObjectURL(blobUrl)
-      } catch (error) {
-        console.error('[StudentLessons] Failed to download lesson attachment:', error)
-      }
     }
   },
   mounted() {
     this.authStore = useAuthStore()
     window.addEventListener('edumatch-student-tour-focus', this.handleTourFocus)
+    window.addEventListener('keydown', this.handleReaderKeydown)
     this.fetchLessons()
     this.fetchSubjects()
   },
   beforeUnmount() {
     window.removeEventListener('edumatch-student-tour-focus', this.handleTourFocus)
-    this.stopLessonEngagement()
+    window.removeEventListener('keydown', this.handleReaderKeydown)
+    void this.closeAttachmentPreview()
   }
 }
 </script>
@@ -786,6 +754,7 @@ export default {
 .lesson-complete-button { min-height: 38px; padding: 0.55rem 0.8rem; border: 1px solid #5f9a45; border-radius: 10px; background: #4f8a35; color: #fff; font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
 .lesson-complete-button:disabled { border-color: #cbd5e1; background: #e2e8f0; color: #64748b; cursor: not-allowed; }
 .lesson-progress-message { grid-column: 1 / -1; margin: 0; color: #4f6f38; font-size: 0.76rem; font-weight: 600; }
+.lesson-reader-hint { display: inline-flex; align-items: center; justify-content: flex-end; gap: 0.45rem; color: #4f6f38; font-size: 0.74rem; font-weight: 750; }
 .lesson-feed-status.is-completed { background: #dcfce7; color: #166534; }
 .lesson-feed-status.is-in-progress { background: #fef3c7; color: #92400e; }
 
@@ -1362,14 +1331,10 @@ export default {
 }
 
 .lesson-attachment-link {
-  border: none;
-  background: transparent;
   color: #1e4307;
   text-align: left;
-  cursor: pointer;
   font-size: 0.78rem;
   font-weight: 700;
-  padding: 0;
   min-width: 0;
   flex: 1;
   display: inline-flex;
@@ -1377,40 +1342,45 @@ export default {
   gap: 0.5rem;
 }
 
-.lesson-attachment-link:hover {
-  color: #163304;
+.lesson-attachment-link span {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
 }
 
-.lesson-attachment-link span {
-  min-width: 0;
+.lesson-attachment-link strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.lesson-attachment-actions {
+.lesson-attachment-link small {
+  color: #64748b;
+  font-size: 0.67rem;
+  font-weight: 600;
+}
+
+.lesson-read-action {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  gap: 0.48rem;
   flex-shrink: 0;
-}
-
-.lesson-attachment-action {
-  border: 1px solid rgba(169, 213, 95, 0.42);
-  background: #f4f7d8;
-  color: #1e4307;
-  border-radius: 999px;
+  min-height: 40px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #4f8a35;
+  border-radius: 11px;
+  background: #4f8a35;
+  color: #fff;
   cursor: pointer;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.28rem 0.62rem;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
-.lesson-attachment-action.secondary {
-  border-color: rgba(169, 213, 95, 0.38);
-  background: #fffef8;
-  color: #4d6120;
-}
+.lesson-read-action:hover:not(:disabled) { transform: translateY(-1px); background: #3f762b; box-shadow: 0 8px 18px rgba(79, 138, 53, 0.22); }
+.lesson-read-action:disabled { border-color: #cbd5e1; background: #e2e8f0; color: #64748b; cursor: not-allowed; }
 
 .lesson-preview-modal {
   position: fixed;
@@ -1436,7 +1406,6 @@ export default {
 }
 
 .lesson-preview-head,
-.lesson-preview-actions,
 .lesson-preview-copy {
   display: grid;
 }
@@ -1472,29 +1441,21 @@ export default {
   font-size: 0.8rem;
 }
 
-.lesson-preview-actions {
-  grid-auto-flow: column;
-  align-items: start;
-  gap: 0.55rem;
-}
-
-.lesson-preview-action-link,
-.lesson-preview-download {
+.lesson-reader-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.42rem;
-  min-height: 38px;
-  padding: 0.55rem 0.8rem;
-  border-radius: 12px;
-  border: 1px solid #bfdbfe;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #dbe4ef;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.9rem;
   cursor: pointer;
 }
+
+.lesson-reader-close:hover { background: #eef2f7; color: #0f172a; }
 
 .lesson-preview-body {
   min-height: 0;
@@ -1527,11 +1488,18 @@ export default {
 
 .lesson-preview-footer {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 0.85rem 1.1rem 1rem;
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
 }
+
+.lesson-reader-progress { display: grid; gap: 0.16rem; min-width: 0; }
+.lesson-reader-progress strong { color: #1e4307; font-size: 0.8rem; }
+.lesson-reader-progress span { color: #64748b; font-size: 0.72rem; }
+.lesson-reader-progress small { color: #b45309; font-size: 0.7rem; font-weight: 650; }
 
 .join-class-modal {
   position: fixed;
@@ -1664,19 +1632,14 @@ export default {
     align-items: flex-start;
   }
 
-  .lesson-attachment-actions {
-    width: 100%;
-    flex-wrap: wrap;
+  .lesson-read-action { width: 100%; }
+
+  .lesson-preview-footer {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .lesson-preview-head {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .lesson-preview-actions {
-    grid-auto-flow: row;
-    justify-items: start;
-  }
+  .lesson-preview-footer .lesson-complete-button { width: 100%; }
 
   .courses-lessons-feed-wrap {
     padding: 0.68rem;
