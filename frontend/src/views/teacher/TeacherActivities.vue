@@ -606,18 +606,45 @@
                   />
                 </div>
 
-                <div v-if="isActivityAssessment" class="form-group full">
-                  <label>Submission Settings</label>
-                  <p class="helper-copy">Choose at least one way students may submit their work.</p>
-                  <div class="activity-setting-grid">
-                    <label class="activity-setting-option"><input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="written" /><span><strong>Written response</strong><small>Type directly in EduMatch</small></span></label>
-                    <label class="activity-setting-option"><input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="link" /><span><strong>External link</strong><small>Drive, Canva, or another URL</small></span></label>
-                    <label class="activity-setting-option"><input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="file" /><span><strong>File uploads</strong><small>Documents, images, PDFs, or ZIP</small></span></label>
+                <div v-if="isActivityAssessment" class="form-group full submission-settings-field">
+                  <div class="submission-settings-heading">
+                    <div>
+                      <label>Submission Settings</label>
+                      <p class="helper-copy">Choose at least one way students may submit their work.</p>
+                    </div>
+                    <span class="submission-settings-badge">Student response</span>
                   </div>
-                  <p v-if="challengeStepAttempted[4] && challengeStepErrors.allowedSubmissionTypes" class="field-error" role="alert">{{ challengeStepErrors.allowedSubmissionTypes }}</p>
-                  <div class="activity-policy-grid">
-                    <label class="activity-toggle"><input v-model="challengeForm.allowResubmission" type="checkbox" /><span><strong>Allow editing and resubmission</strong><small>Students can revise submitted work before the deadline.</small></span></label>
-                    <label class="activity-toggle"><input v-model="challengeForm.allowLateSubmissions" type="checkbox" /><span><strong>Accept late submissions</strong><small>Late work is accepted and clearly marked Late.</small></span></label>
+
+                  <div class="submission-settings-panel">
+                    <div class="activity-setting-grid">
+                      <label class="activity-setting-option">
+                        <input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="written" />
+                        <span><strong>Written response</strong><small>Type directly in EduMatch</small></span>
+                      </label>
+                      <label class="activity-setting-option">
+                        <input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="link" />
+                        <span><strong>External link</strong><small>Share a Drive, Canva, or website URL</small></span>
+                      </label>
+                      <label class="activity-setting-option">
+                        <input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="file" />
+                        <span><strong>File uploads</strong><small>Documents, images, PDFs, or ZIP files</small></span>
+                      </label>
+                    </div>
+                    <p v-if="challengeStepAttempted[4] && challengeStepErrors.allowedSubmissionTypes" class="field-error" role="alert">{{ challengeStepErrors.allowedSubmissionTypes }}</p>
+
+                    <div class="activity-policy-section">
+                      <span class="activity-policy-label">Submission policies</span>
+                      <div class="activity-policy-grid">
+                        <label class="activity-toggle">
+                          <input v-model="challengeForm.allowResubmission" type="checkbox" />
+                          <span><strong>Allow editing and resubmission</strong><small>Students can revise submitted work before the deadline.</small></span>
+                        </label>
+                        <label class="activity-toggle">
+                          <input v-model="challengeForm.allowLateSubmissions" type="checkbox" />
+                          <span><strong>Accept late submissions</strong><small>Late work is accepted and clearly marked Late.</small></span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2403,42 +2430,134 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.submission-settings-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.submission-settings-heading .helper-copy {
+  margin: 0.3rem 0 0;
+}
+
+.submission-settings-badge {
+  flex: 0 0 auto;
+  padding: 0.32rem 0.65rem;
+  border: 1px solid #d9e8d2;
+  border-radius: 999px;
+  background: #f3f9f0;
+  color: #477235;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.submission-settings-panel {
+  padding: 1rem;
+  border: 1px solid #e1e8ef;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
 .activity-setting-grid,
 .activity-policy-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
-  margin-top: 0.75rem;
 }
 
 .activity-policy-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.activity-policy-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e1e8ef;
+}
+
+.activity-policy-label {
+  display: block;
+  margin-bottom: 0.65rem;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 .activity-setting-option,
 .activity-toggle {
   display: flex;
   align-items: flex-start;
-  gap: 0.7rem;
-  padding: 0.9rem;
+  gap: 0.75rem;
+  min-height: 76px;
+  padding: 0.9rem 1rem;
   border: 1px solid #dbe4ee;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #fff;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.activity-setting-option:hover,
+.activity-toggle:hover {
+  border-color: #a8c99a;
+  box-shadow: 0 4px 12px rgba(45, 77, 30, 0.07);
+  transform: translateY(-1px);
+}
+
+.form-group .activity-setting-option input[type="checkbox"],
+.form-group .activity-toggle input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  flex: 0 0 17px;
+  margin: 0.12rem 0 0;
+  padding: 0;
+  border-radius: 4px;
+  accent-color: #4f8a35;
   cursor: pointer;
 }
 
 .activity-setting-option:has(input:checked),
 .activity-toggle:has(input:checked) {
-  border-color: #0f766e;
-  background: #f0fdfa;
+  border-color: #6fa858;
+  background: #f4faF1;
+  box-shadow: 0 0 0 2px rgba(105, 170, 71, 0.1);
 }
 
 .activity-setting-option span,
-.activity-toggle span { display: grid; gap: 0.2rem; }
+.activity-toggle span {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.activity-setting-option strong,
+.activity-toggle strong {
+  color: #26364a;
+  font-size: 0.86rem;
+  line-height: 1.25;
+}
+
 .activity-setting-option small,
-.activity-toggle small { color: #64748b; font-weight: 500; }
+.activity-toggle small {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
 
 @media (max-width: 720px) {
   .activity-setting-grid,
   .activity-policy-grid { grid-template-columns: 1fr; }
+
+  .submission-settings-heading { align-items: center; }
+  .submission-settings-badge { display: none; }
+  .submission-settings-panel { padding: 0.8rem; }
+  .activity-setting-option,
+  .activity-toggle { min-height: auto; }
 }
 .teacher-page-tour-layer {
   position: fixed;
