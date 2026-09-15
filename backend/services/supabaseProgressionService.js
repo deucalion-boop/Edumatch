@@ -2,6 +2,7 @@ const { getSupabaseStorageClient } = require('./supabaseStorageService');
 
 const FINAL_STATUSES = new Set(['completed', 'auto_submitted', 'terminated']);
 const MINIMUM_COMPLETION_SECONDS = 20;
+let warnedMissingProgressTable = false;
 
 function cleanId(value) {
   return String(value?._id || value?.id || value || '').trim();
@@ -24,9 +25,29 @@ function mapLessonProgress(row) {
   };
 }
 
+function isMissingTableError(error, tableName) {
+  const code = String(error?.code || '').trim().toUpperCase();
+  const message = String(error?.message || '').toLowerCase();
+  return code === 'PGRST205'
+    || (message.includes(String(tableName || '').toLowerCase())
+      && (message.includes('schema cache') || message.includes('does not exist')));
+}
+
+function reportMissingProgressTable(error) {
+  if (warnedMissingProgressTable) return;
+  warnedMissingProgressTable = true;
+  console.warn('[lesson progress] Database migration 008 is not applied. Lessons remain visible, but completion tracking stays unavailable.', {
+    code: error?.code || '',
+  });
+}
+
 async function listLessonProgress(studentId) {
   const { data, error } = await getSupabaseStorageClient().from('lesson_progress').select('*')
     .eq('student_id', cleanId(studentId));
+  if (isMissingTableError(error, 'lesson_progress')) {
+    reportMissingProgressTable(error);
+    return [];
+  }
   if (error) throw Object.assign(new Error(error.message || 'Failed to load lesson progress'), { statusCode: 500 });
   return (data || []).map(mapLessonProgress);
 }
@@ -34,6 +55,10 @@ async function listLessonProgress(studentId) {
 async function findLessonProgress(studentId, lessonId) {
   const { data, error } = await getSupabaseStorageClient().from('lesson_progress').select('*')
     .eq('student_id', cleanId(studentId)).eq('lesson_id', cleanId(lessonId)).limit(1).maybeSingle();
+  if (isMissingTableError(error, 'lesson_progress')) {
+    reportMissingProgressTable(error);
+    return null;
+  }
   if (error) throw Object.assign(new Error(error.message || 'Failed to load lesson progress'), { statusCode: 500 });
   return mapLessonProgress(data);
 }
@@ -71,6 +96,10 @@ async function recordLessonProgress({ studentId, lessonId, progressPercent, reac
     ? client.from('lesson_progress').update(row).eq('id', existing.id)
     : client.from('lesson_progress').insert(row);
   const { data, error } = await query.select('*').single();
+  if (isMissingTableError(error, 'lesson_progress')) {
+    reportMissingProgressTable(error);
+    throw Object.assign(new Error('Lesson progress is temporarily unavailable. Apply database migration 008, then try again.'), { statusCode: 503 });
+  }
   if (error) throw Object.assign(new Error(error.message || 'Failed to save lesson progress'), { statusCode: 500 });
   return mapLessonProgress(data);
 }
@@ -155,6 +184,7 @@ module.exports = {
   FINAL_STATUSES,
   MINIMUM_COMPLETION_SECONDS,
   mapLessonProgress,
+  isMissingTableError,
   listLessonProgress,
   findLessonProgress,
   recordLessonProgress,

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { computeAssessmentGate } = require('../services/supabaseProgressionService');
+const { computeAssessmentGate, isMissingTableError } = require('../services/supabaseProgressionService');
 const { calculateSubjectMetrics, percent } = require('../services/supabaseAcademicProgressService');
 const { evaluateAssessmentAnswers, validateEssayWordCounts, normalizeEvaluation } = require('../services/essayEvaluationService');
 
@@ -15,6 +15,11 @@ test('linked assessments remain locked until lesson and earlier stages are compl
   assert.equal(computeAssessmentGate({ assessment: exam, lessonProgress: { status: 'completed' }, relatedAssessments: [activity, quiz, exam], submissions: [{ assessmentId: 'a1', status: 'completed' }] }).prerequisite, 'quiz');
   assert.equal(computeAssessmentGate({ assessment: exam, lessonProgress: { status: 'completed' }, relatedAssessments: [activity, quiz, exam], submissions: [{ assessmentId: 'a1', status: 'completed' }, { assessmentId: 'q1', status: 'completed' }] }).isLocked, false);
   assert.equal(computeAssessmentGate({ assessment: quiz, lessonProgress: { status: 'completed' }, relatedAssessments: [activity, secondActivity, quiz], submissions: [{ assessmentId: 'a1', status: 'completed' }] }).prerequisite, 'activity');
+});
+
+test('missing lesson progress migration is detected without masking unrelated database errors', () => {
+  assert.equal(isMissingTableError({ code: 'PGRST205', message: "Could not find public.lesson_progress" }, 'lesson_progress'), true);
+  assert.equal(isMissingTableError({ code: '42501', message: 'permission denied' }, 'lesson_progress'), false);
 });
 
 test('point percentages and subject weights normalize only across applicable categories', () => {
