@@ -2,12 +2,11 @@ const { publishedLessons, availableAssessments, studentSubmissions } = require('
 const path = require('path');
 const crypto = require('crypto');
 const Lesson = require('../models/Lesson');
-const Assessment = require('../models/Assessment');
-const Submission = require('../models/Submission');
 const User = require('../models/User');
 const { sendSuccess } = require('../utils/responseHelper');
-const { computeMasteryFromSubmissions, recalculateStudentMasteryProgress } = require('../utils/studentProgress');
-const { formatRecommendationPayload, recomputeStudentRecommendation } = require('../services/recommendationService');
+const { computeMasteryFromSubmissions } = require('../utils/studentProgress');
+const { formatRecommendationPayload } = require('../services/recommendationService');
+const { computeAcademicProgress } = require('../services/supabaseAcademicProgressService');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
 const { findSectionById, normalizeSectionId } = require('../services/sectionService');
@@ -34,6 +33,13 @@ const {
   listStudentActivitySubmissions,
   saveActivitySubmission,
 } = require('../services/supabaseActivityService');
+const {
+  listLessonProgress,
+  recordLessonProgress,
+  buildAssessmentGates,
+  assertAssessmentUnlocked,
+} = require('../services/supabaseProgressionService');
+const { evaluateAssessmentAnswers, validateEssayWordCounts } = require('../services/essayEvaluationService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
@@ -129,6 +135,10 @@ function publicAssessment(assessment) {
       options: q.options,
       points: q.points,
       explanation: q.explanation,
+      instructions: q.instructions || '',
+      rubric: q.rubric || '',
+      minWords: q.minWords ?? null,
+      maxWords: q.maxWords ?? null,
     })),
   };
 }
@@ -420,6 +430,9 @@ function toActivitySubmissionResponse(submission, req) {
     totalPoints,
     percentage,
     hasContent: hasActivitySubmissionContent(submission),
+    aiScore: submission?.aiScore ?? null,
+    aiEvaluations: Array.isArray(submission?.aiEvaluations) ? submission.aiEvaluations : [],
+    scoringStatus: String(submission?.scoringStatus || 'final'),
   };
 }
 
@@ -439,42 +452,15 @@ async function getStudentApprovedSubjectIds(studentId) {
 }
 
 async function assertStudentAssessmentAccess(studentId, assessmentId) {
-  const assessment = await Assessment.findById(assessmentId).populate('lessonId', 'title track subject subjectId subjectCode');
+  const approvedSubjectIds = await getStudentApprovedSubjectIds(studentId);
+  const assessments = await availableAssessments(studentId, approvedSubjectIds);
+  const assessment = assessments.find((item) => String(item?._id || item?.id || '') === String(assessmentId || ''));
   if (!assessment) {
-    const error = new Error('Assessment not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const assignedStudentIds = getAssessmentAssignedStudentIds(assessment);
-  if (assignedStudentIds.length > 0) {
-    if (assignedStudentIds.includes(String(studentId || ''))) {
-      return assessment;
-    }
-    const error = new Error('This assessment is not assigned to you');
+    const error = new Error('Assessment not found or is not assigned to your class');
     error.statusCode = 403;
     throw error;
   }
-
-  const effectiveSubjectId = assessment.subjectId || assessment?.lessonId?.subjectId || null;
-  if (!effectiveSubjectId) {
-    const error = new Error('Assessment is not linked to an enrollable subject');
-    error.statusCode = 403;
-    throw error;
-  }
-
-  const enrollment = await findEnrollment({
-    studentId,
-    subjectId: effectiveSubjectId,
-    status: 'approved',
-  });
-
-  if (!enrollment) {
-    const error = new Error('You must be enrolled in this subject before accessing its assessments');
-    error.statusCode = 403;
-    throw error;
-  }
-
+  await assertAssessmentUnlocked(studentId, assessment, assessments);
   return assessment;
 }
 
@@ -492,6 +478,7 @@ async function assertStudentActivityAssessmentAccess(studentId, assessmentId) {
     error.statusCode = 400;
     throw error;
   }
+  await assertAssessmentUnlocked(studentId, assessment, assessments);
   return assessment;
 }
 
@@ -614,6 +601,15 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
     throw error;
   }
 
+  let activityEvaluation = null;
+  const hasEssayQuestion = (Array.isArray(assessment.questions) ? assessment.questions : [])
+    .some((question) => String(question?.type || '').trim().toLowerCase() === 'essay');
+  if (finalize && hasEssayQuestion && responseText) {
+    const answers = [{ questionIndex: 0, answer: responseText }];
+    validateEssayWordCounts(assessment, answers);
+    activityEvaluation = await evaluateAssessmentAnswers(assessment, answers);
+  }
+
   submission.responseText = responseText;
   submission.linkAttachments = linkAttachments;
   submission.attachments = nextAttachments;
@@ -626,8 +622,12 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
   submission.gradedAt = null;
   submission.returnedAt = null;
   submission.teacherFeedback = '';
-  submission.score = 0;
-  submission.totalPoints = 0;
+  submission.score = Number(activityEvaluation?.score || 0);
+  submission.totalPoints = Number(activityEvaluation?.totalPoints || 0);
+  submission.aiScore = activityEvaluation?.aiScore ?? null;
+  submission.aiEvaluations = activityEvaluation?.aiEvaluations || [];
+  submission.scoringStatus = activityEvaluation?.scoringStatus || 'final';
+  submission.teacherAdjustedScore = null;
   submission.autoSubmitted = false;
   submission.terminationReason = '';
   submission.activityLog = [
@@ -663,7 +663,11 @@ const getStudentLessons = asyncHandler(async (req, res) => {
   if (approvedSubjectIds.length === 0) {
     return sendSuccess(res, 200, 'Lessons fetched successfully', { lessons: [] });
   }
-  const lessons = await findPublishedLessons();
+  const [lessons, progressRows] = await Promise.all([
+    findPublishedLessons(),
+    listLessonProgress(req.user._id),
+  ]);
+  const progressByLessonId = new Map(progressRows.map((row) => [String(row.lessonId), row]));
   const dedupedLessons = uniqueBy(
     lessons.filter((lesson) => {
       const lessonSubjectId = String(lesson?.subjectId?._id || lesson?.subjectId || '').trim();
@@ -707,6 +711,14 @@ const getStudentLessons = asyncHandler(async (req, res) => {
       downloadUrl: `${host}/api/student/lessons/${lesson._id}/download`,
       postedAt: lesson.createdAt,
       createdAt: lesson.createdAt,
+      progress: progressByLessonId.get(String(lesson._id)) || {
+        status: 'not_started',
+        progressPercent: 0,
+        engagementSeconds: 0,
+        reachedEnd: false,
+        startedAt: null,
+        completedAt: null,
+      },
     };
     }),
   });
@@ -819,6 +831,7 @@ const getAvailableAssessments = asyncHandler(async (_req, res) => {
     const effectiveSubjectId = String(item?.subjectId || item?.lessonId?.subjectId || '').trim();
     return approvedSubjectIds.some((subjectId) => String(subjectId) === effectiveSubjectId);
   });
+  const gates = await buildAssessmentGates(_req.user._id, filteredAssessments);
 
   return sendSuccess(res, 200, 'Assessments fetched successfully', {
     assessments: filteredAssessments.map((item) => ({
@@ -856,6 +869,9 @@ const getAvailableAssessments = asyncHandler(async (_req, res) => {
       isDeadlinePassed: isAssessmentDeadlinePassed(item),
       createdBy: item.createdBy,
       createdAt: item.createdAt,
+      isLocked: gates.get(String(item._id || item.id))?.isLocked === true,
+      lockReason: gates.get(String(item._id || item.id))?.lockReason || '',
+      prerequisite: gates.get(String(item._id || item.id))?.prerequisite || null,
     })),
   });
 });
@@ -863,12 +879,7 @@ const getAvailableAssessments = asyncHandler(async (_req, res) => {
 const getAssessmentForExam = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
   const assessment = await assertStudentAssessmentAccess(req.user._id, req.params.id);
-  const existingSubmission = await Submission.findOne({
-    studentId: req.user._id,
-    assessmentId: assessment._id,
-  })
-    .select('_id submittedAt score totalPoints status startedAt examDurationMinutes violationCount autoSubmitted terminationReason')
-    .lean();
+  const existingSubmission = await findActivitySubmission(req.user._id, assessment._id);
 
   const existingStatus = String(existingSubmission?.status || '').toLowerCase();
   const isFinalized = ['completed', 'auto_submitted', 'terminated'].includes(existingStatus);
@@ -921,12 +932,17 @@ async function finalizeSubmission({
   appendActivity = null,
 }) {
   const normalizedAnswers = Array.isArray(answers) ? answers : [];
-  const { score, totalPoints } = calculateAssessmentScore(assessment, normalizedAnswers);
+  const evaluation = await evaluateAssessmentAnswers(assessment, normalizedAnswers);
+  const { score, totalPoints, aiScore, aiEvaluations, scoringStatus } = evaluation;
   const now = new Date();
 
   submission.answers = normalizedAnswers;
   submission.score = score;
   submission.totalPoints = totalPoints;
+  submission.aiScore = aiScore;
+  submission.aiEvaluations = aiEvaluations;
+  submission.scoringStatus = scoringStatus;
+  submission.teacherAdjustedScore = null;
   submission.submittedAt = now;
   submission.lastActivityAt = now;
   submission.status = status;
@@ -946,25 +962,28 @@ async function finalizeSubmission({
       },
     ];
   }
-  await submission.save();
+  submission = await saveActivitySubmission(submission);
 
   const percentage = totalPoints > 0 ? Number(((score / totalPoints) * 100).toFixed(2)) : 0;
   const totalItems = Array.isArray(assessment.questions)
     ? assessment.questions.length
     : Number(assessment.numberOfItems || 0);
-  const masteryProgress = await recalculateStudentMasteryProgress(submission.studentId);
+  let masteryProgress = { masteryProgress: 0, averageScore: 0, completedAssessments: 0, lastCalculatedAt: now };
   let recommendationSummary = null;
   try {
-    const reasonByStatus = {
-      completed: 'New assessment completed',
-      auto_submitted: 'Assessment auto-submitted',
-      terminated: 'Assessment terminated',
+    recommendationSummary = await computeAcademicProgress(submission.studentId);
+    const validSubjects = recommendationSummary.subjectPerformance.filter((item) => item.finalPercentage !== null);
+    const averageScore = validSubjects.length
+      ? Number((validSubjects.reduce((sum, item) => sum + Number(item.finalPercentage || 0), 0) / validSubjects.length).toFixed(2))
+      : 0;
+    masteryProgress = {
+      masteryProgress: Math.round(averageScore),
+      averageScore,
+      completedAssessments: recommendationSummary.overallLearningProgress.activitiesCompleted
+        + recommendationSummary.overallLearningProgress.quizzesCompleted
+        + recommendationSummary.overallLearningProgress.examsCompleted,
+      lastCalculatedAt: now,
     };
-    const recommendation = await recomputeStudentRecommendation({
-      studentId: submission.studentId,
-      reason: reasonByStatus[String(status || '').toLowerCase()] || 'Assessment result saved',
-    });
-    recommendationSummary = formatRecommendationPayload(recommendation);
   } catch (recommendationError) {
     console.error('[RECOMMENDATION] recompute failed:', {
       studentId: String(submission.studentId || ''),
@@ -979,10 +998,12 @@ async function finalizeSubmission({
       submission,
       assessment,
     })),
-    safelyRunNotificationTask('automated grade', () => notifyAutomatedGrade({
-      submission,
-      assessment,
-    })),
+    ...(scoringStatus === 'final'
+      ? [safelyRunNotificationTask('automated grade', () => notifyAutomatedGrade({
+        submission,
+        assessment,
+      }))]
+      : []),
     safelyRunNotificationTask('teacher submission', () => notifyTeacherSubmission({
       submission,
       assessment,
@@ -1012,6 +1033,9 @@ async function finalizeSubmission({
       autoSubmitted: Boolean(submission.autoSubmitted),
       violationCount: Number(submission.violationCount || 0),
       terminationReason: submission.terminationReason || '',
+      aiScore: submission.aiScore ?? null,
+      aiEvaluations: Array.isArray(submission.aiEvaluations) ? submission.aiEvaluations : [],
+      scoringStatus: submission.scoringStatus || 'final',
     },
     masteryProgress,
     recommendation: recommendationSummary,
@@ -1028,10 +1052,7 @@ const startAssessmentSession = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  let submission = await Submission.findOne({
-    studentId: req.user._id,
-    assessmentId: assessment._id,
-  });
+  let submission = await findActivitySubmission(req.user._id, assessment._id);
   const currentStatus = String(submission?.status || '').toLowerCase();
 
   if (submission && ['completed', 'auto_submitted', 'terminated'].includes(currentStatus)) {
@@ -1064,7 +1085,7 @@ const startAssessmentSession = asyncHandler(async (req, res) => {
   }
 
   if (!submission) {
-    submission = await Submission.create({
+    submission = await saveActivitySubmission({
       studentId: req.user._id,
       assessmentId: assessment._id,
       answers: [],
@@ -1086,7 +1107,7 @@ const startAssessmentSession = asyncHandler(async (req, res) => {
     });
   } else {
     submission.lastActivityAt = new Date();
-    await submission.save();
+    submission = await saveActivitySubmission(submission);
   }
 
   const expiresAt = computeExamExpiry(submission);
@@ -1122,10 +1143,7 @@ const saveAssessmentProgress = asyncHandler(async (req, res) => {
 
   const assessment = await assertStudentAssessmentAccess(req.user._id, id);
 
-  const submission = await Submission.findOne({
-    studentId: req.user._id,
-    assessmentId: assessment._id,
-  });
+  let submission = await findActivitySubmission(req.user._id, assessment._id);
   if (!submission || String(submission.status || '').toLowerCase() !== 'in_progress') {
     const error = new Error('Exam session is not active');
     error.statusCode = 403;
@@ -1153,7 +1171,7 @@ const saveAssessmentProgress = asyncHandler(async (req, res) => {
 
   submission.answers = answers;
   submission.lastActivityAt = new Date();
-  await submission.save();
+  submission = await saveActivitySubmission(submission);
 
   const expiresAt = computeExamExpiry(submission);
   const remainingMs = Math.max(0, Number(expiresAt ? expiresAt.getTime() - Date.now() : 0));
@@ -1186,10 +1204,7 @@ const logAssessmentActivity = asyncHandler(async (req, res) => {
 
   const assessment = await assertStudentAssessmentAccess(req.user._id, id);
 
-  const submission = await Submission.findOne({
-    studentId: req.user._id,
-    assessmentId: assessment._id,
-  });
+  let submission = await findActivitySubmission(req.user._id, assessment._id);
   if (!submission || String(submission.status || '').toLowerCase() !== 'in_progress') {
     const error = new Error('Exam session is not active');
     error.statusCode = 403;
@@ -1278,7 +1293,7 @@ const logAssessmentActivity = asyncHandler(async (req, res) => {
   }
 
   if (reachedLimit && violationAction === 'pause') {
-    await submission.save();
+    submission = await saveActivitySubmission(submission);
     await safelyRunNotificationTask('paused assessment incident', () => notifyExamIncident({
       submission,
       assessment,
@@ -1296,7 +1311,7 @@ const logAssessmentActivity = asyncHandler(async (req, res) => {
     });
   }
 
-  await submission.save();
+  submission = await saveActivitySubmission(submission);
 
   return sendSuccess(res, 200, 'Exam activity logged', {
     ruleTriggered: false,
@@ -1319,10 +1334,8 @@ const submitAssessment = asyncHandler(async (req, res) => {
   }
 
   const assessment = await assertStudentAssessmentAccess(req.user._id, id);
-  const existingSubmission = await Submission.findOne({
-    studentId: req.user._id,
-    assessmentId: assessment._id,
-  });
+  validateEssayWordCounts(assessment, answers);
+  const existingSubmission = await findActivitySubmission(req.user._id, assessment._id);
   const existingStatus = String(existingSubmission?.status || '').toLowerCase();
 
   if (!existingSubmission || existingStatus !== 'in_progress') {
@@ -1395,11 +1408,13 @@ const getMySubmissions = asyncHandler(async (req, res) => {
     const assessmentMode = String(submission?.assessmentId?.assessmentMode || '').trim().toLowerCase();
     return assessmentMode !== 'activity' || Number(submission?.totalPoints || 0) > 0;
   });
-  const masterySummary = computeMasteryFromSubmissions(scoredSubmissions);
+  const masterySummary = computeMasteryFromSubmissions(scoredSubmissions.filter((submission) => (
+    !['ai_assisted', 'pending_teacher_review'].includes(String(submission?.scoringStatus || '').trim().toLowerCase())
+  )));
 
   return sendSuccess(res, 200, 'Submissions fetched successfully', {
     submissions: scoredSubmissions.map((submission) => {
-      const score = Number(submission?.score || 0);
+      const score = Number(submission?.teacherAdjustedScore ?? submission?.gradeValue ?? submission?.score ?? 0);
       const totalPoints = Number(submission?.totalPoints || 0);
       const percentage = totalPoints > 0 ? Number(((score / totalPoints) * 100).toFixed(2)) : 0;
       const totalItems = Array.isArray(submission?.assessmentId?.questions)
@@ -1408,6 +1423,7 @@ const getMySubmissions = asyncHandler(async (req, res) => {
 
       return {
         ...submission,
+        score,
         percentage,
         totalItems,
         status: submission?.status || 'completed',
@@ -1517,6 +1533,33 @@ const unsubmitActivityResponse = asyncHandler(async (req, res) => {
   return sendSuccess(res, 200, 'Activity unsubmitted successfully', {
     submission: toActivitySubmissionResponse({ ...savedSubmission, assessmentId: assessment }, req),
   });
+});
+
+const updateStudentLessonProgress = asyncHandler(async (req, res) => {
+  assertGradeTenStudentAccess(req);
+  const lesson = await findSupabaseLesson(req.params.id);
+  if (!lesson) throw Object.assign(new Error('Lesson not found'), { statusCode: 404 });
+  const enrollment = await findEnrollment({ studentId: req.user._id, subjectId: lesson.subjectId, status: 'approved' });
+  if (!enrollment) throw Object.assign(new Error('You must be enrolled in this subject to record lesson progress'), { statusCode: 403 });
+
+  const progressPercent = Number(req.body?.progressPercent || 0);
+  const engagementSeconds = Number(req.body?.engagementSeconds || 0);
+  if (!Number.isFinite(progressPercent) || progressPercent < 0 || progressPercent > 100) {
+    throw Object.assign(new Error('progressPercent must be from 0 to 100'), { statusCode: 400 });
+  }
+  if (!Number.isFinite(engagementSeconds) || engagementSeconds < 0) {
+    throw Object.assign(new Error('engagementSeconds must be a positive number'), { statusCode: 400 });
+  }
+  const progress = await recordLessonProgress({
+    studentId: req.user._id,
+    lessonId: lesson._id,
+    progressPercent,
+    reachedEnd: req.body?.reachedEnd === true,
+    engagementSeconds,
+  });
+  return sendSuccess(res, 200, progress.status === 'completed'
+    ? 'Lesson completed. Linked assessments are now available.'
+    : 'Lesson progress saved.', { progress });
 });
 
 const getMySubjects = asyncHandler(async (req, res) => {
@@ -1790,6 +1833,7 @@ module.exports = {
   getMySubjects,
   joinSubjectByCode,
   getStudentLessons,
+  updateStudentLessonProgress,
   getStudentTeachers,
   downloadStudentLessonPdf,
   downloadStudentLessonAttachment,

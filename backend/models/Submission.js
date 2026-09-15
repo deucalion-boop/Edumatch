@@ -186,6 +186,17 @@ const submissionSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    aiEvaluations: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+    aiScore: { type: Number, default: null, min: 0 },
+    teacherAdjustedScore: { type: Number, default: null, min: 0 },
+    scoringStatus: {
+      type: String,
+      enum: ['final', 'ai_assisted', 'pending_teacher_review', 'teacher_approved', 'teacher_overridden'],
+      default: 'final',
+    },
     isLate: {
       type: Boolean,
       default: false,

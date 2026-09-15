@@ -477,6 +477,9 @@
               <span class="assessments-kicker">Assessment center</span>
               <h3 class="section-title">Activities &amp; Exams</h3>
               <p class="section-subtitle">Review assessment details, deadlines, submissions, and performance from one focused workspace.</p>
+              <button type="button" class="btn btn-outline btn-sm assessment-weights-button" :disabled="teacherSubjects.length === 0" @click="openAssessmentWeights">
+                <i class="fas fa-scale-balanced"></i> Configure grading weights
+              </button>
             </div>
             <div class="assessments-summary" aria-label="Assessment summary">
               <div class="assessments-summary-item">
@@ -1248,6 +1251,24 @@
         </section>
       </div>
 
+      <div v-if="showWeightsModal" class="records-modal-backdrop" @click.self="showWeightsModal = false">
+        <div class="records-modal-dialog weights-dialog">
+          <div class="records-modal-header"><div><h3>Subject Grading Weights</h3><p>Choose how Activities, Quizzes, and Exams contribute to subject performance.</p></div><button type="button" class="sidebar-close" @click="showWeightsModal = false"><i class="fas fa-times"></i></button></div>
+          <div class="records-modal-body weights-form">
+            <label><span>Class / Subject</span><select v-model="weightsSubjectId" @change="loadAssessmentWeights"><option v-for="subject in teacherSubjects" :key="subject.id" :value="subject.id">{{ subject.className || subject.name }} — {{ subject.name }}</option></select></label>
+            <div class="weights-grid">
+              <label><span>Activities (%)</span><input v-model.number="weightsForm.activity" type="number" min="0" max="100" /></label>
+              <label><span>Quizzes (%)</span><input v-model.number="weightsForm.quiz" type="number" min="0" max="100" /></label>
+              <label><span>Exams (%)</span><input v-model.number="weightsForm.exam" type="number" min="0" max="100" /></label>
+            </div>
+            <label><span>Minimum graded results before ranking</span><input v-model.number="weightsForm.minimumEvidenceCount" type="number" min="1" max="20" /></label>
+            <p class="weights-total" :class="{ invalid: weightsTotal !== 100 }">Total: {{ weightsTotal }}% {{ weightsTotal === 100 ? '✓' : '— must equal 100%' }}</p>
+            <p v-if="weightsError" class="field-error">{{ weightsError }}</p>
+          </div>
+          <div class="records-modal-footer"><button type="button" class="btn btn-outline" @click="showWeightsModal = false">Cancel</button><button type="button" class="btn btn-primary" :disabled="isSavingWeights || weightsTotal !== 100" @click="saveAssessmentWeights">{{ isSavingWeights ? 'Saving...' : 'Save Weights' }}</button></div>
+        </div>
+      </div>
+
       <div v-if="showResultsModal && selectedAssessmentForResults" class="records-modal-backdrop" @click.self="closeResultsModal">
         <div class="records-modal-dialog">
           <div class="records-modal-header">
@@ -1367,6 +1388,20 @@
                     </div>
                   </section>
 
+                  <section v-if="result.hasEssayEvaluation" class="activity-result-section activity-ai-review">
+                    <span class="activity-result-section-label">AI-assisted essay evaluation</span>
+                    <p class="activity-ai-review__status">
+                      Suggested score: <strong>{{ result.aiScore }}/{{ result.totalPoints }}</strong>
+                      <span>Teacher approval is required before this becomes the student's final grade.</span>
+                    </p>
+                    <article v-for="evaluation in result.aiEvaluations" :key="evaluation.questionIndex" class="activity-ai-review__item">
+                      <strong>{{ evaluation.scoreEarned }}/{{ evaluation.maximumScore }} points</strong>
+                      <p>{{ evaluation.explanation }}</p>
+                      <small v-if="evaluation.strengths?.length">Strengths: {{ evaluation.strengths.join(', ') }}</small>
+                      <small v-if="evaluation.areasForImprovement?.length">Improve: {{ evaluation.areasForImprovement.join(', ') }}</small>
+                    </article>
+                  </section>
+
                   <section v-if="result.teacherFeedback" class="activity-result-section activity-result-feedback">
                     <span class="activity-result-section-label">Teacher Feedback</span>
                     <p>{{ result.teacherFeedback }}</p>
@@ -1405,6 +1440,7 @@
                     <th>Score</th>
                     <th>Percentage</th>
                     <th>Result</th>
+                    <th>AI / Teacher Review</th>
                     <th>Integrity</th>
                     <th>Submitted At</th>
                   </tr>
@@ -1420,7 +1456,7 @@
                         </div>
                       </div>
                     </td>
-                    <td>{{ result.score }} / {{ result.totalItems }}</td>
+                    <td>{{ result.score }} / {{ result.totalPoints }}</td>
                     <td>{{ result.percentage }}%</td>
                     <td>
                       <span
@@ -1429,6 +1465,23 @@
                       >
                         {{ result.passFailStatus === 'pass' ? 'Pass' : 'Fail' }}
                       </span>
+                    </td>
+                    <td>
+                      <details v-if="result.hasEssayEvaluation" class="essay-review-details">
+                        <summary>{{ result.scoringStatus === 'pending_teacher_review' ? 'Review required' : `AI: ${result.aiScore}/${result.totalPoints}` }}</summary>
+                        <div class="essay-review-body">
+                          <article v-for="evaluation in result.aiEvaluations" :key="evaluation.questionIndex">
+                            <strong>Essay {{ Number(evaluation.questionIndex) + 1 }}: {{ evaluation.scoreEarned }}/{{ evaluation.maximumScore }}</strong>
+                            <p>{{ evaluation.explanation }}</p>
+                            <small v-if="evaluation.studentFeedback">{{ evaluation.studentFeedback }}</small>
+                          </article>
+                          <label><span>Final score (0–{{ result.totalPoints }})</span><input v-model.number="result.reviewGrade" type="number" min="0" :max="result.totalPoints" /></label>
+                          <label><span>Teacher feedback</span><textarea v-model.trim="result.reviewFeedback" rows="2"></textarea></label>
+                          <p v-if="result.reviewError" class="field-error">{{ result.reviewError }}</p>
+                          <button type="button" class="btn btn-primary btn-sm" :disabled="result.isReviewing" @click="reviewActivityResult(result, 'grade')">{{ result.isReviewing ? 'Saving...' : 'Approve / Override' }}</button>
+                        </div>
+                      </details>
+                      <span v-else>Objective grading</span>
                     </td>
                     <td>
                       <details v-if="result.violationCount > 0" class="integrity-log-details">
@@ -1887,6 +1940,12 @@ const attendanceSearchQuery = ref('')
 const attendanceStatusFilter = ref('all')
 const pageSize = 5
 const showResultsModal = ref(false)
+const showWeightsModal = ref(false)
+const weightsSubjectId = ref('')
+const weightsForm = reactive({ activity: 30, quiz: 30, exam: 40, minimumEvidenceCount: 2 })
+const weightsError = ref('')
+const isSavingWeights = ref(false)
+const weightsTotal = computed(() => Number(weightsForm.activity || 0) + Number(weightsForm.quiz || 0) + Number(weightsForm.exam || 0))
 const selectedAssessmentForResults = ref(null)
 const showAnswerKeyModal = ref(false)
 const selectedAssessmentForAnswers = ref(null)
@@ -2868,7 +2927,12 @@ const fetchRecords = async () => {
       isTeacherGraded: Boolean(result.isTeacherGraded),
       isLate: result.isLate === true,
       returnedAt: result.returnedAt || null,
-      reviewGrade: result.gradeValue ?? '',
+      aiEvaluations: Array.isArray(result.aiEvaluations) ? result.aiEvaluations : [],
+      aiScore: result.aiScore ?? null,
+      teacherAdjustedScore: result.teacherAdjustedScore ?? null,
+      scoringStatus: String(result.scoringStatus || 'final'),
+      hasEssayEvaluation: result.hasEssayEvaluation === true,
+      reviewGrade: result.teacherAdjustedScore ?? result.gradeValue ?? result.aiScore ?? result.score ?? '',
       reviewFeedback: String(result.teacherFeedback || '').trim(),
       reviewError: '',
       isReviewing: false,
@@ -3058,11 +3122,47 @@ const getActivityReviewLabel = (result) => {
   return 'Submitted'
 }
 
+const loadAssessmentWeights = async () => {
+  if (!weightsSubjectId.value) return
+  weightsError.value = ''
+  try {
+    const response = await axios.get(`${resolveApiBaseUrl()}/teacher/subjects/${encodeURIComponent(weightsSubjectId.value)}/assessment-weights`, getAuthConfig())
+    const weights = response.data?.weights || {}
+    weightsForm.activity = Number(weights.activity ?? 30)
+    weightsForm.quiz = Number(weights.quiz ?? 30)
+    weightsForm.exam = Number(weights.exam ?? 40)
+    weightsForm.minimumEvidenceCount = Number(weights.minimumEvidenceCount ?? 2)
+  } catch (error) {
+    weightsError.value = error.response?.data?.message || 'Failed to load assessment weights.'
+  }
+}
+
+const openAssessmentWeights = async () => {
+  weightsSubjectId.value = String(teacherSubjects.value[0]?.id || '')
+  showWeightsModal.value = true
+  await loadAssessmentWeights()
+}
+
+const saveAssessmentWeights = async () => {
+  if (!weightsSubjectId.value || weightsTotal.value !== 100) return
+  isSavingWeights.value = true
+  weightsError.value = ''
+  try {
+    const response = await axios.patch(`${resolveApiBaseUrl()}/teacher/subjects/${encodeURIComponent(weightsSubjectId.value)}/assessment-weights`, { ...weightsForm }, getAuthConfig())
+    assessmentActionMessage.value = response.data?.message || 'Assessment weights updated.'
+    showWeightsModal.value = false
+  } catch (error) {
+    weightsError.value = error.response?.data?.message || 'Failed to save assessment weights.'
+  } finally {
+    isSavingWeights.value = false
+  }
+}
+
 const reviewActivityResult = async (result, action) => {
   const assessment = selectedAssessmentForResults.value
   if (!assessment?.id || !result?.id || result.isReviewing) return
   const isReturn = action === 'return_for_revision'
-  const maxPoints = Number(assessment.activityPoints || 0)
+  const maxPoints = Number(isActivityAssessment(assessment) ? assessment.activityPoints : result.totalPoints || 0)
   const gradeValue = Number(result.reviewGrade)
   result.reviewError = ''
 
@@ -3082,7 +3182,7 @@ const reviewActivityResult = async (result, action) => {
   result.isReviewing = true
   try {
     const response = await axios.patch(
-      `${resolveApiBaseUrl()}/teacher/activities/${encodeURIComponent(assessment.id)}/submissions/${encodeURIComponent(result.id)}/review`,
+      `${resolveApiBaseUrl()}/teacher/${isActivityAssessment(assessment) ? 'activities' : 'assessments'}/${encodeURIComponent(assessment.id)}/submissions/${encodeURIComponent(result.id)}/review`,
       {
         action,
         gradeValue: isReturn ? undefined : gradeValue,
@@ -3886,6 +3986,27 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.assessment-weights-button { margin-top: 0.7rem; }
+.weights-dialog { max-width: 620px; }
+.weights-form { display: grid; gap: 0.9rem; }
+.weights-form label { display: grid; gap: 0.3rem; color: #334155; font-size: 0.76rem; font-weight: 700; }
+.weights-form input,
+.weights-form select { width: 100%; padding: 0.65rem 0.7rem; border: 1px solid #cbd5e1; border-radius: 9px; background: #fff; font: inherit; }
+.weights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; }
+.weights-total { margin: 0; padding: 0.6rem; border-radius: 9px; background: #f0fdf4; color: #166534; font-size: 0.78rem; font-weight: 800; }
+.weights-total.invalid { background: #fff7ed; color: #9a3412; }
+@media (max-width: 600px) { .weights-grid { grid-template-columns: 1fr; } }
+
+.essay-review-details { min-width: 230px; }
+.essay-review-details summary { cursor: pointer; color: #2563eb; font-size: 0.76rem; font-weight: 800; }
+.essay-review-body { display: grid; gap: 0.65rem; margin-top: 0.6rem; padding: 0.75rem; border: 1px solid #dbe4ef; border-radius: 12px; background: #f8fafc; }
+.essay-review-body article { padding-bottom: 0.55rem; border-bottom: 1px solid #e2e8f0; }
+.essay-review-body article p { margin: 0.25rem 0; color: #475569; font-size: 0.73rem; line-height: 1.4; }
+.essay-review-body article small { color: #64748b; font-size: 0.68rem; }
+.essay-review-body label { display: grid; gap: 0.25rem; color: #334155; font-size: 0.7rem; font-weight: 700; }
+.essay-review-body input,
+.essay-review-body textarea { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; font: inherit; }
+
 .activity-grading-panel {
   margin-top: 1rem;
   padding: 1rem;
@@ -6116,6 +6237,37 @@ onBeforeUnmount(() => {
 .activity-result-feedback {
   border-color: #bfdbfe;
   background: #f8fbff;
+}
+
+.activity-ai-review {
+  border-color: #c4b5fd;
+  background: #faf8ff;
+}
+
+.activity-ai-review__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+}
+
+.activity-ai-review__status span,
+.activity-ai-review__item small {
+  color: #64748b;
+}
+
+.activity-ai-review__item {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.activity-ai-review__item p {
+  margin: 0;
 }
 
 .records-modal-footer {

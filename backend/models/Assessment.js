@@ -15,7 +15,7 @@ const questionSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['multiple-choice', 'true-false', 'short-answer'],
+      enum: ['multiple-choice', 'true-false', 'short-answer', 'essay'],
       default: 'multiple-choice',
     },
     options: {
@@ -36,6 +36,11 @@ const questionSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    instructions: { type: String, default: '', trim: true },
+    expectedAnswer: { type: String, default: '', trim: true },
+    rubric: { type: String, default: '', trim: true },
+    minWords: { type: Number, default: null, min: 0, max: 10000 },
+    maxWords: { type: Number, default: null, min: 1, max: 10000 },
   },
   {
     _id: false,
@@ -203,6 +208,10 @@ const assessmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
       index: true,
+    },
+    requiresLessonCompletion: {
+      type: Boolean,
+      default: true,
     },
     assignmentScope: {
       type: String,

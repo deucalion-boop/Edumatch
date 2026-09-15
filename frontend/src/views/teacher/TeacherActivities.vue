@@ -645,6 +645,18 @@
                         </label>
                       </div>
                     </div>
+
+                    <div v-if="challengeForm.allowedSubmissionTypes.includes('written')" class="activity-policy-section essay-assist-section">
+                      <label class="activity-toggle">
+                        <input v-model="challengeForm.enableEssayEvaluation" type="checkbox" />
+                        <span><strong>AI-assisted essay evaluation</strong><small>Generate a suggested score and feedback for the written response. You still approve the final grade.</small></span>
+                      </label>
+                      <div v-if="challengeForm.enableEssayEvaluation" class="essay-assist-fields">
+                        <label><span>Expected answer or key points <small>Optional</small></span><textarea v-model.trim="challengeForm.essayExpectedAnswer" rows="3" /></label>
+                        <label><span>Grading rubric <small>Optional</small></span><textarea v-model.trim="challengeForm.essayRubric" rows="3" placeholder="Accuracy 40%, reasoning 30%, completeness 20%, clarity 10%" /></label>
+                        <div class="draft-question-meta"><label><span>Minimum words <small>Optional</small></span><input v-model.number="challengeForm.essayMinWords" type="number" min="0" max="10000" /></label><label><span>Maximum words <small>Optional</small></span><input v-model.number="challengeForm.essayMaxWords" type="number" min="1" max="10000" /></label></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -721,12 +733,28 @@
                       <article v-for="(q, idx) in generatedQuestions" :key="idx" class="draft-item">
                         <h4>Question {{ idx + 1 }}</h4>
 
+                        <div class="draft-question-meta">
+                          <div class="form-group">
+                            <label :for="`question-type-${idx}`">Question type</label>
+                            <select :id="`question-type-${idx}`" v-model="q.type">
+                              <option value="multiple-choice">Multiple Choice</option>
+                              <option value="true-false">True or False</option>
+                              <option value="short-answer">Short Answer</option>
+                              <option value="essay">Essay</option>
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label :for="`question-points-${idx}`">Maximum points</label>
+                            <input :id="`question-points-${idx}`" v-model.number="q.points" type="number" min="1" max="500" />
+                          </div>
+                        </div>
+
                         <div class="form-group full">
                           <label>Prompt</label>
                           <textarea v-model.trim="q.prompt" rows="3" required />
                         </div>
 
-                        <div v-if="q.options && q.options.length" class="form-group full">
+                        <div v-if="q.type === 'multiple-choice'" class="form-group full">
                           <label>Options (one per line)</label>
                           <textarea
                             :value="q.options.join('\n')"
@@ -735,9 +763,28 @@
                           />
                         </div>
 
-                        <div v-if="showCorrectAnswers" class="form-group full answer-highlight">
+                        <div v-if="showCorrectAnswers && q.type !== 'essay'" class="form-group full answer-highlight">
                           <label>Correct Answer</label>
                           <input v-model.trim="q.answer" type="text" required />
+                        </div>
+
+                        <div v-if="q.type === 'essay'" class="essay-question-settings">
+                          <div class="form-group full">
+                            <label>Essay instructions <span class="optional-label">Optional</span></label>
+                            <textarea v-model.trim="q.instructions" rows="2" placeholder="Clarify what the student should explain or include." />
+                          </div>
+                          <div class="form-group full">
+                            <label>Expected answer or key points <span class="optional-label">Optional</span></label>
+                            <textarea v-model.trim="q.expectedAnswer" rows="3" placeholder="Key concepts the evaluator should look for. This is never shown to students." />
+                          </div>
+                          <div class="form-group full">
+                            <label>Grading rubric <span class="optional-label">Optional</span></label>
+                            <textarea v-model.trim="q.rubric" rows="3" placeholder="Example: Accuracy 40%, reasoning 30%, completeness 20%, clarity 10%." />
+                          </div>
+                          <div class="draft-question-meta">
+                            <div class="form-group"><label>Minimum words <span class="optional-label">Optional</span></label><input v-model.number="q.minWords" type="number" min="0" max="10000" /></div>
+                            <div class="form-group"><label>Maximum words <span class="optional-label">Optional</span></label><input v-model.number="q.maxWords" type="number" min="1" max="10000" /></div>
+                          </div>
                         </div>
                       </article>
 
@@ -745,7 +792,7 @@
                         <h4>Answer Key</h4>
                         <ol>
                           <li v-for="(q, idx) in generatedQuestions" :key="`answer-key-${idx}`">
-                            <strong>Q{{ idx + 1 }}:</strong> {{ q.answer || 'No answer provided' }}
+                            <strong>Q{{ idx + 1 }}:</strong> {{ q.type === 'essay' ? (q.expectedAnswer || 'Teacher review / rubric based') : (q.answer || 'No answer provided') }}
                           </li>
                         </ol>
                       </section>
@@ -1358,6 +1405,11 @@ const challengeForm = reactive({
   allowedSubmissionTypes: ["written", "link", "file"],
   allowResubmission: true,
   allowLateSubmissions: false,
+  enableEssayEvaluation: false,
+  essayExpectedAnswer: "",
+  essayRubric: "",
+  essayMinWords: null,
+  essayMaxWords: null,
   deadlineDate: "",
   deadlineTime: "",
   challengeDescription: "",
@@ -1560,15 +1612,26 @@ const getChallengeStepErrors = (step) => {
   if (step === 4 && isActivityAssessment.value && challengeForm.allowedSubmissionTypes.length === 0) {
     errors.allowedSubmissionTypes = "Select at least one submission method.";
   }
+  if (step === 4 && isActivityAssessment.value && challengeForm.enableEssayEvaluation) {
+    const minWords = Number(challengeForm.essayMinWords || 0);
+    const maxWords = Number(challengeForm.essayMaxWords || 0);
+    if (minWords < 0 || maxWords < 0 || (minWords && maxWords && minWords > maxWords)) {
+      errors.allowedSubmissionTypes = "Essay word limits are invalid. Minimum words cannot exceed maximum words.";
+    }
+  }
   return errors;
 };
 
 const challengeStepErrors = computed(() => getChallengeStepErrors(challengeCurrentStep.value));
 const challengeCanContinue = computed(() => Object.keys(challengeStepErrors.value).length === 0);
 const challengeProgress = computed(() => ((challengeCurrentStep.value - 1) / (challengeWizardSteps.value.length - 1)) * 100);
-const generatedQuestionsAreValid = computed(() => generatedQuestions.value.length > 0 && generatedQuestions.value.every((question) => (
-  String(question.prompt || "").trim() && String(question.answer || "").trim()
-)));
+const generatedQuestionsAreValid = computed(() => generatedQuestions.value.length > 0 && generatedQuestions.value.every((question) => {
+  const hasPrompt = Boolean(String(question.prompt || "").trim());
+  const hasValidPoints = Number.isFinite(Number(question.points)) && Number(question.points) > 0;
+  const hasAnswer = String(question.type || '') === 'essay' || Boolean(String(question.answer || "").trim());
+  const wordLimitsValid = !question.minWords || !question.maxWords || Number(question.minWords) <= Number(question.maxWords);
+  return hasPrompt && hasValidPoints && hasAnswer && wordLimitsValid;
+}));
 
 async function goToNextChallengeStep() {
   challengeStepAttempted[challengeCurrentStep.value] = true;
@@ -1649,6 +1712,11 @@ function resetAssessmentBuilder() {
   challengeForm.allowedSubmissionTypes = ["written", "link", "file"];
   challengeForm.allowResubmission = true;
   challengeForm.allowLateSubmissions = false;
+  challengeForm.enableEssayEvaluation = false;
+  challengeForm.essayExpectedAnswer = "";
+  challengeForm.essayRubric = "";
+  challengeForm.essayMinWords = null;
+  challengeForm.essayMaxWords = null;
   challengeForm.deadlineDate = "";
   challengeForm.deadlineTime = "";
   challengeForm.challengeDescription = "";
@@ -1772,6 +1840,11 @@ async function generateWithAi() {
       answer: question.correctAnswer || "",
       points: Number(question.points || 1),
       explanation: question.explanation || "",
+      instructions: question.instructions || "",
+      expectedAnswer: question.expectedAnswer || question.correctAnswer || "",
+      rubric: question.rubric || "",
+      minWords: question.minWords ?? null,
+      maxWords: question.maxWords ?? null,
     }));
     generatedDraftMeta.value = {
       title: String(draftAssessment.title || title),
@@ -1842,6 +1915,11 @@ async function finalizeGeneratedAssessment() {
         correctAnswer: String(question.answer || "").trim(),
         points: Number(question.points || 1),
         explanation: String(question.explanation || "").trim(),
+        instructions: String(question.instructions || "").trim(),
+        expectedAnswer: String(question.expectedAnswer || "").trim(),
+        rubric: String(question.rubric || "").trim(),
+        minWords: question.minWords === '' ? null : (question.minWords ?? null),
+        maxWords: question.maxWords === '' ? null : (question.maxWords ?? null),
       })),
     };
     if (generatedDraftMeta.value.lessonId) {
@@ -1940,6 +2018,18 @@ async function publishActivity() {
     formData.append("allowLateSubmissions", String(challengeForm.allowLateSubmissions));
     formData.append("submissionDeadline", submissionDeadline);
     formData.append("challengeDescription", challengeDescription);
+    if (challengeForm.enableEssayEvaluation) {
+      formData.append("questions", JSON.stringify([{
+        questionText: title,
+        type: "essay",
+        instructions: challengeDescription,
+        expectedAnswer: String(challengeForm.essayExpectedAnswer || "").trim(),
+        rubric: String(challengeForm.essayRubric || "").trim(),
+        minWords: challengeForm.essayMinWords || null,
+        maxWords: challengeForm.essayMaxWords || null,
+        points: activityPoints,
+      }]));
+    }
     attachments.forEach((file) => formData.append("attachments", file));
 
     const response = await axios.post(`${resolveApiBaseUrl()}/teacher/assessments`, formData, getAuthConfig());
@@ -2430,6 +2520,23 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.draft-question-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.35fr);
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.essay-question-settings {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid #dbe7d4;
+  border-radius: 12px;
+  background: #f8fbf6;
+}
+
 .submission-settings-heading {
   display: flex;
   align-items: flex-start;
@@ -2485,6 +2592,13 @@ onBeforeUnmount(() => {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.essay-assist-section > .activity-toggle { min-height: auto; }
+.essay-assist-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; padding: 0.85rem; border: 1px solid #dce8d6; border-radius: 10px; background: #fff; }
+.essay-assist-fields > label { display: grid; gap: 0.3rem; color: #334155; font-size: 0.78rem; font-weight: 700; }
+.essay-assist-fields > label span small,
+.essay-assist-fields .draft-question-meta small { color: #64748b; font-weight: 500; }
+.essay-assist-fields textarea { min-height: 82px; }
+.essay-assist-fields .draft-question-meta { grid-column: 1 / -1; margin: 0; }
 
 .activity-setting-option,
 .activity-toggle {
@@ -2550,12 +2664,14 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 720px) {
+  .draft-question-meta { grid-template-columns: 1fr; }
   .activity-setting-grid,
   .activity-policy-grid { grid-template-columns: 1fr; }
 
   .submission-settings-heading { align-items: center; }
   .submission-settings-badge { display: none; }
   .submission-settings-panel { padding: 0.8rem; }
+  .essay-assist-fields { grid-template-columns: 1fr; }
   .activity-setting-option,
   .activity-toggle { min-height: auto; }
 }

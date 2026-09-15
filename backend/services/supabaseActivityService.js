@@ -30,6 +30,10 @@ function mapSubmission(row) {
     gradedAt: row.graded_at || null,
     gradeValue: row.grade_value === null || row.grade_value === undefined ? null : Number(row.grade_value),
     teacherFeedback: row.teacher_feedback || '',
+    aiEvaluations: Array.isArray(row.ai_evaluations) ? row.ai_evaluations : [],
+    aiScore: row.ai_score === null || row.ai_score === undefined ? null : Number(row.ai_score),
+    teacherAdjustedScore: row.teacher_adjusted_score === null || row.teacher_adjusted_score === undefined ? null : Number(row.teacher_adjusted_score),
+    scoringStatus: row.scoring_status || 'final',
     isLate: row.is_late === true,
     returnedAt: row.returned_at || null,
     autoSubmitted: row.auto_submitted === true,
@@ -60,6 +64,10 @@ function submissionRow(payload) {
     graded_at: payload.gradedAt || null,
     grade_value: payload.gradeValue ?? null,
     teacher_feedback: String(payload.teacherFeedback || ''),
+    ai_evaluations: Array.isArray(payload.aiEvaluations) ? payload.aiEvaluations : [],
+    ai_score: payload.aiScore ?? null,
+    teacher_adjusted_score: payload.teacherAdjustedScore ?? null,
+    scoring_status: String(payload.scoringStatus || 'final'),
     is_late: payload.isLate === true,
     returned_at: payload.returnedAt || null,
     auto_submitted: payload.autoSubmitted === true,
@@ -113,6 +121,10 @@ async function updateActivityReview({ submissionId, assessmentId, values }) {
     status: String(values.status),
     updated_at: new Date().toISOString(),
   };
+  if (values.aiEvaluations !== undefined) row.ai_evaluations = Array.isArray(values.aiEvaluations) ? values.aiEvaluations : [];
+  if (values.aiScore !== undefined) row.ai_score = values.aiScore ?? null;
+  if (values.teacherAdjustedScore !== undefined) row.teacher_adjusted_score = values.teacherAdjustedScore ?? null;
+  if (values.scoringStatus !== undefined) row.scoring_status = String(values.scoringStatus || 'teacher_approved');
   const { data, error } = await getSupabaseStorageClient().from('submissions').update(row)
     .eq('id', String(submissionId)).eq('assessment_id', String(assessmentId)).select('*').maybeSingle();
   if (error) throw activityError(error, 'Failed to save activity review');

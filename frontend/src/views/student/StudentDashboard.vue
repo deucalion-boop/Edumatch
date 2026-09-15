@@ -354,6 +354,40 @@
           <div><span>{{ stat.label }}</span><strong>{{ stat.value }}</strong><small>{{ stat.note }}</small></div>
         </article>
       </div>
+
+      <section v-if="!isInitialLoading" class="academic-progress-overview">
+        <header><div><span class="premium-eyebrow">Learning completion</span><h2>Overall learning progress</h2></div><strong>{{ academicOverall.completionPercentage || 0 }}%</strong></header>
+        <div class="academic-progress-track"><span :style="{ width: `${academicOverall.completionPercentage || 0}%` }"></span></div>
+        <div class="academic-progress-counts">
+          <span><i class="fas fa-book-open"></i><strong>{{ academicOverall.lessonsCompleted || 0 }}</strong> Lessons</span>
+          <span><i class="fas fa-list-check"></i><strong>{{ academicOverall.activitiesCompleted || 0 }}</strong> Activities</span>
+          <span><i class="fas fa-circle-question"></i><strong>{{ academicOverall.quizzesCompleted || 0 }}</strong> Quizzes</span>
+          <span><i class="fas fa-file-circle-check"></i><strong>{{ academicOverall.examsCompleted || 0 }}</strong> Exams</span>
+        </div>
+      </section>
+
+      <section v-if="!isInitialLoading" class="subject-performance-section">
+        <header><span class="premium-eyebrow">Subject performance</span><h2>Progress and academic results</h2><p>Completion and performance are shown separately. Empty categories are excluded and remaining weights are normalized.</p></header>
+        <div v-if="academicSubjects.length" class="subject-performance-grid">
+          <article v-for="subject in academicSubjects" :key="subject.subjectId" class="subject-performance-card">
+            <div class="subject-performance-head"><div><strong>{{ subject.subjectName }}</strong><small>{{ subject.subjectCode || `${subject.evidenceCount} graded result(s)` }}</small></div><span :class="performanceTone(subject.performanceLevel)">{{ subject.performanceLevel }}</span></div>
+            <div class="subject-score-pair"><div><span>Completion</span><strong>{{ subject.completionPercentage }}%</strong></div><div><span>Performance</span><strong>{{ subject.finalPercentage === null ? '—' : `${subject.finalPercentage}%` }}</strong></div></div>
+            <div class="subject-progress-track"><span :style="{ width: `${subject.completionPercentage}%` }"></span></div>
+            <div class="category-score-grid"><span>Activity<strong>{{ formatAcademicValue(subject.activityAverage) }}</strong></span><span>Quiz<strong>{{ formatAcademicValue(subject.quizAverage) }}</strong></span><span>Exam<strong>{{ formatAcademicValue(subject.examAverage) }}</strong></span></div>
+            <small class="subject-formula">Weights: A {{ subject.weights.activity }}% · Q {{ subject.weights.quiz }}% · E {{ subject.weights.exam }}%<br>{{ subject.hasSufficientData ? `${subject.evidenceCount} results · ranking eligible` : `${subject.evidenceCount}/${subject.minimumEvidenceCount} results · insufficient data` }}</small>
+          </article>
+        </div>
+        <div v-else class="pathway-loading">No subject performance data is available yet.</div>
+      </section>
+
+      <section v-if="!isInitialLoading" class="recommendation-ranking-section">
+        <header><span class="premium-eyebrow">Evidence-based ranking</span><h2>Academic strengths and priorities</h2></header>
+        <div class="recommendation-highlight-grid">
+          <article class="strength"><span>Top 1 Strength</span><strong>{{ strongestAcademicSubject ? `${strongestAcademicSubject.subjectName} — ${strongestAcademicSubject.finalPercentage}%` : 'More data needed' }}</strong><p>{{ subjectInsights.strengthRecommendation }}</p></article>
+          <article class="priority"><span>Priority for Improvement</span><strong>{{ priorityAcademicSubject ? `${priorityAcademicSubject.subjectName} — ${priorityAcademicSubject.finalPercentage}%` : 'More data needed' }}</strong><p>{{ subjectInsights.improvementRecommendation }}</p></article>
+        </div>
+        <ol v-if="rankedAcademicSubjects.length" class="academic-ranking-list"><li v-for="subject in rankedAcademicSubjects" :key="subject.subjectId"><b>#{{ subject.rank }}</b><span>{{ subject.subjectName }}<small>{{ subject.evidenceCount }} graded results</small></span><strong>{{ subject.finalPercentage }}%</strong><em>{{ subject.performanceLevel }}</em></li></ol>
+      </section>
     </section>
   </main>
 </template>
@@ -483,7 +517,9 @@ export default {
       }).sort((a, b) => this.priority(a.dueTone) - this.priority(b.dueTone)).slice(0, 6)
     },
     recentGrades() {
-      return this.finalizedSubmissions.slice(0, 5).map((item, index) => ({
+      return this.finalizedSubmissions
+        .filter((item) => !['ai_assisted', 'pending_teacher_review'].includes(String(item.scoringStatus || '').toLowerCase()))
+        .slice(0, 5).map((item, index) => ({
         key: `${item.assessmentId || index}`,
         title: item.title || 'Assessment',
         context: this.getContext(this.assessmentMap[item.assessmentId] || { assessmentMode: item.assessmentMode }),
@@ -580,7 +616,18 @@ export default {
           tone: 'gold'
         }
       ]
-    }
+    },
+    academicOverall() {
+      return this.subjectInsights?.overallLearningProgress || {}
+    },
+    academicSubjects() {
+      return Array.isArray(this.subjectInsights?.subjectPerformance) ? this.subjectInsights.subjectPerformance : []
+    },
+    rankedAcademicSubjects() {
+      return Array.isArray(this.subjectInsights?.rankedSubjects) ? this.subjectInsights.rankedSubjects : []
+    },
+    strongestAcademicSubject() { return this.subjectInsights?.strongestSubject || null },
+    priorityAcademicSubject() { return this.subjectInsights?.prioritySubject || null }
   },
   watch: {
     '$route.query.section'() {
@@ -608,6 +655,16 @@ export default {
     if (this.clockTimer) window.clearInterval(this.clockTimer)
   },
   methods: {
+    formatAcademicValue(value) {
+      return value === null || value === undefined ? 'N/A' : `${Number(value).toFixed(1)}%`
+    },
+    performanceTone(level) {
+      const normalized = String(level || '').toLowerCase()
+      if (normalized.includes('excellent') || normalized.includes('strong')) return 'is-strong'
+      if (normalized.includes('needs')) return 'is-priority'
+      if (normalized.includes('insufficient')) return 'is-insufficient'
+      return 'is-developing'
+    },
     resolveDashboardSection(section) {
       const normalized = String(section || '').trim().toLowerCase()
       if (normalized === 'recommendations') return 'recommendations'
@@ -869,12 +926,12 @@ export default {
         }
         if (lessonsRes) this.lessons = this.uniqueBy(lessonsRes.data?.lessons || [], (item, index) => item.id || item._id || `${item.title || ''}-${index}`).map((item, index) => ({ id: String(item.id || item._id || `lesson-${index + 1}`), title: item.title || 'Untitled Lesson', teacherName: item.teacher?.name || '', createdAt: item.createdAt || item.postedAt || null }))
         if (assessmentsRes) this.assessments = this.uniqueBy(assessmentsRes.data?.assessments || [], (item, index) => item.id || item._id || `${item.title || ''}-${index}`).map((item, index) => ({ id: String(item.id || item._id || `assessment-${index + 1}`), title: item.title || 'Untitled Assessment', lessonTitle: item.lessonTitle || '', lessonSubject: item.lessonSubject || item.subject || '', teacherName: item.teacherName || item.createdBy?.name || '', assessmentMode: String(item.assessmentMode || 'activity').trim().toLowerCase(), strand: item.strand || item.track || '', submissionDeadline: item.submissionDeadline || null, createdAt: item.createdAt || null }))
-        if (submissionsRes) this.finalizedSubmissions = (submissionsRes.data?.submissions || []).map((item, index) => ({ id: String(item._id || `submission-${index + 1}`), assessmentId: String(item.assessmentId?._id || item.assessmentId || ''), title: item.assessmentId?.title || item.assessmentTitle || 'Assessment', assessmentMode: String(item.assessmentId?.assessmentMode || item.assessmentMode || 'activity').trim().toLowerCase(), score: Number(item.score || 0), totalPoints: Number(item.totalPoints || 0), percentage: Number(item.percentage || 0), submittedAt: item.submittedAt || item.createdAt || null, createdAt: item.createdAt || null }))
+        if (submissionsRes) this.finalizedSubmissions = (submissionsRes.data?.submissions || []).map((item, index) => ({ id: String(item._id || `submission-${index + 1}`), assessmentId: String(item.assessmentId?._id || item.assessmentId || ''), title: item.assessmentId?.title || item.assessmentTitle || 'Assessment', assessmentMode: String(item.assessmentId?.assessmentMode || item.assessmentMode || 'activity').trim().toLowerCase(), score: Number(item.teacherAdjustedScore ?? item.gradeValue ?? item.score ?? 0), totalPoints: Number(item.totalPoints || 0), percentage: Number(item.totalPoints || 0) > 0 ? Number((((item.teacherAdjustedScore ?? item.gradeValue ?? item.score ?? 0) / item.totalPoints) * 100).toFixed(2)) : Number(item.percentage || 0), scoringStatus: String(item.scoringStatus || 'final').trim().toLowerCase(), submittedAt: item.submittedAt || item.createdAt || null, createdAt: item.createdAt || null }))
         if (activityRes) this.activitySubmissions = (activityRes.data?.submissions || []).map((item, index) => ({ id: String(item.id || `activity-${index + 1}`), assessmentId: String(item.assessmentId || ''), status: String(item.status || 'in_progress').trim().toLowerCase(), hasContent: Boolean(item.hasContent), gradedAt: item.gradedAt || null, submittedAt: item.submittedAt || null, createdAt: item.createdAt || null, gradeValue: item.gradeValue ?? null, score: Number(item.score || 0), totalPoints: Number(item.totalPoints || 0), percentage: Number(item.percentage || 0) }))
         if (subjectsRes) this.subjects = subjectsRes.data?.subjects || []
         if (subjectsRes) this.pendingSubjects = subjectsRes.data?.pendingSubjects || []
 
-        if (subjectsRes) this.subjectInsights = subjectsRes.data?.insights || recommendationRes || {}
+        this.subjectInsights = { ...(subjectsRes?.data?.insights || {}), ...(recommendationRes || {}) }
         if (responses[5].status === 'fulfilled') this.recommendation = recommendationRes
         if (attendanceRes) this.attendanceRecords = attendanceRes.data?.records || []
         if (attendanceRes) this.attendanceSummary = attendanceRes.data?.summary || this.attendanceSummary
@@ -891,6 +948,54 @@ export default {
 </script>
 
 <style scoped>
+.academic-progress-overview,
+.subject-performance-section,
+.recommendation-ranking-section { margin-top: 1rem; padding: 1.1rem; border: 1px solid #dfe8d8; border-radius: 20px; background: #fff; }
+.academic-progress-overview > header { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
+.academic-progress-overview h2,
+.subject-performance-section h2,
+.recommendation-ranking-section h2 { margin: 0.25rem 0 0; color: #1e4307; font-size: 1.15rem; }
+.academic-progress-overview > header > strong { color: #4f8a35; font-size: 1.7rem; }
+.academic-progress-track,
+.subject-progress-track { height: 9px; margin: 0.9rem 0; overflow: hidden; border-radius: 999px; background: #e5eadf; }
+.academic-progress-track span,
+.subject-progress-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1e4307, #8fc867); }
+.academic-progress-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem; }
+.academic-progress-counts span { padding: 0.65rem; border-radius: 12px; background: #f7faf3; color: #52633e; font-size: 0.75rem; }
+.academic-progress-counts i { margin-right: 0.4rem; color: #6c9b4c; }
+.academic-progress-counts strong { margin-right: 0.2rem; color: #1e4307; }
+.subject-performance-section > header p { margin: 0.35rem 0 0.9rem; color: #64748b; font-size: 0.8rem; }
+.subject-performance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 0.8rem; }
+.subject-performance-card { padding: 0.9rem; border: 1px solid #e2e8f0; border-radius: 15px; background: #fbfdf9; }
+.subject-performance-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.7rem; }
+.subject-performance-head > div { display: grid; gap: 0.15rem; }
+.subject-performance-head > div strong { color: #1e4307; }
+.subject-performance-head small { color: #64748b; font-size: 0.7rem; }
+.subject-performance-head > span { padding: 0.22rem 0.48rem; border-radius: 999px; font-size: 0.62rem; font-weight: 800; white-space: nowrap; }
+.subject-performance-head .is-strong { background: #dcfce7; color: #166534; }
+.subject-performance-head .is-priority { background: #fee2e2; color: #991b1b; }
+.subject-performance-head .is-developing { background: #fef3c7; color: #92400e; }
+.subject-performance-head .is-insufficient { background: #e2e8f0; color: #475569; }
+.subject-score-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-top: 0.8rem; }
+.subject-score-pair div { display: grid; padding: 0.55rem; border-radius: 10px; background: #fff; }
+.subject-score-pair span { color: #64748b; font-size: 0.66rem; }
+.subject-score-pair strong { color: #1e4307; font-size: 1rem; }
+.category-score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
+.category-score-grid span { display: grid; gap: 0.12rem; color: #64748b; font-size: 0.63rem; text-align: center; }
+.category-score-grid strong { color: #334155; font-size: 0.75rem; }
+.subject-formula { display: block; margin-top: 0.7rem; color: #64748b; font-size: 0.66rem; line-height: 1.5; }
+.recommendation-highlight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.9rem; }
+.recommendation-highlight-grid article { padding: 0.9rem; border-radius: 15px; }
+.recommendation-highlight-grid .strength { border: 1px solid #bbf7d0; background: #f0fdf4; }
+.recommendation-highlight-grid .priority { border: 1px solid #fecaca; background: #fff7f7; }
+.recommendation-highlight-grid span { color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+.recommendation-highlight-grid strong { display: block; margin-top: 0.3rem; color: #1e4307; }
+.recommendation-highlight-grid p { margin: 0.4rem 0 0; color: #475569; font-size: 0.74rem; line-height: 1.5; }
+.academic-ranking-list { display: grid; gap: 0.45rem; margin: 0.9rem 0 0; padding: 0; list-style: none; }
+.academic-ranking-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 0.7rem; padding: 0.65rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 12px; }
+.academic-ranking-list b { color: #4f8a35; }.academic-ranking-list span { display: grid; color: #334155; font-weight: 700; }.academic-ranking-list small { color: #64748b; font-size: 0.65rem; font-weight: 500; }.academic-ranking-list em { color: #64748b; font-size: 0.68rem; font-style: normal; }
+@media (max-width: 720px) { .academic-progress-counts { grid-template-columns: 1fr 1fr; }.recommendation-highlight-grid { grid-template-columns: 1fr; }.academic-ranking-list li { grid-template-columns: auto 1fr auto; }.academic-ranking-list em { grid-column: 2 / -1; } }
+
 .student-dashboard-page {
   --ink: #12243a;
   --body: #4b5c70;

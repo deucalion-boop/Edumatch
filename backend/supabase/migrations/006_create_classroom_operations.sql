@@ -92,6 +92,11 @@ create table if not exists public.submissions (
   graded_at timestamptz,
   grade_value numeric,
   teacher_feedback text not null default '',
+  ai_evaluations jsonb not null default '[]'::jsonb,
+  ai_score numeric,
+  teacher_adjusted_score numeric,
+  scoring_status text not null default 'final'
+    check (scoring_status in ('final', 'ai_assisted', 'pending_teacher_review', 'teacher_approved', 'teacher_overridden')),
   is_late boolean not null default false,
   returned_at timestamptz,
   auto_submitted boolean not null default false,
@@ -107,6 +112,36 @@ create index if not exists submissions_assessment_updated_idx
   on public.submissions (assessment_id, updated_at desc);
 create index if not exists submissions_student_updated_idx
   on public.submissions (student_id, updated_at desc);
+
+create table if not exists public.lesson_progress (
+  id text primary key default replace(gen_random_uuid()::text, '-', ''),
+  student_id text not null references public.users(id) on delete cascade,
+  lesson_id text not null references public.lessons(id) on delete cascade,
+  status text not null default 'not_started' check (status in ('not_started', 'in_progress', 'completed')),
+  progress_percent numeric not null default 0 check (progress_percent between 0 and 100),
+  engagement_seconds integer not null default 0 check (engagement_seconds >= 0),
+  reached_end boolean not null default false,
+  started_at timestamptz,
+  last_viewed_at timestamptz,
+  completed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (student_id, lesson_id)
+);
+
+create table if not exists public.assessment_weights (
+  id text primary key default replace(gen_random_uuid()::text, '-', ''),
+  subject_id text not null references public.subjects(id) on delete cascade,
+  activity_weight numeric not null default 30 check (activity_weight between 0 and 100),
+  quiz_weight numeric not null default 30 check (quiz_weight between 0 and 100),
+  exam_weight numeric not null default 40 check (exam_weight between 0 and 100),
+  minimum_evidence_count integer not null default 2 check (minimum_evidence_count >= 1),
+  updated_by text references public.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (subject_id),
+  check (activity_weight + quiz_weight + exam_weight > 0)
+);
 
 create table if not exists public.recommendations (
   id text primary key default replace(gen_random_uuid()::text, '-', ''),
@@ -166,7 +201,10 @@ alter table public.submissions enable row level security;
 alter table public.recommendations enable row level security;
 alter table public.app_settings enable row level security;
 alter table public.export_approval_requests enable row level security;
+alter table public.lesson_progress enable row level security;
+alter table public.assessment_weights enable row level security;
 
 revoke all on table public.subjects, public.subject_enrollments,
   public.attendance_records, public.submissions, public.recommendations,
   public.app_settings, public.export_approval_requests from anon, authenticated;
+revoke all on table public.lesson_progress, public.assessment_weights from anon, authenticated;

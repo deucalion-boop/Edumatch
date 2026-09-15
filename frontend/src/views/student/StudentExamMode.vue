@@ -97,9 +97,21 @@
           </div>
 
           <div v-else class="answer-group written-answer">
-            <label :for="`written-answer-${currentOriginalQuestionIndex}`">Your answer</label>
-            <textarea :id="`written-answer-${currentOriginalQuestionIndex}`" :value="answers[currentOriginalQuestionIndex] || ''" rows="7" placeholder="Write your answer clearly here..." @input="setAnswer(currentOriginalQuestionIndex, $event.target.value)"></textarea>
-            <small>Your answer is saved automatically while the exam is active.</small>
+            <label :for="`written-answer-${currentOriginalQuestionIndex}`">{{ currentQuestion.type === 'essay' ? 'Your essay response' : 'Your answer' }}</label>
+            <p v-if="currentQuestion.instructions" class="essay-instructions">{{ currentQuestion.instructions }}</p>
+            <textarea
+              :id="`written-answer-${currentOriginalQuestionIndex}`"
+              :value="answers[currentOriginalQuestionIndex] || ''"
+              rows="9"
+              placeholder="Write your answer clearly here..."
+              @input="setAnswer(currentOriginalQuestionIndex, $event.target.value)"
+            ></textarea>
+            <div class="essay-answer-meta">
+              <small>Your answer is saved automatically while the assessment is active.</small>
+              <small v-if="currentQuestion.type === 'essay'" :class="{ 'word-limit-warning': !isCurrentEssayWordCountValid }">
+                {{ currentEssayWordCount }} words<span v-if="currentQuestion.minWords"> · minimum {{ currentQuestion.minWords }}</span><span v-if="currentQuestion.maxWords"> · maximum {{ currentQuestion.maxWords }}</span>
+              </small>
+            </div>
           </div>
         </article>
 
@@ -228,6 +240,15 @@ export default {
     isLastQuestion() {
       return this.currentQuestionIndex >= Math.max(0, this.assessment.questions.length - 1)
     },
+    currentEssayWordCount() {
+      return String(this.answers[this.currentOriginalQuestionIndex] || '').trim().split(/\s+/).filter(Boolean).length
+    },
+    isCurrentEssayWordCountValid() {
+      if (String(this.currentQuestion?.type || '') !== 'essay') return true
+      const min = Number(this.currentQuestion?.minWords || 0)
+      const max = Number(this.currentQuestion?.maxWords || 0)
+      return this.currentEssayWordCount >= min && (!max || this.currentEssayWordCount <= max)
+    },
     watermarkLabel() {
       const user = this.authStore?.user || {}
       const studentName = String(user.name || user.fullName || 'EduMatch Student').trim()
@@ -322,6 +343,13 @@ export default {
     },
     isQuestionAnswered(index) {
       return Boolean(String(this.answers[index] || '').trim())
+    },
+    isEssayWordCountValid(question, index) {
+      if (String(question?.type || '') !== 'essay') return true
+      const count = String(this.answers[index] || '').trim().split(/\s+/).filter(Boolean).length
+      const min = Number(question?.minWords || 0)
+      const max = Number(question?.maxWords || 0)
+      return count >= min && (!max || count <= max)
     },
     goToQuestion(index) {
       if (this.isPaused || this.hasFinalized) return
@@ -457,6 +485,12 @@ export default {
     },
     async submitExam(reason = 'manual_submit') {
       if (this.hasFinalized || this.isSubmitting) return
+      const invalidEssayIndex = this.assessment.questions.findIndex((question, index) => !this.isEssayWordCountValid(question, index))
+      if (invalidEssayIndex >= 0) {
+        this.currentQuestionIndex = Math.max(0, this.questionOrder.indexOf(invalidEssayIndex))
+        this.showNotice('error', `Question ${invalidEssayIndex + 1} does not meet its essay word-count requirement.`)
+        return
+      }
       this.isSubmitting = true
       this.showSubmitReview = false
       try {
@@ -1485,6 +1519,20 @@ textarea {
   color: var(--exam-muted);
   font-size: 0.68rem;
 }
+
+.essay-instructions {
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 10px 10px 0;
+  background: #eff6ff;
+  color: #334155;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.essay-answer-meta { display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.essay-answer-meta .word-limit-warning { color: #b45309; font-weight: 800; }
 
 .question-actions {
   z-index: 3;

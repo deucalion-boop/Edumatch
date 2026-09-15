@@ -40,6 +40,7 @@ create table if not exists public.assessments (
   assessment_mode text not null default 'activity',
   grading_period text not null default '',
   counts_toward_recommendation boolean not null default false,
+  requires_lesson_completion boolean not null default true,
   assignment_scope text not null default 'handled_class',
   assigned_student_ids jsonb not null default '[]'::jsonb,
   questions jsonb not null default '[]'::jsonb,

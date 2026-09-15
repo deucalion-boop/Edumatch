@@ -142,8 +142,8 @@
                 <strong>{{ lesson.title || 'Untitled Lesson' }}</strong>
                 <small>{{ lesson.teacherName || 'Teacher' }} &middot; {{ formatRelativeDate(lesson.createdAt) }}</small>
               </div>
-              <span class="lesson-feed-status" :class="{ new: isRecentlyPublished(lesson.createdAt) }">
-                {{ isRecentlyPublished(lesson.createdAt) ? 'New Lesson Available' : 'Published' }}
+              <span class="lesson-feed-status" :class="lessonProgressTone(lesson)">
+                {{ lessonProgressLabel(lesson) }}
               </span>
               <span class="lesson-feed-more" aria-hidden="true">
                 <i class="fas" :class="selectedLessonId === lesson.id ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
@@ -163,6 +163,30 @@
                 <span v-if="isRecentlyPublished(lesson.createdAt)" class="status-badge new">New Lesson Available</span>
                 <span v-else class="status-badge published">Published</span>
               </header>
+
+              <section class="lesson-progress-card" :class="lessonProgressTone(lesson)">
+                <div class="lesson-progress-copy">
+                  <span class="lesson-progress-icon"><i class="fas" :class="lesson.progress?.status === 'completed' ? 'fa-circle-check' : 'fa-book-reader'"></i></span>
+                  <div>
+                    <strong>{{ lessonProgressLabel(lesson) }}</strong>
+                    <small>{{ lesson.progress?.status === 'completed' ? `Completed ${formatDate(lesson.progress.completedAt)}` : 'Study the material, then confirm when you reach the end.' }}</small>
+                  </div>
+                </div>
+                <div class="lesson-progress-meter" role="progressbar" :aria-valuenow="Number(lesson.progress?.progressPercent || 0)" aria-valuemin="0" aria-valuemax="100">
+                  <span :style="{ width: `${Number(lesson.progress?.progressPercent || 0)}%` }"></span>
+                </div>
+                <button
+                  v-if="lesson.progress?.status !== 'completed'"
+                  type="button"
+                  class="lesson-complete-button"
+                  :disabled="isSavingLessonProgress || lessonEngagementSeconds(lesson) < 20"
+                  @click="completeLesson(lesson)"
+                >
+                  <i class="fas" :class="isSavingLessonProgress ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+                  {{ lessonEngagementSeconds(lesson) < 20 ? `Keep studying (${20 - lessonEngagementSeconds(lesson)}s)` : 'I reached the end — complete lesson' }}
+                </button>
+                <p v-if="lessonProgressMessage && selectedLessonId === lesson.id" class="lesson-progress-message">{{ lessonProgressMessage }}</p>
+              </section>
 
               <div v-if="Array.isArray(lesson.attachments) && lesson.attachments.length" class="lesson-detail-attachments">
                 <h4>Attachments</h4>
@@ -332,7 +356,11 @@ export default {
       joinClassMessage: '',
       joinClassMessageType: 'info',
       authStore: null,
-      pendingTourAction: ''
+      pendingTourAction: '',
+      lessonEngagementTimer: null,
+      activeLessonSeconds: 0,
+      isSavingLessonProgress: false,
+      lessonProgressMessage: ''
     }
   },
   computed: {
@@ -372,7 +400,16 @@ export default {
       handler() { this.lessonPage = 1 }
     },
     lessonPageCount(count) { this.lessonPage = Math.min(this.lessonPage, count) },
-    selectedLessonId() { this.revealSelectedLesson() }
+    selectedLessonId(nextId, previousId) {
+      this.revealSelectedLesson()
+      if (!nextId) {
+        this.stopLessonEngagement()
+        return
+      }
+      if (nextId !== previousId) {
+        this.startLessonEngagement(this.lessons.find((lesson) => lesson.id === nextId) || null)
+      }
+    }
   },
   methods: {
     changeLessonPage(page) {
@@ -466,7 +503,10 @@ export default {
       return `${configured}/api`
     },
     getAuthConfig() {
-      const token = this.authStore?.token || localStorage.getItem('edumatch_auth_token') || ''
+      const token = this.authStore?.token
+        || localStorage.getItem('edumatch_auth_token')
+        || sessionStorage.getItem('edumatch_auth_token')
+        || ''
       return {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       }
@@ -514,6 +554,70 @@ export default {
     selectLesson(lesson) {
       if (!lesson?.id) return
       this.selectedLessonId = this.selectedLessonId === lesson.id ? null : lesson.id
+    },
+    lessonProgressLabel(lesson) {
+      const status = String(lesson?.progress?.status || 'not_started')
+      if (status === 'completed') return 'Completed'
+      if (status === 'in_progress') return 'In Progress'
+      return 'Not Started'
+    },
+    lessonProgressTone(lesson) {
+      return `is-${String(lesson?.progress?.status || 'not_started').replace(/_/g, '-')}`
+    },
+    lessonEngagementSeconds(lesson) {
+      return Number(lesson?.progress?.engagementSeconds || 0) + (this.selectedLessonId === lesson?.id ? this.activeLessonSeconds : 0)
+    },
+    stopLessonEngagement() {
+      if (this.lessonEngagementTimer) window.clearInterval(this.lessonEngagementTimer)
+      this.lessonEngagementTimer = null
+      this.activeLessonSeconds = 0
+    },
+    startLessonEngagement(lesson) {
+      this.stopLessonEngagement()
+      this.lessonProgressMessage = ''
+      if (!lesson?.id || lesson.progress?.status === 'completed') return
+      void this.saveLessonProgress(lesson, false, 0).catch(() => null)
+      this.lessonEngagementTimer = window.setInterval(() => {
+        this.activeLessonSeconds += 10
+        const percent = Math.min(90, Math.max(Number(lesson.progress?.progressPercent || 0), Math.round(this.lessonEngagementSeconds(lesson) / 60 * 90)))
+        void this.saveLessonProgress(lesson, false, 10, percent).catch(() => null)
+      }, 10000)
+    },
+    async saveLessonProgress(lesson, reachedEnd = false, engagementSeconds = 0, progressPercent = null) {
+      if (!lesson?.id) return null
+      const response = await axios.patch(
+        `${this.resolveApiBaseUrl()}/student/lessons/${lesson.id}/progress`,
+        {
+          progressPercent: progressPercent ?? (reachedEnd ? 100 : Math.max(5, Number(lesson.progress?.progressPercent || 0))),
+          engagementSeconds,
+          reachedEnd
+        },
+        this.getAuthConfig()
+      )
+      const progress = response.data?.progress || response.data?.data?.progress
+      if (progress) {
+        lesson.progress = progress
+        if (engagementSeconds > 0) this.activeLessonSeconds = Math.max(0, this.activeLessonSeconds - engagementSeconds)
+      }
+      return progress
+    },
+    async completeLesson(lesson) {
+      if (!lesson?.id || this.lessonEngagementSeconds(lesson) < 20) return
+      this.isSavingLessonProgress = true
+      this.lessonProgressMessage = ''
+      try {
+        const progress = await this.saveLessonProgress(lesson, true, 0, 100)
+        if (progress?.status === 'completed') {
+          this.lessonProgressMessage = 'Lesson completed. Linked assessments are now unlocked.'
+          this.stopLessonEngagement()
+        } else {
+          this.lessonProgressMessage = 'Keep studying a little longer before completing this lesson.'
+        }
+      } catch (error) {
+        this.lessonProgressMessage = error.response?.data?.message || 'Failed to complete the lesson.'
+      } finally {
+        this.isSavingLessonProgress = false
+      }
     },
     handleAttachmentAction(attachment) {
       if (attachment?.canPreviewInline && attachment?.url) {
@@ -605,7 +709,8 @@ export default {
           className: lesson.className || '',
           teacherName: lesson.teacher?.name || '',
           createdAt: lesson.createdAt,
-          attachments: Array.isArray(lesson.attachments) ? lesson.attachments : []
+          attachments: Array.isArray(lesson.attachments) ? lesson.attachments : [],
+          progress: lesson.progress || { status: 'not_started', progressPercent: 0, engagementSeconds: 0, reachedEnd: false, completedAt: null }
         }))
         this.hasLessonsLoadError = false
         this.lessonsEmptyMessage = 'No lessons available yet. Join a class and wait for teacher approval to access lesson materials.'
@@ -653,11 +758,41 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('edumatch-student-tour-focus', this.handleTourFocus)
+    this.stopLessonEngagement()
   }
 }
 </script>
 
 <style scoped>
+.lesson-progress-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(160px, 0.7fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0.85rem 0;
+  padding: 0.85rem;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+.lesson-progress-card.is-completed { border-color: #b9dca7; background: #f4faef; }
+.lesson-progress-copy { display: flex; align-items: center; gap: 0.7rem; min-width: 0; }
+.lesson-progress-copy > div { display: grid; gap: 0.15rem; }
+.lesson-progress-copy strong { color: #1e4307; font-size: 0.86rem; }
+.lesson-progress-copy small { color: #64748b; font-size: 0.72rem; line-height: 1.35; }
+.lesson-progress-icon { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 34px; background: #eaf3e4; color: #4f8a35; }
+.lesson-progress-meter { height: 8px; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
+.lesson-progress-meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f8a35, #8fc867); transition: width 300ms ease; }
+.lesson-complete-button { min-height: 38px; padding: 0.55rem 0.8rem; border: 1px solid #5f9a45; border-radius: 10px; background: #4f8a35; color: #fff; font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+.lesson-complete-button:disabled { border-color: #cbd5e1; background: #e2e8f0; color: #64748b; cursor: not-allowed; }
+.lesson-progress-message { grid-column: 1 / -1; margin: 0; color: #4f6f38; font-size: 0.76rem; font-weight: 600; }
+.lesson-feed-status.is-completed { background: #dcfce7; color: #166534; }
+.lesson-feed-status.is-in-progress { background: #fef3c7; color: #92400e; }
+
+@media (max-width: 760px) {
+  .lesson-progress-card { grid-template-columns: 1fr; }
+}
+
 .lesson-pagination, .lesson-pagination-controls {
   display: flex;
   align-items: center;

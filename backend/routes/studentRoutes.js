@@ -6,6 +6,7 @@ const {
   getMySubjects,
   joinSubjectByCode,
   getStudentLessons,
+  updateStudentLessonProgress,
   getStudentTeachers,
   downloadStudentLessonPdf,
   downloadStudentLessonAttachment,
@@ -40,6 +41,7 @@ router.get('/subjects', getMySubjects);
 router.post('/subjects/join', joinSubjectByCode);
 router.get('/attendance', getStudentAttendanceHistory);
 router.get('/lessons', getStudentLessons);
+router.patch('/lessons/:id/progress', updateStudentLessonProgress);
 router.get('/teachers', getStudentTeachers);
 router.get('/lessons/:id/download', downloadStudentLessonPdf);
 router.get('/lessons/:id/attachments/:attachmentId/download', downloadStudentLessonAttachment);

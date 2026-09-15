@@ -61,6 +61,7 @@ const {
   getSubjectCategory,
 } = require('../constants/strandSubjects');
 const { findActivitySubmissionById, updateActivityReview } = require('../services/supabaseActivityService');
+const { getSupabaseStorageClient } = require('../services/supabaseStorageService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
@@ -125,6 +126,53 @@ function parseActivitySubmissionTypes(value) {
     throw error;
   }
   return normalized;
+}
+
+const ASSESSMENT_QUESTION_TYPES = new Set(['multiple-choice', 'true-false', 'short-answer', 'essay']);
+
+function parseAssessmentQuestions(value) {
+  if (Array.isArray(value)) return value;
+  if (!String(value || '').trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_error) {
+    throw Object.assign(new Error('questions must contain valid JSON'), { statusCode: 400 });
+  }
+}
+
+function normalizeAssessmentQuestions(value) {
+  if (!Array.isArray(value)) {
+    const error = new Error('questions must be an array');
+    error.statusCode = 400;
+    throw error;
+  }
+  return value.map((question, index) => {
+    const type = String(question?.type || 'multiple-choice').trim().toLowerCase();
+    const questionText = String(question?.questionText || '').trim();
+    const points = Number(question?.points || 1);
+    const minWords = question?.minWords === null || question?.minWords === undefined || question?.minWords === '' ? null : Number(question.minWords);
+    const maxWords = question?.maxWords === null || question?.maxWords === undefined || question?.maxWords === '' ? null : Number(question.maxWords);
+    if (!questionText) throw Object.assign(new Error(`Question ${index + 1} is required`), { statusCode: 400 });
+    if (!ASSESSMENT_QUESTION_TYPES.has(type)) throw Object.assign(new Error(`Question ${index + 1} has an unsupported type`), { statusCode: 400 });
+    if (!Number.isFinite(points) || points <= 0 || points > 500) throw Object.assign(new Error(`Question ${index + 1} points must be from 1 to 500`), { statusCode: 400 });
+    if (minWords !== null && (!Number.isInteger(minWords) || minWords < 0 || minWords > 10000)) throw Object.assign(new Error(`Question ${index + 1} minimum words is invalid`), { statusCode: 400 });
+    if (maxWords !== null && (!Number.isInteger(maxWords) || maxWords < 1 || maxWords > 10000)) throw Object.assign(new Error(`Question ${index + 1} maximum words is invalid`), { statusCode: 400 });
+    if (minWords !== null && maxWords !== null && minWords > maxWords) throw Object.assign(new Error(`Question ${index + 1} minimum words cannot exceed maximum words`), { statusCode: 400 });
+    return {
+      questionText,
+      type,
+      options: type === 'essay' ? [] : (Array.isArray(question?.options) ? question.options.map((item) => String(item || '').trim()).filter(Boolean) : []),
+      correctAnswer: type === 'essay' ? String(question?.expectedAnswer || question?.correctAnswer || '').trim() : String(question?.correctAnswer || '').trim(),
+      points,
+      explanation: String(question?.explanation || '').trim(),
+      instructions: String(question?.instructions || '').trim(),
+      expectedAnswer: String(question?.expectedAnswer || question?.correctAnswer || '').trim(),
+      rubric: String(question?.rubric || '').trim(),
+      minWords,
+      maxWords,
+    };
+  });
 }
 
 function getAssignedTeacherSubject(user) {
@@ -1577,7 +1625,7 @@ const createAssessment = asyncHandler(async (req, res) => {
       countsTowardRecommendation: assessmentPolicy.countsTowardRecommendation,
       assignmentScope: assessmentPolicy.assignmentScope,
       assignedStudentIds,
-      questions: Array.isArray(questions) ? questions : [],
+      questions: normalizeAssessmentQuestions(parseAssessmentQuestions(questions)),
       createdBy: req.user._id,
       publishedBy: req.user._id,
       lastModifiedBy: req.user._id,
@@ -1635,7 +1683,7 @@ const updateAssessmentQuestions = asyncHandler(async (req, res) => {
       error.statusCode = 400;
       throw error;
     }
-    assessment.questions = questions;
+    assessment.questions = normalizeAssessmentQuestions(questions);
   }
 
   const lesson = assessment.lessonId
@@ -1998,6 +2046,11 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
       isTeacherGraded,
       isLate: submission?.isLate === true,
       returnedAt: submission?.returnedAt || null,
+      aiEvaluations: Array.isArray(submission?.aiEvaluations) ? submission.aiEvaluations : [],
+      aiScore: submission?.aiScore ?? null,
+      teacherAdjustedScore: submission?.teacherAdjustedScore ?? null,
+      scoringStatus: String(submission?.scoringStatus || 'final'),
+      hasEssayEvaluation: Array.isArray(submission?.aiEvaluations) && submission.aiEvaluations.length > 0,
     };
   });
 
@@ -2018,8 +2071,8 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
 
 const reviewActivitySubmission = asyncHandler(async (req, res) => {
   const assessment = await findSupabaseAssessment(req.params.assessmentId, req.user._id);
-  if (!assessment || String(assessment.assessmentMode || '').trim().toLowerCase() !== 'activity') {
-    const error = new Error('Activity not found for this teacher');
+  if (!assessment) {
+    const error = new Error('Assessment not found for this teacher');
     error.statusCode = 404;
     throw error;
   }
@@ -2036,8 +2089,8 @@ const reviewActivitySubmission = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
-  if (String(currentSubmission.status || '') !== 'completed') {
-    const error = new Error('Only submitted activity work can be graded or returned');
+  if (!['completed', 'auto_submitted', 'terminated'].includes(String(currentSubmission.status || ''))) {
+    const error = new Error('Only submitted work can be graded or returned');
     error.statusCode = 409;
     throw error;
   }
@@ -2046,6 +2099,9 @@ const reviewActivitySubmission = asyncHandler(async (req, res) => {
   let values;
 
   if (action === 'return_for_revision') {
+    if (String(assessment.assessmentMode || '').trim().toLowerCase() !== 'activity') {
+      throw Object.assign(new Error('Only classroom activities can be returned for revision'), { statusCode: 400 });
+    }
     if (assessment.allowResubmission === false) {
       const error = new Error('Enable student editing/resubmission before returning work for revision');
       error.statusCode = 409;
@@ -2066,7 +2122,9 @@ const reviewActivitySubmission = asyncHandler(async (req, res) => {
       status: 'returned_for_revision',
     };
   } else {
-    const activityPoints = Number(assessment.activityPoints || 0);
+    const activityPoints = String(assessment.assessmentMode || '').trim().toLowerCase() === 'activity'
+      ? Number(assessment.activityPoints || 0)
+      : Number(currentSubmission.totalPoints || (assessment.questions || []).reduce((sum, question) => sum + Number(question?.points || 1), 0));
     const gradeValue = Number(req.body?.gradeValue);
     if (!Number.isFinite(gradeValue) || gradeValue < 0 || gradeValue > activityPoints) {
       const error = new Error(`Grade must be from 0 to ${activityPoints}`);
@@ -2081,6 +2139,10 @@ const reviewActivitySubmission = asyncHandler(async (req, res) => {
       gradedAt: now,
       returnedAt: null,
       status: 'completed',
+      aiEvaluations: currentSubmission.aiEvaluations,
+      aiScore: currentSubmission.aiScore,
+      teacherAdjustedScore: gradeValue,
+      scoringStatus: currentSubmission.aiScore == null ? 'teacher_approved' : (Number(currentSubmission.aiScore) === gradeValue ? 'teacher_approved' : 'teacher_overridden'),
     };
   }
 
@@ -2099,14 +2161,16 @@ const reviewActivitySubmission = asyncHandler(async (req, res) => {
     recipientIds: [submission.studentId],
     sender: req.user,
     type: action === 'return_for_revision' ? 'teacher_feedback' : 'grade_released',
-    title: action === 'return_for_revision' ? 'Activity returned for revision' : 'Activity grade published',
+    title: action === 'return_for_revision' ? 'Activity returned for revision' : 'Assessment grade published',
     subject: assessment.title,
     preview: action === 'return_for_revision'
       ? teacherFeedback
-      : `Your score is ${values.gradeValue} out of ${assessment.activityPoints}.`,
+      : `Your score is ${values.gradeValue} out of ${values.totalPoints}.`,
     eventKey: `activity-review:${submission.id}:${action}:${now}`,
     meta: {
-      route: `/student/activities?assessmentId=${encodeURIComponent(String(assessment._id))}`,
+      route: String(assessment.assessmentMode || '').trim().toLowerCase() === 'activity'
+        ? `/student/activities?assessmentId=${encodeURIComponent(String(assessment._id))}`
+        : '/student/dashboard?section=grades',
       entityType: 'submission',
       entityId: submission.id,
     },
@@ -2115,9 +2179,51 @@ const reviewActivitySubmission = asyncHandler(async (req, res) => {
   return sendSuccess(
     res,
     200,
-    action === 'return_for_revision' ? 'Activity returned for revision' : 'Activity grade published',
+    action === 'return_for_revision' ? 'Activity returned for revision' : 'Assessment grade published',
     { submission }
   );
+});
+
+const getSubjectAssessmentWeights = asyncHandler(async (req, res) => {
+  const subject = await findTeacherSubject(req.user._id, req.params.subjectId);
+  if (!subject) throw Object.assign(new Error('Class not found for this teacher'), { statusCode: 404 });
+  const { data, error } = await getSupabaseStorageClient().from('assessment_weights').select('*')
+    .eq('subject_id', String(subject._id)).limit(1).maybeSingle();
+  if (error) throw Object.assign(new Error(error.message), { statusCode: 500 });
+  return sendSuccess(res, 200, 'Assessment weights fetched successfully', {
+    weights: data ? {
+      activity: Number(data.activity_weight), quiz: Number(data.quiz_weight), exam: Number(data.exam_weight),
+      minimumEvidenceCount: Number(data.minimum_evidence_count || 2),
+    } : { activity: 30, quiz: 30, exam: 40, minimumEvidenceCount: 2 },
+  });
+});
+
+const updateSubjectAssessmentWeights = asyncHandler(async (req, res) => {
+  const subject = await findTeacherSubject(req.user._id, req.params.subjectId);
+  if (!subject) throw Object.assign(new Error('Class not found for this teacher'), { statusCode: 404 });
+  const activity = Number(req.body?.activity);
+  const quiz = Number(req.body?.quiz);
+  const exam = Number(req.body?.exam);
+  const minimumEvidenceCount = Number(req.body?.minimumEvidenceCount || 2);
+  if (![activity, quiz, exam].every((value) => Number.isFinite(value) && value >= 0 && value <= 100)) {
+    throw Object.assign(new Error('Each assessment weight must be from 0 to 100'), { statusCode: 400 });
+  }
+  if (Math.abs(activity + quiz + exam - 100) > 0.001) {
+    throw Object.assign(new Error('Activity, Quiz, and Exam weights must total 100%'), { statusCode: 400 });
+  }
+  if (!Number.isInteger(minimumEvidenceCount) || minimumEvidenceCount < 1 || minimumEvidenceCount > 20) {
+    throw Object.assign(new Error('Minimum evidence count must be from 1 to 20'), { statusCode: 400 });
+  }
+  const now = new Date().toISOString();
+  const { data, error } = await getSupabaseStorageClient().from('assessment_weights').upsert({
+    subject_id: String(subject._id), activity_weight: activity, quiz_weight: quiz, exam_weight: exam,
+    minimum_evidence_count: minimumEvidenceCount, updated_by: String(req.user._id), updated_at: now,
+  }, { onConflict: 'subject_id' }).select('*').single();
+  if (error) throw Object.assign(new Error(error.message), { statusCode: 500 });
+  return sendSuccess(res, 200, 'Assessment weights updated successfully', { weights: {
+    activity: Number(data.activity_weight), quiz: Number(data.quiz_weight), exam: Number(data.exam_weight),
+    minimumEvidenceCount: Number(data.minimum_evidence_count),
+  } });
 });
 
 const getEnrollmentRequests = asyncHandler(async (req, res) => {
@@ -2394,6 +2500,8 @@ module.exports = {
   removeTeacherSubjectStudent,
   getTeacherStudentAssessmentResults,
   reviewActivitySubmission,
+  getSubjectAssessmentWeights,
+  updateSubjectAssessmentWeights,
   getEnrollmentRequests,
   approveEnrollmentRequest,
   rejectEnrollmentRequest,

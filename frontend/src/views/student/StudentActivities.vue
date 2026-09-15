@@ -56,7 +56,7 @@
                 :key="assessment.id"
                 type="button"
                 class="activity-list-card"
-                :class="{ active: selectedAssessmentId === assessment.id }"
+                :class="{ active: selectedAssessmentId === assessment.id, locked: assessment.isLocked }"
                 :aria-pressed="selectedAssessmentId === assessment.id"
                 @click="selectAssessment(assessment)"
               >
@@ -112,6 +112,12 @@
                 </span>
               </div>
             </article>
+
+            <div v-if="selectedAssessment.isLocked" class="assessment-lock-notice" role="status">
+              <span><i class="fas fa-lock" aria-hidden="true"></i></span>
+              <div><strong>This assessment is locked</strong><p>{{ selectedAssessment.lockReason || 'Complete the required learning steps first.' }}</p></div>
+              <router-link v-if="selectedAssessment.lessonId" :to="{ path: '/student/lessons', query: { lessonId: selectedAssessment.lessonId } }">Open lesson</router-link>
+            </div>
 
             <div v-if="isClassroomTask(selectedAssessment)" class="workspace-grid">
               <article class="workspace-card teacher-brief-card">
@@ -527,7 +533,7 @@ export default {
       const assessment = this.selectedAssessment
       if (!assessment || !this.isClassroomTask(assessment)) return false
       const state = this.getAssessmentState(assessment)
-      return !['submitted', 'late', 'graded', 'missing'].includes(state.key)
+      return !['submitted', 'late', 'graded', 'missing', 'locked'].includes(state.key)
     },
     canTurnIn() {
       return this.canEditSelectedActivity && !this.isTurningIn && !this.isUnsubmitting
@@ -761,6 +767,9 @@ export default {
           submissionDeadline: assessment.submissionDeadline || null,
           examDurationMinutes: Number(assessment.examDurationMinutes || 30),
           attachments: Array.isArray(assessment.attachments) ? assessment.attachments : [],
+          isLocked: assessment.isLocked === true,
+          lockReason: String(assessment.lockReason || ''),
+          prerequisite: assessment.prerequisite || null,
           linkedLesson
         }
       })
@@ -828,7 +837,7 @@ export default {
               support: submission.teacherFeedback || 'Your teacher requested changes. Update and resubmit your work.'
             }
           }
-          const isGraded = Boolean(submission.gradedAt || submission.gradeValue !== null || (Number(submission.totalPoints || 0) > 0 && submission.status === 'completed'))
+          const isGraded = Boolean(submission.gradedAt || submission.gradeValue !== null)
           if (isGraded) {
             const activityPoints = this.getActivityPointsValue(assessment)
             const gradeSupport = submission.gradeValue !== null
@@ -1237,6 +1246,15 @@ export default {
       } finally {
         this.isSavingDraft = false
       }
+
+      if (assessment.isLocked) {
+        return {
+          key: 'locked',
+          label: 'Locked',
+          tone: 'locked',
+          support: assessment.lockReason || 'Complete the required learning steps first.'
+        }
+      }
     },
     async unsubmitSelectedActivity() {
       const assessment = this.selectedAssessment
@@ -1270,12 +1288,13 @@ export default {
     },
     isAssessmentStartDisabled(assessment) {
       const state = this.getAssessmentState(assessment)
-      return ['completed', 'closed'].includes(state.key)
+      return ['completed', 'closed', 'locked'].includes(state.key)
     },
     getAssessmentActionLabel(assessment) {
       const state = this.getAssessmentState(assessment)
       if (state.key === 'completed') return 'Submitted / Completed'
       if (state.key === 'closed') return 'Deadline Closed'
+      if (state.key === 'locked') return 'Locked'
       return 'Start Assessment'
     },
     async fetchChallenges() {
@@ -1368,6 +1387,31 @@ export default {
 </script>
 
 <style scoped>
+.assessment-lock-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #f4d38a;
+  border-radius: 14px;
+  background: #fffbeb;
+  color: #78350f;
+}
+.assessment-lock-notice > span { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 11px; background: #fef3c7; }
+.assessment-lock-notice strong { display: block; font-size: 0.88rem; }
+.assessment-lock-notice p { margin: 0.15rem 0 0; color: #92400e; font-size: 0.76rem; }
+.assessment-lock-notice a { padding: 0.5rem 0.75rem; border-radius: 9px; background: #92400e; color: #fff; font-size: 0.75rem; font-weight: 700; text-decoration: none; }
+.activity-list-card.locked { border-style: dashed; background: #f8fafc; }
+.activity-list-card.locked .activity-card-arrow { color: #94a3b8; }
+.activity-status-pill.locked,
+.answer-status-pill.locked { background: #e2e8f0; color: #475569; }
+
+@media (max-width: 640px) {
+  .assessment-lock-notice { grid-template-columns: auto 1fr; }
+  .assessment-lock-notice a { grid-column: 1 / -1; text-align: center; }
+}
+
 .submission-result-card {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
