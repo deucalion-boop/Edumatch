@@ -246,7 +246,10 @@ export default {
       return `${configured}/api`
     },
     getAuthConfig() {
-      const token = localStorage.getItem('edumatch_auth_token') || ''
+      const token = this.authStore?.token
+        || localStorage.getItem('edumatch_auth_token')
+        || sessionStorage.getItem('edumatch_auth_token')
+        || ''
       return {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       }
