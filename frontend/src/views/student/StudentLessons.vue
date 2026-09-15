@@ -237,15 +237,23 @@
         </div>
 
         <div class="lesson-preview-body">
+          <div v-if="isLessonReaderLoading" class="lesson-preview-empty">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Opening lesson material...</span>
+          </div>
+          <div v-else-if="lessonReaderError" class="lesson-preview-empty lesson-preview-error">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>{{ lessonReaderError }}</span>
+          </div>
           <iframe
-            v-if="isPreviewPdf(previewAttachment)"
-            :src="previewAttachment.url"
+            v-else-if="isPreviewPdf(previewAttachment) && lessonReaderBlobUrl"
+            :src="lessonReaderBlobUrl"
             :title="previewAttachment.fileName || 'Attachment preview'"
             class="lesson-preview-frame"
           ></iframe>
           <img
-            v-else-if="isPreviewImage(previewAttachment)"
-            :src="previewAttachment.url"
+            v-else-if="isPreviewImage(previewAttachment) && lessonReaderBlobUrl"
+            :src="lessonReaderBlobUrl"
             :alt="previewAttachment.fileName || 'Attachment preview'"
             class="lesson-preview-image"
           >
@@ -325,6 +333,10 @@ export default {
       lessonPage: 1,
       previewAttachment: null,
       activeReadingLessonId: null,
+      lessonReaderBlobUrl: '',
+      lessonReaderError: '',
+      isLessonReaderLoading: false,
+      lessonReaderRequestId: 0,
       isLessonsLoading: false,
       lessonsEmptyMessage: 'No lessons available yet. Join a class and wait for teacher approval to access lesson materials.',
       hasLessonsLoadError: false,
@@ -528,6 +540,20 @@ export default {
     isPreviewImage(attachment) {
       return String(attachment?.fileType || '').trim().toLowerCase().startsWith('image/')
     },
+    resolveLessonReaderUrl(value) {
+      const raw = String(value || '').trim()
+      if (!raw) return ''
+      try {
+        const parsed = new URL(raw, window.location.origin)
+        const localHosts = new Set(['localhost', '127.0.0.1', '::1'])
+        if (localHosts.has(parsed.hostname) && localHosts.has(window.location.hostname) && parsed.pathname.startsWith('/api/')) {
+          return `${parsed.pathname}${parsed.search}${parsed.hash}`
+        }
+      } catch (_error) {
+        return raw
+      }
+      return raw
+    },
     selectLesson(lesson) {
       if (!lesson?.id) return
       this.selectedLessonId = this.selectedLessonId === lesson.id ? null : lesson.id
@@ -596,16 +622,44 @@ export default {
         this.isSavingLessonProgress = false
       }
     },
-    openLessonReader(lesson, attachment) {
+    async openLessonReader(lesson, attachment) {
       if (!lesson?.id || !attachment?.url) return
+      await this.closeAttachmentPreview()
+      const requestId = ++this.lessonReaderRequestId
       this.activeReadingLessonId = lesson.id
       this.previewAttachment = attachment
-      this.startLessonEngagement(lesson)
+      this.lessonReaderError = ''
+      this.isLessonReaderLoading = true
+      try {
+        const response = await axios.get(this.resolveLessonReaderUrl(attachment.url), {
+          ...this.getAuthConfig(),
+          responseType: 'blob'
+        })
+        const contentType = String(response.headers?.['content-type'] || attachment.fileType || 'application/pdf')
+        const blobUrl = window.URL.createObjectURL(new Blob([response.data], { type: contentType }))
+        if (requestId !== this.lessonReaderRequestId || !this.previewAttachment) {
+          window.URL.revokeObjectURL(blobUrl)
+          return
+        }
+        this.lessonReaderBlobUrl = blobUrl
+        this.startLessonEngagement(lesson)
+      } catch (error) {
+        if (requestId === this.lessonReaderRequestId) {
+          this.lessonReaderError = error.response?.data?.message || 'The lesson material could not be opened. Please try again.'
+        }
+      } finally {
+        if (requestId === this.lessonReaderRequestId) this.isLessonReaderLoading = false
+      }
     },
     async closeAttachmentPreview() {
+      this.lessonReaderRequestId += 1
       const lesson = this.readingLesson
       const pendingSeconds = this.activeLessonSeconds
       this.stopLessonEngagement()
+      if (this.lessonReaderBlobUrl) window.URL.revokeObjectURL(this.lessonReaderBlobUrl)
+      this.lessonReaderBlobUrl = ''
+      this.lessonReaderError = ''
+      this.isLessonReaderLoading = false
       this.previewAttachment = null
       this.activeReadingLessonId = null
       if (lesson?.id && lesson.progress?.status !== 'completed' && pendingSeconds > 0) {
@@ -1485,6 +1539,8 @@ export default {
   color: #64748b;
   font-weight: 700;
 }
+
+.lesson-preview-error { color: #b42318; text-align: center; }
 
 .lesson-preview-footer {
   display: flex;
