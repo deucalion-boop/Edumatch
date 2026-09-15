@@ -186,6 +186,25 @@
                 <section class="brief-section brief-section-card is-materials">
                   <div class="brief-section-head">
                     <div class="brief-section-title">
+                      <span class="brief-section-icon"><i class="fas fa-book-open"></i></span>
+                      <div><h5>Related Lesson</h5><span>Optional lesson material connected to this activity.</span></div>
+                    </div>
+                  </div>
+                  <div class="brief-section-body">
+                    <div v-if="getRelatedLessonMaterials(selectedAssessment).length" class="material-list">
+                      <button v-for="material in getRelatedLessonMaterials(selectedAssessment)" :key="material.id || material.fileName" type="button" class="material-card" @click="openMaterial(material.url || material.downloadUrl)">
+                        <span class="material-icon"><i class="fas fa-book-open"></i></span>
+                        <span class="material-copy"><strong>{{ selectedAssessment.linkedLesson?.title || selectedAssessment.lessonTitle }}</strong><small>{{ material.fileName || 'Lesson material' }}</small></span>
+                        <span class="material-open"><i class="fas fa-arrow-up-right-from-square"></i></span>
+                      </button>
+                    </div>
+                    <p v-else class="empty-copy">No related lesson was linked to this activity.</p>
+                  </div>
+                </section>
+
+                <section class="brief-section brief-section-card is-materials">
+                  <div class="brief-section-head">
+                    <div class="brief-section-title">
                       <span class="brief-section-icon">
                         <i class="fas fa-paperclip"></i>
                       </span>
@@ -197,9 +216,9 @@
                   </div>
 
                   <div class="brief-section-body">
-                    <div v-if="getTeacherMaterials(selectedAssessment).length" class="material-list">
+                    <div v-if="getActivityAttachments(selectedAssessment).length" class="material-list">
                       <button
-                        v-for="material in getTeacherMaterials(selectedAssessment)"
+                        v-for="material in getActivityAttachments(selectedAssessment)"
                         :key="material.id || material.fileName"
                         type="button"
                         class="material-card"
@@ -244,7 +263,13 @@
                   </div>
                 </div>
 
-                <label class="answer-field">
+                  <section v-if="getActivitySubmission(selectedAssessment)?.gradedAt || getActivitySubmission(selectedAssessment)?.teacherFeedback" class="submission-result-card">
+                    <div><span>Grading status</span><strong>{{ getAssessmentState(selectedAssessment).label }}</strong></div>
+                    <div v-if="getActivitySubmission(selectedAssessment)?.gradeValue !== null"><span>Final score</span><strong>{{ getActivitySubmission(selectedAssessment).gradeValue }}/{{ selectedAssessment.activityPoints }}</strong></div>
+                    <p v-if="getActivitySubmission(selectedAssessment)?.teacherFeedback"><strong>Teacher feedback</strong>{{ getActivitySubmission(selectedAssessment).teacherFeedback }}</p>
+                  </section>
+
+                  <label v-if="isSubmissionTypeAllowed(selectedAssessment, 'written')" class="answer-field">
                   <span>Written response</span>
                   <textarea
                     v-model="activityForm.responseText"
@@ -255,7 +280,7 @@
                   ></textarea>
                 </label>
 
-                <div class="answer-field">
+                <div v-if="isSubmissionTypeAllowed(selectedAssessment, 'link')" class="answer-field">
                   <span>Add a link (optional)</span>
                   <div class="link-composer">
                     <input
@@ -289,7 +314,7 @@
                   </div>
                 </div>
 
-                <div class="answer-field">
+                <div v-if="isSubmissionTypeAllowed(selectedAssessment, 'file')" class="answer-field">
                   <div class="answer-field-head">
                     <span>Upload files (optional)</span>
                     <small>Up to 5 files, 10MB each</small>
@@ -343,6 +368,10 @@
                 </div>
 
                 <div class="answer-actions">
+                  <button type="button" class="ghost-btn" :disabled="!canEditSelectedActivity || isSavingDraft" @click="saveActivityDraft">
+                    <i class="fas" :class="isSavingDraft ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"></i>
+                    {{ isSavingDraft ? 'Saving...' : 'Save Draft' }}
+                  </button>
                   <button
                     type="button"
                     class="primary-btn"
@@ -486,6 +515,7 @@ export default {
         attachments: []
       },
       isTurningIn: false,
+      isSavingDraft: false,
       isUnsubmitting: false
     }
   },
@@ -497,7 +527,7 @@ export default {
       const assessment = this.selectedAssessment
       if (!assessment || !this.isClassroomTask(assessment)) return false
       const state = this.getAssessmentState(assessment)
-      return !['submitted', 'graded', 'missing'].includes(state.key)
+      return !['submitted', 'late', 'graded', 'missing'].includes(state.key)
     },
     canTurnIn() {
       return this.canEditSelectedActivity && !this.isTurningIn && !this.isUnsubmitting
@@ -506,7 +536,10 @@ export default {
       const assessment = this.selectedAssessment
       if (!assessment || !this.isClassroomTask(assessment)) return false
       const state = this.getAssessmentState(assessment)
-      return state.key === 'submitted' && !this.isDeadlinePassed(assessment.submissionDeadline) && !this.isUnsubmitting
+      return ['submitted', 'late'].includes(state.key)
+        && assessment.allowResubmission !== false
+        && (!this.isDeadlinePassed(assessment.submissionDeadline) || assessment.allowLateSubmissions === true)
+        && !this.isUnsubmitting
     }
   },
   watch: {
@@ -621,7 +654,7 @@ export default {
       return 'This activity was posted directly to your class. Review the notes below before you start working.'
     },
     getTeacherMaterialCountLabel(assessment) {
-      const count = this.getTeacherMaterials(assessment).length
+      const count = this.getActivityAttachments(assessment).length
       if (count <= 0) return 'No teacher files attached yet.'
       if (count === 1) return '1 teacher file attached.'
       return `${count} teacher files attached.`
@@ -718,6 +751,11 @@ export default {
           activityPoints: Number.isInteger(Number(assessment.activityPoints)) && Number(assessment.activityPoints) >= 1
             ? Number(assessment.activityPoints)
             : null,
+          allowedSubmissionTypes: Array.isArray(assessment.allowedSubmissionTypes) && assessment.allowedSubmissionTypes.length
+            ? assessment.allowedSubmissionTypes
+            : ['written', 'link', 'file'],
+          allowResubmission: assessment.allowResubmission !== false,
+          allowLateSubmissions: assessment.allowLateSubmissions === true,
           challengeDescription: String(assessment.challengeDescription || '').trim(),
           createdAt: assessment.createdAt,
           submissionDeadline: assessment.submissionDeadline || null,
@@ -758,8 +796,16 @@ export default {
     },
     getActivitySubmissionHelpCopy(assessment) {
       const points = this.getActivityPointsValue(assessment)
-      const turnInCopy = 'Turn in at least one: a written response, a link, or a file.'
+      const labels = { written: 'written response', link: 'external link', file: 'file upload' }
+      const methods = (assessment?.allowedSubmissionTypes || ['written', 'link', 'file']).map((type) => labels[type]).filter(Boolean).join(', ')
+      const turnInCopy = `Submit at least one allowed item: ${methods}.`
       return points ? `This activity is worth ${points} points. ${turnInCopy}` : turnInCopy
+    },
+    isSubmissionTypeAllowed(assessment, type) {
+      const allowed = Array.isArray(assessment?.allowedSubmissionTypes) && assessment.allowedSubmissionTypes.length
+        ? assessment.allowedSubmissionTypes
+        : ['written', 'link', 'file']
+      return allowed.includes(type)
     },
     getAssessmentState(assessment) {
       if (!assessment) {
@@ -774,6 +820,14 @@ export default {
       if (this.isClassroomTask(assessment)) {
         const submission = this.getActivitySubmission(assessment)
         if (submission) {
+          if (String(submission.status || '').trim().toLowerCase() === 'returned_for_revision') {
+            return {
+              key: 'revision',
+              label: 'Returned for Revision',
+              tone: 'revision',
+              support: submission.teacherFeedback || 'Your teacher requested changes. Update and resubmit your work.'
+            }
+          }
           const isGraded = Boolean(submission.gradedAt || submission.gradeValue !== null || (Number(submission.totalPoints || 0) > 0 && submission.status === 'completed'))
           if (isGraded) {
             const activityPoints = this.getActivityPointsValue(assessment)
@@ -789,6 +843,14 @@ export default {
           }
 
           if (String(submission.status || '').trim().toLowerCase() === 'completed') {
+            if (submission.isLate) {
+              return {
+                key: 'late',
+                label: 'Late',
+                tone: 'late',
+                support: submission.submittedAt ? `Submitted late on ${this.formatDateTime(submission.submittedAt)}.` : 'This work was submitted after the deadline.'
+              }
+            }
             return {
               key: 'submitted',
               label: 'Submitted',
@@ -808,9 +870,17 @@ export default {
         }
 
         if (this.isDeadlinePassed(assessment.submissionDeadline)) {
+          if (assessment.allowLateSubmissions === true) {
+            return {
+              key: 'assigned',
+              label: 'Not Submitted',
+              tone: 'assigned',
+              support: 'The deadline passed, but your teacher is accepting late submissions.'
+            }
+          }
           return {
             key: 'missing',
-            label: 'Missing',
+            label: 'Not Submitted',
             tone: 'missing',
             support: 'The due date has passed and no submission was turned in.'
           }
@@ -818,7 +888,7 @@ export default {
 
         return {
           key: 'assigned',
-          label: 'Ready To Work',
+          label: 'Not Submitted',
           tone: 'assigned',
           support: assessment.submissionDeadline ? this.getRemainingLabel(assessment.submissionDeadline) : 'No due date was posted for this activity.'
         }
@@ -891,6 +961,20 @@ export default {
 
       return []
     },
+    getActivityAttachments(assessment) {
+      return Array.isArray(assessment?.attachments) ? assessment.attachments : []
+    },
+    getRelatedLessonMaterials(assessment) {
+      const lesson = assessment?.linkedLesson || null
+      const lessonAttachments = Array.isArray(lesson?.attachments) ? lesson.attachments : []
+      if (lessonAttachments.length) return lessonAttachments
+      return lesson?.pdfPath ? [{
+        id: `${lesson.id || assessment.id}-pdf`,
+        fileName: lesson.pdfOriginalName || 'Lesson material',
+        url: lesson.pdfPath,
+        canPreviewInline: true
+      }] : []
+    },
     getSelectedAssessmentGuideCopy(assessment) {
       if (!assessment) return 'Select a task from the list to open the full details.'
       if (this.isClassroomTask(assessment)) {
@@ -905,6 +989,8 @@ export default {
         not_started: 1,
         missing: 2,
         submitted: 3,
+        late: 3,
+        revision: 2,
         graded: 4,
         completed: 4,
         closed: 5,
@@ -1101,6 +1187,7 @@ export default {
     async turnInSelectedActivity() {
       const assessment = this.selectedAssessment
       if (!assessment || !this.isClassroomTask(assessment)) return
+      if (!window.confirm(`Turn in this activity${this.isDeadlinePassed(assessment.submissionDeadline) ? ' as a late submission' : ''}?`)) return
 
       this.isTurningIn = true
       this.clearNotice()
@@ -1127,9 +1214,34 @@ export default {
         this.isTurningIn = false
       }
     },
+    async saveActivityDraft() {
+      const assessment = this.selectedAssessment
+      if (!assessment || !this.isClassroomTask(assessment) || !this.canEditSelectedActivity) return
+      this.isSavingDraft = true
+      this.clearNotice()
+      try {
+        const response = await axios.post(
+          `${this.resolveApiBaseUrl()}/student/assessments/${assessment.id}/activity-response/draft`,
+          this.buildActivityFormData(),
+          this.getMultipartAuthConfig()
+        )
+        const submission = response.data?.submission || response.data?.data?.submission
+        if (submission?.assessmentId) {
+          this.activitySubmissionsByAssessmentId = { ...this.activitySubmissionsByAssessmentId, [submission.assessmentId]: submission }
+          this.refreshAssessmentsFromState()
+          this.syncActivityFormFromSelection()
+        }
+        this.setNotice('success', response.data?.message || 'Activity draft saved.')
+      } catch (error) {
+        this.setNotice('error', this.getAxiosErrorMessage(error, 'Failed to save activity draft.'))
+      } finally {
+        this.isSavingDraft = false
+      }
+    },
     async unsubmitSelectedActivity() {
       const assessment = this.selectedAssessment
       if (!assessment || !this.isClassroomTask(assessment)) return
+      if (!window.confirm('Unsubmit this activity so you can edit and submit it again?')) return
 
       this.isUnsubmitting = true
       this.clearNotice()
@@ -1256,6 +1368,22 @@ export default {
 </script>
 
 <style scoped>
+.submission-result-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  background: #eff6ff;
+}
+.submission-result-card div { display: grid; gap: 0.2rem; }
+.submission-result-card span { color: #64748b; font-size: 0.78rem; text-transform: uppercase; }
+.submission-result-card p { grid-column: 1 / -1; display: grid; gap: 0.35rem; margin: 0; color: #334155; }
+.activity-status-pill.late, .answer-status-pill.late { background: #fff7ed; color: #c2410c; }
+.activity-status-pill.revision, .answer-status-pill.revision { background: #fdf4ff; color: #a21caf; }
+@media (max-width: 620px) { .submission-result-card { grid-template-columns: 1fr; } }
 .student-activity-response-page {
   --workspace-border: #dbe4ef;
   --workspace-ink: #0f172a;

@@ -79,7 +79,7 @@ create table if not exists public.submissions (
   answers jsonb not null default '[]'::jsonb,
   score numeric not null default 0,
   total_points numeric not null default 0,
-  submitted_at timestamptz not null default now(),
+  submitted_at timestamptz default now(),
   started_at timestamptz,
   last_activity_at timestamptz,
   exam_duration_minutes integer not null default 30,
@@ -92,10 +92,12 @@ create table if not exists public.submissions (
   graded_at timestamptz,
   grade_value numeric,
   teacher_feedback text not null default '',
+  is_late boolean not null default false,
+  returned_at timestamptz,
   auto_submitted boolean not null default false,
   termination_reason text not null default '',
   status text not null default 'completed'
-    check (status in ('in_progress', 'completed', 'auto_submitted', 'terminated')),
+    check (status in ('in_progress', 'completed', 'auto_submitted', 'terminated', 'returned_for_revision')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (student_id, assessment_id)

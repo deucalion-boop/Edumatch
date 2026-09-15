@@ -50,6 +50,7 @@ const {
   notifyAssessmentAssigned,
   notifyLessonPublished,
   approvedStudentsForSubject,
+  createStudentNotifications,
   safelyRunNotificationTask,
 } = require('../services/studentNotificationService');
 const {
@@ -59,6 +60,7 @@ const {
   isSubjectAllowedForStrand,
   getSubjectCategory,
 } = require('../constants/strandSubjects');
+const { findActivitySubmissionById, updateActivityReview } = require('../services/supabaseActivityService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
@@ -98,6 +100,30 @@ function parseActivityPoints(value, fallback = null) {
     throw error;
   }
 
+  return normalized;
+}
+
+const ACTIVITY_SUBMISSION_TYPES = ['written', 'link', 'file'];
+
+function parseBooleanSetting(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (typeof value === 'boolean') return value;
+  return String(value).trim().toLowerCase() === 'true';
+}
+
+function parseActivitySubmissionTypes(value) {
+  let parsed = value;
+  if (typeof value === 'string') {
+    try { parsed = JSON.parse(value); } catch (_error) { parsed = value.split(','); }
+  }
+  const normalized = [...new Set((Array.isArray(parsed) ? parsed : [])
+    .map((item) => String(item || '').trim().toLowerCase())
+    .filter((item) => ACTIVITY_SUBMISSION_TYPES.includes(item)))];
+  if (normalized.length === 0) {
+    const error = new Error('Select at least one allowed activity submission type');
+    error.statusCode = 400;
+    throw error;
+  }
   return normalized;
 }
 
@@ -972,6 +998,11 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
     activityPoints: Number.isInteger(Number(assessment.activityPoints)) && Number(assessment.activityPoints) >= 1
       ? Number(assessment.activityPoints)
       : null,
+    allowedSubmissionTypes: Array.isArray(assessment.allowedSubmissionTypes)
+      ? assessment.allowedSubmissionTypes
+      : ['written', 'link', 'file'],
+    allowResubmission: assessment.allowResubmission !== false,
+    allowLateSubmissions: assessment.allowLateSubmissions === true,
     assessmentMode: String(assessment.assessmentMode || 'activity'),
     gradingPeriod: String(assessment.gradingPeriod || ''),
     countsTowardRecommendation: Boolean(assessment.countsTowardRecommendation),
@@ -1231,6 +1262,9 @@ const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
       difficulty: sourceAssessment.difficulty,
       numberOfItems: sourceAssessment.numberOfItems,
       activityPoints: sourceAssessment.activityPoints,
+      allowedSubmissionTypes: sourceAssessment.allowedSubmissionTypes,
+      allowResubmission: sourceAssessment.allowResubmission,
+      allowLateSubmissions: sourceAssessment.allowLateSubmissions,
       examDurationMinutes: sourceAssessment.examDurationMinutes,
       maxViolations: sourceAssessment.maxViolations,
       violationAction: sourceAssessment.violationAction,
@@ -1327,6 +1361,9 @@ const createAssessment = asyncHandler(async (req, res) => {
     deadline: deadlineRaw,
     deadlineAt: deadlineAtRaw,
     activityPoints: activityPointsRaw,
+    allowedSubmissionTypes: allowedSubmissionTypesRaw,
+    allowResubmission: allowResubmissionRaw,
+    allowLateSubmissions: allowLateSubmissionsRaw,
   } = req.body;
 
   const normalizedAssessmentMode = String(assessmentMode || 'activity').trim().toLowerCase() || 'activity';
@@ -1338,6 +1375,15 @@ const createAssessment = asyncHandler(async (req, res) => {
   const normalizedActivityPoints = isActivityAssessment
     ? parseActivityPoints(activityPointsRaw, 100)
     : null;
+  const allowedSubmissionTypes = isActivityAssessment
+    ? parseActivitySubmissionTypes(allowedSubmissionTypesRaw ?? ['written', 'link', 'file'])
+    : ['written', 'link', 'file'];
+  const allowResubmission = isActivityAssessment
+    ? parseBooleanSetting(allowResubmissionRaw, true)
+    : false;
+  const allowLateSubmissions = isActivityAssessment
+    ? parseBooleanSetting(allowLateSubmissionsRaw, false)
+    : false;
   const normalizedDifficulty = isActivityAssessment
     ? 'medium'
     : String(difficulty || '').trim();
@@ -1367,15 +1413,13 @@ const createAssessment = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
-  if (!hasLinkedLesson && normalizedSubjectId) {
-    selectedClass = {
-      _id: normalizedSubjectId,
-      id: normalizedSubjectId,
-      name: String(subject || req.user?.subject || '').trim(),
-      track: normalizeLessonStrand(req.body?.strand || req.user?.strand || 'GENERAL') || 'GENERAL',
-      code: '',
-      subjectCategory: String(subjectCategory || '').trim(),
-    };
+  if (normalizedSubjectId) {
+    selectedClass = await findTeacherSubjectRecord(req.user._id, normalizedSubjectId);
+    if (!selectedClass) {
+      const error = new Error('Selected class is not assigned to this teacher');
+      error.statusCode = 403;
+      throw error;
+    }
   }
   if (!hasLinkedLesson && !selectedClass) {
     const error = new Error('Select a linked lesson or class before creating this assessment');
@@ -1393,6 +1437,16 @@ const createAssessment = asyncHandler(async (req, res) => {
   }
   if (isActivityAssessment && !normalizedChallengeDescription) {
     const error = new Error('challengeDescription is required for activities');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (isActivityAssessment && !selectedClass) {
+    const error = new Error('Class and subject are required for activities');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (isActivityAssessment && lesson && String(lesson.subjectId || '') !== String(selectedClass._id || '')) {
+    const error = new Error('Related lesson must belong to the selected class and subject');
     error.statusCode = 400;
     throw error;
   }
@@ -1461,7 +1515,9 @@ const createAssessment = asyncHandler(async (req, res) => {
       gradingPeriod,
       assignmentScope,
     });
-    const subjectRecord = lesson
+    const subjectRecord = isActivityAssessment
+      ? selectedClass
+      : lesson
       ? {
         _id: lesson.subjectId,
         id: lesson.subjectId,
@@ -1509,6 +1565,9 @@ const createAssessment = asyncHandler(async (req, res) => {
       difficulty: normalizedDifficulty,
       numberOfItems: normalizedNumberOfItems,
       activityPoints: normalizedActivityPoints,
+      allowedSubmissionTypes,
+      allowResubmission,
+      allowLateSubmissions,
       examDurationMinutes,
       submissionDeadline: submissionDeadline || null,
       challengeDescription,
@@ -1893,7 +1952,7 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
       .map((attachment) => toSubmissionAttachmentResponse(attachment, req))
       .filter((attachment) => Boolean(attachment.fileName));
     const teacherFeedback = String(submission?.teacherFeedback || '').trim();
-    const isTeacherGraded = Boolean(submission?.gradedAt || submission?.gradeValue !== null || teacherFeedback);
+    const isTeacherGraded = Boolean(submission?.gradedAt || submission?.gradeValue != null);
 
     return {
       id: String(submission._id),
@@ -1937,6 +1996,8 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
       gradeValue: submission?.gradeValue ?? null,
       teacherFeedback,
       isTeacherGraded,
+      isLate: submission?.isLate === true,
+      returnedAt: submission?.returnedAt || null,
     };
   });
 
@@ -1953,6 +2014,110 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
   }
 
   return sendSuccess(res, 200, 'Student assessment results fetched successfully', { results });
+});
+
+const reviewActivitySubmission = asyncHandler(async (req, res) => {
+  const assessment = await findSupabaseAssessment(req.params.assessmentId, req.user._id);
+  if (!assessment || String(assessment.assessmentMode || '').trim().toLowerCase() !== 'activity') {
+    const error = new Error('Activity not found for this teacher');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const action = String(req.body?.action || 'grade').trim().toLowerCase();
+  if (!['grade', 'return_for_revision'].includes(action)) {
+    const error = new Error('Review action must be grade or return_for_revision');
+    error.statusCode = 400;
+    throw error;
+  }
+  const currentSubmission = await findActivitySubmissionById(req.params.submissionId, assessment._id);
+  if (!currentSubmission) {
+    const error = new Error('Student submission not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (String(currentSubmission.status || '') !== 'completed') {
+    const error = new Error('Only submitted activity work can be graded or returned');
+    error.statusCode = 409;
+    throw error;
+  }
+  const teacherFeedback = String(req.body?.teacherFeedback || '').trim();
+  const now = new Date().toISOString();
+  let values;
+
+  if (action === 'return_for_revision') {
+    if (assessment.allowResubmission === false) {
+      const error = new Error('Enable student editing/resubmission before returning work for revision');
+      error.statusCode = 409;
+      throw error;
+    }
+    if (!teacherFeedback) {
+      const error = new Error('Teacher feedback is required when returning work for revision');
+      error.statusCode = 400;
+      throw error;
+    }
+    values = {
+      score: 0,
+      totalPoints: 0,
+      gradeValue: null,
+      teacherFeedback,
+      gradedAt: null,
+      returnedAt: now,
+      status: 'returned_for_revision',
+    };
+  } else {
+    const activityPoints = Number(assessment.activityPoints || 0);
+    const gradeValue = Number(req.body?.gradeValue);
+    if (!Number.isFinite(gradeValue) || gradeValue < 0 || gradeValue > activityPoints) {
+      const error = new Error(`Grade must be from 0 to ${activityPoints}`);
+      error.statusCode = 400;
+      throw error;
+    }
+    values = {
+      score: gradeValue,
+      totalPoints: activityPoints,
+      gradeValue,
+      teacherFeedback,
+      gradedAt: now,
+      returnedAt: null,
+      status: 'completed',
+    };
+  }
+
+  const submission = await updateActivityReview({
+    submissionId: req.params.submissionId,
+    assessmentId: assessment._id,
+    values,
+  });
+  if (!submission) {
+    const error = new Error('Student submission not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await safelyRunNotificationTask('activity review', () => createStudentNotifications({
+    recipientIds: [submission.studentId],
+    sender: req.user,
+    type: action === 'return_for_revision' ? 'teacher_feedback' : 'grade_released',
+    title: action === 'return_for_revision' ? 'Activity returned for revision' : 'Activity grade published',
+    subject: assessment.title,
+    preview: action === 'return_for_revision'
+      ? teacherFeedback
+      : `Your score is ${values.gradeValue} out of ${assessment.activityPoints}.`,
+    eventKey: `activity-review:${submission.id}:${action}:${now}`,
+    meta: {
+      route: `/student/activities?assessmentId=${encodeURIComponent(String(assessment._id))}`,
+      entityType: 'submission',
+      entityId: submission.id,
+    },
+  }));
+
+  return sendSuccess(
+    res,
+    200,
+    action === 'return_for_revision' ? 'Activity returned for revision' : 'Activity grade published',
+    { submission }
+  );
 });
 
 const getEnrollmentRequests = asyncHandler(async (req, res) => {
@@ -2228,6 +2393,7 @@ module.exports = {
   getTeacherSubjectStudents,
   removeTeacherSubjectStudent,
   getTeacherStudentAssessmentResults,
+  reviewActivitySubmission,
   getEnrollmentRequests,
   approveEnrollmentRequest,
   rejectEnrollmentRequest,

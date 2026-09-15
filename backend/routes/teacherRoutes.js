@@ -24,6 +24,7 @@ const {
   getTeacherSubjectStudents,
   removeTeacherSubjectStudent,
   getTeacherStudentAssessmentResults,
+  reviewActivitySubmission,
   getEnrollmentRequests,
   approveEnrollmentRequest,
   rejectEnrollmentRequest,
@@ -79,6 +80,7 @@ router.post('/students', inviteLimiter, createStudentInvite);
 router.get('/subjects/:subjectId/students', getTeacherSubjectStudents);
 router.delete('/subjects/:subjectId/students/:studentId', removeTeacherSubjectStudent);
 router.get('/students/assessment-results', getTeacherStudentAssessmentResults);
+router.patch('/activities/:assessmentId/submissions/:submissionId/review', reviewActivitySubmission);
 router.get('/enrollment-requests', getEnrollmentRequests);
 router.patch('/enrollment-requests/:studentId/accept', approveEnrollmentRequest);
 router.patch('/enrollment-requests/:studentId/reject', rejectEnrollmentRequest);

@@ -1371,6 +1371,28 @@
                     <span class="activity-result-section-label">Teacher Feedback</span>
                     <p>{{ result.teacherFeedback }}</p>
                   </section>
+
+                  <section class="activity-grading-panel">
+                    <div class="activity-grading-fields">
+                      <label>
+                        <span>Grade (0–{{ selectedAssessmentForResults.activityPoints }})</span>
+                        <input v-model.number="result.reviewGrade" type="number" min="0" :max="selectedAssessmentForResults.activityPoints" :disabled="result.isReviewing" />
+                      </label>
+                      <label class="feedback-field">
+                        <span>Teacher feedback</span>
+                        <textarea v-model.trim="result.reviewFeedback" rows="3" placeholder="Add constructive feedback for the student..." :disabled="result.isReviewing"></textarea>
+                      </label>
+                    </div>
+                    <p v-if="result.reviewError" class="field-error" role="alert">{{ result.reviewError }}</p>
+                    <div class="activity-grading-actions">
+                      <button type="button" class="btn btn-outline" :disabled="result.isReviewing || selectedAssessmentForResults.allowResubmission === false" @click="reviewActivityResult(result, 'return_for_revision')">
+                        <i class="fas fa-rotate-left"></i> Return for Revision
+                      </button>
+                      <button type="button" class="btn btn-primary" :disabled="result.isReviewing" @click="reviewActivityResult(result, 'grade')">
+                        <i class="fas" :class="result.isReviewing ? 'fa-spinner fa-spin' : 'fa-check'"></i> {{ result.isReviewing ? 'Saving...' : 'Save & Publish Grade' }}
+                      </button>
+                    </div>
+                  </section>
                 </div>
               </article>
             </div>
@@ -2844,6 +2866,12 @@ const fetchRecords = async () => {
       gradeValue: result.gradeValue ?? null,
       teacherFeedback: String(result.teacherFeedback || '').trim(),
       isTeacherGraded: Boolean(result.isTeacherGraded),
+      isLate: result.isLate === true,
+      returnedAt: result.returnedAt || null,
+      reviewGrade: result.gradeValue ?? '',
+      reviewFeedback: String(result.teacherFeedback || '').trim(),
+      reviewError: '',
+      isReviewing: false,
       violationCount: Number(result.violationCount || 0),
       terminationReason: String(result.terminationReason || '').trim(),
       activityLog: Array.isArray(result.activityLog) ? result.activityLog : [],
@@ -2935,8 +2963,7 @@ const getAssessmentResults = (assessmentId) => assessmentResultsByAssessmentId.v
 const isTeacherReviewedResult = (result) => Boolean(
   result?.isTeacherGraded
   || result?.gradedAt
-  || result?.gradeValue !== null
-  || String(result?.teacherFeedback || '').trim()
+  || result?.gradeValue != null
 )
 
 const getAssessmentResultsSectionTitle = (assessment) => isActivityAssessment(assessment)
@@ -3023,10 +3050,53 @@ const selectedAssessmentResultSummary = computed(() => {
 })
 
 const getActivityReviewLabel = (result) => {
+  if (String(result?.status || '') === 'returned_for_revision') return 'Returned for Revision'
+  if (result?.isLate && !isTeacherReviewedResult(result)) return 'Late'
   if (result?.gradeValue !== null && result?.gradeValue !== undefined) return `Teacher graded: ${result.gradeValue}`
   if (String(result?.teacherFeedback || '').trim()) return 'Teacher feedback added'
   if (result?.gradedAt) return 'Teacher graded'
   return 'Submitted'
+}
+
+const reviewActivityResult = async (result, action) => {
+  const assessment = selectedAssessmentForResults.value
+  if (!assessment?.id || !result?.id || result.isReviewing) return
+  const isReturn = action === 'return_for_revision'
+  const maxPoints = Number(assessment.activityPoints || 0)
+  const gradeValue = Number(result.reviewGrade)
+  result.reviewError = ''
+
+  if (isReturn && !String(result.reviewFeedback || '').trim()) {
+    result.reviewError = 'Add feedback explaining what the student should revise.'
+    return
+  }
+  if (!isReturn && (!Number.isFinite(gradeValue) || gradeValue < 0 || gradeValue > maxPoints)) {
+    result.reviewError = `Enter a grade from 0 to ${maxPoints}.`
+    return
+  }
+  const confirmation = isReturn
+    ? 'Return this submission to the student for revision?'
+    : `Publish a grade of ${gradeValue}/${maxPoints} to this student?`
+  if (!window.confirm(confirmation)) return
+
+  result.isReviewing = true
+  try {
+    const response = await axios.patch(
+      `${resolveApiBaseUrl()}/teacher/activities/${encodeURIComponent(assessment.id)}/submissions/${encodeURIComponent(result.id)}/review`,
+      {
+        action,
+        gradeValue: isReturn ? undefined : gradeValue,
+        teacherFeedback: String(result.reviewFeedback || '').trim(),
+      },
+      getAuthConfig()
+    )
+    assessmentActionMessage.value = response.data?.message || (isReturn ? 'Activity returned for revision.' : 'Activity grade published.')
+    await fetchRecords()
+  } catch (error) {
+    result.reviewError = error.response?.data?.message || error.message || 'Failed to save this activity review.'
+  } finally {
+    result.isReviewing = false
+  }
 }
 
 const getActivityResponsePreview = (result) => {
@@ -3816,6 +3886,18 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.activity-grading-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+.activity-grading-fields { display: grid; grid-template-columns: minmax(140px, .35fr) 1fr; gap: 1rem; }
+.activity-grading-fields label { display: grid; gap: .4rem; color: #334155; font-weight: 700; }
+.activity-grading-fields input, .activity-grading-fields textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: .75rem; background: #fff; color: #0f172a; }
+.activity-grading-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+@media (max-width: 680px) { .activity-grading-fields { grid-template-columns: 1fr; } .activity-grading-actions .btn { width: 100%; } }
 .teacher-page-tour-layer {
   position: fixed;
   inset: 0;

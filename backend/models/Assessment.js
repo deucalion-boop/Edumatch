@@ -140,6 +140,19 @@ const assessmentSchema = new mongoose.Schema(
       min: 1,
       max: 100,
     },
+    allowedSubmissionTypes: {
+      type: [String],
+      enum: ['written', 'link', 'file'],
+      default: ['written', 'link', 'file'],
+    },
+    allowResubmission: {
+      type: Boolean,
+      default: true,
+    },
+    allowLateSubmissions: {
+      type: Boolean,
+      default: false,
+    },
     examDurationMinutes: {
       type: Number,
       required: true,

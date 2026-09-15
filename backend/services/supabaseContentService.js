@@ -64,6 +64,11 @@ function mapAssessment(row) {
     difficulty: row.difficulty,
     numberOfItems: Number(row.number_of_items || 0),
     activityPoints: row.activity_points === null ? null : Number(row.activity_points),
+    allowedSubmissionTypes: Array.isArray(row.allowed_submission_types)
+      ? row.allowed_submission_types
+      : ['written', 'link', 'file'],
+    allowResubmission: row.allow_resubmission !== false,
+    allowLateSubmissions: row.allow_late_submissions === true,
     examDurationMinutes: Number(row.exam_duration_minutes || 30),
     maxViolations: Number(row.max_violations || 3),
     violationAction: row.violation_action || 'auto-submit',
@@ -133,6 +138,11 @@ async function createSupabaseAssessment(payload) {
     difficulty: String(payload.difficulty || 'medium').trim(),
     number_of_items: Number(payload.numberOfItems || 0),
     activity_points: payload.activityPoints ?? null,
+    allowed_submission_types: Array.isArray(payload.allowedSubmissionTypes)
+      ? payload.allowedSubmissionTypes
+      : ['written', 'link', 'file'],
+    allow_resubmission: payload.allowResubmission !== false,
+    allow_late_submissions: payload.allowLateSubmissions === true,
     exam_duration_minutes: Number(payload.examDurationMinutes || 30),
     max_violations: Number(payload.maxViolations || 3),
     violation_action: String(payload.violationAction || 'auto-submit'),

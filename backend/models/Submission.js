@@ -186,6 +186,14 @@ const submissionSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    isLate: {
+      type: Boolean,
+      default: false,
+    },
+    returnedAt: {
+      type: Date,
+      default: null,
+    },
     autoSubmitted: {
       type: Boolean,
       default: false,
@@ -197,7 +205,7 @@ const submissionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['in_progress', 'completed', 'auto_submitted', 'terminated'],
+      enum: ['in_progress', 'completed', 'auto_submitted', 'terminated', 'returned_for_revision'],
       default: 'completed',
       required: true,
     },

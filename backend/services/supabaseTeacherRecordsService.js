@@ -56,7 +56,7 @@ async function teacherResultData(teacherId, subjectFilter = '', studentFilter = 
     .map(row => [row.id, { ...row, lessonId: lessons.find(lesson => lesson.id === row.lessonId) || null }]));
   if (!assessmentsById.size) return { assessmentsById, submissions: [] };
   const submissions = (await readProfileRows('submissions', 'assessment_id', [...assessmentsById.keys()]))
-    .filter(row => ['completed', 'auto_submitted', 'terminated'].includes(row.status) && students.some(student => student.id === row.studentId))
+    .filter(row => ['completed', 'auto_submitted', 'terminated', 'returned_for_revision'].includes(row.status) && students.some(student => student.id === row.studentId))
     .map(row => ({ ...row, studentId: students.find(student => student.id === row.studentId) }));
   return { assessmentsById, submissions };
 }

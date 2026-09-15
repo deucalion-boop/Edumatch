@@ -352,20 +352,20 @@
                   </div>
                 </div>
                 <div class="form-group">
-                  <label for="challengeTitle">{{ isActivityAssessment ? "Activity Title (Optional)" : "Assessment Title" }}</label>
+                  <label for="challengeTitle">{{ isActivityAssessment ? "Activity Title" : "Assessment Title" }} <span class="required-indicator">*</span></label>
                   <input
                     id="challengeTitle"
                     v-model.trim="challengeForm.challengeTitle"
                     type="text"
                     :placeholder="isActivityAssessment ? 'e.g., Reflection Activity 1' : 'e.g., Module 1 Quiz'"
-                    :required="!isActivityAssessment"
+                    required
                     :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.challengeTitle)"
                     aria-describedby="challengeTitle-error"
                   />
                   <p v-if="challengeStepAttempted[1] && challengeStepErrors.challengeTitle" id="challengeTitle-error" class="field-error" role="alert">{{ challengeStepErrors.challengeTitle }}</p>
                 </div>
 
-                <div class="form-group">
+                <div v-if="!isActivityAssessment" class="form-group">
                   <label for="linkedLesson">Linked Lesson</label>
                   <select id="linkedLesson" v-model="challengeForm.linkedLesson" :required="!challengeForm.subjectId" :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.linkedLesson)" aria-describedby="challengeContext-error">
                     <option value="">Select lesson</option>
@@ -375,7 +375,7 @@
                   </select>
                 </div>
 
-                <div class="form-group">
+                <div v-if="!isActivityAssessment" class="form-group">
                   <label for="challengeClass">Class to Publish</label>
                   <select id="challengeClass" v-model="challengeForm.subjectId" :required="!challengeForm.linkedLesson" :disabled="teacherClasses.length === 0" :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.linkedLesson)" aria-describedby="challengeContext-error">
                     <option value="">
@@ -389,6 +389,35 @@
                   </select>
                   <p class="helper-copy">Choose the class that should receive this assessment when you are not linking a lesson.</p>
                 </div>
+
+                <template v-if="isActivityAssessment">
+                  <div class="form-group">
+                    <label for="activityClass">Class <span class="required-indicator">*</span></label>
+                    <select id="activityClass" v-model="challengeForm.subjectId" required :disabled="teacherClasses.length === 0" :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.subjectId)">
+                      <option value="">{{ teacherClasses.length ? 'Select class' : 'Create a class first in Students' }}</option>
+                      <option v-for="classItem in teacherClasses" :key="classItem.id" :value="classItem.id">{{ classItem.label }}</option>
+                    </select>
+                    <p v-if="challengeStepAttempted[1] && challengeStepErrors.subjectId" class="field-error" role="alert">{{ challengeStepErrors.subjectId }}</p>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="activitySubject">Subject <span class="required-indicator">*</span></label>
+                    <select id="activitySubject" v-model="challengeForm.subject" required :disabled="!challengeForm.subjectId || Boolean(teacherSubject)" :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.challengeSubject)">
+                      <option value="">{{ challengeForm.subjectId ? 'Select subject' : 'Select class first' }}</option>
+                      <option v-for="subjectName in activitySubjectOptions" :key="subjectName" :value="subjectName">{{ subjectName }}</option>
+                    </select>
+                    <p v-if="challengeStepAttempted[1] && challengeStepErrors.challengeSubject" class="field-error" role="alert">{{ challengeStepErrors.challengeSubject }}</p>
+                  </div>
+
+                  <div class="form-group full">
+                    <label for="relatedLesson">Related Lesson <span class="optional-label">Optional</span></label>
+                    <select id="relatedLesson" v-model="challengeForm.linkedLesson" :disabled="!challengeForm.subjectId || filteredActivityLessons.length === 0">
+                      <option value="">{{ filteredActivityLessons.length ? 'No related lesson' : 'No lessons for this class and subject' }}</option>
+                      <option v-for="lesson in filteredActivityLessons" :key="lesson.id" :value="lesson.id">{{ lesson.title }}</option>
+                    </select>
+                    <p class="helper-copy">Related lesson material stays separate from activity files and never changes the selected class.</p>
+                  </div>
+                </template>
 
                 <p v-if="challengeStepAttempted[1] && challengeStepErrors.linkedLesson" id="challengeContext-error" class="field-error full" role="alert">{{ challengeStepErrors.linkedLesson }}</p>
                 </template>
@@ -489,7 +518,7 @@
                   <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeExamType" id="challengeExamType-error" class="field-error" role="alert">{{ challengeStepErrors.challengeExamType }}</p>
                 </div>
 
-                <div class="form-group">
+                <div v-if="!isActivityAssessment" class="form-group">
                   <label for="challengeSubject">Subject</label>
                   <select id="challengeSubject" v-model="challengeForm.subject" required :disabled="Boolean(teacherSubject) || !selectedAssessmentStrand" :aria-invalid="Boolean(challengeStepAttempted[3] && challengeStepErrors.challengeSubject)" aria-describedby="challengeSubject-error">
                     <option value="">{{ !selectedAssessmentStrand ? 'Select lesson or class first' : (teacherSubject ? 'Assigned subject' : 'Select subject') }}</option>
@@ -575,6 +604,21 @@
                     :aria-invalid="Boolean(challengeStepAttempted[4] && challengeStepErrors.challengeDescription)"
                     aria-describedby="challengeDescription-error"
                   />
+                </div>
+
+                <div v-if="isActivityAssessment" class="form-group full">
+                  <label>Submission Settings</label>
+                  <p class="helper-copy">Choose at least one way students may submit their work.</p>
+                  <div class="activity-setting-grid">
+                    <label class="activity-setting-option"><input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="written" /><span><strong>Written response</strong><small>Type directly in EduMatch</small></span></label>
+                    <label class="activity-setting-option"><input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="link" /><span><strong>External link</strong><small>Drive, Canva, or another URL</small></span></label>
+                    <label class="activity-setting-option"><input v-model="challengeForm.allowedSubmissionTypes" type="checkbox" value="file" /><span><strong>File uploads</strong><small>Documents, images, PDFs, or ZIP</small></span></label>
+                  </div>
+                  <p v-if="challengeStepAttempted[4] && challengeStepErrors.allowedSubmissionTypes" class="field-error" role="alert">{{ challengeStepErrors.allowedSubmissionTypes }}</p>
+                  <div class="activity-policy-grid">
+                    <label class="activity-toggle"><input v-model="challengeForm.allowResubmission" type="checkbox" /><span><strong>Allow editing and resubmission</strong><small>Students can revise submitted work before the deadline.</small></span></label>
+                    <label class="activity-toggle"><input v-model="challengeForm.allowLateSubmissions" type="checkbox" /><span><strong>Accept late submissions</strong><small>Late work is accepted and clearly marked Late.</small></span></label>
+                  </div>
                 </div>
 
                 <div v-if="isActivityAssessment" class="form-group full">
@@ -1284,6 +1328,9 @@ const challengeForm = reactive({
   challengeDifficulty: "",
   challengePoints: 100,
   activityPoints: 100,
+  allowedSubmissionTypes: ["written", "link", "file"],
+  allowResubmission: true,
+  allowLateSubmissions: false,
   deadlineDate: "",
   deadlineTime: "",
   challengeDescription: "",
@@ -1443,10 +1490,13 @@ const getChallengeStepErrors = (step) => {
   const errors = {};
   const hasContext = Boolean(String(challengeForm.linkedLesson || "").trim() || String(challengeForm.subjectId || "").trim());
   if (step === 1) {
-    if (!isActivityAssessment.value && !String(challengeForm.challengeTitle || "").trim()) {
-      errors.challengeTitle = "Enter an assessment title.";
+    if (!String(challengeForm.challengeTitle || "").trim()) {
+      errors.challengeTitle = isActivityAssessment.value ? "Enter an activity title." : "Enter an assessment title.";
     }
-    if (!hasContext) errors.linkedLesson = "Select a linked lesson or a class to publish to.";
+    if (isActivityAssessment.value) {
+      if (!String(challengeForm.subjectId || "").trim()) errors.subjectId = "Select the class for this activity.";
+      if (!String(challengeForm.subject || "").trim()) errors.challengeSubject = "Select the subject for this activity.";
+    } else if (!hasContext) errors.linkedLesson = "Select a linked lesson or a class to publish to.";
   }
   if (step === 2) {
     if (!String(challengeForm.assessmentMode || "").trim()) errors.challengeAssessmentMode = "Select a type.";
@@ -1479,6 +1529,9 @@ const getChallengeStepErrors = (step) => {
   }
   if (step === 4 && !String(challengeForm.challengeDescription || "").trim()) {
     errors.challengeDescription = isActivityAssessment.value ? "Enter clear activity instructions." : "Enter assessment instructions.";
+  }
+  if (step === 4 && isActivityAssessment.value && challengeForm.allowedSubmissionTypes.length === 0) {
+    errors.allowedSubmissionTypes = "Select at least one submission method.";
   }
   return errors;
 };
@@ -1525,8 +1578,10 @@ const canPublishActivity = computed(() => {
     || ""
   ).trim();
   return Boolean(
-    (String(challengeForm.linkedLesson || "").trim() || selectedClass?.id)
+    selectedClass?.id
     && resolvedSubject
+    && String(challengeForm.challengeTitle || "").trim()
+    && challengeForm.allowedSubmissionTypes.length > 0
     && Number.isInteger(activityPoints)
     && activityPoints >= 1
     && activityPoints <= 100
@@ -1564,6 +1619,9 @@ function resetAssessmentBuilder() {
   challengeForm.challengeDifficulty = "";
   challengeForm.challengePoints = 100;
   challengeForm.activityPoints = 100;
+  challengeForm.allowedSubmissionTypes = ["written", "link", "file"];
+  challengeForm.allowResubmission = true;
+  challengeForm.allowLateSubmissions = false;
   challengeForm.deadlineDate = "";
   challengeForm.deadlineTime = "";
   challengeForm.challengeDescription = "";
@@ -1804,7 +1862,7 @@ async function publishActivity() {
     const selectedClass = getSelectedChallengeClass();
     const subjectId = String(selectedClass?.id || "").trim();
     const challengeDescription = String(challengeForm.challengeDescription || "").trim();
-    const title = String(challengeForm.challengeTitle || "").trim() || buildActivityTitleFromInstructions(challengeDescription);
+    const title = String(challengeForm.challengeTitle || "").trim();
     const subject = String(
       selectedLinkedLesson.value?.subject
       || selectedClass?.name
@@ -1817,8 +1875,8 @@ async function publishActivity() {
     const activityPoints = Number(challengeForm.activityPoints);
     const attachments = Array.isArray(challengeForm.activityAttachments) ? challengeForm.activityAttachments : [];
 
-    if ((!lessonId && !subjectId) || !subject || !challengeDescription || !submissionDeadline) {
-      throw new Error("Select a linked lesson or class, then complete the activity instructions and deadline before publishing.");
+    if (!subjectId || !subject || !title || !challengeDescription || !submissionDeadline) {
+      throw new Error("Select the class and subject, then complete the activity title, instructions, and deadline.");
     }
 
     if (!Number.isInteger(activityPoints) || activityPoints < 1 || activityPoints > 100) {
@@ -1842,18 +1900,17 @@ async function publishActivity() {
     flash.value = null;
 
     const formData = new FormData();
-    if (lessonId) {
-      formData.append("lessonId", lessonId);
-    }
-    if (!lessonId && subjectId) {
-      formData.append("subjectId", subjectId);
-    }
+    if (lessonId) formData.append("lessonId", lessonId);
+    formData.append("subjectId", subjectId);
     formData.append("title", title);
     formData.append("subject", subject);
     formData.append("assessmentMode", "activity");
     formData.append("gradingPeriod", gradingPeriod);
     formData.append("assignmentScope", "handled_class");
     formData.append("activityPoints", String(activityPoints));
+    formData.append("allowedSubmissionTypes", JSON.stringify(challengeForm.allowedSubmissionTypes));
+    formData.append("allowResubmission", String(challengeForm.allowResubmission));
+    formData.append("allowLateSubmissions", String(challengeForm.allowLateSubmissions));
     formData.append("submissionDeadline", submissionDeadline);
     formData.append("challengeDescription", challengeDescription);
     attachments.forEach((file) => formData.append("attachments", file));
@@ -1909,6 +1966,7 @@ async function loadLessonOptions() {
       track: lesson.track || "",
       strand: lesson.strand || lesson.track || "",
       subject: lesson.subject || "",
+      subjectId: String(lesson.subjectId || ""),
       className: lesson.className || "",
       classLabel: formatClassLabel({
         name: lesson.subject || "",
@@ -1937,6 +1995,20 @@ const selectedAssessmentStrand = computed(() => normalizeStrand(
 const assessmentSubjectOptions = computed(() => {
   if (teacherSubject.value) return [teacherSubject.value];
   return getSubjectsForStrand(selectedAssessmentStrand.value);
+});
+const activitySubjectOptions = computed(() => {
+  const selectedClass = selectedChallengeClass.value;
+  const values = [selectedClass?.name, teacherSubject.value].map((value) => String(value || "").trim()).filter(Boolean);
+  return [...new Set(values)];
+});
+const filteredActivityLessons = computed(() => {
+  const selectedClassId = String(challengeForm.subjectId || "").trim();
+  const selectedSubject = String(challengeForm.subject || "").trim();
+  if (!selectedClassId || !selectedSubject) return [];
+  return lessonOptions.value.filter((lesson) => (
+    String(lesson.subjectId || "") === selectedClassId
+    && String(lesson.subject || "") === selectedSubject
+  ));
 });
 const selectedAssessmentLessonSummary = computed(() => {
   if (!selectedLinkedLesson.value) {
@@ -2242,6 +2314,7 @@ watch(
 watch(
   () => challengeForm.linkedLesson,
   () => {
+    if (isActivityAssessment.value) return;
     const allowedSubjects = assessmentSubjectOptions.value;
     if (!allowedSubjects.includes(challengeForm.subject)) {
       challengeForm.subject = selectedLinkedLesson.value?.subject && allowedSubjects.includes(selectedLinkedLesson.value.subject)
@@ -2259,8 +2332,15 @@ watch(
 watch(
   () => challengeForm.subjectId,
   () => {
-    if (String(challengeForm.linkedLesson || "").trim()) return;
     const selectedClass = selectedChallengeClass.value;
+    if (isActivityAssessment.value) {
+      challengeForm.subject = selectedClass?.name || teacherSubject.value || "";
+      if (!filteredActivityLessons.value.some((lesson) => lesson.id === challengeForm.linkedLesson)) {
+        challengeForm.linkedLesson = "";
+      }
+      return;
+    }
+    if (String(challengeForm.linkedLesson || "").trim()) return;
     if (selectedClass?.name) {
       challengeForm.subject = selectedClass.name;
       return;
@@ -2323,6 +2403,43 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.activity-setting-grid,
+.activity-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.activity-policy-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.activity-setting-option,
+.activity-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.activity-setting-option:has(input:checked),
+.activity-toggle:has(input:checked) {
+  border-color: #0f766e;
+  background: #f0fdfa;
+}
+
+.activity-setting-option span,
+.activity-toggle span { display: grid; gap: 0.2rem; }
+.activity-setting-option small,
+.activity-toggle small { color: #64748b; font-weight: 500; }
+
+@media (max-width: 720px) {
+  .activity-setting-grid,
+  .activity-policy-grid { grid-template-columns: 1fr; }
+}
 .teacher-page-tour-layer {
   position: fixed;
   inset: 0;

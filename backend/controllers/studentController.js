@@ -1,5 +1,6 @@
 const { publishedLessons, availableAssessments, studentSubmissions } = require('../services/supabaseStudentDashboardService');
 const path = require('path');
+const crypto = require('crypto');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
@@ -28,6 +29,11 @@ const {
   notifyExamIncident,
   notifyTeacherSubmission,
 } = require('../services/teacherNotificationService');
+const {
+  findActivitySubmission,
+  listStudentActivitySubmissions,
+  saveActivitySubmission,
+} = require('../services/supabaseActivityService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
@@ -408,6 +414,8 @@ function toActivitySubmissionResponse(submission, req) {
     gradedAt: submission?.gradedAt || null,
     gradeValue: submission?.gradeValue ?? null,
     teacherFeedback: String(submission?.teacherFeedback || '').trim(),
+    isLate: submission?.isLate === true,
+    returnedAt: submission?.returnedAt || null,
     score,
     totalPoints,
     percentage,
@@ -471,7 +479,14 @@ async function assertStudentAssessmentAccess(studentId, assessmentId) {
 }
 
 async function assertStudentActivityAssessmentAccess(studentId, assessmentId) {
-  const assessment = await assertStudentAssessmentAccess(studentId, assessmentId);
+  const approvedSubjectIds = await getStudentApprovedSubjectIds(studentId);
+  const assessments = await availableAssessments(studentId, approvedSubjectIds);
+  const assessment = assessments.find((item) => String(item?._id || '') === String(assessmentId || ''));
+  if (!assessment) {
+    const error = new Error('This activity is not assigned to your class');
+    error.statusCode = 403;
+    throw error;
+  }
   if (String(assessment?.assessmentMode || 'activity').trim().toLowerCase() !== 'activity') {
     const error = new Error('This response workspace is only available for activity-type tasks');
     error.statusCode = 400;
@@ -494,6 +509,7 @@ async function uploadStudentSubmissionAttachments(files, studentId, assessmentId
   })));
 
   return uploads.map((file) => ({
+    _id: crypto.randomUUID().replace(/-/g, ''),
     originalName: file.originalName,
     storedPath: file.storedPath,
     mimeType: file.mimeType,
@@ -511,10 +527,26 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
   const hasRetainedAttachmentIds = Object.prototype.hasOwnProperty.call(req.body || {}, 'retainedAttachmentIds');
   const uploadedFiles = Array.isArray(req.files?.attachments) ? req.files.attachments : [];
 
-  let submission = await Submission.findOne({
-    studentId: req.user._id,
-    assessmentId: assessment._id,
-  });
+  let submission = await findActivitySubmission(req.user._id, assessment._id);
+
+  const allowedTypes = new Set(Array.isArray(assessment.allowedSubmissionTypes)
+    ? assessment.allowedSubmissionTypes
+    : ['written', 'link', 'file']);
+  if (responseText && !allowedTypes.has('written')) {
+    const error = new Error('Written responses are not enabled for this activity');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (linkAttachments.length > 0 && !allowedTypes.has('link')) {
+    const error = new Error('External links are not enabled for this activity');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (uploadedFiles.length > 0 && !allowedTypes.has('file')) {
+    const error = new Error('File uploads are not enabled for this activity');
+    error.statusCode = 400;
+    throw error;
+  }
 
   const currentStatus = String(submission?.status || '').trim().toLowerCase();
   if (submission && ['auto_submitted', 'terminated'].includes(currentStatus)) {
@@ -523,7 +555,12 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
     throw error;
   }
 
-  if (submission && currentStatus === 'completed') {
+  if (submission && currentStatus === 'completed' && submission.gradedAt) {
+    const error = new Error('Graded work can only be changed after the teacher returns it for revision.');
+    error.statusCode = 409;
+    throw error;
+  }
+  if (submission && currentStatus === 'completed' && assessment.allowResubmission === false) {
     const error = new Error(finalize
       ? 'Activity already submitted.'
       : 'Activity already submitted. Unsubmit it first before editing.');
@@ -531,7 +568,7 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
     throw error;
   }
 
-  if (isAssessmentDeadlinePassed(assessment)) {
+  if (isAssessmentDeadlinePassed(assessment) && assessment.allowLateSubmissions !== true) {
     const error = new Error('Deadline has passed. Submission is closed.');
     error.statusCode = 403;
     error.details = {
@@ -541,7 +578,7 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
   }
 
   if (!submission) {
-    submission = new Submission({
+    submission = {
       studentId: req.user._id,
       assessmentId: assessment._id,
       status: 'in_progress',
@@ -551,7 +588,10 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
       startedAt: null,
       lastActivityAt: now,
       examDurationMinutes: parseExamDurationMinutes(assessment.examDurationMinutes),
-    });
+      activityLog: [],
+      attachments: [],
+      linkAttachments: [],
+    };
   }
 
   const existingAttachments = Array.isArray(submission.attachments) ? submission.attachments : [];
@@ -581,6 +621,13 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
   submission.draftSavedAt = now;
   submission.status = finalize ? 'completed' : 'in_progress';
   submission.submittedAt = finalize ? now : null;
+  submission.isLate = finalize && isAssessmentDeadlinePassed(assessment);
+  submission.gradeValue = null;
+  submission.gradedAt = null;
+  submission.returnedAt = null;
+  submission.teacherFeedback = '';
+  submission.score = 0;
+  submission.totalPoints = 0;
   submission.autoSubmitted = false;
   submission.terminationReason = '';
   submission.activityLog = [
@@ -597,9 +644,7 @@ async function saveActivitySubmissionState({ req, assessment, finalize = false }
     },
   ];
 
-  await submission.save();
-  await submission.populate('assessmentId', 'title assessmentMode lessonId submissionDeadline');
-  return submission;
+  return saveActivitySubmission(submission);
 }
 
 function assertGradeTenStudentAccess(req) {
@@ -793,6 +838,11 @@ const getAvailableAssessments = asyncHandler(async (_req, res) => {
       activityPoints: Number.isInteger(Number(item.activityPoints)) && Number(item.activityPoints) >= 1
         ? Number(item.activityPoints)
         : null,
+      allowedSubmissionTypes: Array.isArray(item.allowedSubmissionTypes)
+        ? item.allowedSubmissionTypes
+        : ['written', 'link', 'file'],
+      allowResubmission: item.allowResubmission !== false,
+      allowLateSubmissions: item.allowLateSubmissions === true,
       assessmentMode: String(item.assessmentMode || 'activity'),
       gradingPeriod: String(item.gradingPeriod || ''),
       countsTowardRecommendation: Boolean(item.countsTowardRecommendation),
@@ -1370,11 +1420,13 @@ const getMySubmissions = asyncHandler(async (req, res) => {
 
 const getMyActivitySubmissions = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
-  const submissions = await studentSubmissions(req.user._id, false);
-
-  const activitySubmissions = submissions.filter((submission) => (
-    String(submission?.assessmentId?.assessmentMode || '').trim().toLowerCase() === 'activity'
-  ));
+  const approvedSubjectIds = await getStudentApprovedSubjectIds(req.user._id);
+  const activityAssessments = (await availableAssessments(req.user._id, approvedSubjectIds))
+    .filter((assessment) => String(assessment?.assessmentMode || '').trim().toLowerCase() === 'activity');
+  const assessmentById = new Map(activityAssessments.map((assessment) => [String(assessment._id), assessment]));
+  const activitySubmissions = (await listStudentActivitySubmissions(req.user._id))
+    .filter((submission) => assessmentById.has(String(submission.assessmentId)))
+    .map((submission) => ({ ...submission, assessmentId: assessmentById.get(String(submission.assessmentId)) }));
 
   return sendSuccess(res, 200, 'Activity submissions fetched successfully', {
     submissions: activitySubmissions.map((submission) => toActivitySubmissionResponse(submission, req)),
@@ -1391,7 +1443,7 @@ const saveActivityResponseDraft = asyncHandler(async (req, res) => {
   });
 
   return sendSuccess(res, 200, 'Activity draft saved successfully', {
-    submission: toActivitySubmissionResponse(submission, req),
+    submission: toActivitySubmissionResponse({ ...submission, assessmentId: assessment }, req),
   });
 });
 
@@ -1415,24 +1467,25 @@ const turnInActivityResponse = asyncHandler(async (req, res) => {
   }));
 
   return sendSuccess(res, 201, 'Activity submitted successfully', {
-    submission: toActivitySubmissionResponse(submission, req),
+    submission: toActivitySubmissionResponse({ ...submission, assessmentId: assessment }, req),
   });
 });
 
 const unsubmitActivityResponse = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
   const assessment = await assertStudentActivityAssessmentAccess(req.user._id, req.params.id);
-  if (isAssessmentDeadlinePassed(assessment)) {
+  if (assessment.allowResubmission === false) {
+    const error = new Error('The teacher has disabled editing and resubmission for this activity.');
+    error.statusCode = 403;
+    throw error;
+  }
+  if (isAssessmentDeadlinePassed(assessment) && assessment.allowLateSubmissions !== true) {
     const error = new Error('Deadline has passed. Unsubmit is no longer allowed.');
     error.statusCode = 403;
     throw error;
   }
 
-  const submission = await Submission.findOne({
-    studentId: req.user._id,
-    assessmentId: assessment._id,
-  })
-    .populate('assessmentId', 'title assessmentMode lessonId submissionDeadline');
+  const submission = await findActivitySubmission(req.user._id, assessment._id);
 
   if (!submission || String(submission.status || '').trim().toLowerCase() !== 'completed') {
     const error = new Error('Only submitted activity work can be unsubmitted.');
@@ -1459,10 +1512,10 @@ const unsubmitActivityResponse = asyncHandler(async (req, res) => {
       occurredAt: now,
     },
   ];
-  await submission.save();
+  const savedSubmission = await saveActivitySubmission(submission);
 
   return sendSuccess(res, 200, 'Activity unsubmitted successfully', {
-    submission: toActivitySubmissionResponse(submission, req),
+    submission: toActivitySubmissionResponse({ ...savedSubmission, assessmentId: assessment }, req),
   });
 });
 
