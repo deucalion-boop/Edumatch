@@ -117,16 +117,19 @@ function hydrateChallenge(data) {
     _id: data.id, userId: data.user_id, challengeTokenHash: data.challenge_token_hash,
     otpHash: data.otp_hash, remember: data.remember === true,
     failedAttempts: Number(data.failed_attempts || 0), expiresAt: data.expires_at,
+    createdAt: data.created_at,
     consumedAt: data.consumed_at || null, ipAddress: data.ip_address, userAgent: data.user_agent,
   };
   Object.defineProperty(challenge, 'save', { enumerable: false, value: () => saveChallenge(challenge) });
   return challenge;
 }
 
-async function consumeOpenChallenges(userId) {
+async function consumeOpenChallenges(userId, exceptTokenHash = '') {
   const client = getSupabaseStorageClient();
-  const { error } = await client.from('otp_challenges').update({ consumed_at: new Date().toISOString() })
+  let query = client.from('otp_challenges').update({ consumed_at: new Date().toISOString() })
     .eq('user_id', String(userId)).is('consumed_at', null);
+  if (exceptTokenHash) query = query.neq('challenge_token_hash', exceptTokenHash);
+  const { error } = await query;
   if (error) throw normalizeError(error, 'Failed to expire OTP challenges');
 }
 
@@ -147,6 +150,14 @@ async function findActiveChallenge(tokenHash) {
   const { data, error } = await client.from('otp_challenges').select('*')
     .eq('challenge_token_hash', tokenHash).is('consumed_at', null)
     .gt('expires_at', new Date().toISOString()).limit(1).maybeSingle();
+  if (error) throw normalizeError(error, 'Failed to read OTP challenge');
+  return hydrateChallenge(data);
+}
+
+async function findOpenChallenge(tokenHash) {
+  const client = getSupabaseStorageClient();
+  const { data, error } = await client.from('otp_challenges').select('*')
+    .eq('challenge_token_hash', tokenHash).is('consumed_at', null).limit(1).maybeSingle();
   if (error) throw normalizeError(error, 'Failed to read OTP challenge');
   return hydrateChallenge(data);
 }
@@ -268,7 +279,7 @@ async function listLoginAttempts({ search = '', outcome = '', role = '', page = 
 }
 
 module.exports = {
-  consumeOpenChallenges, createChallenge, createSession, deleteChallenge, findActiveChallenge,
+  consumeOpenChallenges, createChallenge, createSession, deleteChallenge, findActiveChallenge, findOpenChallenge,
   findActiveSession, listActiveSessions, listLoginAttempts, recordLoginAttempt, revokeSession,
   revokeNonAdminSessions, revokeUserSessions, saveChallenge, sessionExists, touchSession,
 };

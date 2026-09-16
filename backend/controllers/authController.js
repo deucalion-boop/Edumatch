@@ -19,6 +19,7 @@ const {
   createSession,
   deleteChallenge,
   findActiveChallenge,
+  findOpenChallenge,
   recordLoginAttempt: persistLoginAttempt,
   revokeUserSessions,
   sessionExists,
@@ -31,6 +32,7 @@ const DEFAULT_ACCESS_TOKEN_TTL = '1d';
 const DEFAULT_REMEMBER_ME_TOKEN_TTL = '30d';
 const LOGIN_OTP_TTL_MINUTES = 2;
 const LOGIN_OTP_MAX_ATTEMPTS = 5;
+const LOGIN_OTP_RESEND_COOLDOWN_SECONDS = 30;
 
 async function createSessionAndSignToken(user, req, remember = false) {
   const rememberSession = remember === true;
@@ -89,7 +91,6 @@ async function issueLoginOtp(user, req, remember) {
   const challengeTokenHash = crypto.createHash('sha256').update(challengeToken).digest('hex');
   const expiresAt = new Date(Date.now() + LOGIN_OTP_TTL_MINUTES * 60 * 1000);
 
-  await consumeOpenChallenges(user._id);
   await createChallenge({
     userId: user._id,
     challengeTokenHash,
@@ -112,7 +113,12 @@ async function issueLoginOtp(user, req, remember) {
     error.statusCode = 502;
     throw error;
   }
-  return { challengeToken, expiresAt };
+  await consumeOpenChallenges(user._id, challengeTokenHash);
+  return {
+    challengeToken,
+    expiresAt,
+    resendAvailableAt: new Date(Date.now() + LOGIN_OTP_RESEND_COOLDOWN_SECONDS * 1000),
+  };
 }
 
 function buildLoginUser(user, req) {
@@ -393,6 +399,51 @@ const login = asyncHandler(async (req, res) => {
     requiresOtp: true,
     challengeToken: challenge.challengeToken,
     expiresAt: challenge.expiresAt,
+    resendAvailableAt: challenge.resendAvailableAt,
+    deliveryHint: maskEmail(user.email),
+  });
+});
+
+const resendLoginOtp = asyncHandler(async (req, res) => {
+  const challengeToken = String(req.body?.challengeToken || '').trim();
+  if (!/^[a-f0-9]{64}$/.test(challengeToken)) {
+    const error = new Error('Verification challenge is invalid');
+    error.statusCode = 400;
+    throw error;
+  }
+  const challengeTokenHash = crypto.createHash('sha256').update(challengeToken).digest('hex');
+  const previousChallenge = await findOpenChallenge(challengeTokenHash);
+  if (!previousChallenge || Number(previousChallenge.failedAttempts || 0) >= LOGIN_OTP_MAX_ATTEMPTS) {
+    const error = new Error('Verification challenge is invalid. Sign in again to request a new code.');
+    error.statusCode = 400;
+    throw error;
+  }
+  const resendAvailableAt = new Date(previousChallenge.createdAt).getTime()
+    + LOGIN_OTP_RESEND_COOLDOWN_SECONDS * 1000;
+  if (Date.now() < resendAvailableAt) {
+    const error = new Error('Please wait before requesting another code.');
+    error.statusCode = 429;
+    throw error;
+  }
+  const user = await findSupabaseAccount('id', previousChallenge.userId);
+  if (!user || user.status !== 'active') {
+    const error = new Error('Account is no longer available');
+    error.statusCode = 403;
+    throw error;
+  }
+  assertGmailEmail(user.email);
+  const { maintenanceModeEnabled, maintenanceMessage } = (await getAppSettings()).maintenance;
+  if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
+    const error = new Error(maintenanceMessage);
+    error.statusCode = 503;
+    throw error;
+  }
+  const challenge = await issueLoginOtp(user, req, previousChallenge.remember === true);
+  return sendSuccess(res, 202, 'New verification code sent', {
+    requiresOtp: true,
+    challengeToken: challenge.challengeToken,
+    expiresAt: challenge.expiresAt,
+    resendAvailableAt: challenge.resendAvailableAt,
     deliveryHint: maskEmail(user.email),
   });
 });
@@ -679,6 +730,7 @@ const completePasswordReset = asyncHandler(async (req, res) => {
 module.exports = {
   login,
   verifyLoginOtp,
+  resendLoginOtp,
   syncPresence,
   validateInvite,
   completeInvite,

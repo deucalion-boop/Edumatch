@@ -3,6 +3,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const {
   login,
   verifyLoginOtp,
+  resendLoginOtp,
   syncPresence,
   validateInvite,
   completeInvite,
@@ -18,6 +19,7 @@ const router = express.Router();
 
 router.post('/login', loginLimiter, login);
 router.post('/login/verify-otp', loginLimiter, verifyLoginOtp);
+router.post('/login/resend-otp', loginLimiter, resendLoginOtp);
 router.post('/presence', authMiddleware, syncPresence);
 router.post('/change-password', authMiddleware, changePassword);
 router.get('/invite/:token', inviteLimiter, validateInvite);

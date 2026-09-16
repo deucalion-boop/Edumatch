@@ -1,5 +1,5 @@
 <template>
-  <main class="premium-dashboard">
+  <main class="premium-dashboard" :class="{ 'premium-dashboard--pathway': showRecommendationsPanel }">
     <template v-if="!hasFocusedDashboardSection">
       <section class="premium-hero" aria-labelledby="student-welcome-title">
         <div class="premium-hero__content">
@@ -2383,6 +2383,10 @@ export default {
   font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
+.premium-dashboard--pathway {
+  background: transparent;
+}
+
 .premium-dashboard *,
 .premium-dashboard *::before,
 .premium-dashboard *::after {
@@ -4395,12 +4399,10 @@ export default {
   margin: 0 auto;
   padding: clamp(1.25rem, 2.2vw, 1.75rem);
   overflow: hidden;
-  border: 1px solid rgba(79, 125, 58, 0.16);
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at 95% 0%, rgba(220, 234, 211, 0.72), transparent 24rem),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 244, 0.96));
-  box-shadow: 0 24px 60px rgba(30, 67, 7, 0.11);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   animation: grades-fade-up 420ms ease both;
 }
 

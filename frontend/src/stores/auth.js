@@ -313,6 +313,7 @@ export function useAuthStore() {
           challengeToken: responseData.challengeToken,
           deliveryHint: responseData.deliveryHint || '',
           expiresAt: responseData.expiresAt || null,
+          resendAvailableAt: responseData.resendAvailableAt || null,
         }
       }
       const normalizedRole = String(responseData.user?.role || '').toLowerCase().trim()
@@ -376,6 +377,25 @@ export function useAuthStore() {
       return { redirectPath: responseData.redirectPath || dashboardPathByRole(normalizedRole), role: normalizedRole }
     } catch (error) {
       state.error = error.response?.data?.message || error.message || 'Unable to verify login'
+      throw new Error(state.error)
+    }
+  }
+
+  const resendLoginOtp = async (challengeToken) => {
+    clearAlerts()
+    try {
+      const response = await axios.post(`${resolveApiBaseUrl()}/auth/login/resend-otp`, { challengeToken })
+      const data = response.data || {}
+      if (!data.success || !data.challengeToken) throw new Error('Unable to resend verification code')
+      state.message = 'A new verification code was sent to your email.'
+      return {
+        challengeToken: data.challengeToken,
+        deliveryHint: data.deliveryHint || '',
+        expiresAt: data.expiresAt || null,
+        resendAvailableAt: data.resendAvailableAt || null,
+      }
+    } catch (error) {
+      state.error = error.response?.data?.message || error.message || 'Unable to resend verification code'
       throw new Error(state.error)
     }
   }
@@ -571,6 +591,7 @@ export function useAuthStore() {
     logout,
     login,
     verifyLoginOtp,
+    resendLoginOtp,
     googleLogin,
     clearAlerts,
     consumeMessage,

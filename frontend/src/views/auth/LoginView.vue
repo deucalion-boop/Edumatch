@@ -109,7 +109,7 @@
                 Enter the 6-digit one-time password sent to {{ otpDeliveryHint || 'your registered email address' }}.
               </p>
               <p class="auth-form-helper" :class="{ 'otp-expired': otpSecondsRemaining === 0 }">
-                {{ otpSecondsRemaining > 0 ? `OTP expires in ${otpSecondsRemaining}s` : 'OTP expired. Return to sign in to request a new code.' }}
+                {{ otpSecondsRemaining > 0 ? `OTP expires in ${otpSecondsRemaining}s` : 'OTP expired. Request a new code below.' }}
               </p>
               <div class="auth-form-input-wrapper has-icon">
                 <i class="auth-form-icon fas fa-shield-halved"></i>
@@ -125,6 +125,14 @@
                 />
               </div>
               <div class="validation-message">{{ validation.otp }}</div>
+              <button
+                type="button"
+                class="otp-resend-button"
+                :disabled="isLoading || isResendingOtp || otpResendSecondsRemaining > 0"
+                @click="handleResendOtp"
+              >
+                {{ isResendingOtp ? 'Sending...' : otpResendSecondsRemaining > 0 ? `Resend OTP in ${otpResendSecondsRemaining}s` : 'Resend OTP' }}
+              </button>
             </div>
 
             <div class="auth-form-group captcha-group">
@@ -302,6 +310,8 @@ export default {
     const otpChallengeToken = ref('')
     const otpDeliveryHint = ref('')
     const otpSecondsRemaining = ref(0)
+    const otpResendSecondsRemaining = ref(0)
+    const isResendingOtp = ref(false)
     let otpCountdownTimerId = null
     
     const showPassword = ref(false)
@@ -457,18 +467,22 @@ export default {
       otpCountdownTimerId = null
     }
 
-    const startOtpCountdown = (expiresAt) => {
+    const startOtpCountdown = (expiresAt, resendAvailableAt) => {
       stopOtpCountdown()
       const expiryTime = new Date(expiresAt || Date.now() + 120000).getTime()
+      const resendTime = new Date(resendAvailableAt || Date.now() + 30000).getTime()
       const updateCountdown = () => {
         otpSecondsRemaining.value = Math.max(0, Math.ceil((expiryTime - Date.now()) / 1000))
+        otpResendSecondsRemaining.value = Math.max(0, Math.ceil((resendTime - Date.now()) / 1000))
         if (otpSecondsRemaining.value === 0) {
-          stopOtpCountdown()
-          validation.otp = 'OTP expired. Return to sign in to request a new code.'
+          validation.otp = 'OTP expired. Request a new code below.'
         }
+        if (otpSecondsRemaining.value === 0 && otpResendSecondsRemaining.value === 0) stopOtpCountdown()
       }
       updateCountdown()
-      if (otpSecondsRemaining.value > 0) otpCountdownTimerId = window.setInterval(updateCountdown, 1000)
+      if (otpSecondsRemaining.value > 0 || otpResendSecondsRemaining.value > 0) {
+        otpCountdownTimerId = window.setInterval(updateCountdown, 1000)
+      }
     }
     
     // Form submission
@@ -492,7 +506,7 @@ export default {
         return
       }
       if (otpRequired.value && otpSecondsRemaining.value === 0) {
-        validation.otp = 'OTP expired. Return to sign in to request a new code.'
+        validation.otp = 'OTP expired. Request a new code below.'
         return
       }
       
@@ -520,7 +534,7 @@ export default {
           otpChallengeToken.value = result.challengeToken
           otpDeliveryHint.value = result.deliveryHint || ''
           form.otpCode = ''
-          startOtpCountdown(result.expiresAt)
+          startOtpCountdown(result.expiresAt, result.resendAvailableAt)
           resetCaptcha()
           return
         }
@@ -535,11 +549,29 @@ export default {
       }
     }
 
+    const handleResendOtp = async () => {
+      if (!otpChallengeToken.value || isLoading.value || isResendingOtp.value || otpResendSecondsRemaining.value > 0) return
+      isResendingOtp.value = true
+      try {
+        const result = await authStore.resendLoginOtp(otpChallengeToken.value)
+        otpChallengeToken.value = result.challengeToken
+        otpDeliveryHint.value = result.deliveryHint
+        form.otpCode = ''
+        validation.otp = ''
+        startOtpCountdown(result.expiresAt, result.resendAvailableAt)
+      } catch (_error) {
+        // The auth store displays the server error.
+      } finally {
+        isResendingOtp.value = false
+      }
+    }
+
     const backToCredentials = () => {
       otpRequired.value = false
       otpChallengeToken.value = ''
       otpDeliveryHint.value = ''
       otpSecondsRemaining.value = 0
+      otpResendSecondsRemaining.value = 0
       stopOtpCountdown()
       form.otpCode = ''
       form.password = ''
@@ -637,6 +669,8 @@ export default {
       otpRequired,
       otpDeliveryHint,
       otpSecondsRemaining,
+      otpResendSecondsRemaining,
+      isResendingOtp,
       invite,
       inviteForm,
       recaptchaContainer,
@@ -652,6 +686,7 @@ export default {
       clearValidation,
       togglePasswordVisibility,
       handleSubmit,
+      handleResendOtp,
       backToCredentials,
       handleInviteSubmit
     }
@@ -716,6 +751,26 @@ export default {
 .auth-form-helper.otp-expired {
   color: #b91c1c;
   font-weight: 600;
+}
+
+.otp-resend-button {
+  margin-top: 0.65rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #9a3412;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.otp-resend-button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.otp-resend-button:disabled {
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
 .remember-me input[type='checkbox'] {

@@ -214,7 +214,12 @@ function loginFixture(t, settingsValue = {}) {
     comparePassword: async (password) => password === 'correct-password',
     save: async () => { events.push(['save']); },
   };
-  const challenge = { userId: user._id, otpHash: 'test-otp-hash', remember: false, failedAttempts: 0, save: async () => {} };
+  const challenge = {
+    userId: user._id, otpHash: 'test-otp-hash', remember: false, failedAttempts: 0,
+    createdAt: new Date(Date.now() - 60000).toISOString(),
+    expiresAt: new Date(Date.now() - 1000).toISOString(),
+    save: async () => {},
+  };
   const controller = loadModule('controllers/authController.js', {
     '../services/supabaseSettingsService': settings.service,
     '../services/supabaseAccountService': {
@@ -228,6 +233,7 @@ function loginFixture(t, settingsValue = {}) {
       createChallenge: async (payload) => { events.push(['otp', payload]); },
       recordLoginAttempt: async (payload) => { events.push(['attempt', payload]); },
       findActiveChallenge: async () => challenge,
+      findOpenChallenge: async () => challenge,
     },
     '../services/gmailService': { sendEmailViaGmail: async () => { events.push(['email']); return { sent: true }; } },
     '../utils/fileStorage': { resolveStoredFileUrl: (_req, url) => url },
@@ -237,8 +243,32 @@ function loginFixture(t, settingsValue = {}) {
     body: { username: 'student', password, captchaToken: 'verified-test-captcha' },
     headers: {}, ip: '127.0.0.1',
   });
-  return { ...settings, controller, events, user, request };
+  return { ...settings, controller, events, user, challenge, request };
 }
+
+test('an expired login OTP can be resent after cooldown without creating a session', async (t) => {
+  const fixture = loginFixture(t);
+  const result = await callController(fixture.controller.resendLoginOtp, {
+    ...fixture.request(), body: { challengeToken: 'a'.repeat(64) },
+  });
+  assert.equal(result.failure, undefined);
+  assert.equal(result.response.statusCode, 202);
+  assert.equal(result.response.body.requiresOtp, true);
+  assert.equal(result.response.body.challengeToken.length, 64);
+  assert.equal(fixture.events.filter(([name]) => name === 'email').length, 1);
+  assert.equal(fixture.events.some(([name]) => name === 'session'), false);
+});
+
+test('login OTP resend enforces cooldown and rejects exhausted challenges', async (t) => {
+  const fixture = loginFixture(t);
+  const request = { ...fixture.request(), body: { challengeToken: 'a'.repeat(64) } };
+  fixture.challenge.createdAt = new Date().toISOString();
+  assert.equal((await callController(fixture.controller.resendLoginOtp, request)).failure.statusCode, 429);
+  fixture.challenge.createdAt = new Date(Date.now() - 60000).toISOString();
+  fixture.challenge.failedAttempts = 5;
+  assert.equal((await callController(fixture.controller.resendLoginOtp, request)).failure.statusCode, 400);
+  assert.equal(fixture.events.some(([name]) => name === 'email'), false);
+});
 
 test('login honors saved lockout threshold and duration', async (t) => {
   const fixture = loginFixture(t, { security: { maxLoginAttempts: 3, accountLockoutDurationMinutes: 2 } });
