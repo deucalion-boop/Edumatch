@@ -5,11 +5,23 @@ and administrator security settings. Existing administrator accounts are preserv
 on startup. A first administrator requires an explicit `ADMIN_PASSWORD` meeting
 the existing password policy and must change that password after signing in.
 
-Apply migrations `001` through `006` on a new database. The existing connected
+Apply migrations `001` through `008` in order on a new database. Migration `007`
+adds assessment submission settings, including `allow_late_submissions`, to
+databases created before those fields were added to migration `003`. Migration
+`008` adds lesson progress and recommendation fields. The existing connected
 project has all 17 application tables. The security check confirmed that the
 public key cannot directly access these tables. The configured application file
 bucket was changed from public to private and verified on September 7, 2026;
 no files were deleted. These observations describe that project at check time.
+
+If an assessment save reports that `allow_late_submissions` is missing from the
+schema cache, run `backend/supabase/migrations/007_improve_activity_workflow.sql`
+in the Supabase SQL Editor for the project configured by the backend. Then apply
+`008_progressive_learning_and_recommendations.sql` if it has not been applied.
+The `007` migration is safe to rerun because its column additions and index use
+`if not exists`. If the column exists in `public.assessments` but PostgREST still
+reports a stale schema cache, run `NOTIFY pgrst, 'reload schema';` in the SQL
+Editor and retry the save.
 
 ## Local development
 
