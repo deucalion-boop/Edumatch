@@ -1,5 +1,5 @@
 <template>
-  <main class="premium-dashboard" :class="{ 'premium-dashboard--pathway': showRecommendationsPanel }">
+  <main class="premium-dashboard">
     <template v-if="!hasFocusedDashboardSection">
       <section class="premium-hero" aria-labelledby="student-welcome-title">
         <div class="premium-hero__content">
@@ -2377,14 +2377,7 @@ export default {
   min-height: 100%;
   padding: clamp(1rem, 2.2vw, 2rem);
   color: var(--ink);
-  background:
-    radial-gradient(circle at 3% 2%, rgba(220, 234, 211, 0.75), transparent 24rem),
-    linear-gradient(180deg, #fbfdf9 0%, var(--canvas) 100%);
   font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
-}
-
-.premium-dashboard--pathway {
-  background: transparent;
 }
 
 .premium-dashboard *,
