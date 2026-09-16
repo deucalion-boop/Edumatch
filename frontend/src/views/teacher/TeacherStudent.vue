@@ -258,7 +258,10 @@
                     <i class="fas fa-users-gear"></i>
                     Manage Students
                   </button>
-                  <button type="button" role="menuitem" class="record-link record-link-button" @click="openAnnouncement(subject)"><i class="fas fa-bullhorn"></i> Post Announcement</button>
+                  <button type="button" role="menuitem" class="record-link record-link-button subject-announcement-btn" @click="openAnnouncement(subject)">
+                    <i class="fas fa-bullhorn" aria-hidden="true"></i>
+                    <span>Post Announcement</span>
+                  </button>
                   <button type="button" role="menuitem" class="record-link record-link-button subject-copy-btn" @click="subjectActionsMenuId = ''; copySubjectCode(subject)">
                     <i class="fas fa-copy"></i>
                     Copy Code
@@ -2347,6 +2350,22 @@ onBeforeUnmount(() => {
 .subject-students-btn:hover {
   border-color: #86efac;
   background: #dcfce7;
+}
+
+.subject-announcement-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid #dbe4ef;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.subject-announcement-btn:hover {
+  border-color: #b8c9d9;
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .subject-edit-btn {
