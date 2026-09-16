@@ -3811,14 +3811,12 @@ export default {
   width: min(100%, 88rem);
   min-height: auto;
   margin: 0 auto;
-  padding: clamp(1.25rem, 2.2vw, 1.75rem);
-  overflow: hidden;
-  border: 1px solid rgba(79, 125, 58, 0.16);
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at 96% 2%, rgba(220, 234, 211, 0.72), transparent 22rem),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 244, 0.96));
-  box-shadow: 0 24px 60px rgba(30, 67, 7, 0.11);
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   animation: grades-fade-up 420ms ease both;
 }
 
@@ -3827,8 +3825,8 @@ export default {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1.5rem;
-  margin-bottom: 1.1rem;
-  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
   border-bottom: 1px solid rgba(79, 125, 58, 0.13);
 }
 
@@ -3881,8 +3879,8 @@ export default {
 .grades-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.8rem;
-  margin-bottom: 1rem;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .grades-stat-card {
@@ -4123,11 +4121,11 @@ export default {
 .grades-premium-empty {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr);
-  gap: clamp(1.5rem, 3vw, 2.5rem);
+  grid-template-columns: minmax(11rem, 0.46fr) minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2.25rem);
   align-items: center;
-  min-height: 17.5rem;
-  padding: clamp(1.25rem, 3vw, 2rem);
+  min-height: 18rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
   overflow: hidden;
   border: 1px solid rgba(79, 125, 58, 0.18);
   border-radius: 20px;
@@ -4311,25 +4309,27 @@ export default {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .grades-results-dashboard,
-  .grades-premium-empty {
+  .grades-results-dashboard {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .grades-performance-card {
     min-height: 17rem;
   }
+}
+
+@media (max-width: 800px) {
+  .grades-premium-empty {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
 
   .grades-premium-empty__visual {
-    min-height: 14rem;
+    min-height: 11rem;
   }
 }
 
 @media (max-width: 700px) {
-  .premium-dashboard .premium-grades-panel {
-    padding: 1.25rem;
-  }
-
   .grades-premium-header {
     flex-direction: column;
     gap: 1rem;
@@ -4342,11 +4342,24 @@ export default {
   }
 
   .grades-stat-grid {
-    grid-template-columns: minmax(0, 1fr);
+    gap: 0.65rem;
   }
 
   .grades-stat-card {
-    min-height: 7.7rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.55rem;
+    min-height: 8.4rem;
+    padding: 0.85rem;
+  }
+
+  .grades-stat-card__icon {
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 11px;
+  }
+
+  .grades-stat-card strong {
+    font-size: 1.55rem;
   }
 
   .grades-content-skeleton {
@@ -4367,8 +4380,8 @@ export default {
   }
 
   .grades-premium-empty__visual {
-    min-height: 12rem;
-    transform: scale(0.86);
+    min-height: 10rem;
+    transform: scale(0.78);
   }
 
   .grades-premium-empty__copy .premium-eyebrow,
@@ -4382,6 +4395,17 @@ export default {
 
   .grades-results-feed__heading {
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 380px) {
+  .grades-stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .grades-stat-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 6.5rem;
   }
 }
 
