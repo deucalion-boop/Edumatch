@@ -40,6 +40,7 @@ const {
   assertAssessmentUnlocked,
 } = require('../services/supabaseProgressionService');
 const { evaluateAssessmentAnswers, validateEssayWordCounts } = require('../services/essayEvaluationService');
+const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
@@ -126,8 +127,9 @@ function publicAssessment(assessment) {
     maxViolations: Number(plain.maxViolations || DEFAULT_MAX_VIOLATIONS),
     violationAction: String(plain.violationAction || DEFAULT_VIOLATION_ACTION),
     assessmentMode: String(plain.assessmentMode || 'activity'),
-    gradingPeriod: String(plain.gradingPeriod || ''),
-    countsTowardRecommendation: Boolean(plain.countsTowardRecommendation),
+    gradingPeriod: normalizeGradingPeriod(plain.gradingPeriod),
+    countsTowardRecommendation: Boolean(plain.countsTowardRecommendation)
+      && Boolean(normalizeGradingPeriod(plain.gradingPeriod)),
     assignmentScope: String(plain.assignmentScope || 'handled_class'),
     questions: (plain.questions || []).map((q) => ({
       questionText: q.questionText,
@@ -857,8 +859,9 @@ const getAvailableAssessments = asyncHandler(async (_req, res) => {
       allowResubmission: item.allowResubmission !== false,
       allowLateSubmissions: item.allowLateSubmissions === true,
       assessmentMode: String(item.assessmentMode || 'activity'),
-      gradingPeriod: String(item.gradingPeriod || ''),
-      countsTowardRecommendation: Boolean(item.countsTowardRecommendation),
+      gradingPeriod: normalizeGradingPeriod(item.gradingPeriod),
+      countsTowardRecommendation: Boolean(item.countsTowardRecommendation)
+        && Boolean(normalizeGradingPeriod(item.gradingPeriod)),
       assignmentScope: String(item.assignmentScope || 'handled_class'),
       examDurationMinutes: parseExamDurationMinutes(item.examDurationMinutes),
       maxViolations: Number(item.maxViolations || DEFAULT_MAX_VIOLATIONS),

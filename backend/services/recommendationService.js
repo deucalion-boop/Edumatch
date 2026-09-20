@@ -3,14 +3,18 @@ const Settings = require('../models/Settings');
 const Submission = require('../models/Submission');
 const Recommendation = require('../models/Recommendation');
 const { getSubjectCategory } = require('../constants/strandSubjects');
-const { GRADING_PERIODS, gradingPeriodOrder } = require('../constants/assessmentConfig');
+const {
+  GRADING_PERIODS,
+  normalizeGradingPeriod,
+  gradingPeriodOrder,
+} = require('../constants/assessmentConfig');
 const { getAiRuntimeConfigFromEnv } = require('../utils/aiRuntimeConfig');
 const { isRecommendationAssessment } = require('./assessmentPolicyService');
 
 const SUBJECT_CATEGORIES = ['Math', 'Science', 'English', 'AP', 'Business', 'Technical'];
 const FINAL_SUBMISSION_STATUSES = ['completed', 'auto_submitted', 'terminated'];
 const DEFAULT_EVENT_NAME = 'Strand Recommendation Updated';
-const NO_RECOMMENDATION_MESSAGE = 'Complete the 1st, 2nd, 3rd, and 4th grading assessments to generate recommendation';
+const NO_RECOMMENDATION_MESSAGE = 'Complete the 1st, 2nd, and 3rd grading assessments to generate recommendation';
 const RECOMMENDATION_IN_PROGRESS_MESSAGE = 'Recommendation In Progress. Complete the remaining grading assessments to unlock your strand recommendation.';
 const RECOMMENDATION_ENCOURAGEMENT_MESSAGE = "Hi there! It looks like you're exploring your interests and strengths. You've shown potential in Math, Science, and English, which are all great skills to build on. The STEM strand is a great fit for you because it combines these subjects, and you'll have the chance to develop problem-solving and critical thinking skills. This strand matches you because it plays to your strengths and can help you grow in areas you enjoy.";
 
@@ -288,7 +292,7 @@ async function loadAssessmentAttempts(studentId) {
   })
     .populate({
       path: 'assessmentId',
-      select: 'subjectId subject subjectCode subjectCategory examType title numberOfItems questions lessonId',
+      select: 'subjectId subject subjectCode subjectCategory examType title numberOfItems questions lessonId assessmentMode gradingPeriod countsTowardRecommendation',
       populate: { path: 'lessonId', select: 'track title subject subjectId subjectCode' },
     })
     .sort({ submittedAt: -1, createdAt: -1 })
@@ -334,21 +338,43 @@ async function loadAssessmentAttempts(studentId) {
 }
 
 function formatRecommendationPayload(recommendation) {
-  const attemptsCount = Array.isArray(recommendation?.assessmentAttempts) ? recommendation.assessmentAttempts.length : 0;
-  const subjectPerformance = Array.isArray(recommendation?.subjectPerformance) ? recommendation.subjectPerformance : [];
-  const strandScores = recommendation?.strandScores || { STEM: 0, HUMSS: 0, ABM: 0, TVL: 0 };
-  const recommendedName = String(recommendation?.recommendedStrand?.name || '').trim();
-  const isRecommendationReady = Boolean(recommendedName);
-  const completedGradingPeriods = getCompletedGradingPeriods(recommendation?.assessmentAttempts || []);
+  const assessmentAttempts = (Array.isArray(recommendation?.assessmentAttempts)
+    ? recommendation.assessmentAttempts
+    : [])
+    .filter((attempt) => Boolean(normalizeGradingPeriod(attempt?.gradingPeriod)))
+    .map((attempt) => ({
+      ...(typeof attempt?.toObject === 'function' ? attempt.toObject() : attempt),
+      gradingPeriod: normalizeGradingPeriod(attempt?.gradingPeriod),
+    }));
+  const attemptsCount = assessmentAttempts.length;
+  const subjectPerformance = computeSubjectPerformance(assessmentAttempts);
+  const strandScores = computeStrandScores(computeCategoryScores(assessmentAttempts));
+  const rankedStrands = Object.entries(strandScores)
+    .sort((left, right) => Number(right[1]) - Number(left[1]));
+  const completedGradingPeriods = getCompletedGradingPeriods(assessmentAttempts);
   const missingGradingPeriods = getMissingGradingPeriods(completedGradingPeriods);
+  const isRecommendationReady = completedGradingPeriods.length === GRADING_PERIODS.length
+    && subjectPerformance.length > 0
+    && Number(rankedStrands[0]?.[1] || 0) > 0;
+  const recommendedName = isRecommendationReady ? String(rankedStrands[0]?.[0] || '') : '';
+  const topTwoStrands = isRecommendationReady
+    ? rankedStrands.slice(0, 2).map(([name]) => name)
+    : [];
+  const confidence = isRecommendationReady
+    ? computeConfidence({
+      attemptsCount,
+      topScore: Number(rankedStrands[0]?.[1] || 0),
+      secondScore: Number(rankedStrands[1]?.[1] || 0),
+    })
+    : null;
   const recommendationProgressPercent = computeRecommendationProgress({
-    assessmentAttempts: recommendation?.assessmentAttempts || [],
+    assessmentAttempts,
     isRecommendationReady,
   });
 
   return {
     studentId: String(recommendation?.studentId || ''),
-    assessmentAttempts: recommendation?.assessmentAttempts || [],
+    assessmentAttempts,
     subjectPerformance,
     strandScores,
     requiredGradingPeriods: GRADING_PERIODS,
@@ -357,9 +383,9 @@ function formatRecommendationPayload(recommendation) {
     recommendedStrand: isRecommendationReady
       ? {
         name: recommendedName,
-        confidence: recommendation?.recommendedStrand?.confidence || null,
+        confidence,
         generatedAt: recommendation?.recommendedStrand?.generatedAt || null,
-        topTwoStrands: Array.isArray(recommendation?.recommendedStrand?.topTwoStrands) ? recommendation.recommendedStrand.topTwoStrands : [],
+        topTwoStrands,
       }
       : {
         name: '',
@@ -367,7 +393,7 @@ function formatRecommendationPayload(recommendation) {
         generatedAt: null,
         topTwoStrands: [],
       },
-    confidence: isRecommendationReady ? recommendation?.recommendedStrand?.confidence || null : null,
+    confidence,
     recommendationExplanation: attemptsCount <= 0
       ? NO_RECOMMENDATION_MESSAGE
       : (isRecommendationReady ? RECOMMENDATION_ENCOURAGEMENT_MESSAGE : RECOMMENDATION_IN_PROGRESS_MESSAGE),

@@ -1,4 +1,4 @@
-const GRADING_PERIODS = ['1st', '2nd', '3rd', '4th'];
+const GRADING_PERIODS = Object.freeze(['1st', '2nd', '3rd']);
 const ASSESSMENT_MODES = ['activity', 'quiz', 'grading_assessment'];
 const ASSIGNMENT_SCOPES = ['handled_class', 'advisory_class'];
 

@@ -427,7 +427,7 @@
                   <div>
                     <span class="builder-section-step">Step 2</span>
                     <h3>Activity, Quiz, or Exam Setup</h3>
-                    <p>Choose whether this should stay as an activity, become a quiz, or be published as an exam with a 1st, 2nd, 3rd, or 4th grading tag.</p>
+                    <p>Choose whether this should stay as an activity, become a quiz, or be published as an exam with a 1st, 2nd, or 3rd grading tag.</p>
                   </div>
                   <span class="section-state-pill" :class="challengeAssessmentModeClass">
                     {{ challengeAssessmentModePill }}
@@ -450,7 +450,6 @@
                     <option value="1st">1st Grading</option>
                     <option value="2nd">2nd Grading</option>
                     <option value="3rd">3rd Grading</option>
-                    <option value="4th">4th Grading</option>
                   </select>
                 </div>
 
@@ -575,7 +574,7 @@
                 <div class="form-group full">
                   <div class="assessment-mode-hint">
                     <strong>Recommendation rule:</strong>
-                    Strand recommendations only use exams tagged as 1st, 2nd, 3rd, or 4th grading. Activities still appear for students, but they do not affect the AI recommendation.
+                    Strand recommendations only use exams tagged as 1st, 2nd, or 3rd grading. Activities still appear for students, but they do not affect the AI recommendation.
                   </div>
                 </div>
 

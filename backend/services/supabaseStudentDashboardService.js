@@ -1,6 +1,7 @@
 const { readProfileRows } = require('./supabaseUserProfileService');
 const { listSupabaseLessons, listSupabaseAssessments } = require('./supabaseContentService');
 const { getSupabaseStorageClient } = require('./supabaseStorageService');
+const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 async function publishedLessons() {
   const lessons = await listSupabaseLessons();
   if (!lessons.length) return [];
@@ -14,6 +15,8 @@ async function publishedLessons() {
 async function availableAssessments(studentId, subjectIds) {
   const [assessments, lessons] = await Promise.all([listSupabaseAssessments(), listSupabaseLessons()]);
   const visible = assessments.filter(row => {
+    if (String(row.assessmentMode || '').trim().toLowerCase() === 'grading_assessment'
+      && !normalizeGradingPeriod(row.gradingPeriod)) return false;
     const assigned = Array.isArray(row.assignedStudentIds) ? row.assignedStudentIds.map(String) : [];
     if (assigned.length) return assigned.includes(String(studentId));
     const lesson = lessons.find(lesson => lesson.id === row.lessonId);
@@ -32,9 +35,10 @@ async function studentSubmissions(studentId, finalized = false) {
   const assessments = await readProfileRows('assessments', 'id', [...new Set(rows.map(row => row.assessmentId))]);
   return rows.map(row => {
     const assessment = assessments.find(item => item.id === row.assessmentId);
+    const gradingPeriod = normalizeGradingPeriod(assessment?.gradingPeriod);
     const safeAssessment = assessment ? { _id: assessment.id, title: assessment.title, examType: assessment.examType,
       difficulty: assessment.difficulty, numberOfItems: assessment.numberOfItems, assessmentMode: assessment.assessmentMode,
-      lessonId: assessment.lessonId, submissionDeadline: assessment.submissionDeadline } : null;
+      gradingPeriod, lessonId: assessment.lessonId, submissionDeadline: assessment.submissionDeadline } : null;
     return { ...row, assessmentId: safeAssessment };
   });
 }

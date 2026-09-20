@@ -9,7 +9,7 @@ test('linked assessments remain locked until lesson and earlier stages are compl
   const activity = { id: 'a1', lessonId: lesson, assessmentMode: 'activity' };
   const secondActivity = { id: 'a2', lessonId: lesson, assessmentMode: 'activity' };
   const quiz = { id: 'q1', lessonId: lesson, assessmentMode: 'quiz' };
-  const exam = { id: 'e1', lessonId: lesson, assessmentMode: 'grading_assessment' };
+  const exam = { id: 'e1', lessonId: lesson, assessmentMode: 'grading_assessment', gradingPeriod: '1st' };
   assert.equal(computeAssessmentGate({ assessment: activity, lessonProgress: null, relatedAssessments: [activity, quiz, exam], submissions: [] }).prerequisite, 'lesson');
   assert.equal(computeAssessmentGate({ assessment: quiz, lessonProgress: { status: 'completed' }, relatedAssessments: [activity, quiz, exam], submissions: [] }).prerequisite, 'activity');
   assert.equal(computeAssessmentGate({ assessment: exam, lessonProgress: { status: 'completed' }, relatedAssessments: [activity, quiz, exam], submissions: [{ assessmentId: 'a1', status: 'completed' }] }).prerequisite, 'quiz');
@@ -30,10 +30,12 @@ test('point percentages and subject weights normalize only across applicable cat
     assessments: [
       { id: 'a1', subjectId: 'math', assessmentMode: 'activity', activityPoints: 10 },
       { id: 'q1', subjectId: 'math', assessmentMode: 'quiz' },
+      { id: 'legacy-exam', subjectId: 'math', assessmentMode: 'grading_assessment', gradingPeriod: '4th' },
     ],
     submissions: [
       { assessmentId: 'a1', status: 'completed', gradeValue: 8, score: 8, totalPoints: 10, gradedAt: new Date() },
       { assessmentId: 'q1', status: 'completed', score: 18, totalPoints: 20 },
+      { assessmentId: 'legacy-exam', status: 'completed', score: 100, totalPoints: 100 },
     ],
     progressRows: [{ lessonId: 'l1', status: 'completed' }],
     weightConfig: { activity: 30, quiz: 30, exam: 40, minimumEvidenceCount: 2 },

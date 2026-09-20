@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { getSupabaseStorageClient } = require('./supabaseStorageService');
+const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 
 function contentError(error, fallbackMessage) {
   const normalized = new Error(String(error?.message || fallbackMessage));
@@ -7,7 +8,7 @@ function contentError(error, fallbackMessage) {
   normalized.code = error?.code;
   normalized.details = error?.details;
   normalized.hint = error?.hint;
-  normalized.statusCode = error?.code === '23505' ? 409 : 500;
+  normalized.statusCode = error?.code === '23505' ? 409 : (error?.code === '23514' ? 400 : 500);
   return normalized;
 }
 
@@ -76,8 +77,9 @@ function mapAssessment(row) {
     challengeDescription: row.challenge_description || '',
     attachments: normalizeAttachments(row.attachments),
     assessmentMode: row.assessment_mode || 'activity',
-    gradingPeriod: row.grading_period || '',
-    countsTowardRecommendation: row.counts_toward_recommendation === true,
+    gradingPeriod: normalizeGradingPeriod(row.grading_period),
+    countsTowardRecommendation: row.counts_toward_recommendation === true
+      && Boolean(normalizeGradingPeriod(row.grading_period)),
     requiresLessonCompletion: row.requires_lesson_completion !== false,
     assignmentScope: row.assignment_scope || 'handled_class',
     assignedStudentIds: Array.isArray(row.assigned_student_ids) ? row.assigned_student_ids : [],
@@ -128,6 +130,14 @@ async function findSupabaseLesson(id, createdBy = null) {
 }
 
 async function createSupabaseAssessment(payload) {
+  const assessmentMode = String(payload.assessmentMode || 'activity').trim();
+  const gradingPeriod = normalizeGradingPeriod(payload.gradingPeriod);
+  if (assessmentMode === 'grading_assessment' && !gradingPeriod) {
+    const error = new Error('gradingPeriod is required for grading assessments. Allowed values: 1st, 2nd, 3rd');
+    error.statusCode = 400;
+    throw error;
+  }
+
   const row = {
     lesson_id: referenceId(payload.lessonId),
     title: String(payload.title || '').trim(),
@@ -150,9 +160,9 @@ async function createSupabaseAssessment(payload) {
     submission_deadline: payload.submissionDeadline || null,
     challenge_description: String(payload.challengeDescription || '').trim(),
     attachments: normalizeAttachments(payload.attachments),
-    assessment_mode: String(payload.assessmentMode || 'activity'),
-    grading_period: String(payload.gradingPeriod || ''),
-    counts_toward_recommendation: payload.countsTowardRecommendation === true,
+    assessment_mode: assessmentMode,
+    grading_period: gradingPeriod,
+    counts_toward_recommendation: payload.countsTowardRecommendation === true && Boolean(gradingPeriod),
     requires_lesson_completion: payload.requiresLessonCompletion !== false,
     assignment_scope: String(payload.assignmentScope || 'handled_class'),
     assigned_student_ids: Array.isArray(payload.assignedStudentIds) ? payload.assignedStudentIds.map(referenceId).filter(Boolean) : [],

@@ -6,6 +6,7 @@ const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
 const { sendSuccess } = require('../utils/responseHelper');
 const { ROLE_HEADTEACHER, ROLE_TEACHER, ROLE_STUDENT } = require('../constants/userRoles');
+const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 const { ensureTeacherSubject } = require('../services/subjectService');
 const { inferSubjectCategory, normalizeSubjectCategory } = require('../services/recommendationService');
 const {
@@ -295,8 +296,9 @@ function headTeacherAssessmentToResponse(assessment, teacher, submissionCountsBy
     difficulty: String(assessment?.difficulty || '').trim(),
     numberOfItems: Number(assessment?.numberOfItems || 0),
     assessmentMode: String(assessment?.assessmentMode || 'activity'),
-    gradingPeriod: String(assessment?.gradingPeriod || ''),
-    countsTowardRecommendation: Boolean(assessment?.countsTowardRecommendation),
+    gradingPeriod: normalizeGradingPeriod(assessment?.gradingPeriod),
+    countsTowardRecommendation: Boolean(assessment?.countsTowardRecommendation)
+      && Boolean(normalizeGradingPeriod(assessment?.gradingPeriod)),
     assignmentScope: String(assessment?.assignmentScope || 'handled_class'),
     assignedStudentsCount: Array.isArray(assessment?.assignedStudentIds) ? assessment.assignedStudentIds.length : 0,
     examDurationMinutes: Number(assessment?.examDurationMinutes || 30),

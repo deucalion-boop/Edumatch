@@ -3,6 +3,7 @@ const { listSupabaseLessons, listSupabaseAssessments } = require('./supabaseCont
 const { listHydratedStudentEnrollments } = require('./supabaseEnrollmentService');
 const { listLessonProgress } = require('./supabaseProgressionService');
 const { listStudentActivitySubmissions } = require('./supabaseActivityService');
+const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 
 const DEFAULT_WEIGHTS = { activity: 30, quiz: 30, exam: 40 };
 const FINAL_STATUSES = new Set(['completed', 'auto_submitted', 'terminated']);
@@ -15,7 +16,10 @@ function assessmentCategory(assessment) {
   const mode = String(assessment?.assessmentMode || '').toLowerCase();
   if (mode === 'activity') return 'activity';
   if (mode === 'quiz') return 'quiz';
-  return 'exam';
+  if (mode === 'grading_assessment') {
+    return normalizeGradingPeriod(assessment?.gradingPeriod) ? 'exam' : null;
+  }
+  return null;
 }
 function performanceLevel(value) {
   if (value === null) return 'Insufficient Data';
@@ -28,7 +32,10 @@ function performanceLevel(value) {
 function calculateSubjectMetrics({ subject, lessons, assessments, submissions, progressRows, weightConfig }) {
   const subjectId = cleanId(subject);
   const subjectLessons = lessons.filter((item) => cleanId(item.subjectId) === subjectId);
-  const subjectAssessments = assessments.filter((item) => cleanId(item.subjectId || item.lessonId?.subjectId) === subjectId);
+  const subjectAssessments = assessments.filter((item) => (
+    cleanId(item.subjectId || item.lessonId?.subjectId) === subjectId
+    && Boolean(assessmentCategory(item))
+  ));
   const assessmentIds = new Set(subjectAssessments.map(cleanId));
   const finalSubmissions = submissions.filter((item) => assessmentIds.has(cleanId(item.assessmentId)) && FINAL_STATUSES.has(String(item.status || '').toLowerCase()));
   const progressByLesson = new Map(progressRows.map((item) => [cleanId(item.lessonId), item]));
@@ -42,6 +49,7 @@ function calculateSubjectMetrics({ subject, lessons, assessments, submissions, p
     const scoringStatus = String(submission.scoringStatus || '').trim().toLowerCase();
     if (hasEssayEvaluation && !['teacher_approved', 'teacher_overridden'].includes(scoringStatus)) return;
     const category = assessmentCategory(assessment);
+    if (!category) return;
     const earned = submission.teacherAdjustedScore ?? submission.gradeValue ?? submission.score;
     const total = Number(submission.totalPoints || (category === 'activity' ? assessment.activityPoints : 0));
     const value = percent(earned, total);
@@ -107,7 +115,10 @@ async function computeAcademicProgress(studentId) {
     activity: Number(row.activity_weight), quiz: Number(row.quiz_weight), exam: Number(row.exam_weight), minimumEvidenceCount: Number(row.minimum_evidence_count || 2),
   }]));
   const visibleLessons = lessons.filter((item) => subjectIds.includes(cleanId(item.subjectId)));
-  const visibleAssessments = assessments.filter((item) => subjectIds.includes(cleanId(item.subjectId)));
+  const visibleAssessments = assessments.filter((item) => (
+    subjectIds.includes(cleanId(item.subjectId))
+    && Boolean(assessmentCategory(item))
+  ));
   const subjectPerformance = subjects.map((subject) => calculateSubjectMetrics({
     subject,
     lessons: visibleLessons,
@@ -125,7 +136,8 @@ async function computeAcademicProgress(studentId) {
   const completedByCategory = { activity: 0, quiz: 0, exam: 0 };
   submissions.filter((item) => FINAL_STATUSES.has(String(item.status || '').toLowerCase())).forEach((submission) => {
     const assessment = visibleAssessments.find((item) => cleanId(item) === cleanId(submission.assessmentId));
-    if (assessment) completedByCategory[assessmentCategory(assessment)] += 1;
+    const category = assessmentCategory(assessment);
+    if (category) completedByCategory[category] += 1;
   });
   const totalRequired = visibleLessons.length + visibleAssessments.length;
   const totalCompleted = completedLessons + Object.values(completedByCategory).reduce((sum, value) => sum + value, 0);

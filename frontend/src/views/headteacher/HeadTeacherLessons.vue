@@ -402,7 +402,6 @@
                 <option value="1st">1st Grading</option>
                 <option value="2nd">2nd Grading</option>
                 <option value="3rd">3rd Grading</option>
-                <option value="4th">4th Grading</option>
               </select>
             </label>
 
@@ -512,7 +511,7 @@
 
           <div class="headteacher-policy-note">
             <strong>Recommendation rule:</strong>
-            Only exams tagged as 1st, 2nd, 3rd, or 4th grading affect strand recommendations. Activities stay visible to students but do not affect the AI recommendation.
+            Only exams tagged as 1st, 2nd, or 3rd grading affect strand recommendations. Activities stay visible to students but do not affect the AI recommendation.
           </div>
 
           <div class="headteacher-draft-box">

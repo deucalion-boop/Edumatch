@@ -44,6 +44,7 @@ const {
   normalizeExportApprovalRequest,
 } = require('../services/exportApprovalService');
 const { formatRecommendationPayload } = require('../services/recommendationService');
+const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 const { computeMasteryFromSubmissions } = require('../utils/studentProgress');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
@@ -625,7 +626,10 @@ async function buildStudentLearningInsights(student) {
       };
     });
   const latestExamSubmission = [...latestSubmissions]
-    .filter((submission) => String(submission?.assessmentId?.assessmentMode || '').trim().toLowerCase() === 'grading_assessment')
+    .filter((submission) => (
+      String(submission?.assessmentId?.assessmentMode || '').trim().toLowerCase() === 'grading_assessment'
+      && Boolean(normalizeGradingPeriod(submission?.assessmentId?.gradingPeriod))
+    ))
     .sort((left, right) => {
       const rightTime = new Date(right?.submittedAt || right?.createdAt || 0).getTime();
       const leftTime = new Date(left?.submittedAt || left?.createdAt || 0).getTime();
@@ -668,7 +672,7 @@ async function buildStudentLearningInsights(student) {
       latestExamResult: latestExamSubmission
         ? {
           title: String(latestExamSubmission?.assessmentId?.title || 'Exam').trim() || 'Exam',
-          gradingPeriod: String(latestExamSubmission?.assessmentId?.gradingPeriod || '').trim(),
+          gradingPeriod: normalizeGradingPeriod(latestExamSubmission?.assessmentId?.gradingPeriod),
           score: Number(latestExamSubmission?.score || 0),
           totalPoints: Number(latestExamSubmission?.totalPoints || 0),
           percentage: calculateSubmissionPercentage(latestExamSubmission),

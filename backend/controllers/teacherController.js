@@ -29,6 +29,7 @@ const {
 } = require('../services/subjectService');
 const { uploadFile, uploadFiles } = require('../services/storageService');
 const { ROLE_STUDENT } = require('../constants/userRoles');
+const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 const { normalizeContactNumber, issueInviteForUser, mapUserResponse } = require('../services/userManagementService');
 const { getSectionOrThrow } = require('../services/sectionService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
@@ -1052,8 +1053,9 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
     allowResubmission: assessment.allowResubmission !== false,
     allowLateSubmissions: assessment.allowLateSubmissions === true,
     assessmentMode: String(assessment.assessmentMode || 'activity'),
-    gradingPeriod: String(assessment.gradingPeriod || ''),
-    countsTowardRecommendation: Boolean(assessment.countsTowardRecommendation),
+    gradingPeriod: normalizeGradingPeriod(assessment.gradingPeriod),
+    countsTowardRecommendation: Boolean(assessment.countsTowardRecommendation)
+      && Boolean(normalizeGradingPeriod(assessment.gradingPeriod)),
     assignmentScope: String(assessment.assignmentScope || 'handled_class'),
     assignedStudentsCount: Array.isArray(assessment.assignedStudentIds) ? assessment.assignedStudentIds.length : 0,
     examDurationMinutes: Number(assessment.examDurationMinutes || 30),
@@ -2019,7 +2021,7 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
       activityPoints: Number.isInteger(Number(assessment.activityPoints)) && Number(assessment.activityPoints) >= 1
         ? Number(assessment.activityPoints)
         : null,
-      gradingPeriod: String(assessment.gradingPeriod || ''),
+      gradingPeriod: normalizeGradingPeriod(assessment.gradingPeriod),
       countsTowardRecommendation: Boolean(assessment.countsTowardRecommendation),
       assignmentScope: String(assessment.assignmentScope || 'handled_class'),
       score,

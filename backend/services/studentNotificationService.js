@@ -2,6 +2,7 @@ const { readProfileRows } = require('./supabaseUserProfileService');
 const { availableAssessments, studentSubmissions } = require('./supabaseStudentDashboardService');
 const crypto = require('crypto');
 const { upsertNotifications } = require('./supabaseNotificationService');
+const { GRADING_PERIODS, normalizeGradingPeriod } = require('../constants/assessmentConfig');
 
 const STUDENT_ROLE = 'student';
 const UPCOMING_DEADLINE_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -202,11 +203,14 @@ async function syncGradesAndFeedback(studentId) {
 
 async function syncRecommendation(studentId) {
   const recommendation = (await readProfileRows('recommendations', 'student_id', studentId))[0];
-  const attempts = Array.isArray(recommendation?.assessmentAttempts) ? recommendation.assessmentAttempts : [];
+  const attempts = (Array.isArray(recommendation?.assessmentAttempts) ? recommendation.assessmentAttempts : [])
+    .filter((attempt) => Boolean(normalizeGradingPeriod(attempt?.gradingPeriod)));
   if (attempts.length === 0) return;
   const strand = clean(recommendation?.recommendedStrand?.name);
   const isReady = Boolean(strand);
-  const progress = Math.min(100, Math.round((attempts.length / 4) * 100));
+  const completedPeriods = new Set(attempts.map((attempt) => normalizeGradingPeriod(attempt?.gradingPeriod)));
+  const completedCount = GRADING_PERIODS.filter((period) => completedPeriods.has(period)).length;
+  const progress = Math.min(100, Math.round((completedCount / GRADING_PERIODS.length) * 100));
   await createStudentNotifications({
     recipientIds: [studentId],
     type: isReady ? 'recommendation_ready' : 'recommendation_progress',
@@ -214,8 +218,8 @@ async function syncRecommendation(studentId) {
     subject: isReady ? `${strand} is your recommended strand` : `${progress}% complete`,
     preview: isReady
       ? 'Your strand recommendation is ready. Open your dashboard to review the result.'
-      : `You have completed ${attempts.length} of 4 grading assessments.`,
-    eventKey: `recommendation:${isReady ? strand : 'progress'}:${attempts.length}`,
+      : `You have completed ${completedCount} of ${GRADING_PERIODS.length} grading assessments.`,
+    eventKey: `recommendation:${isReady ? strand : 'progress'}:${completedCount}`,
     meta: { route: '/student/dashboard?section=recommendations', entityType: 'recommendation', entityId: clean(recommendation?._id) },
   });
 }
