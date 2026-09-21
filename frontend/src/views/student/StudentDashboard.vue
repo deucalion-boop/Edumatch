@@ -567,7 +567,8 @@ export default {
       return this.activeDashboardSection === 'recommendations'
     },
     isRecommendationPreview() {
-      return ['1', 'true', 'recommendations'].includes(String(this.$route?.query?.demo || '').trim().toLowerCase())
+      const explicitlyRequested = ['1', 'true', 'recommendations'].includes(String(this.$route?.query?.demo || '').trim().toLowerCase())
+      return explicitlyRequested || (import.meta.env.DEV && this.showRecommendationsPanel)
     },
     activityMap() {
       return this.activitySubmissions.reduce((map, item) => {
@@ -715,9 +716,10 @@ export default {
   watch: {
     '$route.query.section'() {
       this.scheduleDashboardSectionFocus()
+      if (this.showRecommendationsPanel && import.meta.env.DEV) this.fetchDashboardData()
     },
     '$route.query.demo'() {
-      this.fetchDashboardData()
+      if (!import.meta.env.DEV) this.fetchDashboardData()
     }
   },
   created() {
