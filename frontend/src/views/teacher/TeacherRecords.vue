@@ -1752,6 +1752,34 @@
                   <option value="hard">Hard</option>
                 </select>
               </label>
+              <div class="assessment-edit-attachments">
+                <span>Attachments</span>
+                <p>Drag and drop files or browse. PDF, Office documents, JPG/JPEG, and PNG are supported (10MB each).</p>
+                <div
+                  class="assessment-edit-dropzone"
+                  :class="{ 'is-dragging': isAssessmentEditDropActive }"
+                  @dragenter.prevent="isAssessmentEditDropActive = true"
+                  @dragover.prevent="isAssessmentEditDropActive = true"
+                  @dragleave.prevent="isAssessmentEditDropActive = false"
+                  @drop.prevent="handleAssessmentEditDrop"
+                  @click="assessmentEditFileInput?.click()"
+                >
+                  <input ref="assessmentEditFileInput" type="file" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.txt,.webp,.zip" @change="handleAssessmentEditFileChange" />
+                  <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i>
+                  <strong>Drop multiple files here or browse</strong>
+                </div>
+                <div v-if="assessmentEditForm.existingAttachments.length || assessmentEditForm.newAttachments.length" class="assessment-edit-file-list">
+                  <div v-for="attachment in assessmentEditForm.existingAttachments" :key="`existing-${attachment.id}`" class="assessment-edit-file">
+                    <span><strong>{{ attachment.fileName }}</strong><small>{{ getAttachmentTypeLabel(attachment) }} · {{ formatBytes(attachment.size) }} · uploaded</small></span>
+                    <button type="button" aria-label="Remove attachment" @click="removeExistingAssessmentAttachment(attachment.id)"><i class="fas fa-times"></i></button>
+                  </div>
+                  <div v-for="file in assessmentEditForm.newAttachments" :key="`new-${file.name}-${file.size}-${file.lastModified}`" class="assessment-edit-file">
+                    <span><strong>{{ file.name }}</strong><small>{{ getAttachmentTypeLabel(file) }} · {{ formatBytes(file.size) }} · ready to upload</small></span>
+                    <button type="button" aria-label="Remove attachment" @click="removeNewAssessmentAttachment(file)"><i class="fas fa-times"></i></button>
+                  </div>
+                </div>
+                <div v-if="assessmentEditUploadProgress > 0 && assessmentEditUploadProgress < 100" class="assessment-edit-progress"><span :style="{ width: `${assessmentEditUploadProgress}%` }"></span></div>
+              </div>
               <p class="lesson-manage-empty">Use “Edit Deadline” on the record card to change its due date.</p>
               <p v-if="assessmentEditError" class="lesson-manage-error">{{ assessmentEditError }}</p>
             </div>
@@ -1915,7 +1943,12 @@ const assessmentEditForm = reactive({
   challengeDescription: '',
   activityPoints: 100,
   difficulty: 'medium',
+  existingAttachments: [],
+  newAttachments: [],
 })
+const assessmentEditFileInput = ref(null)
+const isAssessmentEditDropActive = ref(false)
+const assessmentEditUploadProgress = ref(0)
 const showAssessmentCopyModal = ref(false)
 const selectedAssessmentForCopy = ref(null)
 const assessmentCopySubjectIds = ref([])
@@ -3340,6 +3373,78 @@ const copyLessonToClasses = async () => {
   }
 }
 
+const ASSESSMENT_ATTACHMENT_EXTENSIONS = new Set(['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png', '.txt', '.webp', '.zip'])
+const MAX_ASSESSMENT_ATTACHMENT_BYTES = 10 * 1024 * 1024
+const MAX_ASSESSMENT_ATTACHMENTS = 10
+
+const getAttachmentExtension = (name) => {
+  const normalized = String(name || '').trim().toLowerCase()
+  return normalized.includes('.') ? `.${normalized.split('.').pop()}` : ''
+}
+
+const getAttachmentTypeLabel = (file) => getAttachmentExtension(file?.name || file?.fileName).replace('.', '').toUpperCase()
+  || String(file?.type || file?.fileType || 'File')
+
+const formatBytes = (value) => {
+  const bytes = Number(value || 0)
+  if (!bytes) return '0 B'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+const mergeAssessmentEditFiles = (files) => {
+  const existingCount = assessmentEditForm.existingAttachments.length
+  const next = [...assessmentEditForm.newAttachments]
+  const keys = new Set([
+    ...assessmentEditForm.existingAttachments.map((file) => `${String(file.fileName || '').toLowerCase()}:${Number(file.size || 0)}`),
+    ...next.map((file) => `${String(file.name || '').toLowerCase()}:${Number(file.size || 0)}`),
+  ])
+  const warnings = []
+  for (const file of Array.from(files || [])) {
+    const extension = getAttachmentExtension(file?.name)
+    const key = `${String(file?.name || '').toLowerCase()}:${Number(file?.size || 0)}`
+    if (keys.has(key)) {
+      warnings.push(`${file.name} is already attached.`)
+      continue
+    }
+    if (!ASSESSMENT_ATTACHMENT_EXTENSIONS.has(extension)) {
+      warnings.push(`${file.name} has an unsupported file type.`)
+      continue
+    }
+    if (Number(file.size || 0) > MAX_ASSESSMENT_ATTACHMENT_BYTES) {
+      warnings.push(`${file.name} exceeds 10MB.`)
+      continue
+    }
+    if (existingCount + next.length >= MAX_ASSESSMENT_ATTACHMENTS) {
+      warnings.push(`Only ${MAX_ASSESSMENT_ATTACHMENTS} attachments are allowed.`)
+      break
+    }
+    keys.add(key)
+    next.push(file)
+  }
+  assessmentEditForm.newAttachments = next
+  assessmentEditError.value = warnings.join(' ')
+}
+
+const handleAssessmentEditFileChange = (event) => {
+  mergeAssessmentEditFiles(event?.target?.files)
+  if (event?.target) event.target.value = ''
+}
+
+const handleAssessmentEditDrop = (event) => {
+  isAssessmentEditDropActive.value = false
+  mergeAssessmentEditFiles(event?.dataTransfer?.files)
+}
+
+const removeExistingAssessmentAttachment = (id) => {
+  assessmentEditForm.existingAttachments = assessmentEditForm.existingAttachments.filter((item) => String(item.id) !== String(id))
+}
+
+const removeNewAssessmentAttachment = (fileToRemove) => {
+  assessmentEditForm.newAttachments = assessmentEditForm.newAttachments.filter((file) => file !== fileToRemove)
+}
+
 const openAssessmentEditModal = (assessment) => {
   selectedAssessmentForEdit.value = assessment || null
   assessmentEditForm.title = String(assessment?.title || '').trim()
@@ -3347,6 +3452,8 @@ const openAssessmentEditModal = (assessment) => {
   assessmentEditForm.challengeDescription = String(assessment?.challengeDescription || '').trim()
   assessmentEditForm.activityPoints = Number(assessment?.activityPoints || 100)
   assessmentEditForm.difficulty = String(assessment?.difficulty || 'medium').trim().toLowerCase()
+  assessmentEditForm.existingAttachments = Array.isArray(assessment?.attachments) ? [...assessment.attachments] : []
+  assessmentEditForm.newAttachments = []
   assessmentEditError.value = ''
   showAssessmentEditModal.value = Boolean(assessment)
 }
@@ -3355,6 +3462,9 @@ const closeAssessmentEditModal = () => {
   if (isSavingAssessmentEdit.value) return
   showAssessmentEditModal.value = false
   selectedAssessmentForEdit.value = null
+  assessmentEditForm.existingAttachments = []
+  assessmentEditForm.newAttachments = []
+  assessmentEditUploadProgress.value = 0
   assessmentEditError.value = ''
 }
 
@@ -3374,26 +3484,40 @@ const saveAssessmentEdit = async () => {
   assessmentEditError.value = ''
   try {
     const assessmentId = encodeURIComponent(assessment.id)
-    await axios.patch(
+    const formData = new FormData()
+    formData.append('title', assessmentEditForm.title)
+    formData.append('subjectId', assessmentEditForm.subjectId)
+    formData.append('challengeDescription', assessmentEditForm.challengeDescription)
+    formData.append('activityPoints', String(assessmentEditForm.activityPoints))
+    formData.append('difficulty', assessmentEditForm.difficulty)
+    formData.append('retainedAttachmentIds', JSON.stringify(assessmentEditForm.existingAttachments.map((item) => item.id)))
+    assessmentEditForm.newAttachments.forEach((file) => formData.append('attachments', file))
+    assessmentEditUploadProgress.value = assessmentEditForm.newAttachments.length ? 1 : 0
+    const response = await axios.patch(
       `${resolveApiBaseUrl()}/teacher/assessments/${assessmentId}`,
+      formData,
       {
-        title: assessmentEditForm.title,
-        subjectId: assessmentEditForm.subjectId,
-        challengeDescription: assessmentEditForm.challengeDescription,
-        activityPoints: assessmentEditForm.activityPoints,
-        difficulty: assessmentEditForm.difficulty,
+        ...getAuthConfig(),
+        onUploadProgress: (event) => {
+          if (event.total) assessmentEditUploadProgress.value = Math.min(99, Math.round((event.loaded / event.total) * 100))
+        },
       },
-      getAuthConfig(),
     )
+    assessmentEditUploadProgress.value = assessmentEditForm.newAttachments.length ? 100 : 0
     showAssessmentEditModal.value = false
     selectedAssessmentForEdit.value = null
     await fetchRecords()
-    assessmentActionMessage.value = `${getAssessmentTypeLabel(assessment)} changes saved successfully.`
+    const rejected = Array.isArray(response.data?.attachmentUpload?.rejected) ? response.data.attachmentUpload.rejected : []
+    const rejectedDetails = rejected.map((item) => `${item.fileName}: ${item.reason}`).join('; ')
+    assessmentActionMessage.value = rejectedDetails
+      ? `${response.data?.message || 'Assessment updated'}. Skipped: ${rejectedDetails}`
+      : response.data?.message || `${getAssessmentTypeLabel(assessment)} changes saved successfully.`
   } catch (error) {
     console.error('Failed to update assessment:', error)
     assessmentEditError.value = error.response?.data?.message || 'Failed to update the assessment.'
   } finally {
     isSavingAssessmentEdit.value = false
+    window.setTimeout(() => { assessmentEditUploadProgress.value = 0 }, 500)
   }
 }
 
@@ -11743,6 +11867,95 @@ onBeforeUnmount(() => {
   margin-top: 0.12rem;
   color: #94a3b8;
   font-size: 0.62rem;
+}
+.assessment-edit-attachments {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.assessment-edit-attachments > span {
+  font-weight: 700;
+  color: #334155;
+}
+
+.assessment-edit-attachments > p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.assessment-edit-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 88px;
+  padding: 0.9rem;
+  border: 1.5px dashed #94a3b8;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+}
+
+.assessment-edit-dropzone.is-dragging {
+  border-color: #69aa47;
+  background: #f0f9eb;
+}
+
+.assessment-edit-dropzone input {
+  display: none;
+}
+
+.assessment-edit-file-list {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.assessment-edit-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+}
+
+.assessment-edit-file > span {
+  min-width: 0;
+  display: grid;
+}
+
+.assessment-edit-file strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assessment-edit-file small {
+  color: #64748b;
+}
+
+.assessment-edit-file button {
+  border: 0;
+  background: transparent;
+  color: #b91c1c;
+  cursor: pointer;
+}
+
+.assessment-edit-progress {
+  height: 0.4rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.assessment-edit-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #69aa47;
 }
 </style>
 

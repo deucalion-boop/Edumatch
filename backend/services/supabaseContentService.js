@@ -139,6 +139,7 @@ async function createSupabaseAssessment(payload) {
   }
 
   const row = {
+    id: referenceId(payload.id) || undefined,
     lesson_id: referenceId(payload.lessonId),
     title: String(payload.title || '').trim(),
     exam_type: String(payload.examType || '').trim(),
@@ -195,6 +196,38 @@ async function findSupabaseAssessment(id, createdBy = null) {
   return mapAssessment(data);
 }
 
+async function updateSupabaseAssessment(id, createdBy, payload = {}) {
+  const normalizedId = referenceId(id);
+  const ownerId = referenceId(createdBy);
+  if (!normalizedId || !ownerId) return null;
+  const row = {
+    lesson_id: referenceId(payload.lessonId),
+    title: String(payload.title || '').trim(),
+    subject: String(payload.subject || '').trim(),
+    subject_id: referenceId(payload.subjectId),
+    subject_code: String(payload.subjectCode || '').trim().toUpperCase(),
+    subject_category: String(payload.subjectCategory || 'Technical').trim(),
+    difficulty: String(payload.difficulty || 'medium').trim(),
+    activity_points: payload.activityPoints ?? null,
+    challenge_description: String(payload.challengeDescription || '').trim(),
+    attachments: normalizeAttachments(payload.attachments),
+    assigned_student_ids: Array.isArray(payload.assignedStudentIds) ? payload.assignedStudentIds.map(referenceId).filter(Boolean) : [],
+    published_by: referenceId(payload.publishedBy),
+    last_modified_by: referenceId(payload.lastModifiedBy),
+    updated_at: new Date().toISOString(),
+  };
+  const { data, error } = await getSupabaseStorageClient()
+    .from('assessments')
+    .update(row)
+    .eq('id', normalizedId)
+    .eq('created_by', ownerId)
+    .select('*')
+    .limit(1)
+    .maybeSingle();
+  if (error) throw contentError(error, 'Failed to update assessment in Supabase');
+  return mapAssessment(data);
+}
+
 module.exports = {
   createSupabaseLesson,
   listSupabaseLessons,
@@ -202,4 +235,5 @@ module.exports = {
   createSupabaseAssessment,
   findSupabaseAssessment,
   listSupabaseAssessments,
+  updateSupabaseAssessment,
 };

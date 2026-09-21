@@ -3,6 +3,7 @@ const { readProfileRows } = require('../services/supabaseUserProfileService');
 const { teacherRequests, decideTeacherRequest, teacherResultData } = require('../services/supabaseTeacherRecordsService');
 const { nameError, phoneError } = require('../utils/teacherValidation');
 const path = require('path');
+const crypto = require('crypto');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
@@ -46,6 +47,7 @@ const {
   findSupabaseAssessment,
   createSupabaseAssessment,
   listSupabaseAssessments,
+  updateSupabaseAssessment,
 } = require('../services/supabaseContentService');
 const {
   notifyAssessmentAssigned,
@@ -586,6 +588,57 @@ function normalizeAssessmentAttachments(assessment) {
   return Array.isArray(assessment?.attachments) ? assessment.attachments : [];
 }
 
+function assessmentAttachmentKey(file) {
+  return [
+    String(file?.originalname || file?.originalName || file?.fileName || '').trim().toLowerCase(),
+    Number(file?.size || 0),
+  ].join(':');
+}
+
+async function uploadAssessmentAttachments(files, { teacherId, assessmentId = 'new' } = {}) {
+  const rejected = [];
+  const seen = new Set();
+  const uniqueFiles = [];
+  for (const file of Array.isArray(files) ? files : []) {
+    if (Number(file?.size || 0) > 10 * 1024 * 1024) {
+      rejected.push({ fileName: String(file?.originalname || 'Attachment'), reason: 'File exceeds the 10MB limit' });
+      continue;
+    }
+    const key = assessmentAttachmentKey(file);
+    if (!key || seen.has(key)) {
+      rejected.push({ fileName: String(file?.originalname || 'Attachment'), reason: 'Duplicate file' });
+      continue;
+    }
+    seen.add(key);
+    uniqueFiles.push(file);
+  }
+
+  const settled = await Promise.allSettled(uniqueFiles.map((file) => uploadFile({
+    file,
+    folder: `teacher-assessments/${String(teacherId || 'unknown')}/${String(assessmentId || 'new')}`,
+  })));
+  const uploaded = [];
+  settled.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      const file = result.value;
+      uploaded.push({
+        originalName: file.originalName,
+        storedPath: file.storedPath,
+        mimeType: file.mimeType,
+        extension: file.extension,
+        size: file.size,
+        uploadedAt: file.uploadedAt,
+      });
+      return;
+    }
+    rejected.push({
+      fileName: String(uniqueFiles[index]?.originalname || 'Attachment'),
+      reason: String(result.reason?.message || 'Upload failed'),
+    });
+  });
+  return { uploaded, rejected };
+}
+
 function toAssessmentAttachmentResponse(attachment, req) {
   return {
     id: String(attachment?._id || ''),
@@ -1104,7 +1157,7 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
 });
 
 const updateTeacherAssessment = asyncHandler(async (req, res) => {
-  const assessment = await Assessment.findOne({ _id: req.params.id, createdBy: req.user._id });
+  const assessment = await findSupabaseAssessment(req.params.id, req.user._id);
   if (!assessment) {
     const error = new Error('Assessment not found');
     error.statusCode = 404;
@@ -1126,12 +1179,11 @@ const updateTeacherAssessment = asyncHandler(async (req, res) => {
     throw error;
   }
   const normalizedSubject = ensureTeacherSubjectAccess(req.user, subjectRecord.name);
-  const duplicateAssessment = await Assessment.findOne({
-    _id: { $ne: assessment._id },
-    createdBy: req.user._id,
-    subjectId: subjectRecord._id,
-    title: new RegExp(`^${normalizedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-  }).select('_id');
+  const duplicateAssessment = (await listSupabaseAssessments(req.user._id)).find((item) => (
+    String(item._id) !== String(assessment._id)
+    && String(item.subjectId || '') === String(subjectRecord._id)
+    && String(item.title || '').trim().toLowerCase() === normalizedTitle.toLowerCase()
+  ));
   if (duplicateAssessment) {
     const error = new Error('An activity or assessment with the same title already exists for this class');
     error.statusCode = 409;
@@ -1148,14 +1200,13 @@ const updateTeacherAssessment = asyncHandler(async (req, res) => {
   }
 
   let linkedLesson = assessment.lessonId
-    ? await Lesson.findOne({ _id: assessment.lessonId, createdBy: req.user._id }).select('_id title subjectId')
+    ? await findSupabaseLesson(assessment.lessonId, req.user._id)
     : null;
   if (linkedLesson && String(linkedLesson.subjectId || '') !== String(subjectRecord._id)) {
-    linkedLesson = await Lesson.findOne({
-      createdBy: req.user._id,
-      subjectId: subjectRecord._id,
-      title: linkedLesson.title,
-    }).select('_id');
+    linkedLesson = (await listSupabaseLessons(req.user._id)).find((lesson) => (
+      String(lesson.subjectId || '') === String(subjectRecord._id)
+      && normalizeKeyPart(lesson.title) === normalizeKeyPart(linkedLesson.title)
+    )) || null;
   }
 
   assessment.title = normalizedTitle;
@@ -1182,6 +1233,36 @@ const updateTeacherAssessment = asyncHandler(async (req, res) => {
     }
     assessment.difficulty = difficulty;
   }
+
+  const currentAttachments = normalizeAssessmentAttachments(assessment);
+  let retainedAttachmentIds = req.body?.retainedAttachmentIds;
+  if (typeof retainedAttachmentIds === 'string') {
+    try {
+      retainedAttachmentIds = JSON.parse(retainedAttachmentIds);
+    } catch {
+      retainedAttachmentIds = retainedAttachmentIds.split(',');
+    }
+  }
+  const retainedIds = Array.isArray(retainedAttachmentIds)
+    ? new Set(retainedAttachmentIds.map((value) => String(value || '').trim()).filter(Boolean))
+    : null;
+  const retainedAttachments = retainedIds
+    ? currentAttachments.filter((attachment) => retainedIds.has(String(attachment?._id || '')))
+    : currentAttachments;
+  const existingKeys = new Set(retainedAttachments.map(assessmentAttachmentKey));
+  const uploadedFiles = (Array.isArray(req.files?.attachments) ? req.files.attachments : [])
+    .filter((file) => !existingKeys.has(assessmentAttachmentKey(file)));
+  const duplicateFiles = (Array.isArray(req.files?.attachments) ? req.files.attachments : [])
+    .filter((file) => existingKeys.has(assessmentAttachmentKey(file)))
+    .map((file) => ({ fileName: file.originalname, reason: 'Duplicate file' }));
+  const uploadResult = await uploadAssessmentAttachments(uploadedFiles, {
+    teacherId: req.user._id,
+    assessmentId: assessment._id,
+  });
+  const middlewareRejections = Array.isArray(req.rejectedAssessmentAttachments)
+    ? req.rejectedAssessmentAttachments
+    : [];
+  assessment.attachments = [...retainedAttachments, ...uploadResult.uploaded];
   assessment.assignedStudentIds = await resolveAssignedStudentIds({
     assignmentScope: assessment.assignmentScope,
     teacherId: req.user._id,
@@ -1189,9 +1270,23 @@ const updateTeacherAssessment = asyncHandler(async (req, res) => {
   });
   assessment.lastModifiedBy = req.user._id;
   if (!assessment.publishedBy) assessment.publishedBy = req.user._id;
-  await assessment.save();
+  const updatedAssessment = await updateSupabaseAssessment(assessment._id, req.user._id, assessment);
+  if (!updatedAssessment) {
+    const error = new Error('Assessment not found');
+    error.statusCode = 404;
+    throw error;
+  }
 
-  return sendSuccess(res, 200, 'Assessment updated successfully', { assessment });
+  const rejectedAttachments = [...middlewareRejections, ...duplicateFiles, ...uploadResult.rejected];
+  return sendSuccess(res, 200, rejectedAttachments.length
+    ? 'Assessment updated; some attachments were skipped'
+    : 'Assessment updated successfully', {
+    assessment: updatedAssessment,
+    attachmentUpload: {
+      uploadedCount: uploadResult.uploaded.length,
+      rejected: rejectedAttachments,
+    },
+  });
 });
 
 const copyTeacherAssessmentToClasses = asyncHandler(async (req, res) => {
@@ -1536,28 +1631,14 @@ const createAssessment = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  const assessmentId = crypto.randomUUID().replace(/-/g, '');
   const uploadedAssessmentFiles = Array.isArray(req.files?.attachments) ? req.files.attachments : [];
   let assessmentAttachmentsPayload = [];
-  if (isActivityAssessment && uploadedAssessmentFiles.length > 0) {
-    const normalizedUploads = uniqueBy(uploadedAssessmentFiles, (file) => {
-      const originalName = String(file.originalname || '').trim().toLowerCase();
-      const mimeType = String(file.mimetype || '').trim().toLowerCase();
-      const size = Number(file.size || 0);
-      return `${originalName}:${mimeType}:${size}`;
-    });
-
-    const uploadedAttachments = await uploadFiles(normalizedUploads, {
-      folder: `teacher-assessments/${String(req.user?._id || 'unknown')}`,
-    });
-    assessmentAttachmentsPayload = uploadedAttachments.map((file) => ({
-      originalName: file.originalName,
-      storedPath: file.storedPath,
-      mimeType: file.mimeType,
-      extension: file.extension,
-      size: file.size,
-      uploadedAt: file.uploadedAt,
-    }));
-  }
+  const assessmentUploadResult = await uploadAssessmentAttachments(uploadedAssessmentFiles, {
+    teacherId: req.user._id,
+    assessmentId,
+  });
+  assessmentAttachmentsPayload = assessmentUploadResult.uploaded;
 
   let assessment;
   try {
@@ -1602,6 +1683,7 @@ const createAssessment = asyncHandler(async (req, res) => {
       : [];
 
     assessment = await createSupabaseAssessment({
+      id: assessmentId,
       lessonId: lesson?._id || undefined,
       title: normalizedTitle,
       examType: normalizedExamType,
@@ -1651,7 +1733,19 @@ const createAssessment = asyncHandler(async (req, res) => {
   }
 
   await safelyRunNotificationTask('new assessment', () => notifyAssessmentAssigned({ assessment, publisher: req.user }));
-  return sendSuccess(res, 201, 'Assessment created successfully', { assessment });
+  const rejectedAttachments = [
+    ...(Array.isArray(req.rejectedAssessmentAttachments) ? req.rejectedAssessmentAttachments : []),
+    ...assessmentUploadResult.rejected,
+  ];
+  return sendSuccess(res, 201, rejectedAttachments.length
+    ? 'Assessment created; some attachments were skipped'
+    : 'Assessment created successfully', {
+    assessment,
+    attachmentUpload: {
+      uploadedCount: assessmentAttachmentsPayload.length,
+      rejected: rejectedAttachments,
+    },
+  });
 });
 
 const updateAssessmentQuestions = asyncHandler(async (req, res) => {

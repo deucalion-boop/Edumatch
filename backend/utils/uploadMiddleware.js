@@ -115,9 +115,29 @@ const uploadStudentSubmissionFiles = buildCommonAttachmentUpload(
   'Only common document, image, and zip files are allowed for student submissions'
 );
 
-const uploadTeacherAssessmentFiles = buildCommonAttachmentUpload(
-  'Only common document, image, and zip files are allowed for activity attachments'
-);
+const uploadTeacherAssessmentFiles = multer({
+  storage: memoryStorage,
+  fileFilter: (req, file, cb) => {
+    if (!isAllowedCommonAttachment(file)) {
+      if (!Array.isArray(req.rejectedAssessmentAttachments)) req.rejectedAssessmentAttachments = [];
+      req.rejectedAssessmentAttachments.push({
+        fileName: String(file?.originalname || 'Attachment'),
+        fileType: String(file?.mimetype || 'application/octet-stream'),
+        reason: 'Unsupported file type',
+      });
+      return cb(null, false);
+    }
+
+    return cb(null, true);
+  },
+  limits: {
+    // Assessment files are validated individually at 10MB by the controller.
+    // This higher parser ceiling lets one oversized file be skipped without
+    // discarding the other valid files in the multipart request.
+    fileSize: 25 * 1024 * 1024,
+    files: 10,
+  },
+});
 
 module.exports = {
   lessonUpload,

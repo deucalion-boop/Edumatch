@@ -660,9 +660,9 @@
                   </div>
                 </div>
 
-                <div v-if="isActivityAssessment" class="form-group full">
-                  <label>Teacher Attachments</label>
-                  <p class="helper-copy">Optional. Upload up to 5 files for students to open from the activity page.</p>
+                <div class="form-group full">
+                  <label>{{ isActivityAssessment ? 'Teacher Attachments' : 'Quiz / Exam Attachments' }}</label>
+                  <p class="helper-copy">Optional. Add up to 10 files for students to open before they begin.</p>
 
                   <div
                     class="lesson-upload-box"
@@ -682,8 +682,8 @@
                     />
                     <div class="lesson-upload-content">
                       <i class="fas fa-paperclip"></i>
-                      <h4>Drag and drop activity files here</h4>
-                      <p>PDF, document, image, or zip files, up to 5 files and 10MB each.</p>
+                      <h4>Drag and drop multiple files here</h4>
+                      <p>PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, JPG/JPEG, or PNG; up to 10MB each.</p>
                       <button type="button" class="btn btn-outline btn-sm" @click="triggerActivityAttachmentBrowse">
                         Browse Files
                       </button>
@@ -694,12 +694,17 @@
                     <div v-for="file in challengeForm.activityAttachments" :key="`${file.name}:${file.size}:${file.lastModified}`" class="attachment-item attachment-item-removable">
                       <div class="attachment-copy">
                         <span class="attachment-name">{{ file.name }}</span>
-                        <span class="attachment-meta">{{ formatBytes(file.size) }}</span>
+                        <span class="attachment-meta">{{ getAttachmentTypeLabel(file) }} · {{ formatBytes(file.size) }}</span>
                       </div>
                       <button type="button" class="attachment-remove-btn" @click="removeActivityAttachment(file)">
                         Remove
                       </button>
                     </div>
+                  </div>
+                  <div v-if="isAssessmentUploading" class="attachment-upload-progress" role="status" aria-live="polite">
+                    <span><i class="fas fa-spinner fa-spin"></i> Uploading attachments</span>
+                    <strong>{{ assessmentUploadProgress }}%</strong>
+                    <div><span :style="{ width: `${assessmentUploadProgress}%` }"></span></div>
                   </div>
                 </div>
 
@@ -1110,7 +1115,7 @@ const getSubjectsForStrand = (strand) => {
 /** Lesson form */
 const MAX_LESSON_PDF_BYTES = 10 * 1024 * 1024;
 const MAX_ACTIVITY_ATTACHMENT_BYTES = 10 * 1024 * 1024;
-const MAX_ACTIVITY_ATTACHMENT_COUNT = 5;
+const MAX_ACTIVITY_ATTACHMENT_COUNT = 10;
 const ACTIVITY_ATTACHMENT_EXTENSIONS = new Set([".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt", ".jpg", ".jpeg", ".png", ".webp", ".zip"]);
 const teacherClasses = ref([]);
 const lessonForm = reactive({
@@ -1124,6 +1129,8 @@ const isLessonDropActive = ref(false);
 const lessonPlanFileInput = ref(null);
 const activityAttachmentInput = ref(null);
 const isActivityDropActive = ref(false);
+const assessmentUploadProgress = ref(0);
+const isAssessmentUploading = computed(() => assessmentUploadProgress.value > 0 && assessmentUploadProgress.value < 100);
 const lessonCurrentStep = ref(1);
 const lessonStepAttempted = reactive({ 1: false, 2: false, 3: false });
 const lessonWizardSteps = [
@@ -1444,22 +1451,16 @@ function getFileExtension(fileName) {
 function validateActivityAttachment(file) {
   const extension = getFileExtension(file?.name);
   if (!ACTIVITY_ATTACHMENT_EXTENSIONS.has(extension)) {
-    return "Only PDF, common document, image, and zip files are allowed for activity attachments.";
+    return "Only PDF, DOC/DOCX, PPT/PPTX, XLS/XLSX, JPG/JPEG, PNG, TXT, WEBP, or ZIP files are allowed.";
   }
   if (Number(file?.size || 0) > MAX_ACTIVITY_ATTACHMENT_BYTES) {
-    return "Each activity attachment must be 10MB or smaller.";
+    return "Each attachment must be 10MB or smaller.";
   }
   return "";
 }
 
 function ensureActivityAttachmentAccess() {
-  if (canManageActivityAttachments.value) return true;
-  flash.value = {
-    tab: "challenge",
-    type: "error",
-    message: "Switch to Activity mode before adding activity attachments.",
-  };
-  return false;
+  return canManageActivityAttachments.value;
 }
 
 function mergeActivityAttachments(files) {
@@ -1474,9 +1475,13 @@ function mergeActivityAttachments(files) {
 
   for (const file of incomingFiles) {
     const key = `${file?.name}:${file?.size}:${file?.lastModified}`;
-    if (!file || existingKeys.has(key)) continue;
+    if (!file) continue;
+    if (existingKeys.has(key)) {
+      warningMessage = `${file.name} is already selected.`;
+      continue;
+    }
     if (nextAttachments.length >= MAX_ACTIVITY_ATTACHMENT_COUNT) {
-      warningMessage = `You can upload up to ${MAX_ACTIVITY_ATTACHMENT_COUNT} activity attachments only.`;
+      warningMessage = `You can upload up to ${MAX_ACTIVITY_ATTACHMENT_COUNT} attachments only.`;
       break;
     }
 
@@ -1537,6 +1542,20 @@ function removeActivityAttachment(fileToRemove) {
   challengeForm.activityAttachments = challengeForm.activityAttachments.filter((file) => (
     `${file?.name}:${file?.size}:${file?.lastModified}` !== removeKey
   ));
+}
+
+function getAttachmentTypeLabel(file) {
+  const extension = getFileExtension(file?.name || file?.fileName).replace('.', '').toUpperCase();
+  return extension || String(file?.type || file?.fileType || 'File');
+}
+
+function getAssessmentSaveMessage(response, fallback) {
+  const rejected = Array.isArray(response?.data?.attachmentUpload?.rejected)
+    ? response.data.attachmentUpload.rejected
+    : [];
+  if (!rejected.length) return response?.data?.message || fallback;
+  const details = rejected.map((item) => `${item.fileName}: ${item.reason}`).join('; ');
+  return `${response?.data?.message || fallback}. Skipped: ${details}`;
 }
 
 const generatedQuestions = ref([]); // [{prompt, answer, options?:[]}]
@@ -1655,9 +1674,7 @@ function selectChallengeWizardStep(step) {
   challengeCurrentStep.value = step;
 }
 
-const canManageActivityAttachments = computed(() => (
-  isActivityAssessment.value
-));
+const canManageActivityAttachments = computed(() => true);
 const canPublishActivity = computed(() => {
   if (!isActivityAssessment.value) return false;
   const selectedClass = getSelectedChallengeClass();
@@ -1932,7 +1949,24 @@ async function finalizeGeneratedAssessment() {
       createPayload.subjectId = generatedDraftMeta.value.subjectId;
     }
 
-    const response = await axios.post(`${resolveApiBaseUrl()}/teacher/assessments`, createPayload, getAuthConfig());
+    const attachments = Array.isArray(challengeForm.activityAttachments) ? challengeForm.activityAttachments : [];
+    attachments.forEach((file) => {
+      const validationMessage = validateActivityAttachment(file);
+      if (validationMessage) throw new Error(validationMessage);
+    });
+    const formData = new FormData();
+    Object.entries(createPayload).forEach(([key, value]) => {
+      formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value ?? ''));
+    });
+    attachments.forEach((file) => formData.append('attachments', file));
+    assessmentUploadProgress.value = attachments.length ? 1 : 0;
+    const response = await axios.post(`${resolveApiBaseUrl()}/teacher/assessments`, formData, {
+      ...getAuthConfig(),
+      onUploadProgress: (event) => {
+        if (event.total) assessmentUploadProgress.value = Math.min(99, Math.round((event.loaded / event.total) * 100));
+      },
+    });
+    assessmentUploadProgress.value = attachments.length ? 100 : 0;
     const savedAssessment = response.data?.assessment || null;
 
     isGeneratedPreviewVisible.value = false;
@@ -1945,7 +1979,7 @@ async function finalizeGeneratedAssessment() {
     flash.value = {
       tab: "challenge",
       type: "success",
-      message: "Assessment successfully created. It is now available in Records.",
+      message: getAssessmentSaveMessage(response, "Assessment successfully created. It is now available in Records."),
     };
 
     emitTeacherAssessmentCreated(savedAssessment);
@@ -1957,6 +1991,7 @@ async function finalizeGeneratedAssessment() {
     }
   } finally {
     isSavingGeneratedAssessment.value = false;
+    window.setTimeout(() => { assessmentUploadProgress.value = 0; }, 500);
   }
 }
 
@@ -1996,7 +2031,7 @@ async function publishActivity() {
     }
 
     if (attachments.length > MAX_ACTIVITY_ATTACHMENT_COUNT) {
-      throw new Error(`You can upload up to ${MAX_ACTIVITY_ATTACHMENT_COUNT} activity attachments only.`);
+      throw new Error(`You can upload up to ${MAX_ACTIVITY_ATTACHMENT_COUNT} attachments only.`);
     }
 
     for (const attachment of attachments) {
@@ -2035,13 +2070,20 @@ async function publishActivity() {
     }
     attachments.forEach((file) => formData.append("attachments", file));
 
-    const response = await axios.post(`${resolveApiBaseUrl()}/teacher/assessments`, formData, getAuthConfig());
+    assessmentUploadProgress.value = attachments.length ? 1 : 0;
+    const response = await axios.post(`${resolveApiBaseUrl()}/teacher/assessments`, formData, {
+      ...getAuthConfig(),
+      onUploadProgress: (event) => {
+        if (event.total) assessmentUploadProgress.value = Math.min(99, Math.round((event.loaded / event.total) * 100));
+      },
+    });
+    assessmentUploadProgress.value = attachments.length ? 100 : 0;
     const savedAssessment = response.data?.assessment || null;
 
     flash.value = {
       tab: "challenge",
       type: "success",
-      message: response.data?.message || "Activity successfully created. It is now available for students.",
+      message: getAssessmentSaveMessage(response, "Activity successfully created. It is now available for students."),
     };
 
     resetAssessmentBuilder();
@@ -2054,6 +2096,7 @@ async function publishActivity() {
     }
   } finally {
     isPublishingActivity.value = false;
+    window.setTimeout(() => { assessmentUploadProgress.value = 0; }, 500);
   }
 }
 
@@ -3072,6 +3115,31 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 0.4rem;
   margin-top: 0.35rem;
+}
+
+.attachment-upload-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem 0.75rem;
+  margin-top: 0.65rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.attachment-upload-progress > div {
+  grid-column: 1 / -1;
+  height: 0.4rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.attachment-upload-progress > div > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #69aa47;
+  transition: width 160ms ease;
 }
 
 .attachment-item {

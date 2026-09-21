@@ -455,6 +455,32 @@
                       <span>No lesson is linked. You can continue when ready.</span>
                     </div>
                   </section>
+
+                  <section v-if="getActivityAttachments(selectedAssessment).length" class="brief-section exam-brief-section">
+                    <div class="brief-section-title">
+                      <span class="brief-section-icon is-resource"><i class="fas fa-paperclip"></i></span>
+                      <div>
+                        <h5>Assessment attachments</h5>
+                        <span>Open each teacher file individually before starting.</span>
+                      </div>
+                    </div>
+                    <div class="material-list">
+                      <button
+                        v-for="material in getActivityAttachments(selectedAssessment)"
+                        :key="material.id || material.fileName"
+                        type="button"
+                        class="material-card"
+                        @click="openMaterial(material.url || material.downloadUrl)"
+                      >
+                        <span class="material-icon" aria-hidden="true"><i class="fas" :class="material.canPreviewInline ? 'fa-file-pdf' : 'fa-file-alt'"></i></span>
+                        <span class="material-copy">
+                          <strong>{{ material.fileName || 'Assessment attachment' }}</strong>
+                          <small>{{ material.extension ? material.extension.replace('.', '').toUpperCase() : material.fileType || 'File' }} · {{ formatBytes(material.size) }}</small>
+                        </span>
+                        <span class="material-open"><i class="fas fa-arrow-up-right-from-square"></i></span>
+                      </button>
+                    </div>
+                  </section>
                 </div>
 
                 <aside class="exam-start-panel">

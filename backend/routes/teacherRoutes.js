@@ -69,11 +69,16 @@ router.get('/lessons/:id/attachments/:attachmentId/download', downloadTeacherLes
 router.post(
   '/assessments',
   uploadLimiter,
-  uploadTeacherAssessmentFiles.fields([{ name: 'attachments', maxCount: 5 }]),
+  uploadTeacherAssessmentFiles.fields([{ name: 'attachments', maxCount: 10 }]),
   createAssessment
 );
 router.get('/assessments', getTeacherAssessments);
-router.patch('/assessments/:id', updateTeacherAssessment);
+router.patch(
+  '/assessments/:id',
+  uploadLimiter,
+  uploadTeacherAssessmentFiles.fields([{ name: 'attachments', maxCount: 10 }]),
+  updateTeacherAssessment
+);
 router.post('/assessments/:id/classes', copyTeacherAssessmentToClasses);
 router.put('/assessments/:id/questions', updateAssessmentQuestions);
 router.get('/assessments/:id/results', getAssessmentResultsSummary);
