@@ -290,7 +290,6 @@
       <header class="pathway-premium-header">
         <div class="pathway-premium-header__copy">
           <span class="premium-eyebrow"><i class="fas fa-compass" aria-hidden="true"></i> Personalized pathway</span>
-          <span v-if="isRecommendationPreview" class="pathway-demo-badge"><i class="fas fa-flask" aria-hidden="true"></i> Demo data</span>
           <h1 id="recommendation-title">Recommendation progress</h1>
           <p>Turn your assessment results into a clearer picture of the academic strand that fits your strengths.</p>
         </div>
@@ -426,92 +425,6 @@ import { useAuthStore } from '../../stores/auth.js'
 
 const NEW_WINDOW_MS = 72 * 60 * 60 * 1000
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
-const RECOMMENDATION_DEMO_ENABLED = true
-
-function createRecommendationPreviewData() {
-  const now = Date.now()
-  const submission = (id, title, assessmentMode, percentage, gradingPeriod = '') => ({
-    id,
-    assessmentId: id,
-    title,
-    assessmentMode,
-    gradingPeriod,
-    score: percentage,
-    totalPoints: 100,
-    percentage,
-    scoringStatus: 'final',
-    submittedAt: new Date(now - Number(id.replace(/\D/g, '') || 1) * 86400000).toISOString(),
-    createdAt: new Date(now - Number(id.replace(/\D/g, '') || 1) * 86400000).toISOString()
-  })
-
-  const subject = ({ id, name, code, category, completion, activity, quiz, exam, final, level, evidence, rank }) => ({
-    subjectId: id,
-    subjectName: name,
-    subjectCode: code,
-    subjectCategory: category,
-    completionPercentage: completion,
-    activityAverage: activity,
-    quizAverage: quiz,
-    examAverage: exam,
-    finalPercentage: final,
-    performanceLevel: level,
-    evidenceCount: evidence,
-    minimumEvidenceCount: 2,
-    hasSufficientData: true,
-    weights: { activity: 30, quiz: 30, exam: 40 },
-    rank
-  })
-
-  const rankedSubjects = [
-    subject({ id: 'demo-science', name: 'Science', code: 'SCI-10', category: 'Science', completion: 88, activity: 92, quiz: 90, exam: 94, final: 92.2, level: 'Excellent', evidence: 8, rank: 1 }),
-    subject({ id: 'demo-math', name: 'Mathematics', code: 'MAT-10', category: 'Math', completion: 82, activity: 89, quiz: 91, exam: 88, final: 89.2, level: 'Strong', evidence: 7, rank: 2 }),
-    subject({ id: 'demo-english', name: 'English', code: 'ENG-10', category: 'English', completion: 76, activity: 84, quiz: 82, exam: 79, final: 81.3, level: 'Strong', evidence: 6, rank: 3 }),
-    subject({ id: 'demo-ap', name: 'Araling Panlipunan', code: 'AP-10', category: 'AP', completion: 78, activity: 83, quiz: 80, exam: 81, final: 81.2, level: 'Strong', evidence: 6, rank: 4 }),
-    subject({ id: 'demo-filipino', name: 'Filipino', code: 'FIL-10', category: 'English', completion: 72, activity: 80, quiz: 78, exam: 76, final: 77.8, level: 'Developing', evidence: 5, rank: 5 }),
-    subject({ id: 'demo-tle', name: 'Technology and Livelihood Education', code: 'TLE-10', category: 'Technical', completion: 74, activity: 79, quiz: 76, exam: 75, final: 76.5, level: 'Developing', evidence: 5, rank: 6 }),
-    subject({ id: 'demo-mapeh', name: 'MAPEH', code: 'MAPEH-10', category: 'Technical', completion: 70, activity: 77, quiz: 73, exam: 74, final: 74.7, level: 'Needs Improvement', evidence: 5, rank: 7 }),
-    subject({ id: 'demo-esp', name: 'Edukasyon sa Pagpapakatao', code: 'ESP-10', category: 'AP', completion: 68, activity: 75, quiz: 72, exam: 71, final: 72.4, level: 'Needs Improvement', evidence: 4, rank: 8 })
-  ]
-
-  return {
-    finalizedSubmissions: [
-      submission('demo-1', 'Science Quiz: Matter', 'quiz', 92),
-      submission('demo-2', 'Mathematics Quiz: Functions', 'quiz', 88),
-      submission('demo-3', 'First Grading Examination', 'grading_assessment', 91, '1st'),
-      submission('demo-4', 'Second Grading Examination', 'grading_assessment', 86, '2nd'),
-      submission('demo-5', 'Third Grading Examination', 'grading_assessment', 94, '3rd'),
-      submission('demo-6', 'English Reading Assessment', 'quiz', 84)
-    ],
-    activitySubmissions: [
-      submission('demo-activity-1', 'Science Laboratory Report', 'activity', 95),
-      submission('demo-activity-2', 'Mathematics Problem Set', 'activity', 89),
-      submission('demo-activity-3', 'English Essay', 'activity', 86)
-    ],
-    subjects: rankedSubjects.map((item) => ({ id: item.subjectId, name: item.subjectName, code: item.subjectCode })),
-    subjectInsights: {
-      assessmentAttemptsCount: 9,
-      recommendationProgressPercent: 100,
-      isRecommendationReady: true,
-      recommendedStrand: { name: 'STEM', confidence: 91 },
-      strandScores: { STEM: 91, HUMSS: 82, TVL: 75, ABM: 64 },
-      overallLearningProgress: {
-        lessonsCompleted: 18,
-        activitiesCompleted: 9,
-        quizzesCompleted: 7,
-        examsCompleted: 3,
-        totalRequiredItems: 45,
-        completedRequiredItems: 37,
-        completionPercentage: 82
-      },
-      subjectPerformance: rankedSubjects,
-      rankedSubjects,
-      strongestSubject: rankedSubjects[0],
-      prioritySubject: rankedSubjects[rankedSubjects.length - 1],
-      strengthRecommendation: 'You are currently performing strongest in Science. Continue exploring advanced experiments and analytical activities.',
-      improvementRecommendation: 'Focus on Filipino reading comprehension and written exercises to strengthen your overall performance.'
-    }
-  }
-}
 
 export default {
   name: 'StudentDashboard',
@@ -599,10 +512,6 @@ export default {
     },
     showRecommendationsPanel() {
       return this.activeDashboardSection === 'recommendations'
-    },
-    isRecommendationPreview() {
-      const explicitlyRequested = ['1', 'true', 'recommendations'].includes(String(this.$route?.query?.demo || '').trim().toLowerCase())
-      return explicitlyRequested || (RECOMMENDATION_DEMO_ENABLED && this.showRecommendationsPanel)
     },
     activityMap() {
       return this.activitySubmissions.reduce((map, item) => {
@@ -786,10 +695,6 @@ export default {
   watch: {
     '$route.query.section'() {
       this.scheduleDashboardSectionFocus()
-      if (this.showRecommendationsPanel && RECOMMENDATION_DEMO_ENABLED) this.fetchDashboardData()
-    },
-    '$route.query.demo'() {
-      this.fetchDashboardData()
     }
   },
   created() {
@@ -813,15 +718,6 @@ export default {
     if (this.clockTimer) window.clearInterval(this.clockTimer)
   },
   methods: {
-    applyRecommendationPreviewData() {
-      const preview = createRecommendationPreviewData()
-      this.finalizedSubmissions = preview.finalizedSubmissions
-      this.activitySubmissions = preview.activitySubmissions
-      this.subjects = preview.subjects
-      this.subjectInsights = preview.subjectInsights
-      this.recommendation = preview.subjectInsights
-      this.scoredAverageScore = this.averagePercentageForRows(preview.finalizedSubmissions)
-    },
     formatAcademicValue(value) {
       return value === null || value === undefined ? 'N/A' : `${Number(value).toFixed(1)}%`
     },
@@ -1088,7 +984,7 @@ export default {
           axios.get(`${base}/student/submissions/me`, auth),
           axios.get(`${base}/student/activity-submissions`, auth),
           axios.get(`${base}/student/subjects`, auth),
-          this.isRecommendationPreview ? Promise.resolve(null) : this.fetchRecommendation(),
+          this.fetchRecommendation(),
           axios.get(`${base}/student/attendance`, auth)
         ])
 
@@ -1114,12 +1010,22 @@ export default {
         if (subjectsRes) this.subjects = subjectsRes.data?.subjects || []
         if (subjectsRes) this.pendingSubjects = subjectsRes.data?.pendingSubjects || []
 
-        this.subjectInsights = { ...(subjectsRes?.data?.insights || {}), ...(recommendationRes || {}) }
+        const academicInsights = subjectsRes?.data?.insights || {}
+        this.subjectInsights = {
+          ...academicInsights,
+          ...(recommendationRes || {}),
+          subjectPerformance: academicInsights.subjectPerformance || recommendationRes?.subjectPerformance || [],
+          overallLearningProgress: academicInsights.overallLearningProgress || {},
+          rankedSubjects: academicInsights.rankedSubjects || [],
+          strongestSubject: academicInsights.strongestSubject || null,
+          prioritySubject: academicInsights.prioritySubject || null,
+          strengthRecommendation: academicInsights.strengthRecommendation || '',
+          improvementRecommendation: academicInsights.improvementRecommendation || ''
+        }
         if (responses[5].status === 'fulfilled') this.recommendation = recommendationRes
         if (attendanceRes) this.attendanceRecords = attendanceRes.data?.records || []
         if (attendanceRes) this.attendanceSummary = attendanceRes.data?.summary || this.attendanceSummary
         if (submissionsRes) this.scoredAverageScore = Number(submissionsRes.data?.summary?.averageScore || 0)
-        if (this.isRecommendationPreview) this.applyRecommendationPreviewData()
       } catch (error) {
         console.error('Failed to fetch student dashboard data:', error)
         this.loadError = 'We could not refresh the latest dashboard data right now. Showing the most recent information available.'
@@ -4651,23 +4557,6 @@ export default {
 
 .pathway-premium-header__copy {
   max-width: 46rem;
-}
-
-.pathway-demo-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-left: 0.6rem;
-  padding: 0.25rem 0.55rem;
-  color: #854d0e;
-  border: 1px solid #fde68a;
-  border-radius: 999px;
-  background: #fffbeb;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  vertical-align: middle;
 }
 
 .premium-dashboard .pathway-premium-header h1 {
