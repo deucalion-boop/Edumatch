@@ -399,6 +399,7 @@ import { useAuthStore } from '../../stores/auth.js'
 
 const NEW_WINDOW_MS = 72 * 60 * 60 * 1000
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+const RECOMMENDATION_DEMO_ENABLED = true
 
 function createRecommendationPreviewData() {
   const now = Date.now()
@@ -568,7 +569,7 @@ export default {
     },
     isRecommendationPreview() {
       const explicitlyRequested = ['1', 'true', 'recommendations'].includes(String(this.$route?.query?.demo || '').trim().toLowerCase())
-      return explicitlyRequested || (import.meta.env.DEV && this.showRecommendationsPanel)
+      return explicitlyRequested || (RECOMMENDATION_DEMO_ENABLED && this.showRecommendationsPanel)
     },
     activityMap() {
       return this.activitySubmissions.reduce((map, item) => {
@@ -716,10 +717,10 @@ export default {
   watch: {
     '$route.query.section'() {
       this.scheduleDashboardSectionFocus()
-      if (this.showRecommendationsPanel && import.meta.env.DEV) this.fetchDashboardData()
+      if (this.showRecommendationsPanel && RECOMMENDATION_DEMO_ENABLED) this.fetchDashboardData()
     },
     '$route.query.demo'() {
-      if (!import.meta.env.DEV) this.fetchDashboardData()
+      this.fetchDashboardData()
     }
   },
   created() {
