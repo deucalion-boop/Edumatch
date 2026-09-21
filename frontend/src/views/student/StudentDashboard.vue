@@ -367,6 +367,33 @@
         </div>
       </section>
 
+      <section v-if="!isInitialLoading && rankedStrandRecommendations.length" class="strand-ranking-section">
+        <header>
+          <div><span class="premium-eyebrow">AI strand recommendation</span><h2>Strand fit ranking</h2></div>
+          <p>Ranked from the strongest to the lowest match using your graded subject performance.</p>
+        </header>
+        <ol class="strand-ranking-list">
+          <li v-for="strand in rankedStrandRecommendations" :key="strand.name" :class="{ 'is-top-strand': strand.rank === 1 }">
+            <div class="strand-rank-summary">
+              <span class="strand-rank-number">#{{ strand.rank }}</span>
+              <div class="strand-rank-name"><strong>{{ strand.name }}</strong><small>{{ strand.rank === 1 ? 'Top recommendation' : strand.fitLabel }}</small></div>
+              <div class="strand-rank-score"><strong>{{ strand.score }}%</strong><span>{{ strand.fitLabel }}</span></div>
+            </div>
+            <div class="strand-fit-track" role="progressbar" :aria-label="`${strand.name} strand fit`" :aria-valuenow="strand.score" aria-valuemin="0" aria-valuemax="100"><span :style="{ width: `${strand.score}%` }"></span></div>
+            <details :open="strand.rank === 1">
+              <summary><span>View subject basis</span><i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
+              <div v-if="strand.subjects.length" class="strand-subject-evidence">
+                <article v-for="subject in strand.subjects" :key="`${strand.name}-${subject.subjectId || subject.subjectName}`">
+                  <div><strong>{{ subject.subjectName }}</strong><small>{{ subject.subjectCode || subject.category }}</small></div>
+                  <span :class="`is-${subject.tone}`">{{ subject.score }}% · {{ subject.label }}</span>
+                </article>
+              </div>
+              <p v-else class="strand-no-evidence">More graded subject results are needed to explain this strand score.</p>
+            </details>
+          </li>
+        </ol>
+      </section>
+
       <section v-if="!isInitialLoading" class="subject-performance-section">
         <header><span class="premium-eyebrow">Subject performance</span><h2>Progress and academic results</h2><p>Completion and performance are shown separately. Empty categories are excluded and remaining weights are normalized.</p></header>
         <div v-if="academicSubjects.length" class="subject-performance-grid">
@@ -417,10 +444,11 @@ function createRecommendationPreviewData() {
     createdAt: new Date(now - Number(id.replace(/\D/g, '') || 1) * 86400000).toISOString()
   })
 
-  const subject = ({ id, name, code, completion, activity, quiz, exam, final, level, evidence, rank }) => ({
+  const subject = ({ id, name, code, category, completion, activity, quiz, exam, final, level, evidence, rank }) => ({
     subjectId: id,
     subjectName: name,
     subjectCode: code,
+    subjectCategory: category,
     completionPercentage: completion,
     activityAverage: activity,
     quizAverage: quiz,
@@ -435,10 +463,14 @@ function createRecommendationPreviewData() {
   })
 
   const rankedSubjects = [
-    subject({ id: 'demo-science', name: 'Science', code: 'SCI-10', completion: 88, activity: 92, quiz: 90, exam: 94, final: 92.2, level: 'Excellent', evidence: 8, rank: 1 }),
-    subject({ id: 'demo-math', name: 'Mathematics', code: 'MAT-10', completion: 82, activity: 89, quiz: 91, exam: 88, final: 89.2, level: 'Strong', evidence: 7, rank: 2 }),
-    subject({ id: 'demo-english', name: 'English', code: 'ENG-10', completion: 76, activity: 84, quiz: 82, exam: 79, final: 81.3, level: 'Strong', evidence: 6, rank: 3 }),
-    subject({ id: 'demo-filipino', name: 'Filipino', code: 'FIL-10', completion: 68, activity: 78, quiz: 74, exam: 72, final: 74.4, level: 'Needs Improvement', evidence: 5, rank: 4 })
+    subject({ id: 'demo-science', name: 'Science', code: 'SCI-10', category: 'Science', completion: 88, activity: 92, quiz: 90, exam: 94, final: 92.2, level: 'Excellent', evidence: 8, rank: 1 }),
+    subject({ id: 'demo-math', name: 'Mathematics', code: 'MAT-10', category: 'Math', completion: 82, activity: 89, quiz: 91, exam: 88, final: 89.2, level: 'Strong', evidence: 7, rank: 2 }),
+    subject({ id: 'demo-english', name: 'English', code: 'ENG-10', category: 'English', completion: 76, activity: 84, quiz: 82, exam: 79, final: 81.3, level: 'Strong', evidence: 6, rank: 3 }),
+    subject({ id: 'demo-ap', name: 'Araling Panlipunan', code: 'AP-10', category: 'AP', completion: 78, activity: 83, quiz: 80, exam: 81, final: 81.2, level: 'Strong', evidence: 6, rank: 4 }),
+    subject({ id: 'demo-filipino', name: 'Filipino', code: 'FIL-10', category: 'English', completion: 72, activity: 80, quiz: 78, exam: 76, final: 77.8, level: 'Developing', evidence: 5, rank: 5 }),
+    subject({ id: 'demo-tle', name: 'Technology and Livelihood Education', code: 'TLE-10', category: 'Technical', completion: 74, activity: 79, quiz: 76, exam: 75, final: 76.5, level: 'Developing', evidence: 5, rank: 6 }),
+    subject({ id: 'demo-mapeh', name: 'MAPEH', code: 'MAPEH-10', category: 'Technical', completion: 70, activity: 77, quiz: 73, exam: 74, final: 74.7, level: 'Needs Improvement', evidence: 5, rank: 7 }),
+    subject({ id: 'demo-esp', name: 'Edukasyon sa Pagpapakatao', code: 'ESP-10', category: 'AP', completion: 68, activity: 75, quiz: 72, exam: 71, final: 72.4, level: 'Needs Improvement', evidence: 4, rank: 8 })
   ]
 
   return {
@@ -461,6 +493,7 @@ function createRecommendationPreviewData() {
       recommendationProgressPercent: 100,
       isRecommendationReady: true,
       recommendedStrand: { name: 'STEM', confidence: 91 },
+      strandScores: { STEM: 91, HUMSS: 82, TVL: 75, ABM: 64 },
       overallLearningProgress: {
         lessonsCompleted: 18,
         activitiesCompleted: 9,
@@ -473,7 +506,7 @@ function createRecommendationPreviewData() {
       subjectPerformance: rankedSubjects,
       rankedSubjects,
       strongestSubject: rankedSubjects[0],
-      prioritySubject: rankedSubjects[3],
+      prioritySubject: rankedSubjects[rankedSubjects.length - 1],
       strengthRecommendation: 'You are currently performing strongest in Science. Continue exploring advanced experiments and analytical activities.',
       improvementRecommendation: 'Focus on Filipino reading comprehension and written exercises to strengthen your overall performance.'
     }
@@ -711,6 +744,42 @@ export default {
     rankedAcademicSubjects() {
       return Array.isArray(this.subjectInsights?.rankedSubjects) ? this.subjectInsights.rankedSubjects : []
     },
+    rankedStrandRecommendations() {
+      const scores = this.subjectInsights?.strandScores || this.recommendation?.strandScores || {}
+      const categoryMap = {
+        STEM: ['Math', 'Science', 'Technical'],
+        HUMSS: ['English', 'AP', 'Science'],
+        ABM: ['Business', 'Math', 'English'],
+        TVL: ['Technical', 'Science', 'Math']
+      }
+      return Object.entries(scores)
+        .map(([name, value]) => ({ name: String(name).toUpperCase(), score: this.clamp(Math.round(Number(value || 0))) }))
+        .filter((strand) => strand.score > 0)
+        .sort((left, right) => right.score - left.score)
+        .map((strand, index) => {
+          const relevantCategories = categoryMap[strand.name] || []
+          const subjects = this.academicSubjects
+            .map((subject) => {
+              const score = this.academicSubjectScore(subject)
+              const category = this.academicSubjectCategory(subject)
+              return {
+                ...subject,
+                category,
+                score,
+                tone: score >= 85 ? 'high' : (score >= 75 ? 'moderate' : 'low'),
+                label: score >= 85 ? 'High' : (score >= 75 ? 'Good' : 'Needs focus')
+              }
+            })
+            .filter((subject) => relevantCategories.includes(subject.category) && subject.score !== null)
+            .sort((left, right) => right.score - left.score)
+          return {
+            ...strand,
+            rank: index + 1,
+            fitLabel: strand.score >= 85 ? 'Excellent fit' : (strand.score >= 75 ? 'Strong fit' : (strand.score >= 65 ? 'Moderate fit' : 'Developing fit')),
+            subjects
+          }
+        })
+    },
     strongestAcademicSubject() { return this.subjectInsights?.strongestSubject || null },
     priorityAcademicSubject() { return this.subjectInsights?.prioritySubject || null }
   },
@@ -755,6 +824,22 @@ export default {
     },
     formatAcademicValue(value) {
       return value === null || value === undefined ? 'N/A' : `${Number(value).toFixed(1)}%`
+    },
+    academicSubjectScore(subject) {
+      const value = subject?.finalPercentage ?? subject?.averageScore ?? subject?.progress
+      if (value === null || value === undefined || !Number.isFinite(Number(value))) return null
+      return Number(Number(value).toFixed(1))
+    },
+    academicSubjectCategory(subject) {
+      const explicit = String(subject?.subjectCategory || '').trim()
+      if (['Math', 'Science', 'English', 'AP', 'Business', 'Technical'].includes(explicit)) return explicit
+      const name = String(subject?.subjectName || subject?.name || '').toLowerCase()
+      if (/(math|algebra|geometry|calculus|statistics)/.test(name)) return 'Math'
+      if (/(science|biology|chemistry|physics|research)/.test(name)) return 'Science'
+      if (/(english|filipino|language|literature|reading|writing)/.test(name)) return 'English'
+      if (/(araling|panlipunan|history|social|esp|pagpapakatao)/.test(name)) return 'AP'
+      if (/(business|account|entrepreneur|economics|finance)/.test(name)) return 'Business'
+      return 'Technical'
     },
     performanceTone(level) {
       const normalized = String(level || '').toLowerCase()
@@ -1048,10 +1133,12 @@ export default {
 
 <style scoped>
 .academic-progress-overview,
+.strand-ranking-section,
 .subject-performance-section,
 .recommendation-ranking-section { margin-top: 1rem; padding: 1.1rem; border: 1px solid #dfe8d8; border-radius: 20px; background: #fff; }
 .academic-progress-overview > header { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
 .academic-progress-overview h2,
+.strand-ranking-section h2,
 .subject-performance-section h2,
 .recommendation-ranking-section h2 { margin: 0.25rem 0 0; color: #1e4307; font-size: 1.15rem; }
 .academic-progress-overview > header > strong { color: #4f8a35; font-size: 1.7rem; }
@@ -1063,6 +1150,36 @@ export default {
 .academic-progress-counts span { padding: 0.65rem; border-radius: 12px; background: #f7faf3; color: #52633e; font-size: 0.75rem; }
 .academic-progress-counts i { margin-right: 0.4rem; color: #6c9b4c; }
 .academic-progress-counts strong { margin-right: 0.2rem; color: #1e4307; }
+.strand-ranking-section > header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.strand-ranking-section > header > p { max-width: 32rem; margin: 0; color: #64748b; font-size: 0.76rem; line-height: 1.5; text-align: right; }
+.strand-ranking-list { display: grid; gap: 0.7rem; margin: 1rem 0 0; padding: 0; list-style: none; }
+.strand-ranking-list > li { padding: 0.85rem; border: 1px solid #e2e8f0; border-radius: 15px; background: #fbfdf9; }
+.strand-ranking-list > li.is-top-strand { border-color: #a7d68e; background: linear-gradient(135deg, #f0fdf4, #fbfef8); box-shadow: 0 10px 24px rgba(30, 67, 7, 0.07); }
+.strand-rank-summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; }
+.strand-rank-number { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; color: #fff; border-radius: 11px; background: #4f8a35; font-size: 0.75rem; font-weight: 850; }
+.strand-rank-name { display: grid; gap: 0.1rem; }
+.strand-rank-name strong { color: #1e4307; font-size: 0.95rem; }
+.strand-rank-name small { color: #64748b; font-size: 0.66rem; }
+.strand-rank-score { display: grid; justify-items: end; }
+.strand-rank-score strong { color: #1e4307; font-size: 1.15rem; }
+.strand-rank-score span { color: #64748b; font-size: 0.62rem; font-weight: 700; }
+.strand-fit-track { height: 7px; margin: 0.7rem 0 0.55rem; overflow: hidden; border-radius: 999px; background: #e5eadf; }
+.strand-fit-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1e4307, #8fc867); }
+.strand-ranking-list details { border-top: 1px solid #e6ece2; }
+.strand-ranking-list summary { display: flex; align-items: center; justify-content: space-between; padding-top: 0.65rem; color: #456534; cursor: pointer; font-size: 0.69rem; font-weight: 800; list-style: none; }
+.strand-ranking-list summary::-webkit-details-marker { display: none; }
+.strand-ranking-list details[open] summary i { transform: rotate(180deg); }
+.strand-ranking-list summary i { transition: transform 180ms ease; }
+.strand-subject-evidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.45rem; margin-top: 0.65rem; }
+.strand-subject-evidence article { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; padding: 0.6rem 0.7rem; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
+.strand-subject-evidence article > div { display: grid; min-width: 0; }
+.strand-subject-evidence article strong { overflow: hidden; color: #334155; font-size: 0.72rem; text-overflow: ellipsis; white-space: nowrap; }
+.strand-subject-evidence article small { color: #94a3b8; font-size: 0.6rem; }
+.strand-subject-evidence article > span { flex: 0 0 auto; padding: 0.22rem 0.42rem; border-radius: 999px; font-size: 0.6rem; font-weight: 800; }
+.strand-subject-evidence .is-high { color: #166534; background: #dcfce7; }
+.strand-subject-evidence .is-moderate { color: #854d0e; background: #fef3c7; }
+.strand-subject-evidence .is-low { color: #991b1b; background: #fee2e2; }
+.strand-no-evidence { margin: 0.65rem 0 0; color: #64748b; font-size: 0.7rem; }
 .subject-performance-section > header p { margin: 0.35rem 0 0.9rem; color: #64748b; font-size: 0.8rem; }
 .subject-performance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 0.8rem; }
 .subject-performance-card { padding: 0.9rem; border: 1px solid #e2e8f0; border-radius: 15px; background: #fbfdf9; }
@@ -1093,7 +1210,7 @@ export default {
 .academic-ranking-list { display: grid; gap: 0.45rem; margin: 0.9rem 0 0; padding: 0; list-style: none; }
 .academic-ranking-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 0.7rem; padding: 0.65rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 12px; }
 .academic-ranking-list b { color: #4f8a35; }.academic-ranking-list span { display: grid; color: #334155; font-weight: 700; }.academic-ranking-list small { color: #64748b; font-size: 0.65rem; font-weight: 500; }.academic-ranking-list em { color: #64748b; font-size: 0.68rem; font-style: normal; }
-@media (max-width: 720px) { .academic-progress-counts { grid-template-columns: 1fr 1fr; }.recommendation-highlight-grid { grid-template-columns: 1fr; }.academic-ranking-list li { grid-template-columns: auto 1fr auto; }.academic-ranking-list em { grid-column: 2 / -1; } }
+@media (max-width: 720px) { .academic-progress-counts { grid-template-columns: 1fr 1fr; }.strand-ranking-section > header { align-items: flex-start; flex-direction: column; }.strand-ranking-section > header > p { text-align: left; }.strand-subject-evidence { grid-template-columns: 1fr; }.recommendation-highlight-grid { grid-template-columns: 1fr; }.academic-ranking-list li { grid-template-columns: auto 1fr auto; }.academic-ranking-list em { grid-column: 2 / -1; } }
 
 .student-dashboard-page {
   --ink: #12243a;
