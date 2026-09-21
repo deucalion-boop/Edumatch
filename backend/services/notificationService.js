@@ -23,7 +23,9 @@ async function createAdminMessageNotification({
   const preview = buildMessagePreview(content);
   const senderName = String(sender?.name || sender?.username || 'Admin').trim() || 'Admin';
   const senderRole = String(sender?.role || 'admin').trim().toLowerCase();
-  const senderLabel = senderRole === 'headteacher' ? 'Head Teacher' : 'Admin';
+  const senderLabel = senderRole === 'headteacher'
+    ? 'Head Teacher'
+    : (senderRole === 'secretary' ? 'Secretary' : 'Admin');
 
   const messageRecord = await createAdminMessage({
     senderId: sender?._id,

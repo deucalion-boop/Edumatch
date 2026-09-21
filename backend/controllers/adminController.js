@@ -715,12 +715,42 @@ function parseBoundedNumber(value, { min, max, fieldName, fallback }) {
   return parsed;
 }
 
+const ADMIN_MANAGED_ROLES = [ROLE_SECRETARY, ROLE_HEADTEACHER, ROLE_TEACHER, ROLE_STUDENT];
+const SECRETARY_MANAGED_ROLES = [ROLE_HEADTEACHER, ROLE_TEACHER, ROLE_STUDENT];
+
 function ensureAdminManagedRole(role) {
-  if (![ROLE_SECRETARY, ROLE_HEADTEACHER].includes(role)) {
-    const error = new Error('Admin can only create Secretary and HeadTeacher accounts');
+  if (!ADMIN_MANAGED_ROLES.includes(role)) {
+    const error = new Error('Administrators can only manage Secretary, Head Teacher, Teacher, and Student accounts');
     error.statusCode = 403;
     throw error;
   }
+}
+
+function ensureUserManagementPermission(req, role) {
+  const actorRole = String(req?.user?.role || '').trim().toLowerCase();
+  const allowedRoles = actorRole === ROLE_SECRETARY ? SECRETARY_MANAGED_ROLES : ADMIN_MANAGED_ROLES;
+  if (![ROLE_ADMIN, ROLE_SECRETARY].includes(actorRole) || !allowedRoles.includes(role)) {
+    const error = new Error('Forbidden: you cannot manage accounts with this role');
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
+function normalizeStudentFields({ role, strand, gradeLevel }) {
+  if (role !== ROLE_STUDENT) return { strand: '', gradeLevel: '' };
+  const normalizedStrand = String(strand || '').trim().toUpperCase();
+  const normalizedGradeLevel = String(gradeLevel || FIXED_STUDENT_GRADE_LEVEL).trim();
+  if (normalizedStrand && !ALLOWED_STRANDS.includes(normalizedStrand)) {
+    const error = new Error(`strand must be one of: ${ALLOWED_STRANDS.join(', ')}`);
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!ALLOWED_STUDENT_GRADE_LEVELS.includes(normalizedGradeLevel)) {
+    const error = new Error(`gradeLevel must be one of: ${ALLOWED_STUDENT_GRADE_LEVELS.join(', ')}`);
+    error.statusCode = 400;
+    throw error;
+  }
+  return { strand: normalizedStrand, gradeLevel: normalizedGradeLevel };
 }
 
 function normalizeAdminManagedRole(roleInput) {
@@ -860,7 +890,7 @@ const getAuditLogs = asyncHandler(async (req, res) => {
 });
 
 const createAndInviteUser = asyncHandler(async (req, res) => {
-  const { name, email, username, role, contactNumber, expiresInHours, department } = req.body || {};
+  const { name, email, username, role, contactNumber, department, subject, strand, gradeLevel } = req.body || {};
 
   if (!name || !email || !username || !role) {
     const error = new Error('name, email, username, and role are required');
@@ -884,13 +914,13 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
 
   const normalizedRole = normalizeAdminManagedRole(role);
   ensureAdminManagedRole(normalizedRole);
+  ensureUserManagementPermission(req, normalizedRole);
   const normalizedContactNumber = normalizeContactNumber(contactNumber);
-  const normalizedDepartment = normalizeDepartment(department, {
-    required: normalizedRole === ROLE_HEADTEACHER,
-  });
+  const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
+  const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
   await ensureSingleHeadTeacherPerDepartment({
     role: normalizedRole,
-    department: normalizedDepartment,
+    department: scopedFields.department,
   });
 
   const created = await createSupabaseAccount({
@@ -899,10 +929,11 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
     username: normalizedUsername,
     role: normalizedRole,
     status: 'active',
-    strand: '',
-    subject: '',
-    department: normalizedDepartment,
-    gradeLevel: '',
+    strand: studentFields.strand,
+    subject: scopedFields.subject,
+    department: scopedFields.department,
+    gradeLevel: studentFields.gradeLevel,
+    managedBy: req.user._id,
     contactNumber: normalizedContactNumber,
     invite: {
       tokenHash: '',
@@ -944,6 +975,9 @@ const createUser = asyncHandler(async (req, res) => {
     status,
     contactNumber,
     department,
+    subject,
+    strand,
+    gradeLevel,
   } = req.body;
 
   if (!name || !email || !username || !role) {
@@ -961,16 +995,15 @@ const createUser = asyncHandler(async (req, res) => {
 
   const normalizedRole = normalizeAdminManagedRole(role);
   ensureAdminManagedRole(normalizedRole);
+  ensureUserManagementPermission(req, normalizedRole);
   const normalizedUsername = String(username).trim();
   const normalizedContactNumber = normalizeContactNumber(contactNumber);
-  const normalizedDepartment = normalizeDepartment(department, {
-    required: normalizedRole === ROLE_HEADTEACHER,
-  });
+  const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
+  const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
   await ensureSingleHeadTeacherPerDepartment({
     role: normalizedRole,
-    department: normalizedDepartment,
+    department: scopedFields.department,
   });
-  console.log('[TEMP][createUser] normalized contactNumber:', normalizedContactNumber);
   const normalizedStatus = String(status || '').trim().toLowerCase();
   if (normalizedUsername.length > 50) {
     const error = new Error('username must be 50 characters or fewer');
@@ -992,10 +1025,11 @@ const createUser = asyncHandler(async (req, res) => {
       username: normalizedUsername,
       role: normalizedRole,
       status: resolvedStatus,
-      strand: '',
-      subject: '',
-      department: normalizedDepartment,
-      gradeLevel: '',
+      strand: studentFields.strand,
+      subject: scopedFields.subject,
+      department: scopedFields.department,
+      gradeLevel: studentFields.gradeLevel,
+      managedBy: req.user._id,
       contactNumber: normalizedContactNumber,
       invite: {
         tokenHash: '',
@@ -1003,13 +1037,6 @@ const createUser = asyncHandler(async (req, res) => {
         sentAt: null,
         usedAt: null,
       },
-    });
-    console.log('[createUser] saved document:', {
-      id: created._id,
-      email: created.email,
-      role: created.role,
-      status: created.status,
-      contactNumber: created.contactNumber || '',
     });
   } catch (saveError) {
     console.error('[createUser] save failed:', {
@@ -1036,6 +1063,9 @@ const createUser = asyncHandler(async (req, res) => {
       role: created.role,
       status: created.status,
       department: created.department || '',
+      subject: created.subject || '',
+      strand: created.strand || '',
+      gradeLevel: created.gradeLevel || '',
       contactNumber: created.contactNumber || '',
       inviteExpiresAt: created?.invite?.expiresAt || null,
       inviteSentAt: created?.invite?.sentAt || null,
@@ -1056,6 +1086,7 @@ const sendUserInvite = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
+  ensureUserManagementPermission(req, normalizeAdminManagedRole(user.role));
   const inviteResult = await issueInviteForUser({
     user,
     req,
@@ -1155,7 +1186,7 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, email, username, password, role, status, subject, contactNumber, department } = req.body;
+  const { name, email, username, password, role, status, subject, contactNumber, department, strand, gradeLevel } = req.body;
 
   const user = await findSupabaseAccount('id', id);
   if (!user) {
@@ -1163,6 +1194,7 @@ const updateUser = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
+  ensureUserManagementPermission(req, normalizeAdminManagedRole(user.role));
 
   if (email && String(email).toLowerCase().trim() !== user.email) {
     const emailExists = await findSupabaseAccountByEmail(email);
@@ -1201,13 +1233,11 @@ const updateUser = asyncHandler(async (req, res) => {
   if (role !== undefined) {
     const normalizedRole = normalizeAdminManagedRole(role);
     ensureAdminManagedRole(normalizedRole);
+    ensureUserManagementPermission(req, normalizedRole);
     user.role = normalizedRole;
   }
   if (status !== undefined) user.status = status;
   if (contactNumber !== undefined) user.contactNumber = normalizeContactNumber(contactNumber);
-  if (contactNumber !== undefined) {
-    console.log('[TEMP][updateUser] normalized contactNumber:', user.contactNumber);
-  }
   if (department !== undefined || role !== undefined || subject !== undefined) {
     const scopedFields = applyRoleScopedFields({
       role: user.role,
@@ -1221,7 +1251,15 @@ const updateUser = asyncHandler(async (req, res) => {
     });
     user.department = scopedFields.department;
     user.subject = scopedFields.subject;
-    user.strand = '';
+  }
+  if (strand !== undefined || gradeLevel !== undefined || role !== undefined) {
+    const studentFields = normalizeStudentFields({
+      role: user.role,
+      strand: strand !== undefined ? strand : user.strand,
+      gradeLevel: gradeLevel !== undefined ? gradeLevel : user.gradeLevel,
+    });
+    user.strand = studentFields.strand;
+    user.gradeLevel = studentFields.gradeLevel;
   }
 
   if (req.file) {
@@ -1240,7 +1278,6 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 
   await user.save();
-  console.log('[TEMP][updateUser] saved contactNumber:', user.contactNumber || '');
 
   return sendSuccess(res, 200, 'User updated successfully', {
     user: {
@@ -1253,6 +1290,7 @@ const updateUser = asyncHandler(async (req, res) => {
       strand: user.strand,
       subject: user.subject || '',
       department: user.department || '',
+      gradeLevel: user.gradeLevel || '',
       contactNumber: user.contactNumber || '',
       profileImage: normalizeProfileImageUrl(user, req),
       avatar: normalizeProfileImageUrl(user, req),
@@ -1271,14 +1309,14 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const actingAdmin = await findSupabaseAccount('id', req.user._id);
-  if (!actingAdmin) {
-    const error = new Error('Admin account not found');
+  const actingUser = await findSupabaseAccount('id', req.user._id);
+  if (!actingUser) {
+    const error = new Error('Acting account not found');
     error.statusCode = 401;
     throw error;
   }
 
-  const passwordMatched = await actingAdmin.comparePassword(currentPassword);
+  const passwordMatched = await actingUser.comparePassword(currentPassword);
   if (!passwordMatched) {
     const error = new Error('Incorrect current password');
     error.statusCode = 401;
@@ -1291,9 +1329,10 @@ const deleteUser = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
+  ensureUserManagementPermission(req, normalizeAdminManagedRole(user.role));
 
   if (String(user._id) === String(req.user._id)) {
-    const error = new Error('You cannot delete your own admin account');
+    const error = new Error('You cannot delete your own account');
     error.statusCode = 400;
     throw error;
   }
@@ -1972,7 +2011,7 @@ const getAnalytics = asyncHandler(async (_req, res) => {
 
 const sendUserMessage = asyncHandler(async (req, res) => {
   const recipientId = String(req.params.id || '').trim();
-  if (!mongoose.Types.ObjectId.isValid(recipientId)) {
+  if (!recipientId) {
     const error = new Error('Invalid recipient id');
     error.statusCode = 400;
     throw error;
@@ -2000,6 +2039,7 @@ const sendUserMessage = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
+  ensureUserManagementPermission(req, normalizeAdminManagedRole(recipient.role));
 
   const recipientRole = String(recipient.role || '').trim().toLowerCase();
   if (!['student', 'teacher'].includes(recipientRole)) {

@@ -19,7 +19,7 @@
               <img src="/logo.png" alt="EduMatch" class="admin-logo-img" />
             </div>
             <div class="admin-logo-text">
-              <h1>EduMatch Admin</h1>
+              <h1>EduMatch {{ portalRoleLabel }}</h1>
               <span class="page-title">User Management</span>
             </div>
           </div>
@@ -65,7 +65,7 @@
             </div>
             <div class="admin-sidebar-brand-copy">
               <h3>EduMatch</h3>
-              <p>Admin Portal</p>
+              <p>{{ portalRoleLabel }} Portal</p>
             </div>
           </div>
           <button type="button" class="sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
@@ -73,7 +73,7 @@
           </button>
         </div>
         <nav class="sidebar-menu sidebar-nav">
-          <div class="nav-section">
+          <div v-if="!isSecretary" class="nav-section">
             <h4 class="nav-section-title">Navigation</h4>
             <router-link to="/admin/dashboard" class="nav-link sidebar-item sidebar-item--dashboard" :class="{ active: isActive('/admin/dashboard') }" @click="closeSidebar">
               <i class="fas fa-tachometer-alt"></i>
@@ -94,6 +94,21 @@
             <router-link to="/admin/audit-logs" class="nav-link sidebar-item sidebar-item--audit-logs" :class="{ active: isActive('/admin/audit-logs') }" @click="closeSidebar">
               <i class="fas fa-clipboard-list"></i>
               <span>Audit Logs</span>
+            </router-link>
+          </div>
+          <div v-else class="nav-section">
+            <h4 class="nav-section-title">Navigation</h4>
+            <router-link to="/secretary/dashboard" class="nav-link sidebar-item sidebar-item--dashboard" :class="{ active: isActive('/secretary/dashboard') }" @click="closeSidebar">
+              <i class="fas fa-tachometer-alt"></i><span>Overview</span>
+            </router-link>
+            <router-link to="/secretary/users" class="nav-link sidebar-item sidebar-item--users" :class="{ active: isActive('/secretary/users') }" @click="closeSidebar">
+              <i class="fas fa-user-cog"></i><span>User Management</span>
+            </router-link>
+            <router-link to="/secretary/students" class="nav-link sidebar-item" :class="{ active: isActive('/secretary/students') }" @click="closeSidebar">
+              <i class="fas fa-user-graduate"></i><span>Student Records</span>
+            </router-link>
+            <router-link to="/secretary/archived" class="nav-link sidebar-item" :class="{ active: isActive('/secretary/archived') }" @click="closeSidebar">
+              <i class="fas fa-box-archive"></i><span>Archived</span>
             </router-link>
           </div>
         </nav>
@@ -495,7 +510,8 @@
               <div class="form-group">
                 <label for="userRole">User Role *</label>
                 <div class="role-options">
-                  <div 
+                  <div
+                    v-if="!isSecretary"
                     class="role-option" 
                     :class="{ selected: newUser.role === 'secretary' }"
                     @click="newUser.role = 'secretary'"
@@ -505,11 +521,21 @@
                     </div>
                     <div class="role-info">
                       <h4>Secretary</h4>
-                      <p>Can view HeadTeacher and Teacher lists with read-only access</p>
+                      <p>Can manage Head Teacher, Teacher, and Student accounts</p>
                     </div>
                     <div class="role-check">
                       <i class="fas fa-check"></i>
                     </div>
+                  </div>
+                  <div class="role-option" :class="{ selected: newUser.role === 'teacher' }" @click="newUser.role = 'teacher'">
+                    <div class="role-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <div class="role-info"><h4>Teacher</h4><p>Can manage classes, lessons, assessments, and students</p></div>
+                    <div class="role-check"><i class="fas fa-check"></i></div>
+                  </div>
+                  <div class="role-option" :class="{ selected: newUser.role === 'student' }" @click="newUser.role = 'student'">
+                    <div class="role-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div class="role-info"><h4>Student</h4><p>Can access assigned learning activities and records</p></div>
+                    <div class="role-check"><i class="fas fa-check"></i></div>
                   </div>
                   <div 
                     class="role-option" 
@@ -537,13 +563,30 @@
                 </div>
               </div>
 
-              <div v-if="newUser.role === 'headteacher'" class="form-group">
-                <label for="headteacherDepartment">Department *</label>
-                <select id="headteacherDepartment" v-model="newUser.department" required>
+              <div v-if="['headteacher', 'teacher'].includes(newUser.role)" class="form-group">
+                <label for="managedDepartment">Department *</label>
+                <select id="managedDepartment" v-model="newUser.department" required>
                   <option value="" disabled>Select department</option>
                   <option v-for="department in departmentOptions" :key="department" :value="department">
                     {{ department }}
                   </option>
+                </select>
+              </div>
+              <div v-if="newUser.role === 'teacher'" class="form-group">
+                <label for="teacherSubject">Subject</label>
+                <input id="teacherSubject" v-model.trim="newUser.subject" type="text" placeholder="Defaults to department">
+              </div>
+              <div v-if="newUser.role === 'student'" class="form-group">
+                <label for="studentGradeLevel">Grade Level *</label>
+                <select id="studentGradeLevel" v-model="newUser.gradeLevel" required>
+                  <option v-for="grade in studentGradeLevels" :key="grade" :value="grade">{{ grade }}</option>
+                </select>
+              </div>
+              <div v-if="newUser.role === 'student'" class="form-group">
+                <label for="studentStrand">Strand</label>
+                <select id="studentStrand" v-model="newUser.strand">
+                  <option value="">Not assigned</option>
+                  <option v-for="strand in studentStrands" :key="strand" :value="strand">{{ strand }}</option>
                 </select>
               </div>
             </div>
@@ -614,14 +657,14 @@
         </div>
         <div class="modal-body">
           <div class="actions-grid" id="userActionsGrid">
-            <button 
-              class="action-card"
+            <button class="action-card"
               @click="viewUserProfile"
             >
               <i class="fas fa-user-circle"></i>
               View Profile
             </button>
-            <button 
+            <button
+              v-if="canManageUser(selectedUser)"
               class="action-card"
               @click="editUser"
             >
@@ -644,7 +687,8 @@
               <i class="fas fa-book-open"></i>
               View Subject
             </button>
-            <button 
+            <button
+              v-if="canManageUser(selectedUser) && ['student', 'teacher'].includes(selectedUser?.role)"
               class="action-card"
               @click="sendMessage"
             >
@@ -652,14 +696,15 @@
               Send Message
             </button>
             <button
-              v-if="selectedUser?.status === 'pending'"
+              v-if="canManageUser(selectedUser) && selectedUser?.status === 'pending'"
               class="action-card"
               @click="sendInviteToUser"
             >
               <i class="fas fa-paper-plane"></i>
               Send Invite
             </button>
-            <button 
+            <button
+              v-if="canManageUser(selectedUser)"
               class="action-card"
               :class="{ active: selectedUser?.status === 'active' }"
               @click="toggleUserStatus"
@@ -667,7 +712,8 @@
               <i :class="selectedUser?.status === 'active' ? 'fas fa-pause-circle' : 'fas fa-play-circle'"></i>
               {{ selectedUser?.status === 'active' ? 'Deactivate' : 'Activate' }}
             </button>
-            <button 
+            <button
+              v-if="canManageUser(selectedUser)"
               class="action-card danger"
               @click="confirmDeleteUser"
             >
@@ -763,17 +809,33 @@
                 <div class="form-group">
                   <label for="editRole">User Role</label>
                   <select id="editRole" v-model="editUserData.role" @change="onEditRoleChange">
-                    <option value="secretary">Secretary</option>
-                    <option value="headteacher">Headteacher</option>
+                    <option v-for="role in allowedManagedRoles" :key="role" :value="role">{{ roleLabel(role) }}</option>
                   </select>
                 </div>
-                <div v-if="editUserData.role === 'headteacher'" class="form-group">
+                <div v-if="['headteacher', 'teacher'].includes(editUserData.role)" class="form-group">
                   <label for="editDepartment">Department</label>
                   <select id="editDepartment" v-model="editUserData.department">
                     <option value="" disabled>Select Department</option>
                     <option v-for="department in departmentOptions" :key="department" :value="department">
                       {{ department }}
                     </option>
+                  </select>
+                </div>
+                <div v-if="editUserData.role === 'teacher'" class="form-group">
+                  <label for="editSubject">Subject</label>
+                  <input id="editSubject" v-model.trim="editUserData.subject" type="text" placeholder="Defaults to department">
+                </div>
+                <div v-if="editUserData.role === 'student'" class="form-group">
+                  <label for="editGradeLevel">Grade Level</label>
+                  <select id="editGradeLevel" v-model="editUserData.gradeLevel">
+                    <option v-for="grade in studentGradeLevels" :key="grade" :value="grade">{{ grade }}</option>
+                  </select>
+                </div>
+                <div v-if="editUserData.role === 'student'" class="form-group">
+                  <label for="editStrand">Strand</label>
+                  <select id="editStrand" v-model="editUserData.strand">
+                    <option value="">Not assigned</option>
+                    <option v-for="strand in studentStrands" :key="strand" :value="strand">{{ strand }}</option>
                   </select>
                 </div>
                 <div class="form-group">
@@ -922,7 +984,7 @@
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-primary edit-user-btn" @click="editFromProfile">
+          <button v-if="canManageUser(selectedUser)" class="btn btn-primary edit-user-btn" @click="editFromProfile">
             <i class="fas fa-user-edit"></i> Edit User
           </button>
         </div>
@@ -1328,7 +1390,7 @@
           </div>
           <p id="confirmationMessage">{{ confirmMessage }}</p>
           <div v-if="confirmRequiresPassword" class="confirm-password-group">
-            <label for="confirmDeletePassword" class="confirm-password-label">Enter your admin password to continue</label>
+            <label for="confirmDeletePassword" class="confirm-password-label">Enter your {{ portalRoleLabel.toLowerCase() }} password to continue</label>
             <input
               id="confirmDeletePassword"
               v-model="confirmPassword"
@@ -1390,6 +1452,19 @@ export default {
       return `${configured}/api`
     }
     const apiBaseUrl = resolveApiBaseUrl()
+    const isSecretary = computed(() => String(authStore.user?.role || '').trim().toLowerCase() === 'secretary')
+    const portalRoleLabel = computed(() => isSecretary.value ? 'Secretary' : 'Admin')
+    const managementApiPath = computed(() => `${apiBaseUrl}/${isSecretary.value ? 'secretary' : 'admin'}`)
+    const allowedManagedRoles = computed(() => isSecretary.value
+      ? ['headteacher', 'teacher', 'student']
+      : ['secretary', 'headteacher', 'teacher', 'student'])
+    const roleLabel = (role) => ({
+      secretary: 'Secretary',
+      headteacher: 'Head Teacher',
+      teacher: 'Teacher',
+      student: 'Student',
+    }[role] || String(role || 'User'))
+    const canManageUser = (user) => allowedManagedRoles.value.includes(String(user?.role || '').trim().toLowerCase())
 
     const getAuthConfig = (headers = {}) => ({
       headers: {
@@ -1431,9 +1506,12 @@ export default {
       fullName: '',
       username: '',
       email: '',
-      role: 'secretary',
+      role: isSecretary.value ? 'headteacher' : 'secretary',
       status: 'active',
       department: '',
+      subject: '',
+      gradeLevel: 'Grade 10',
+      strand: '',
       contactNumber: '',
     })
     const departmentOptions = [
@@ -1446,6 +1524,8 @@ export default {
       'Edukasyon sa Pagpapakatao (ESP)',
       'MAPEH',
     ]
+    const studentGradeLevels = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
+    const studentStrands = ['STEM', 'HUMSS', 'ABM', 'TVL']
     
     const selectedUser = ref(null)
     const editUserData = ref({
@@ -1457,6 +1537,8 @@ export default {
       status: '',
       department: '',
       subject: '',
+      gradeLevel: 'Grade 10',
+      strand: '',
       contactNumber: '',
       avatar: '',
       avatarPreview: ''
@@ -1647,12 +1729,12 @@ export default {
 
     const goToProfile = () => {
       closeAccountMenu()
-      router.push('/admin/profile')
+      router.push(isSecretary.value ? '/secretary/profile' : '/admin/profile')
     }
 
     const goToSettings = () => {
       closeAccountMenu()
-      router.push('/admin/settings')
+      router.push(isSecretary.value ? '/secretary/settings' : '/admin/settings')
     }
 
     const syncMobileMenuBodyState = () => {
@@ -1935,6 +2017,7 @@ export default {
         department: firstDefined(user?.department, fallback?.department, ''),
         subject: firstDefined(user?.subject, fallback?.subject, ''),
         strand: firstDefined(user?.strand, fallback?.strand, ''),
+        gradeLevel: firstDefined(user?.gradeLevel, fallback?.gradeLevel, 'Grade 10'),
         contactNumber: normalizePhilippinePhone(firstDefined(user?.contactNumber, fallback?.contactNumber, '')),
         profileImage: firstDefined(user?.profileImage, fallback?.profileImage, ''),
         avatar: resolvedAvatar,
@@ -2282,8 +2365,11 @@ export default {
     watch(
       () => newUser.role,
       (role) => {
-        if (role !== 'headteacher') {
-          newUser.department = ''
+        if (!['headteacher', 'teacher'].includes(role)) newUser.department = ''
+        if (role !== 'teacher') newUser.subject = ''
+        if (role !== 'student') {
+          newUser.gradeLevel = 'Grade 10'
+          newUser.strand = ''
         }
       }
     )
@@ -2360,9 +2446,12 @@ export default {
         fullName: '',
         username: '',
         email: '',
-        role: 'secretary',
+        role: isSecretary.value ? 'headteacher' : 'secretary',
         status: 'active',
         department: '',
+        subject: '',
+        gradeLevel: 'Grade 10',
+        strand: '',
         contactNumber: '',
       })
     }
@@ -2390,8 +2479,10 @@ export default {
         username: user.username,
         role: user.role,
         status: user.status,
-        department: user.role === 'headteacher' ? (user.department || '') : '',
+        department: ['headteacher', 'teacher'].includes(user.role) ? (user.department || '') : '',
         subject: user.subject || '',
+        gradeLevel: user.gradeLevel || 'Grade 10',
+        strand: user.strand || '',
         contactNumber: normalizePhilippinePhone(user.contactNumber),
         avatar: resolveUserAvatarUrl(user),
         avatarPreview: ''
@@ -2406,8 +2497,13 @@ export default {
     }
 
     const onEditRoleChange = () => {
-      if (editUserData.value.role !== 'headteacher') {
+      if (!['headteacher', 'teacher'].includes(editUserData.value.role)) {
         editUserData.value.department = ''
+      }
+      if (editUserData.value.role !== 'teacher') editUserData.value.subject = ''
+      if (editUserData.value.role !== 'student') {
+        editUserData.value.gradeLevel = 'Grade 10'
+        editUserData.value.strand = ''
       }
     }
     
@@ -2451,8 +2547,8 @@ export default {
         return
       }
 
-      if (!['secretary', 'headteacher'].includes(newUser.role)) {
-        showToastMessage('Role must be secretary or headteacher', 'error')
+      if (!allowedManagedRoles.value.includes(newUser.role)) {
+        showToastMessage('You do not have permission to create that role', 'error')
         return
       }
       const contactNumber = normalizePhilippinePhone(newUser.contactNumber)
@@ -2460,17 +2556,14 @@ export default {
         showToastMessage('Please enter a valid Philippine contact number beginning with +63', 'error')
         return
       }
-      if (newUser.role === 'headteacher' && !String(newUser.department || '').trim()) {
-        showToastMessage('Department is required for HeadTeacher role', 'error')
+      if (['headteacher', 'teacher'].includes(newUser.role) && !String(newUser.department || '').trim()) {
+        showToastMessage('Department is required for Head Teacher and Teacher accounts', 'error')
         return
       }
       if (newUser.role === 'headteacher' && hasDepartmentHeadTeacher({ department: newUser.department })) {
         showToastMessage('This department already has a Head Teacher assigned', 'error')
         return
       }
-
-      // TEMP DEBUG: trace contact number from UI -> create request payload
-      console.log('[TEMP][AdminUserManagement][createUser] normalized contactNumber:', contactNumber)
 
       isCreateInviteLoading.value = true
 
@@ -2481,11 +2574,13 @@ export default {
           username: String(newUser.username || '').trim(),
           role: newUser.role,
           status: 'active',
-          department: newUser.role === 'headteacher' ? newUser.department : '',
+          department: ['headteacher', 'teacher'].includes(newUser.role) ? newUser.department : '',
+          subject: newUser.role === 'teacher' ? newUser.subject : '',
+          gradeLevel: newUser.role === 'student' ? newUser.gradeLevel : '',
+          strand: newUser.role === 'student' ? newUser.strand : '',
           contactNumber,
         }
-        console.log('[TEMP][AdminUserManagement][createUser] payload:', createPayload)
-        const response = await axios.post(`${apiBaseUrl}/admin/users`, createPayload, getAuthConfig())
+        const response = await axios.post(`${managementApiPath.value}/users`, createPayload, getAuthConfig())
         const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()
         const emailSent = response.data?.invite?.emailSent !== false
         const baseMessage = emailSent
@@ -2513,7 +2608,7 @@ export default {
     }
     
     const saveUserEdit = async () => {
-      const allowedRoles = ['secretary', 'headteacher']
+      const allowedRoles = allowedManagedRoles.value
       const allowedStatuses = ['pending', 'active', 'inactive', 'suspended']
       const emailRegex = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i
 
@@ -2522,6 +2617,9 @@ export default {
       const role = String(editUserData.value.role || '').trim()
       const status = String(editUserData.value.status || '').trim()
       const department = String(editUserData.value.department || '').trim()
+      const subject = String(editUserData.value.subject || '').trim()
+      const gradeLevel = String(editUserData.value.gradeLevel || 'Grade 10').trim()
+      const strand = String(editUserData.value.strand || '').trim()
       const contactNumber = normalizePhilippinePhone(editUserData.value.contactNumber)
 
       if (!editUserData.value.id) {
@@ -2537,15 +2635,15 @@ export default {
         return
       }
       if (!allowedRoles.includes(role)) {
-        showToastMessage('Role must be secretary or headteacher', 'error')
+        showToastMessage('You do not have permission to assign that role', 'error')
         return
       }
       if (!allowedStatuses.includes(status)) {
         showToastMessage('Status must be pending, active, inactive, or suspended', 'error')
         return
       }
-      if (role === 'headteacher' && !department) {
-        showToastMessage('Department is required for HeadTeacher role', 'error')
+      if (['headteacher', 'teacher'].includes(role) && !department) {
+        showToastMessage('Department is required for Head Teacher and Teacher accounts', 'error')
         return
       }
       if (role === 'headteacher' && hasDepartmentHeadTeacher({
@@ -2565,7 +2663,10 @@ export default {
       payload.append('email', email)
       payload.append('role', role)
       payload.append('status', status)
-      payload.append('department', role === 'headteacher' ? department : '')
+      payload.append('department', ['headteacher', 'teacher'].includes(role) ? department : '')
+      payload.append('subject', role === 'teacher' ? subject : '')
+      payload.append('gradeLevel', role === 'student' ? gradeLevel : '')
+      payload.append('strand', role === 'student' ? strand : '')
       payload.append('contactNumber', contactNumber)
       if (selectedEditAvatarFile.value) {
         payload.append('profileImage', selectedEditAvatarFile.value)
@@ -2574,7 +2675,7 @@ export default {
       try {
         isSavingEdit.value = true
         const response = await axios.put(
-          `${apiBaseUrl}/admin/users/${editUserData.value.id}`,
+          `${managementApiPath.value}/users/${editUserData.value.id}`,
           payload,
           getAuthConfig()
         )
@@ -2598,7 +2699,7 @@ export default {
     }
 
     const fetchSelectedUserDetails = async (userId) => {
-      const response = await axios.get(`${apiBaseUrl}/admin/users/${userId}`, getAuthConfig())
+      const response = await axios.get(`${managementApiPath.value}/users/${userId}`, getAuthConfig())
       const user = response.data?.user
       if (!user) {
         throw new Error('User details are missing in response')
@@ -2728,7 +2829,7 @@ export default {
       try {
         isSendingMessage.value = true
         await axios.post(
-          `${apiBaseUrl}/admin/users/${userId}/messages`,
+          `${managementApiPath.value}/users/${userId}/messages`,
           {
             subject: String(messageData.subject || '').trim(),
             content: String(messageData.content || '').trim(),
@@ -2755,7 +2856,7 @@ export default {
 
       try {
         const response = await axios.post(
-          `${apiBaseUrl}/admin/users/${userId}/send-invite`,
+          `${managementApiPath.value}/users/${userId}/send-invite`,
           { expiresInHours: 48 },
           getAuthConfig()
         )
@@ -2802,7 +2903,7 @@ export default {
           const payload = new FormData()
           payload.append('status', newStatus)
           await axios.put(
-            `${apiBaseUrl}/admin/users/${userId}`,
+            `${managementApiPath.value}/users/${userId}`,
             payload,
             getAuthConfig()
           )
@@ -2836,11 +2937,11 @@ export default {
         try {
           const passwordValue = String(confirmPassword.value || '').trim()
           if (!passwordValue) {
-            showToastMessage('Admin password is required to delete a user', 'error')
+            showToastMessage(`${portalRoleLabel.value} password is required to delete a user`, 'error')
             return
           }
 
-          await axios.delete(`${apiBaseUrl}/admin/users/${userId}`, {
+          await axios.delete(`${managementApiPath.value}/users/${userId}`, {
             ...getAuthConfig(),
             data: {
               currentPassword: passwordValue,
@@ -2972,7 +3073,7 @@ export default {
       if (isFetchingUsers.value) return
       isFetchingUsers.value = true
       try {
-        const response = await axios.get(`${apiBaseUrl}/admin/users`, getAuthConfig())
+        const response = await axios.get(`${managementApiPath.value}/users`, getAuthConfig())
         const payload = uniqueBy(
           response.data?.users || [],
           (user, index) => user._id || user.id || `${String(user.email || '').toLowerCase()}-${index}`
@@ -3075,6 +3176,13 @@ export default {
       isSidebarOpen,
       accountMenuRef,
       isAccountMenuOpen,
+      isSecretary,
+      portalRoleLabel,
+      allowedManagedRoles,
+      roleLabel,
+      canManageUser,
+      studentGradeLevels,
+      studentStrands,
       isActive,
       toggleSidebar,
       closeSidebar,
