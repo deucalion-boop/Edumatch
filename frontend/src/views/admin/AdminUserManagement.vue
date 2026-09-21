@@ -566,13 +566,6 @@
                   <option v-for="grade in studentGradeLevels" :key="grade" :value="grade">{{ grade }}</option>
                 </select>
               </div>
-              <div v-if="newUser.role === 'student'" class="form-group">
-                <label for="studentStrand">Strand</label>
-                <select id="studentStrand" v-model="newUser.strand">
-                  <option value="">Not assigned</option>
-                  <option v-for="strand in studentStrands" :key="strand" :value="strand">{{ strand }}</option>
-                </select>
-              </div>
             </div>
 
             <div class="tab-content" :class="{ active: addUserTab === 'additional' }" id="additionalTab">
