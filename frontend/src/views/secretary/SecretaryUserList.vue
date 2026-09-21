@@ -23,9 +23,13 @@
             <i class="fas fa-home"></i>
             <span>Dashboard</span>
           </router-link>
-          <router-link to="/secretary/users" class="nav-link" :class="{ active: route.path === '/secretary/users' }" @click="closeSidebar">
+          <router-link to="/secretary/teachers" class="nav-link" :class="{ active: route.path === '/secretary/teachers' }" @click="closeSidebar">
             <i class="fas fa-users"></i>
             <span>Teacher Monitoring</span>
+          </router-link>
+          <router-link to="/secretary/users" class="nav-link" :class="{ active: route.path === '/secretary/users' }" @click="closeSidebar">
+            <i class="fas fa-user-cog"></i>
+            <span>User Management</span>
           </router-link>
           <router-link to="/secretary/students" class="nav-link" :class="{ active: route.path === '/secretary/students' }" @click="closeSidebar">
             <i class="fas fa-user-graduate"></i>
@@ -67,7 +71,7 @@
               <i class="fas fa-bars"></i>
             </button>
             <div>
-              <h1>Secretary User List</h1>
+              <h1>Teacher Monitor</h1>
               <p class="header-subtitle">Review and search HeadTeacher and Teacher records in one dedicated view-only directory.</p>
             </div>
           </div>

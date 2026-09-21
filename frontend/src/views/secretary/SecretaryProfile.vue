@@ -1,9 +1,25 @@
 <template>
   <div class="teacher-dashboard secretary-dashboard-page">
+    <aside id="secretary-sidebar-drawer" class="teacher-sidebar" :class="{ active: isSidebarOpen }">
+      <div class="sidebar-header">
+        <div class="teacher-logo"><div class="secretary-logo-icon"><img src="/logo.png" alt="EduMatch" class="secretary-logo-img"></div><div class="teacher-logo-text"><h2>EduMatch</h2><p>Secretary Portal</p></div></div>
+        <button type="button" class="sidebar-close" aria-label="Close sidebar" @click="closeSidebar"><i class="fas fa-times"></i></button>
+      </div>
+      <nav class="sidebar-nav"><div class="nav-section"><h4 class="nav-section-title">Workspace</h4>
+        <router-link to="/secretary/dashboard" class="nav-link" @click="closeSidebar"><i class="fas fa-home"></i><span>Dashboard</span></router-link>
+        <router-link to="/secretary/teachers" class="nav-link" @click="closeSidebar"><i class="fas fa-users"></i><span>Teacher Monitoring</span></router-link>
+        <router-link to="/secretary/users" class="nav-link" @click="closeSidebar"><i class="fas fa-user-cog"></i><span>User Management</span></router-link>
+        <router-link to="/secretary/students" class="nav-link" @click="closeSidebar"><i class="fas fa-user-graduate"></i><span>Student Records</span></router-link>
+        <router-link to="/secretary/archived" class="nav-link" @click="closeSidebar"><i class="fas fa-box-archive"></i><span>Archived</span></router-link>
+      </div></nav>
+      <div class="sidebar-footer"><div class="secretary-profile"><div class="secretary-avatar"><i class="fas fa-user"></i></div><div class="secretary-info"><h5>{{ displayName }}</h5><div class="secretary-profile-meta"><p class="secretary-role">Secretary</p><div class="secretary-status"><span class="secretary-profile-status-indicator active"></span><span>active</span></div></div></div></div></div>
+    </aside>
+    <button v-if="isSidebarOpen" type="button" class="sidebar-backdrop" aria-label="Close sidebar" @click="closeSidebar"></button>
     <main class="teacher-main secretary-main dashboard-container">
       <header class="top-header secretary-top-header dashboard-header">
         <div class="header-content secretary-header-content dashboard-header-content">
           <div class="header-left secretary-header-copy dashboard-header-copy">
+            <button type="button" class="mobile-menu-toggle" aria-label="Open sidebar" @click="toggleSidebar"><i class="fas fa-bars"></i></button>
             <div>
               <h1>Secretary Profile</h1>
               <p class="header-subtitle">Review your account information and keep your secretary details up to date.</p>
@@ -141,6 +157,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
+const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
 
@@ -160,6 +177,8 @@ const errors = reactive({
 })
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
+const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
+const closeSidebar = () => { isSidebarOpen.value = false }
 const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.value }
 
 const goToProfile = () => {
@@ -256,13 +275,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.secretary-main,
-.secretary-main.dashboard-container {
-  width: 100%;
-  max-width: none !important;
-  margin: 0;
-}
-
 .secretary-profile-grid,
 .secretary-banner {
   width: 100%;

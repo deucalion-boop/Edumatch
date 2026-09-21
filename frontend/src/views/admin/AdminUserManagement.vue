@@ -19,7 +19,7 @@
               <img src="/logo.png" alt="EduMatch" class="admin-logo-img" />
             </div>
             <div class="admin-logo-text">
-              <h1>EduMatch {{ portalRoleLabel }}</h1>
+              <h1>EduMatch Admin</h1>
               <span class="page-title">User Management</span>
             </div>
           </div>
@@ -65,7 +65,7 @@
             </div>
             <div class="admin-sidebar-brand-copy">
               <h3>EduMatch</h3>
-              <p>{{ portalRoleLabel }} Portal</p>
+              <p>Admin Portal</p>
             </div>
           </div>
           <button type="button" class="sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
@@ -73,7 +73,7 @@
           </button>
         </div>
         <nav class="sidebar-menu sidebar-nav">
-          <div v-if="!isSecretary" class="nav-section">
+          <div class="nav-section">
             <h4 class="nav-section-title">Navigation</h4>
             <router-link to="/admin/dashboard" class="nav-link sidebar-item sidebar-item--dashboard" :class="{ active: isActive('/admin/dashboard') }" @click="closeSidebar">
               <i class="fas fa-tachometer-alt"></i>
@@ -94,21 +94,6 @@
             <router-link to="/admin/audit-logs" class="nav-link sidebar-item sidebar-item--audit-logs" :class="{ active: isActive('/admin/audit-logs') }" @click="closeSidebar">
               <i class="fas fa-clipboard-list"></i>
               <span>Audit Logs</span>
-            </router-link>
-          </div>
-          <div v-else class="nav-section">
-            <h4 class="nav-section-title">Navigation</h4>
-            <router-link to="/secretary/dashboard" class="nav-link sidebar-item sidebar-item--dashboard" :class="{ active: isActive('/secretary/dashboard') }" @click="closeSidebar">
-              <i class="fas fa-tachometer-alt"></i><span>Overview</span>
-            </router-link>
-            <router-link to="/secretary/users" class="nav-link sidebar-item sidebar-item--users" :class="{ active: isActive('/secretary/users') }" @click="closeSidebar">
-              <i class="fas fa-user-cog"></i><span>User Management</span>
-            </router-link>
-            <router-link to="/secretary/students" class="nav-link sidebar-item" :class="{ active: isActive('/secretary/students') }" @click="closeSidebar">
-              <i class="fas fa-user-graduate"></i><span>Student Records</span>
-            </router-link>
-            <router-link to="/secretary/archived" class="nav-link sidebar-item" :class="{ active: isActive('/secretary/archived') }" @click="closeSidebar">
-              <i class="fas fa-box-archive"></i><span>Archived</span>
             </router-link>
           </div>
         </nav>
@@ -511,7 +496,6 @@
                 <label for="userRole">User Role *</label>
                 <div class="role-options">
                   <div
-                    v-if="!isSecretary"
                     class="role-option" 
                     :class="{ selected: newUser.role === 'secretary' }"
                     @click="newUser.role = 'secretary'"
@@ -1390,7 +1374,7 @@
           </div>
           <p id="confirmationMessage">{{ confirmMessage }}</p>
           <div v-if="confirmRequiresPassword" class="confirm-password-group">
-            <label for="confirmDeletePassword" class="confirm-password-label">Enter your {{ portalRoleLabel.toLowerCase() }} password to continue</label>
+            <label for="confirmDeletePassword" class="confirm-password-label">Enter your admin password to continue</label>
             <input
               id="confirmDeletePassword"
               v-model="confirmPassword"
@@ -1452,12 +1436,8 @@ export default {
       return `${configured}/api`
     }
     const apiBaseUrl = resolveApiBaseUrl()
-    const isSecretary = computed(() => String(authStore.user?.role || '').trim().toLowerCase() === 'secretary')
-    const portalRoleLabel = computed(() => isSecretary.value ? 'Secretary' : 'Admin')
-    const managementApiPath = computed(() => `${apiBaseUrl}/${isSecretary.value ? 'secretary' : 'admin'}`)
-    const allowedManagedRoles = computed(() => isSecretary.value
-      ? ['headteacher', 'teacher', 'student']
-      : ['secretary', 'headteacher', 'teacher', 'student'])
+    const managementApiPath = computed(() => `${apiBaseUrl}/admin`)
+    const allowedManagedRoles = computed(() => ['secretary', 'headteacher', 'teacher', 'student'])
     const roleLabel = (role) => ({
       secretary: 'Secretary',
       headteacher: 'Head Teacher',
@@ -1506,7 +1486,7 @@ export default {
       fullName: '',
       username: '',
       email: '',
-      role: isSecretary.value ? 'headteacher' : 'secretary',
+      role: 'secretary',
       status: 'active',
       department: '',
       subject: '',
@@ -1729,12 +1709,12 @@ export default {
 
     const goToProfile = () => {
       closeAccountMenu()
-      router.push(isSecretary.value ? '/secretary/profile' : '/admin/profile')
+      router.push('/admin/profile')
     }
 
     const goToSettings = () => {
       closeAccountMenu()
-      router.push(isSecretary.value ? '/secretary/settings' : '/admin/settings')
+      router.push('/admin/settings')
     }
 
     const syncMobileMenuBodyState = () => {
@@ -2446,7 +2426,7 @@ export default {
         fullName: '',
         username: '',
         email: '',
-        role: isSecretary.value ? 'headteacher' : 'secretary',
+        role: 'secretary',
         status: 'active',
         department: '',
         subject: '',
@@ -2937,7 +2917,7 @@ export default {
         try {
           const passwordValue = String(confirmPassword.value || '').trim()
           if (!passwordValue) {
-            showToastMessage(`${portalRoleLabel.value} password is required to delete a user`, 'error')
+            showToastMessage('Admin password is required to delete a user', 'error')
             return
           }
 
@@ -3176,8 +3156,6 @@ export default {
       isSidebarOpen,
       accountMenuRef,
       isAccountMenuOpen,
-      isSecretary,
-      portalRoleLabel,
       allowedManagedRoles,
       roleLabel,
       canManageUser,

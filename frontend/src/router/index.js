@@ -26,6 +26,8 @@ import AdminAuditLogs from '../views/admin/AdminAuditLogs.vue'
 import AdminSettings from '../views/admin/AdminSettings.vue'
 import AdminProfile from '../views/admin/AdminProfile.vue'
 import SecretaryView from '../views/secretary/SecretaryView.vue'
+import SecretaryUserList from '../views/secretary/SecretaryUserList.vue'
+import SecretaryUserManagement from '../views/secretary/SecretaryUserManagement.vue'
 import SecretaryStudentsRecords from '../views/secretary/SecretaryStudentsRecords.vue'
 import SecretaryArchivedRecords from '../views/secretary/SecretaryArchivedRecords.vue'
 import SecretaryProfile from '../views/secretary/SecretaryProfile.vue'
@@ -139,7 +141,7 @@ const syncDashboardStylesheet = (path) => {
     removeStylesheet(TEACHER_STYLESHEET_ID)
   }
 
-  if (normalizedPath.startsWith('/secretary') && normalizedPath !== '/secretary/users') {
+  if (normalizedPath.startsWith('/secretary')) {
     ensureStylesheet(SECRETARY_STYLESHEET_ID, SECRETARY_STYLESHEET_HREF)
   } else {
     removeStylesheet(SECRETARY_STYLESHEET_ID)
@@ -193,7 +195,8 @@ const routes = [
   { path: '/teacher/profile', name: 'teacher-profile', component: TeacherProfile, meta: { requiresAuth: true, roles: ['teacher'] } },
   { path: '/teacher/settings', name: 'teacher-settings', component: TeacherSettings, meta: { requiresAuth: true, roles: ['teacher'] } },
   { path: '/secretary/dashboard', name: 'secretary-dashboard', component: SecretaryView, meta: { requiresAuth: true, roles: ['secretary'] } },
-  { path: '/secretary/users', name: 'secretary-users', component: AdminUserManagement, meta: { requiresAuth: true, roles: ['secretary'] } },
+  { path: '/secretary/users', name: 'secretary-users', component: SecretaryUserManagement, meta: { requiresAuth: true, roles: ['secretary'] } },
+  { path: '/secretary/teachers', name: 'secretary-teachers', component: SecretaryUserList, meta: { requiresAuth: true, roles: ['secretary'] } },
   { path: '/secretary/students', name: 'secretary-students', component: SecretaryStudentsRecords, meta: { requiresAuth: true, roles: ['secretary'] } },
   { path: '/secretary/archived', name: 'secretary-archived', component: SecretaryArchivedRecords, meta: { requiresAuth: true, roles: ['secretary'] } },
   { path: '/secretary/profile', name: 'secretary-profile', component: SecretaryProfile, meta: { requiresAuth: true, roles: ['secretary'] } },
