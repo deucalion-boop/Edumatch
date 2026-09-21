@@ -457,6 +457,7 @@
               <select v-model="assessmentForm.examType" required>
                 <option value="">Select exam type</option>
                 <option value="multiple_choice">Multiple Choice</option>
+                <option value="practical_exam">Practical Exam</option>
                 <option value="identification">Identification</option>
                 <option value="true_false">True or False</option>
                 <option value="mixed">Mixed</option>

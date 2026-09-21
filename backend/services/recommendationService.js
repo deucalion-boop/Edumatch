@@ -182,6 +182,83 @@ function computeRecommendationProgress({ assessmentAttempts, isRecommendationRea
   return clamp(Math.round((completedPeriods.length / GRADING_PERIODS.length) * 100), 0, 99);
 }
 
+function buildRecommendationFromGradeRecords(records = []) {
+  const gradeRecords = Array.isArray(records) ? records : [];
+  const evidenceRecords = gradeRecords.map((record) => {
+    const periodGrades = [record?.p1, record?.p2, record?.p3]
+      .filter((value) => value !== null && value !== undefined && Number.isFinite(Number(value)))
+      .map(Number);
+    const evidenceGrade = record?.finalGrade !== null && record?.finalGrade !== undefined
+      ? Number(record.finalGrade)
+      : (periodGrades.length ? Number((periodGrades.reduce((sum, value) => sum + value, 0) / periodGrades.length).toFixed(2)) : null);
+    return { ...record, evidenceGrade };
+  }).filter((record) => record.evidenceGrade !== null);
+
+  const categoryBuckets = new Map();
+  evidenceRecords.forEach((record) => {
+    const category = normalizeSubjectCategory(record.subjectCategory)
+      || inferSubjectCategory({ subject: record.subjectName, subjectCategory: record.subjectCategory });
+    const values = categoryBuckets.get(category) || [];
+    values.push(record.evidenceGrade);
+    categoryBuckets.set(category, values);
+  });
+  const categoryScores = Object.fromEntries(SUBJECT_CATEGORIES.map((category) => {
+    const values = categoryBuckets.get(category) || [];
+    return [category, values.length ? Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(2)) : 0];
+  }));
+  const strandScores = computeStrandScores(categoryScores);
+  const rankedStrands = Object.entries(strandScores).sort((left, right) => Number(right[1]) - Number(left[1]));
+  const completedGradingPeriods = GRADING_PERIODS.filter((period, index) => (
+    gradeRecords.length > 0 && gradeRecords.every((record) => record?.[`p${index + 1}`] !== null && record?.[`p${index + 1}`] !== undefined)
+  ));
+  const completedSlots = gradeRecords.reduce((total, record) => total + Number(record?.completedPeriods || 0), 0);
+  const requiredSlots = gradeRecords.length * GRADING_PERIODS.length;
+  const isRecommendationReady = gradeRecords.length > 0
+    && evidenceRecords.length > 0
+    && completedSlots === requiredSlots;
+  const recommendationProgressPercent = requiredSlots > 0
+    ? Math.min(isRecommendationReady ? 100 : 99, Math.round(completedSlots / requiredSlots * 100))
+    : 0;
+  const recommendedName = isRecommendationReady ? String(rankedStrands[0]?.[0] || '') : '';
+  const confidence = isRecommendationReady ? computeConfidence({
+    attemptsCount: completedSlots,
+    topScore: Number(rankedStrands[0]?.[1] || 0),
+    secondScore: Number(rankedStrands[1]?.[1] || 0),
+  }) : null;
+
+  return {
+    gradeRecords,
+    subjectPerformance: evidenceRecords.map((record) => ({
+      subjectId: record.subjectId,
+      subjectName: record.subjectName,
+      subjectCode: record.subjectCode,
+      subjectCategory: record.subjectCategory,
+      p1: record.p1,
+      p2: record.p2,
+      p3: record.p3,
+      finalGrade: record.finalGrade,
+      averageScore: record.evidenceGrade,
+      completedAssessments: record.completedPeriods,
+      latestCompletedAt: record.latestGradedAt,
+    })),
+    strandScores,
+    requiredGradingPeriods: GRADING_PERIODS,
+    completedGradingPeriods,
+    missingGradingPeriods: GRADING_PERIODS.filter((period) => !completedGradingPeriods.includes(period)),
+    assessmentAttemptsCount: completedSlots,
+    recommendationProgressPercent,
+    recommendationStatus: isRecommendationReady ? 'ready' : (completedSlots > 0 ? 'in_progress' : 'not_started'),
+    isRecommendationReady,
+    recommendedStrand: isRecommendationReady
+      ? { name: recommendedName, confidence, generatedAt: new Date().toISOString(), topTwoStrands: rankedStrands.slice(0, 2).map(([name]) => name) }
+      : { name: '', confidence: null, generatedAt: null, topTwoStrands: [] },
+    confidence,
+    recommendationExplanation: isRecommendationReady
+      ? `The ranking uses the complete P1, P2, P3, and Final Grade records for ${gradeRecords.length} subject${gradeRecords.length === 1 ? '' : 's'}.`
+      : RECOMMENDATION_IN_PROGRESS_MESSAGE,
+  };
+}
+
 function fallbackExplanation({ recommendedStrand, confidence, topCategories, topTwoStrands, attemptsCount }) {
   return RECOMMENDATION_ENCOURAGEMENT_MESSAGE;
 }
@@ -499,6 +576,7 @@ module.exports = {
   NO_RECOMMENDATION_MESSAGE,
   normalizeSubjectCategory,
   inferSubjectCategory,
+  buildRecommendationFromGradeRecords,
   formatRecommendationPayload,
   recomputeStudentRecommendation,
 };

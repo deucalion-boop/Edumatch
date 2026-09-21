@@ -513,6 +513,7 @@
                     <option value="identification">Identification</option>
                     <option value="true_false">True or False</option>
                     <option value="mixed">Mixed</option>
+                    <option value="practical_exam">Practical Exam</option>
                   </select>
                   <p v-if="challengeStepAttempted[3] && challengeStepErrors.challengeExamType" id="challengeExamType-error" class="field-error" role="alert">{{ challengeStepErrors.challengeExamType }}</p>
                 </div>
@@ -1597,6 +1598,9 @@ const getChallengeStepErrors = (step) => {
       if (!Number.isInteger(questionCount) || questionCount < 1 || questionCount > 100) errors.challengeQuestionCount = "Enter 1 to 100 questions.";
       if (!Number.isInteger(duration) || duration < 1 || duration > 300) errors.challengeExamDurationMinutes = "Enter a timer from 1 to 300 minutes.";
       if (!String(challengeForm.challengeExamType || "").trim()) errors.challengeExamType = "Select an exam type.";
+      if (challengeForm.challengeExamType === "practical_exam" && !isGradingAssessment.value) {
+        errors.challengeExamType = "Practical Exam must use the Exam type and a grading period.";
+      }
       if (!String(challengeForm.challengeDifficulty || "").trim()) errors.challengeDifficulty = "Select a difficulty.";
       if (!Number.isFinite(totalPoints) || totalPoints < 10 || totalPoints > 500) errors.challengePoints = "Enter total points from 10 to 500.";
     }

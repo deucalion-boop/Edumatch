@@ -47,6 +47,7 @@ function isPastDate(value) {
 
 function buildAssessmentPolicy(input = {}) {
   const assessmentMode = normalizeAssessmentMode(input.assessmentMode || input.mode);
+  const isPracticalExam = String(input.examType || '').trim().toLowerCase() === 'practical_exam';
   const gradingPeriod = assessmentMode === 'grading_assessment'
     ? normalizeGradingPeriod(input.gradingPeriod)
     : '';
@@ -55,6 +56,11 @@ function buildAssessmentPolicy(input = {}) {
 
   if (assessmentMode === 'grading_assessment' && !gradingPeriod) {
     const error = new Error(`gradingPeriod is required for grading assessments. Allowed values: ${GRADING_PERIODS.join(', ')}`);
+    error.statusCode = 400;
+    throw error;
+  }
+  if (isPracticalExam && assessmentMode !== 'grading_assessment') {
+    const error = new Error('Practical Exam must be published as an exam with a 1st, 2nd, or 3rd grading period');
     error.statusCode = 400;
     throw error;
   }

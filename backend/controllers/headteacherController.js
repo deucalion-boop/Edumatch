@@ -882,6 +882,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
   const challengeDescription = String(challengeDescriptionRaw || '').trim();
   const assessmentPolicy = buildAssessmentPolicy({
     assessmentMode,
+    examType,
     gradingPeriod,
     assignmentScope,
   });
@@ -978,6 +979,7 @@ const updateManagedTeacherAssessment = asyncHandler(async (req, res) => {
 
   const nextPolicy = buildAssessmentPolicy({
     assessmentMode: assessmentMode !== undefined ? assessmentMode : assessment.assessmentMode,
+    examType: examType !== undefined ? examType : assessment.examType,
     gradingPeriod: gradingPeriod !== undefined ? gradingPeriod : assessment.gradingPeriod,
     assignmentScope: assignmentScope !== undefined ? assignmentScope : assessment.assignmentScope,
   });

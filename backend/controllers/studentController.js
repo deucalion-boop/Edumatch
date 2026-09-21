@@ -5,7 +5,6 @@ const Lesson = require('../models/Lesson');
 const User = require('../models/User');
 const { sendSuccess } = require('../utils/responseHelper');
 const { computeMasteryFromSubmissions } = require('../utils/studentProgress');
-const { formatRecommendationPayload } = require('../services/recommendationService');
 const { computeAcademicProgress } = require('../services/supabaseAcademicProgressService');
 const { uploadFile } = require('../services/storageService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
@@ -1589,7 +1588,7 @@ const getMySubjects = asyncHandler(async (req, res) => {
   });
   const lessons = allLessons.filter((lesson) => approvedSubjectIdSet.has(String(lesson.subjectId || '')));
   const assessments = allAssessments.filter((assessment) => approvedSubjectIdSet.has(String(assessment.subjectId || '')));
-  const recommendation = null;
+  const academicProgress = await computeAcademicProgress(req.user._id);
 
   const lessonCounts = new Map();
   lessons.forEach((lesson) => {
@@ -1604,7 +1603,7 @@ const getMySubjects = asyncHandler(async (req, res) => {
   });
 
   const subjectPerformanceById = new Map(
-    (Array.isArray(recommendation?.subjectPerformance) ? recommendation.subjectPerformance : [])
+    (Array.isArray(academicProgress?.subjectPerformance) ? academicProgress.subjectPerformance : [])
       .map((item) => [String(item?.subjectId || ''), item])
   );
 
@@ -1646,7 +1645,7 @@ const getMySubjects = asyncHandler(async (req, res) => {
     pendingSubjects: pendingEnrollments.map(mapEnrollmentRow),
     studentContext,
     insights: {
-      ...formatRecommendationPayload(recommendation),
+      ...academicProgress,
     },
   });
 });

@@ -507,6 +507,7 @@ const generateAssessmentWithAi = asyncHandler(async (req, res) => {
   const examDurationMinutes = parseExamDurationMinutes(examDurationMinutesRaw, { required: true });
   const assessmentPolicy = buildAssessmentPolicy({
     assessmentMode,
+    examType,
     gradingPeriod,
     assignmentScope,
   });

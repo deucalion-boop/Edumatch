@@ -1,6 +1,6 @@
 const { readProfileRows } = require('../services/supabaseUserProfileService');
 const { sendSuccess } = require('../utils/responseHelper');
-const { formatRecommendationPayload } = require('../services/recommendationService');
+const { buildRecommendationFromGradeRecords } = require('../services/recommendationService');
 const { computeAcademicProgress } = require('../services/supabaseAcademicProgressService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -45,13 +45,11 @@ const getRecommendation = asyncHandler(async (req, res) => {
   }
   await assertRecommendationAccess(req, studentId);
 
-  const [recommendation, academicProgress] = await Promise.all([
-    readProfileRows('recommendations', 'student_id', studentId).then((rows) => rows[0] || null),
-    computeAcademicProgress(studentId),
-  ]);
+  const academicProgress = await computeAcademicProgress(studentId);
+  const recommendation = buildRecommendationFromGradeRecords(academicProgress.gradeRecords);
 
   return sendSuccess(res, 200, 'Recommendation fetched successfully', {
-    recommendation: { ...formatRecommendationPayload(recommendation), ...academicProgress },
+    recommendation: { ...recommendation, ...academicProgress },
   });
 });
 
@@ -64,13 +62,11 @@ const recomputeRecommendation = asyncHandler(async (req, res) => {
   }
   await assertRecommendationAccess(req, studentId);
 
-  const [recommendation, academicProgress] = await Promise.all([
-    readProfileRows('recommendations', 'student_id', studentId).then((rows) => rows[0] || null),
-    computeAcademicProgress(studentId),
-  ]);
+  const academicProgress = await computeAcademicProgress(studentId);
+  const recommendation = buildRecommendationFromGradeRecords(academicProgress.gradeRecords);
 
   return sendSuccess(res, 200, 'Strand recommendation recomputed successfully', {
-    recommendation: { ...formatRecommendationPayload(recommendation), ...academicProgress },
+    recommendation: { ...recommendation, ...academicProgress },
   });
 });
 

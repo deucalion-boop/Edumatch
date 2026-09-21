@@ -34,6 +34,14 @@ test('only the three current grading periods are accepted', () => {
   );
 });
 
+test('practical exams require a grading period', () => {
+  assert.throws(
+    () => buildAssessmentPolicy({ assessmentMode: 'quiz', examType: 'practical_exam' }),
+    /must be published as an exam/
+  );
+  assert.equal(buildAssessmentPolicy({ assessmentMode: 'grading_assessment', examType: 'practical_exam', gradingPeriod: '2nd' }).gradingPeriod, '2nd');
+});
+
 test('legacy attempts do not affect recommendation progress or scores', () => {
   const payload = formatRecommendationPayload({
     studentId: 'student-1',

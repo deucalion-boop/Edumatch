@@ -197,7 +197,7 @@
       <header class="grades-premium-header">
         <div class="grades-premium-header__copy">
           <span class="premium-eyebrow"><i class="fas fa-chart-simple" aria-hidden="true"></i> Grades overview</span>
-          <h1 id="recent-results-title">Recent results</h1>
+          <h1 id="recent-results-title">Grade Results</h1>
           <p>Track your academic performance, celebrate your progress, and discover where to focus next.</p>
         </div>
         <router-link to="/student/dashboard" class="grades-back-button">
@@ -278,6 +278,29 @@
           </router-link>
         </div>
       </div>
+
+      <section v-if="!isInitialLoading && subjectGradeRecords.length" class="complete-grade-history" aria-labelledby="complete-grade-history-title">
+        <header>
+          <div><span class="premium-eyebrow">Official grading record</span><h2 id="complete-grade-history-title">Complete grading history</h2></div>
+          <p>Final Grade is calculated after P1, P2, and P3 are all available.</p>
+        </header>
+        <div class="complete-grade-history__table-wrap">
+          <table>
+            <thead><tr><th>Subject</th><th>P1</th><th>P2</th><th>P3</th><th>Final Grade</th></tr></thead>
+            <tbody>
+              <tr v-for="record in subjectGradeRecords" :key="record.subjectId">
+                <th><strong>{{ record.subjectName }}</strong><small>{{ record.subjectCode || 'No subject code' }}</small></th>
+                <td v-for="period in ['1st', '2nd', '3rd']" :key="`${record.subjectId}-${period}`">
+                  <strong>{{ formatPeriodGrade(gradePeriod(record, period)?.grade) }}</strong>
+                  <small v-if="gradePeriod(record, period)?.source?.examType">{{ formatLabel(gradePeriod(record, period).source.examType) }}</small>
+                  <small v-else>Awaiting result</small>
+                </td>
+                <td class="is-final"><strong>{{ formatPeriodGrade(record.finalGrade) }}</strong><small>{{ record.finalGrade === null ? `${record.completedPeriods || 0}/3 periods` : 'Complete' }}</small></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
 
     <section
@@ -400,6 +423,12 @@
             <div class="subject-performance-head"><div><strong>{{ subject.subjectName }}</strong><small>{{ subject.subjectCode || `${subject.evidenceCount} graded result(s)` }}</small></div><span :class="performanceTone(subject.performanceLevel)">{{ subject.performanceLevel }}</span></div>
             <div class="subject-score-pair"><div><span>Completion</span><strong>{{ subject.completionPercentage }}%</strong></div><div><span>Performance</span><strong>{{ subject.finalPercentage === null ? '—' : `${subject.finalPercentage}%` }}</strong></div></div>
             <div class="subject-progress-track"><span :style="{ width: `${subject.completionPercentage}%` }"></span></div>
+            <div class="period-grade-grid" aria-label="Grading period history">
+              <span>P1<strong>{{ formatPeriodGrade(subject.p1) }}</strong></span>
+              <span>P2<strong>{{ formatPeriodGrade(subject.p2) }}</strong></span>
+              <span>P3<strong>{{ formatPeriodGrade(subject.p3) }}</strong></span>
+              <span class="is-final">Final Grade<strong>{{ formatPeriodGrade(subject.finalGrade) }}</strong></span>
+            </div>
             <div class="category-score-grid"><span>Activity<strong>{{ formatAcademicValue(subject.activityAverage) }}</strong></span><span>Quiz<strong>{{ formatAcademicValue(subject.quizAverage) }}</strong></span><span>Exam<strong>{{ formatAcademicValue(subject.examAverage) }}</strong></span></div>
             <small class="subject-formula">Weights: A {{ subject.weights.activity }}% · Q {{ subject.weights.quiz }}% · E {{ subject.weights.exam }}%<br>{{ subject.hasSufficientData ? `${subject.evidenceCount} results · ranking eligible` : `${subject.evidenceCount}/${subject.minimumEvidenceCount} results · insufficient data` }}</small>
           </article>
@@ -544,6 +573,16 @@ export default {
       }).sort((a, b) => this.priority(a.dueTone) - this.priority(b.dueTone)).slice(0, 6)
     },
     recentGrades() {
+      const gradingResults = Array.isArray(this.subjectInsights?.latestGradeResults) ? this.subjectInsights.latestGradeResults : []
+      if (gradingResults.length) {
+        return gradingResults.slice(0, 8).map((result, index) => ({
+          key: `${result.subjectId || 'subject'}-${result.gradingPeriod || index}`,
+          title: result.subjectName || result.title || 'Subject grade',
+          context: `${this.periodLabel(result.gradingPeriod)}${result.examType ? ` · ${this.formatLabel(result.examType)}` : ''}`,
+          score: this.formatPeriodGrade(result.grade),
+          time: this.relative(result.gradedAt)
+        }))
+      }
       return this.finalizedSubmissions
         .filter((item) => !['ai_assisted', 'pending_teacher_review'].includes(String(item.scoringStatus || '').toLowerCase()))
         .slice(0, 5).map((item, index) => ({
@@ -584,46 +623,50 @@ export default {
       ]
     },
     gradeOverviewStats() {
-      const gradedCount = this.summary.completedChallenges
-      const totalAssessments = this.assessments.length
-      const completionRate = totalAssessments
-        ? Math.min(100, Math.round((gradedCount / totalAssessments) * 100))
+      const completedPeriods = this.subjectGradeRecords.reduce((total, record) => total + Number(record.completedPeriods || 0), 0)
+      const requiredPeriods = this.subjectGradeRecords.length * 3
+      const finalGrades = this.subjectGradeRecords.map((record) => record.finalGrade).filter((value) => value !== null && value !== undefined).map(Number)
+      const highestGrade = finalGrades.length ? Math.max(...finalGrades) : null
+      const completionRate = requiredPeriods
+        ? Math.min(100, Math.round((completedPeriods / requiredPeriods) * 100))
         : null
       return [
         {
-          label: 'Current Average',
-          value: this.hasGradesData ? this.formatPercent(this.summary.averageScore) : '—',
-          note: this.hasGradesData ? this.summary.performanceTrend : 'Awaiting your first score',
+          label: 'Final Grade Average',
+          value: this.finalGradeAverage === null ? '—' : this.formatPercent(this.finalGradeAverage),
+          note: finalGrades.length ? `${finalGrades.length} completed subject grade${finalGrades.length === 1 ? '' : 's'}` : 'Requires P1, P2, and P3',
           icon: 'fa-chart-pie',
           tone: 'forest'
         },
         {
-          label: 'Graded Activities',
-          value: this.hasGradesData ? String(gradedCount) : '—',
-          note: this.hasGradesData ? 'Published results' : 'No activities graded yet',
+          label: 'Period Grades',
+          value: String(completedPeriods),
+          note: requiredPeriods ? `${completedPeriods} of ${requiredPeriods} records available` : 'No enrolled subjects',
           icon: 'fa-clipboard-check',
           tone: 'sage'
         },
         {
-          label: 'Highest Score',
-          value: this.hasGradesData ? this.formatPercent(this.summary.highestScore) : '—',
-          note: this.hasGradesData ? 'Your personal best' : 'Ready for your best result',
+          label: 'Highest Final Grade',
+          value: highestGrade === null ? '—' : this.formatPercent(highestGrade),
+          note: highestGrade === null ? 'Awaiting complete grading history' : 'Highest completed subject',
           icon: 'fa-trophy',
           tone: 'gold'
         },
         {
           label: 'Completion Rate',
           value: completionRate === null ? '—' : `${completionRate}%`,
-          note: totalAssessments ? `${gradedCount} of ${totalAssessments} graded` : 'No assigned work yet',
+          note: requiredPeriods ? 'P1, P2, and P3 completion' : 'No grading records yet',
           icon: 'fa-circle-check',
           tone: 'teal'
         }
       ]
     },
     recommendationAssessmentStats() {
+      const periodGrades = this.subjectGradeRecords.flatMap((record) => [record.p1, record.p2, record.p3])
+        .filter((value) => value !== null && value !== undefined).map((value) => ({ percentage: Number(value) }))
       return [
         { label: 'Quiz', value: this.formatWholePercent(this.averagePercentageForRows(this.finalizedSubmissions.filter((item) => String(item?.assessmentMode || '').trim().toLowerCase() === 'quiz'))) },
-        { label: 'Exam', value: this.formatWholePercent(this.averagePercentageForRows(this.finalizedSubmissions.filter((item) => String(item?.assessmentMode || '').trim().toLowerCase() === 'grading_assessment' && ['1st', '2nd', '3rd'].includes(item?.gradingPeriod)))) },
+        { label: 'Exam', value: this.formatWholePercent(this.averagePercentageForRows(periodGrades)) },
         { label: 'Activities', value: this.formatWholePercent(this.averagePercentageForRows(this.activitySubmissions)) }
       ]
     },
@@ -633,7 +676,7 @@ export default {
         { ...assessmentStats[0], note: 'Quiz average', icon: 'fa-clipboard-question', tone: 'forest' },
         { ...assessmentStats[1], note: 'Exam average', icon: 'fa-file-circle-check', tone: 'sage' },
         { ...assessmentStats[2], note: 'Activity average', icon: 'fa-list-check', tone: 'teal' },
-        { label: 'Completed', value: String(this.summary.completedChallenges), note: 'Graded assessments', icon: 'fa-circle-check', tone: 'success' },
+        { label: 'Completed', value: String(this.subjectGradeRecords.reduce((total, record) => total + Number(record.completedPeriods || 0), 0)), note: 'Subject period grades', icon: 'fa-circle-check', tone: 'success' },
         { label: 'Classes', value: String(this.subjects.length), note: 'Active learning spaces', icon: 'fa-book-open', tone: 'blue' },
         {
           label: 'Suggested Strand',
@@ -649,6 +692,13 @@ export default {
     },
     academicSubjects() {
       return Array.isArray(this.subjectInsights?.subjectPerformance) ? this.subjectInsights.subjectPerformance : []
+    },
+    subjectGradeRecords() {
+      return Array.isArray(this.subjectInsights?.gradeRecords) ? this.subjectInsights.gradeRecords : []
+    },
+    finalGradeAverage() {
+      const grades = this.subjectGradeRecords.map((record) => record.finalGrade).filter((value) => value !== null && value !== undefined)
+      return grades.length ? Number((grades.reduce((sum, value) => sum + Number(value || 0), 0) / grades.length).toFixed(2)) : null
     },
     rankedAcademicSubjects() {
       return Array.isArray(this.subjectInsights?.rankedSubjects) ? this.subjectInsights.rankedSubjects : []
@@ -721,8 +771,23 @@ export default {
     formatAcademicValue(value) {
       return value === null || value === undefined ? 'N/A' : `${Number(value).toFixed(1)}%`
     },
+    formatPeriodGrade(value) {
+      return value === null || value === undefined ? '—' : `${Number(value).toFixed(2)}%`
+    },
+    gradePeriod(record, period) {
+      return (Array.isArray(record?.periods) ? record.periods : []).find((item) => item.period === period) || null
+    },
+    periodLabel(period) {
+      return { '1st': 'P1', '2nd': 'P2', '3rd': 'P3' }[String(period || '').trim()] || 'Grading period'
+    },
+    formatLabel(value) {
+      return String(value || '').replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+    },
     academicSubjectScore(subject) {
-      const value = subject?.finalPercentage ?? subject?.averageScore ?? subject?.progress
+      const periodGrades = [subject?.p1, subject?.p2, subject?.p3]
+        .filter((value) => value !== null && value !== undefined && Number.isFinite(Number(value))).map(Number)
+      const periodAverage = periodGrades.length ? periodGrades.reduce((sum, value) => sum + value, 0) / periodGrades.length : null
+      const value = subject?.finalGrade ?? periodAverage ?? subject?.finalPercentage ?? subject?.averageScore ?? subject?.progress
       if (value === null || value === undefined || !Number.isFinite(Number(value))) return null
       return Number(Number(value).toFixed(1))
     },
@@ -1038,6 +1103,23 @@ export default {
 </script>
 
 <style scoped>
+.complete-grade-history { margin-top: 1rem; padding: 1.1rem; border: 1px solid #dfe8d8; border-radius: 20px; background: #fff; }
+.complete-grade-history > header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 0.85rem; }
+.complete-grade-history h2 { margin: 0.25rem 0 0; color: #1e4307; font-size: 1.15rem; }
+.complete-grade-history > header > p { max-width: 30rem; margin: 0; color: #64748b; font-size: 0.75rem; text-align: right; }
+.complete-grade-history__table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 14px; }
+.complete-grade-history table { width: 100%; min-width: 700px; border-collapse: collapse; }
+.complete-grade-history th,
+.complete-grade-history td { padding: 0.75rem; border-bottom: 1px solid #edf1e9; color: #334155; text-align: center; }
+.complete-grade-history thead th { color: #60705c; background: #f7faf3; font-size: 0.68rem; text-transform: uppercase; }
+.complete-grade-history tbody th { min-width: 13rem; text-align: left; }
+.complete-grade-history tbody strong,
+.complete-grade-history tbody small { display: block; }
+.complete-grade-history tbody strong { color: #1e4307; font-size: 0.78rem; }
+.complete-grade-history tbody small { margin-top: 0.16rem; color: #94a3b8; font-size: 0.6rem; }
+.complete-grade-history td.is-final { background: #f0fdf4; }
+.complete-grade-history tbody tr:last-child th,
+.complete-grade-history tbody tr:last-child td { border-bottom: 0; }
 .academic-progress-overview,
 .strand-ranking-section,
 .subject-performance-section,
@@ -1052,6 +1134,11 @@ export default {
 .subject-progress-track { height: 9px; margin: 0.9rem 0; overflow: hidden; border-radius: 999px; background: #e5eadf; }
 .academic-progress-track span,
 .subject-progress-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1e4307, #8fc867); }
+.period-grade-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.4rem; margin-bottom: 0.75rem; }
+.period-grade-grid span { display: grid; gap: 0.15rem; padding: 0.55rem 0.35rem; color: #64748b; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; font-size: 0.62rem; text-align: center; }
+.period-grade-grid strong { color: #334155; font-size: 0.76rem; }
+.period-grade-grid .is-final { color: #3f6212; border-color: #bbd7a8; background: #f0fdf4; font-weight: 800; }
+.period-grade-grid .is-final strong { color: #1e4307; }
 .academic-progress-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem; }
 .academic-progress-counts span { padding: 0.65rem; border-radius: 12px; background: #f7faf3; color: #52633e; font-size: 0.75rem; }
 .academic-progress-counts i { margin-right: 0.4rem; color: #6c9b4c; }
@@ -1116,7 +1203,7 @@ export default {
 .academic-ranking-list { display: grid; gap: 0.45rem; margin: 0.9rem 0 0; padding: 0; list-style: none; }
 .academic-ranking-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 0.7rem; padding: 0.65rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 12px; }
 .academic-ranking-list b { color: #4f8a35; }.academic-ranking-list span { display: grid; color: #334155; font-weight: 700; }.academic-ranking-list small { color: #64748b; font-size: 0.65rem; font-weight: 500; }.academic-ranking-list em { color: #64748b; font-size: 0.68rem; font-style: normal; }
-@media (max-width: 720px) { .academic-progress-counts { grid-template-columns: 1fr 1fr; }.strand-ranking-section > header { align-items: flex-start; flex-direction: column; }.strand-ranking-section > header > p { text-align: left; }.strand-subject-evidence { grid-template-columns: 1fr; }.recommendation-highlight-grid { grid-template-columns: 1fr; }.academic-ranking-list li { grid-template-columns: auto 1fr auto; }.academic-ranking-list em { grid-column: 2 / -1; } }
+@media (max-width: 720px) { .complete-grade-history > header { align-items: flex-start; flex-direction: column; }.complete-grade-history > header > p { text-align: left; }.academic-progress-counts { grid-template-columns: 1fr 1fr; }.strand-ranking-section > header { align-items: flex-start; flex-direction: column; }.strand-ranking-section > header > p { text-align: left; }.strand-subject-evidence { grid-template-columns: 1fr; }.recommendation-highlight-grid { grid-template-columns: 1fr; }.academic-ranking-list li { grid-template-columns: auto 1fr auto; }.academic-ranking-list em { grid-column: 2 / -1; } }
 
 .student-dashboard-page {
   --ink: #12243a;

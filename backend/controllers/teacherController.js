@@ -63,6 +63,7 @@ const {
 } = require('../constants/strandSubjects');
 const { findActivitySubmissionById, updateActivityReview } = require('../services/supabaseActivityService');
 const { getSupabaseStorageClient } = require('../services/supabaseStorageService');
+const { syncStudentSubjectGradeRecords } = require('../services/supabaseGradeRecordService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
@@ -1562,6 +1563,7 @@ const createAssessment = asyncHandler(async (req, res) => {
   try {
     const assessmentPolicy = buildAssessmentPolicy({
       assessmentMode: normalizedAssessmentMode,
+      examType: normalizedExamType,
       gradingPeriod,
       assignmentScope,
     });
@@ -1696,6 +1698,7 @@ const updateAssessmentQuestions = asyncHandler(async (req, res) => {
     : null;
   const nextPolicy = buildAssessmentPolicy({
     assessmentMode: assessmentMode !== undefined ? assessmentMode : assessment.assessmentMode,
+    examType: examType !== undefined ? examType : assessment.examType,
     gradingPeriod: gradingPeriod !== undefined ? gradingPeriod : assessment.gradingPeriod,
     assignmentScope: assignmentScope !== undefined ? assignmentScope : assessment.assignmentScope,
   });
@@ -1984,7 +1987,7 @@ const getTeacherStudentAssessmentResults = asyncHandler(async (req, res) => {
   const { assessmentsById, submissions } = await teacherResultData(req.user._id, subjectFilter, studentFilter);
 
   let results = submissions.map((submission) => {
-    const score = Number(submission?.score || 0);
+    const score = Number(submission?.teacherAdjustedScore ?? submission?.gradeValue ?? submission?.score ?? 0);
     const totalPoints = Number(submission?.totalPoints || 0);
     const percentage = totalPoints > 0 ? Number(((score / totalPoints) * 100).toFixed(2)) : 0;
     const passFailStatus = percentage >= PASSING_PERCENTAGE ? 'pass' : 'fail';
@@ -2157,6 +2160,10 @@ const reviewActivitySubmission = asyncHandler(async (req, res) => {
     const error = new Error('Student submission not found');
     error.statusCode = 404;
     throw error;
+  }
+
+  if (action === 'grade' && String(assessment.assessmentMode || '').trim().toLowerCase() === 'grading_assessment') {
+    await syncStudentSubjectGradeRecords(submission.studentId);
   }
 
   await safelyRunNotificationTask('activity review', () => createStudentNotifications({

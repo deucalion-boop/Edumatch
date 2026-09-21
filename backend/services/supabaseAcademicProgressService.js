@@ -4,6 +4,8 @@ const { listHydratedStudentEnrollments } = require('./supabaseEnrollmentService'
 const { listLessonProgress } = require('./supabaseProgressionService');
 const { listStudentActivitySubmissions } = require('./supabaseActivityService');
 const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
+const { buildSubjectGradeRecords, saveSubjectGradeRecords, latestGradeResults } = require('./supabaseGradeRecordService');
+const { buildRecommendationFromGradeRecords } = require('./recommendationService');
 
 const DEFAULT_WEIGHTS = { activity: 30, quiz: 30, exam: 40 };
 const FINAL_STATUSES = new Set(['completed', 'auto_submitted', 'terminated']);
@@ -29,7 +31,7 @@ function performanceLevel(value) {
   return 'Needs Improvement';
 }
 
-function calculateSubjectMetrics({ subject, lessons, assessments, submissions, progressRows, weightConfig }) {
+function calculateSubjectMetrics({ subject, lessons, assessments, submissions, progressRows, weightConfig, gradeRecord = null }) {
   const subjectId = cleanId(subject);
   const subjectLessons = lessons.filter((item) => cleanId(item.subjectId) === subjectId);
   const subjectAssessments = assessments.filter((item) => (
@@ -65,9 +67,15 @@ function calculateSubjectMetrics({ subject, lessons, assessments, submissions, p
   const weights = weightConfig || DEFAULT_WEIGHTS;
   const applicable = Object.keys(averages).filter((key) => averages[key] !== null && Number(weights[key] || 0) > 0);
   const applicableWeight = applicable.reduce((sum, key) => sum + Number(weights[key] || 0), 0);
-  const finalPercentage = applicableWeight > 0
+  const courseworkPercentage = applicableWeight > 0
     ? round(applicable.reduce((sum, key) => sum + averages[key] * Number(weights[key] || 0), 0) / applicableWeight)
     : null;
+  const availablePeriodGrades = [gradeRecord?.p1, gradeRecord?.p2, gradeRecord?.p3]
+    .filter((value) => value !== null && value !== undefined).map(Number);
+  const gradingRecordPercentage = gradeRecord?.finalGrade ?? (availablePeriodGrades.length
+    ? round(availablePeriodGrades.reduce((sum, value) => sum + value, 0) / availablePeriodGrades.length)
+    : null);
+  const finalPercentage = gradingRecordPercentage ?? courseworkPercentage;
   const completedLessons = subjectLessons.filter((lesson) => progressByLesson.get(cleanId(lesson))?.status === 'completed').length;
   const completedAssessmentIds = new Set(finalSubmissions.map((item) => cleanId(item.assessmentId)));
   const completedAssessments = completedAssessmentIds.size;
@@ -88,6 +96,13 @@ function calculateSubjectMetrics({ subject, lessons, assessments, submissions, p
     activityAverage: averages.activity,
     quizAverage: averages.quiz,
     examAverage: averages.exam,
+    p1: gradeRecord?.p1 ?? null,
+    p2: gradeRecord?.p2 ?? null,
+    p3: gradeRecord?.p3 ?? null,
+    finalGrade: gradeRecord?.finalGrade ?? null,
+    gradingHistory: gradeRecord?.periods || [],
+    latestGradedAt: gradeRecord?.latestGradedAt || null,
+    courseworkPercentage,
     finalPercentage,
     performanceLevel: performanceLevel(finalPercentage),
     evidenceCount: categoryValues.activity.length + categoryValues.quiz.length + categoryValues.exam.length,
@@ -119,6 +134,29 @@ async function computeAcademicProgress(studentId) {
     subjectIds.includes(cleanId(item.subjectId))
     && Boolean(assessmentCategory(item))
   ));
+  const calculatedGradeRecords = buildSubjectGradeRecords({
+    studentId,
+    subjects,
+    assessments: visibleAssessments,
+    submissions,
+  });
+  const gradeRecords = await saveSubjectGradeRecords(calculatedGradeRecords);
+  const recentGradeResults = latestGradeResults(gradeRecords);
+  const gradeRecommendation = buildRecommendationFromGradeRecords(gradeRecords);
+  const recommendationSave = await client.from('recommendations').upsert({
+    student_id: String(studentId),
+    assessment_attempts: recentGradeResults,
+    subject_performance: gradeRecommendation.subjectPerformance,
+    strand_scores: gradeRecommendation.strandScores,
+    recommended_strand: gradeRecommendation.recommendedStrand,
+    recommendation_explanation: gradeRecommendation.recommendationExplanation,
+    last_reason: 'Subject grading records synchronized',
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'student_id' });
+  if (recommendationSave.error) {
+    throw Object.assign(new Error(recommendationSave.error.message || 'Failed to save grade-based recommendation'), { statusCode: 500 });
+  }
+  const gradeRecordBySubjectId = new Map(gradeRecords.map((record) => [record.subjectId, record]));
   const subjectPerformance = subjects.map((subject) => calculateSubjectMetrics({
     subject,
     lessons: visibleLessons,
@@ -126,6 +164,7 @@ async function computeAcademicProgress(studentId) {
     submissions,
     progressRows,
     weightConfig: weightsBySubject.get(cleanId(subject)),
+    gradeRecord: gradeRecordBySubjectId.get(cleanId(subject)) || null,
   }));
   const rankedSubjects = subjectPerformance.filter((item) => item.hasSufficientData && item.finalPercentage !== null)
     .sort((a, b) => b.finalPercentage - a.finalPercentage)
@@ -152,6 +191,8 @@ async function computeAcademicProgress(studentId) {
       completedRequiredItems: totalCompleted,
       completionPercentage: totalRequired ? round(totalCompleted / totalRequired * 100) : 0,
     },
+    gradeRecords,
+    latestGradeResults: recentGradeResults,
     subjectPerformance,
     rankedSubjects,
     strongestSubject,
