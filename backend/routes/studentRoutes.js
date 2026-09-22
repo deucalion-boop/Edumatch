@@ -31,12 +31,22 @@ const {
 
 const router = express.Router();
 const { uploadLimiter } = require('../middlewares/rateLimiters');
+const {
+  getMyAccountRequest,
+  getMySettings,
+  submitMyAccountRequest,
+  updateMySettings,
+} = require('../controllers/studentSettingsController');
 
 router.use(authMiddleware, roleMiddleware('student'));
 
 router.get('/profile', getStudentProfile);
 router.put('/profile', uploadLimiter, uploadProfileImage.single('profileImage'), updateStudentProfile);
 router.patch('/tour-preference', updateStudentTourPreference);
+router.get('/settings', getMySettings);
+router.put('/settings', updateMySettings);
+router.get('/account-requests/current', getMyAccountRequest);
+router.post('/account-requests', submitMyAccountRequest);
 router.get('/subjects', getMySubjects);
 router.post('/subjects/join', joinSubjectByCode);
 router.get('/attendance', getStudentAttendanceHistory);

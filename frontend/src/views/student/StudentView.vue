@@ -1,5 +1,5 @@
 <template>
-  <div class="student-dashboard" :class="{ 'sidebar-open': isSidebarOpen, 'no-route-sidebar': shouldHideSidebar }">
+  <div class="student-dashboard" :class="[{ 'sidebar-open': isSidebarOpen, 'no-route-sidebar': shouldHideSidebar }, studentAppearanceClasses]">
     <aside v-if="!shouldHideSidebar" id="student-sidebar-drawer" class="student-sidebar" :class="{ active: isSidebarOpen }" data-tour="sidebar">
       <div class="sidebar-header">
         <div class="student-logo">
@@ -288,6 +288,42 @@ export default {
       profileImage: '',
       profile: {}
     })
+    const studentAppearance = reactive({ theme: 'system', textSize: 'normal', highContrast: false, reduceMotion: false })
+    const systemDark = ref(false)
+    const studentAppearanceClasses = computed(() => ({
+      'student-theme-dark': studentAppearance.theme === 'dark' || (studentAppearance.theme === 'system' && systemDark.value),
+      'student-theme-light': studentAppearance.theme === 'light',
+      'student-text-large': studentAppearance.textSize === 'large',
+      'student-text-larger': studentAppearance.textSize === 'larger',
+      'student-high-contrast': studentAppearance.highContrast,
+      'student-reduce-motion': studentAppearance.reduceMotion,
+    }))
+
+    const applyStudentPreferences = (settings = {}) => {
+      if (settings.appearance && typeof settings.appearance === 'object') Object.assign(studentAppearance, settings.appearance)
+      systemDark.value = studentAppearance.theme === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches === true
+    }
+
+    const loadStudentPreferences = async () => {
+      const identity = authStore.user?.id || authStore.user?._id || authStore.user?.username || 'student'
+      const cacheKey = `edumatch_student_settings_v2_${identity}`
+      try { applyStudentPreferences(JSON.parse(localStorage.getItem(cacheKey) || '{}')) } catch (_error) { localStorage.removeItem(cacheKey) }
+      if (!authStore.token) return
+      try {
+        const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+        const baseUrl = !configured ? '/api' : (configured.endsWith('/api') ? configured : `${configured}/api`)
+        const response = await fetch(`${baseUrl}/student/settings`, { headers: { Authorization: `Bearer ${authStore.token}` } })
+        if (!response.ok) return
+        const payload = await response.json()
+        const settings = payload?.settings || {}
+        applyStudentPreferences(settings)
+        localStorage.setItem(cacheKey, JSON.stringify(settings))
+      } catch (_error) {
+        // Cached preferences remain active when the server is temporarily unavailable.
+      }
+    }
+
+    const handleStudentPreferencesChanged = (event) => applyStudentPreferences(event.detail || {})
 
     const {
       notifications,
@@ -835,6 +871,8 @@ export default {
       window.addEventListener('scroll', handleTourViewportChange, true)
       window.addEventListener('resize', syncMobileMenuBodyState)
       fetchUserData()
+      loadStudentPreferences()
+      window.addEventListener('edumatch-student-preferences-changed', handleStudentPreferencesChanged)
       maybeAutoStartTour()
       syncMobileMenuBodyState()
     })
@@ -845,6 +883,7 @@ export default {
       window.removeEventListener('resize', handleTourViewportChange)
       window.removeEventListener('scroll', handleTourViewportChange, true)
       window.removeEventListener('resize', syncMobileMenuBodyState)
+      window.removeEventListener('edumatch-student-preferences-changed', handleStudentPreferencesChanged)
       closeTour({ markSeen: false })
       document.body.classList.remove('student-mobile-menu-open')
     })
@@ -860,6 +899,7 @@ export default {
       unreadNotificationCount,
       isNotificationsLoading,
       showNotificationsPanel,
+      studentAppearanceClasses,
       shouldHideSidebar,
       displayName,
       sidebarAvatarUrl,
@@ -902,6 +942,21 @@ body.student-tour-open {
 body.student-dashboard .student-dashboard.no-route-sidebar .student-main {
   margin-left: 0 !important;
 }
+
+.student-dashboard.student-text-large { font-size: 1.08rem; }
+.student-dashboard.student-text-larger { font-size: 1.16rem; }
+.student-dashboard.student-reduce-motion *,
+.student-dashboard.student-reduce-motion *::before,
+.student-dashboard.student-reduce-motion *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+.student-dashboard.student-high-contrast { --border-color: #475569; }
+.student-dashboard.student-high-contrast :is(.section-card, .settings-panel, .student-card, .dashboard-card, table, input, select, textarea) { border-color: #475569 !important; }
+.student-dashboard.student-theme-dark { color-scheme: dark; color: #e2e8f0; background: #0f1712; }
+.student-dashboard.student-theme-dark .student-main,
+.student-dashboard.student-theme-dark .student-dashboard-page { background: #0f1712 !important; }
+.student-dashboard.student-theme-dark :is(.top-header, .section-card, .settings-panel, .student-card, .dashboard-card, .stat-card, .lesson-card, .activity-card, .profile-card, .notification-dropdown) { background-color: #18221c !important; border-color: #405348 !important; color: #e2e8f0 !important; }
+.student-dashboard.student-theme-dark :is(h1, h2, h3, h4, h5, strong, label, .detail-value) { color: #f8fafc !important; }
+.student-dashboard.student-theme-dark :is(p, small, .header-subtitle, .detail-label) { color: #b9c5bd !important; }
+.student-dashboard.student-theme-dark :is(input, select, textarea) { background: #101813 !important; border-color: #506157 !important; color: #f8fafc !important; }
 
 body.student-dashboard .dashboard-home-btn {
   display: inline-flex !important;

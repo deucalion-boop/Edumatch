@@ -3,6 +3,7 @@ const { availableAssessments, studentSubmissions } = require('./supabaseStudentD
 const crypto = require('crypto');
 const { upsertNotifications } = require('./supabaseNotificationService');
 const { GRADING_PERIODS, normalizeGradingPeriod } = require('../constants/assessmentConfig');
+const { getStudentSettings } = require('./studentSettingsService');
 
 const STUDENT_ROLE = 'student';
 const UPCOMING_DEADLINE_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -150,10 +151,20 @@ async function notifyAutomatedGrade({ submission, assessment }) {
 }
 
 async function syncUpcomingDeadlines(studentId) {
+  const settings = await getStudentSettings(studentId);
+  if (settings.notifications.deadlines === false || settings.notifications.inApp === false) return;
+  const reminder = settings.learning.deadlineReminder;
+  if (reminder === 'none') return;
   const now = new Date();
-  const deadlineLimit = new Date(now.getTime() + UPCOMING_DEADLINE_WINDOW_MS);
+  const windowMultiplier = reminder === 'three-days' ? 3 : 1;
+  const deadlineLimit = new Date(now.getTime() + (UPCOMING_DEADLINE_WINDOW_MS * windowMultiplier));
+  const manilaDate = (value) => new Date(value).toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
   const approvedSubjectIds = (await readProfileRows('subject_enrollments', 'student_id', studentId)).filter(row => row.status === 'approved').map(row => row.subjectId);
-  const assessments = (await availableAssessments(studentId, approvedSubjectIds)).filter(row => new Date(row.submissionDeadline) > now && new Date(row.submissionDeadline) <= deadlineLimit);
+  const assessments = (await availableAssessments(studentId, approvedSubjectIds)).filter(row => {
+    const deadline = new Date(row.submissionDeadline);
+    if (!(deadline > now) || deadline > deadlineLimit) return false;
+    return reminder !== 'same-day' || manilaDate(deadline) === manilaDate(now);
+  });
   const submittedIds = new Set((await studentSubmissions(studentId, true)).map(row => clean(row.assessmentId?._id)));
   await Promise.all(assessments
     .filter((assessment) => !submittedIds.has(clean(assessment._id)))

@@ -1,7 +1,5 @@
 const User = require('../models/User');
 const Recommendation = require('../models/Recommendation');
-const ExportApprovalRequest = require('../models/ExportApprovalRequest');
-const mongoose = require('mongoose');
 const { sendSuccess } = require('../utils/responseHelper');
 const { ROLE_HEADTEACHER, ROLE_SECRETARY, ROLE_STUDENT, ROLE_TEACHER } = require('../constants/userRoles');
 const { mapUserResponse } = require('../services/userManagementService');
@@ -24,6 +22,11 @@ const {
   expireExportApprovalRequestIfNeeded,
   normalizeExportApprovalRequest,
 } = require('../services/exportApprovalService');
+const {
+  createExportApprovalRequest,
+  findExportApprovalRequest,
+  findLatestExportApprovalRequest,
+} = require('../services/supabaseExportApprovalService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -186,11 +189,11 @@ async function buildArchivedPdfExportSelection(req, rawFilters = {}) {
 async function findLatestArchivedPdfExportRequest(requesterId, requestSignature) {
   if (!requesterId || !requestSignature) return null;
 
-  const exportRequest = await ExportApprovalRequest.findOne({
+  const exportRequest = await findLatestExportApprovalRequest({
     requesterId,
     requestType: EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
     requestSignature,
-  }).sort({ createdAt: -1 });
+  });
 
   if (!exportRequest) return null;
 
@@ -312,7 +315,7 @@ const requestArchivedPdfExport = asyncHandler(async (req, res) => {
     });
   }
 
-  const createdRequest = await ExportApprovalRequest.create({
+  const createdRequest = await createExportApprovalRequest({
     requestType: EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
     requestSignature: exportSelection.requestSignature,
     requesterId: req.user?._id,
@@ -338,14 +341,14 @@ const consumeArchivedPdfExportApproval = asyncHandler(async (req, res) => {
   assertSecretaryAccess(req, 'Only Secretaries can use archived PDF export approvals');
 
   const requestId = String(req.params.id || '').trim();
-  if (!mongoose.Types.ObjectId.isValid(requestId)) {
+  if (!/^[a-zA-Z0-9-]{8,80}$/.test(requestId)) {
     const error = new Error('Invalid archived PDF export approval request id.');
     error.statusCode = 400;
     throw error;
   }
 
-  const exportRequest = await ExportApprovalRequest.findOne({
-    _id: requestId,
+  const exportRequest = await findExportApprovalRequest({
+    id: requestId,
     requesterId: req.user?._id,
     requestType: EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
   });

@@ -8,8 +8,6 @@ const Recommendation = require('../models/Recommendation');
 const Subject = require('../models/Subject');
 const SubjectEnrollment = require('../models/SubjectEnrollment');
 const { getAppSettings, saveAppSettings } = require('../services/supabaseSettingsService');
-const ExportApprovalRequest = require('../models/ExportApprovalRequest');
-const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs/promises');
 const { sendSuccess } = require('../utils/responseHelper');
@@ -43,6 +41,11 @@ const {
   getApprovedExportRequestExpiryDate,
   normalizeExportApprovalRequest,
 } = require('../services/exportApprovalService');
+const {
+  countExportApprovalRequests,
+  findExportApprovalRequest,
+  listExportApprovalRequests,
+} = require('../services/supabaseExportApprovalService');
 const { formatRecommendationPayload } = require('../services/recommendationService');
 const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 const { computeMasteryFromSubmissions } = require('../utils/studentProgress');
@@ -2094,11 +2097,10 @@ const sendUserMessage = asyncHandler(async (req, res) => {
 const getArchivedPdfExportRequests = asyncHandler(async (req, res) => {
   const requestedLimit = Number(req.query?.limit || 12);
   const limit = Math.min(50, Math.max(1, Number.isFinite(requestedLimit) ? requestedLimit : 12));
-  const exportRequests = await ExportApprovalRequest.find({
+  const exportRequests = await listExportApprovalRequests({
     requestType: EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
-  })
-    .sort({ createdAt: -1 })
-    .limit(limit);
+    limit,
+  });
 
   for (const exportRequest of exportRequests) {
     await expireExportApprovalRequestIfNeeded(exportRequest);
@@ -2119,7 +2121,7 @@ const getArchivedPdfExportRequests = asyncHandler(async (req, res) => {
     return new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime();
   });
 
-  const pendingCount = await ExportApprovalRequest.countDocuments({
+  const pendingCount = await countExportApprovalRequests({
     requestType: EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
     status: EXPORT_APPROVAL_STATUS_PENDING,
   });
@@ -2136,7 +2138,7 @@ const getArchivedPdfExportRequests = asyncHandler(async (req, res) => {
 
 const reviewArchivedPdfExportRequest = asyncHandler(async (req, res) => {
   const requestId = String(req.params.id || '').trim();
-  if (!mongoose.Types.ObjectId.isValid(requestId)) {
+  if (!/^[a-zA-Z0-9-]{8,80}$/.test(requestId)) {
     const error = new Error('Invalid export approval request id.');
     error.statusCode = 400;
     throw error;
@@ -2150,8 +2152,8 @@ const reviewArchivedPdfExportRequest = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const exportRequest = await ExportApprovalRequest.findOne({
-    _id: requestId,
+  const exportRequest = await findExportApprovalRequest({
+    id: requestId,
     requestType: EXPORT_APPROVAL_REQUEST_TYPE_ARCHIVED_PDF,
   });
 

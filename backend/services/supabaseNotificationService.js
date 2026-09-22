@@ -155,24 +155,33 @@ async function upsertNotifications(payloads) {
   return Number(data?.length || 0);
 }
 
-async function listNotifications({ recipientId, recipientRole, limit = 10 }) {
-  const { data, error } = await getSupabaseStorageClient().from('notifications').select('*')
+function applyExcludedTypes(query, excludedTypes = []) {
+  const safeTypes = [...new Set((excludedTypes || []).map((value) => clean(value).toLowerCase()).filter((value) => /^[a-z0-9_]+$/.test(value)))];
+  return safeTypes.length ? query.not('type', 'in', `(${safeTypes.join(',')})`) : query;
+}
+
+async function listNotifications({ recipientId, recipientRole, limit = 10, excludedTypes = [] }) {
+  let query = getSupabaseStorageClient().from('notifications').select('*')
     .eq('recipient_id', referenceId(recipientId))
     .eq('recipient_role', clean(recipientRole).toLowerCase())
-    .eq('is_cleared', false)
+    .eq('is_cleared', false);
+  query = applyExcludedTypes(query, excludedTypes)
     .order('urgent', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(limit);
+  const { data, error } = await query;
   if (error) throw notificationError(error, 'Failed to read notifications from Supabase');
   return (data || []).map(mapNotification);
 }
 
-async function countUnreadNotifications({ recipientId, recipientRole }) {
-  const { count, error } = await getSupabaseStorageClient().from('notifications').select('id', { count: 'exact', head: true })
+async function countUnreadNotifications({ recipientId, recipientRole, excludedTypes = [] }) {
+  let query = getSupabaseStorageClient().from('notifications').select('id', { count: 'exact', head: true })
     .eq('recipient_id', referenceId(recipientId))
     .eq('recipient_role', clean(recipientRole).toLowerCase())
     .eq('is_viewed', false)
     .eq('is_cleared', false);
+  query = applyExcludedTypes(query, excludedTypes);
+  const { count, error } = await query;
   if (error) throw notificationError(error, 'Failed to count notifications in Supabase');
   return Number(count || 0);
 }

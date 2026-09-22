@@ -316,6 +316,26 @@
             </article>
           </div>
         </section>
+        <section class="request-board section-card student-account-request-board">
+          <div class="request-board-header">
+            <div class="table-info"><span class="request-board-eyebrow">Student account safety</span><h3>Student Account Requests</h3><p>Review deactivation and permanent deletion requests submitted by students.</p></div>
+            <span class="request-count-pill" :class="{ 'has-pending': pendingStudentAccountRequestCount > 0 }">{{ pendingStudentAccountRequestCount }} pending</span>
+          </div>
+          <div v-if="studentAccountRequestsLoading" class="request-empty-state"><i class="fas fa-spinner fa-spin"></i><strong>Loading student requests</strong></div>
+          <div v-else-if="studentAccountRequests.length === 0" class="request-empty-state"><i class="fas fa-user-shield"></i><strong>No student account requests</strong><p>Requests will appear here when submitted.</p></div>
+          <div v-else class="export-request-list">
+            <article v-for="request in studentAccountRequests" :key="request.id" class="export-request-card" :class="getStudentRequestStatusClass(request.status)">
+              <div class="export-request-top"><div><h4>{{ request.studentName || 'Student account' }}</h4><p>{{ request.studentEmail || 'Email unavailable' }} · {{ request.action === 'delete' ? 'Permanent deletion' : 'Account deactivation' }}</p></div><span class="export-request-status" :class="getStudentRequestStatusClass(request.status)">{{ formatStudentRequestStatus(request.status) }}</span></div>
+              <div class="export-request-meta"><span><i class="fas fa-clock"></i> Submitted {{ formatDateTime(request.createdAt) }}</span></div>
+              <p class="student-request-reason"><strong>Reason:</strong> {{ request.reason }}</p>
+              <p v-if="request.reviewerNote" class="export-request-note">Administrator note: {{ request.reviewerNote }}</p>
+              <div v-if="request.status === 'pending'" class="export-request-actions">
+                <button type="button" class="btn btn-primary export-request-action" :disabled="activeStudentRequestId === request.id" @click="reviewStudentAccountRequest(request, 'approved')"><i class="fas" :class="activeStudentRequestId === request.id ? 'fa-spinner fa-spin' : 'fa-check'"></i> Approve</button>
+                <button type="button" class="btn btn-outline export-request-action export-request-action--reject" :disabled="activeStudentRequestId === request.id" @click="reviewStudentAccountRequest(request, 'rejected')"><i class="fas fa-xmark"></i> Reject</button>
+              </div>
+            </article>
+          </div>
+        </section>
         <footer>© 2026 EduMatch</footer>
       </main>
     </div>
@@ -343,6 +363,9 @@ const accountMenuRef = ref(null)
 const loading = ref(false)
 const requests = ref([])
 const activeRequestActionId = ref('')
+const studentAccountRequests = ref([])
+const studentAccountRequestsLoading = ref(false)
+const activeStudentRequestId = ref('')
 const feedbackMessage = ref('')
 const feedbackTone = ref('success')
 
@@ -491,6 +514,8 @@ const closedFilteredCount = computed(() => (
   filteredRequests.value.filter((request) => ['rejected', 'fulfilled', 'expired'].includes(String(request.status || '').trim().toLowerCase())).length
 ))
 
+const pendingStudentAccountRequestCount = computed(() => studentAccountRequests.value.filter((request) => request.status === 'pending').length)
+
 const filteredSummaryLabel = computed(() => {
   const visibleCount = filteredRequests.value.length
   const loadedCount = requests.value.length
@@ -572,6 +597,49 @@ const fetchRequests = async ({ silent = false } = {}) => {
   }
 }
 
+const fetchStudentAccountRequests = async ({ silent = false } = {}) => {
+  if (!silent) studentAccountRequestsLoading.value = true
+  try {
+    const response = await axios.get(`${apiBaseUrl}/admin/student-account-requests`, { ...getAuthConfig(), params: { limit: REQUEST_FETCH_LIMIT } })
+    studentAccountRequests.value = Array.isArray(response.data?.requests) ? response.data.requests : []
+  } catch (error) {
+    if (!silent) setFeedback(error.response?.data?.message || 'Failed to load student account requests.', 'error')
+  } finally {
+    if (!silent) studentAccountRequestsLoading.value = false
+  }
+}
+
+const formatStudentRequestStatus = (status) => ({ pending: 'Pending', approved: 'Approved', rejected: 'Rejected', completed: 'Completed' })[status] || 'Unknown'
+const getStudentRequestStatusClass = (status) => status === 'completed' || status === 'approved' ? 'is-approved' : status === 'rejected' ? 'is-rejected' : 'is-pending'
+
+const reviewStudentAccountRequest = async (request, decision) => {
+  const destructiveAction = decision === 'approved' && request.action === 'delete'
+  const message = destructiveAction
+    ? `Permanently delete ${request.studentName || 'this student'} and associated records? This cannot be undone.`
+    : `${decision === 'approved' ? 'Approve' : 'Reject'} the ${request.action} request from ${request.studentName || 'this student'}?`
+  if (!window.confirm(message)) return
+  let confirmation = ''
+  if (destructiveAction) {
+    confirmation = window.prompt(`Type ${request.studentEmail} to confirm permanent deletion:`, '') || ''
+    if (confirmation.trim().toLowerCase() !== String(request.studentEmail || '').trim().toLowerCase()) {
+      setFeedback('Deletion cancelled because the email confirmation did not match.', 'error')
+      return
+    }
+  }
+  const note = window.prompt('Optional administrator note:', '')
+  if (note === null) return
+  activeStudentRequestId.value = request.id
+  try {
+    const response = await axios.patch(`${apiBaseUrl}/admin/student-account-requests/${encodeURIComponent(request.id)}/review`, { decision, note, confirmation }, getAuthConfig())
+    setFeedback(response.data?.message || 'Student account request reviewed.')
+    await fetchStudentAccountRequests({ silent: true })
+  } catch (error) {
+    setFeedback(error.response?.data?.message || 'Failed to review student account request.', 'error')
+  } finally {
+    activeStudentRequestId.value = ''
+  }
+}
+
 const applyFiltersAndRefresh = async () => {
   syncActiveFilters()
   await fetchRequests()
@@ -642,21 +710,25 @@ onMounted(() => {
 
   syncActiveFilters()
   fetchRequests()
+  fetchStudentAccountRequests()
 
   autoRefreshTimer = window.setInterval(() => {
     if (document.visibilityState === 'visible') {
       fetchRequests({ silent: true })
+      fetchStudentAccountRequests({ silent: true })
     }
   }, AUTO_REFRESH_INTERVAL_MS)
 
   visibilityChangeHandler = () => {
     if (document.visibilityState === 'visible') {
       fetchRequests({ silent: true })
+      fetchStudentAccountRequests({ silent: true })
     }
   }
 
   document.addEventListener('visibilitychange', visibilityChangeHandler)
   window.addEventListener('focus', fetchRequests)
+  window.addEventListener('focus', fetchStudentAccountRequests)
 })
 
 onBeforeUnmount(() => {
@@ -671,6 +743,7 @@ onBeforeUnmount(() => {
   }
 
   window.removeEventListener('focus', fetchRequests)
+  window.removeEventListener('focus', fetchStudentAccountRequests)
 
   if (autoRefreshTimer) {
     window.clearInterval(autoRefreshTimer)
@@ -1166,6 +1239,9 @@ onBeforeUnmount(() => {
 .export-request-note {
   color: #334155;
 }
+
+.student-account-request-board { margin-top: 1rem; }
+.student-request-reason { margin: 0; color: #475569; line-height: 1.55; }
 
 .export-request-actions {
   display: flex;

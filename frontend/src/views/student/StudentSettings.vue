@@ -18,7 +18,7 @@
       <aside class="student-settings-nav" aria-label="Student settings sections">
         <div class="settings-nav-heading">
           <strong>Settings</strong>
-          <small>Saved on this device</small>
+          <small>Synced with your account</small>
         </div>
         <button
           v-for="tab in settingsTabs"
@@ -58,7 +58,7 @@
           </div>
           <div class="panel-actions">
             <small>These preferences are saved in this browser.</small>
-            <button type="button" class="btn btn-primary" @click="savePreferences"><i class="fas fa-save"></i> Save preferences</button>
+            <button type="button" class="btn btn-primary" :disabled="isSavingPreferences" @click="savePreferences"><i class="fas" :class="isSavingPreferences ? 'fa-spinner fa-spin' : 'fa-save'"></i> {{ isSavingPreferences ? 'Saving...' : 'Save preferences' }}</button>
           </div>
         </section>
 
@@ -82,7 +82,7 @@
             <label class="preference-row"><span><strong>Higher contrast</strong><small>Increase borders and text contrast.</small></span><input v-model="appearance.highContrast" type="checkbox" class="settings-toggle-input" @change="applyAppearance"></label>
             <label class="preference-row"><span><strong>Reduce motion</strong><small>Limit non-essential interface animation.</small></span><input v-model="appearance.reduceMotion" type="checkbox" class="settings-toggle-input" @change="applyAppearance"></label>
           </div>
-          <div class="panel-actions"><small>Appearance applies immediately on this device.</small><button type="button" class="btn btn-primary" @click="savePreferences"><i class="fas fa-save"></i> Save appearance</button></div>
+          <div class="panel-actions"><small>Appearance applies immediately and follows your account.</small><button type="button" class="btn btn-primary" :disabled="isSavingPreferences" @click="savePreferences"><i class="fas" :class="isSavingPreferences ? 'fa-spinner fa-spin' : 'fa-save'"></i> {{ isSavingPreferences ? 'Saving...' : 'Save appearance' }}</button></div>
         </section>
 
         <template v-if="activeTab === 'security'">
@@ -267,7 +267,13 @@
           <div class="privacy-grid">
             <article class="privacy-card"><i class="fas fa-database"></i><div><h4>Your information</h4><p>EduMatch stores your profile, class enrollment, learning progress, submissions, grades, and attendance as part of your school record.</p></div></article>
             <article class="privacy-card"><i class="fas fa-file-arrow-down"></i><div><h4>Download settings snapshot</h4><p>Download your visible profile details and settings from this device as a JSON file.</p><button type="button" class="btn btn-outline" @click="downloadData"><i class="fas fa-download"></i> Download snapshot</button></div></article>
-            <article class="privacy-card privacy-card-warning"><i class="fas fa-school"></i><div><h4>Deactivate or delete an account</h4><p>Student accounts and academic records are managed by the school. Contact your teacher or school administrator to request account changes.</p></div></article>
+            <article class="privacy-card privacy-card-warning"><i class="fas fa-school"></i><div><h4>Deactivate or delete an account</h4><p>Submit a request for a school administrator to review. Deletion permanently removes the account and associated records after approval.</p></div></article>
+            <article v-if="accountRequest" class="privacy-card account-request-status"><i class="fas fa-clipboard-check"></i><div><h4>Latest request: {{ formatRequestStatus(accountRequest.status) }}</h4><p>{{ formatRequestAction(accountRequest.action) }} requested {{ formatSessionTime(accountRequest.createdAt) }}.</p><p v-if="accountRequest.reviewerNote"><strong>Administrator note:</strong> {{ accountRequest.reviewerNote }}</p></div></article>
+            <form v-if="!hasPendingAccountRequest" class="account-request-form" @submit.prevent="submitAccountRequest">
+              <div><label for="account-action">Requested action</label><select id="account-action" v-model="accountRequestForm.action"><option value="deactivate">Deactivate my account</option><option value="delete">Delete my account and records</option></select></div>
+              <div><label for="account-reason">Reason</label><textarea id="account-reason" v-model.trim="accountRequestForm.reason" rows="4" maxlength="1000" placeholder="Explain why you are requesting this change..." required></textarea><small>{{ accountRequestForm.reason.length }}/1000 · Minimum 10 characters</small></div>
+              <button type="submit" class="btn" :class="accountRequestForm.action === 'delete' ? 'btn-danger' : 'btn-outline'" :disabled="isSubmittingAccountRequest || accountRequestForm.reason.length < 10"><i class="fas" :class="isSubmittingAccountRequest ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i> {{ isSubmittingAccountRequest ? 'Submitting...' : 'Submit for review' }}</button>
+            </form>
           </div>
         </section>
       </main>
@@ -307,7 +313,7 @@ export default {
         { id: 'deadlines', name: 'Upcoming deadlines', description: 'Remind me before an activity or assessment is due.', enabled: true },
         { id: 'results', name: 'Grades and results', description: 'Notify me when a result or grade is released.', enabled: true },
         { id: 'enrollment', name: 'Class enrollment', description: 'Notify me when a class request changes status.', enabled: true },
-        { id: 'email', name: 'Email notifications', description: 'Also send enabled updates to my registered email.', enabled: false }
+        { id: 'inApp', name: 'In-app notifications', description: 'Show enabled updates in the EduMatch notification menu.', enabled: true }
       ],
       learningPreferences: { deadlineReminder: 'one-day' },
       appearance: { theme: 'system', textSize: 'normal', highContrast: false, reduceMotion: false },
@@ -322,6 +328,10 @@ export default {
       sessionError: '',
       revokingSessionId: '',
       isUpdatingPassword: false,
+      isSavingPreferences: false,
+      accountRequest: null,
+      accountRequestForm: { action: 'deactivate', reason: '' },
+      isSubmittingAccountRequest: false,
 
       passwordData: {
         currentPassword: '',
@@ -449,6 +459,9 @@ export default {
     sortedSessions() {
       return [...this.activeSessions].sort((left, right) => Number(right.current) - Number(left.current))
     },
+    hasPendingAccountRequest() {
+      return this.accountRequest?.status === 'pending'
+    },
     appearanceClasses() {
       return {
         'student-theme-dark': this.appearance.theme === 'dark' || (this.appearance.theme === 'system' && this.isSystemDark),
@@ -496,35 +509,53 @@ export default {
       localStorage.setItem('edumatch_student_settings_tab', tabId)
       if (tabId === 'security' && this.activeSessions.length === 0) this.loadActiveSessions()
     },
-    savePreferences() {
-      try {
-        const payload = {
-          notifications: Object.fromEntries(this.notificationPreferences.map(item => [item.id, item.enabled])),
-          learning: { ...this.learningPreferences },
-          appearance: { ...this.appearance }
-        }
-        localStorage.setItem(this.preferenceStorageKey(), JSON.stringify(payload))
-        this.applyAppearance()
-        window.dispatchEvent(new CustomEvent('edumatch-student-preferences-changed', { detail: payload }))
-        this.showToast('success', 'Preferences saved on this device.')
-      } catch (error) {
-        this.showToast('error', 'Unable to save preferences on this device.')
+    settingsPayload() {
+      return {
+        notifications: Object.fromEntries(this.notificationPreferences.map(item => [item.id, item.enabled])),
+        learning: { ...this.learningPreferences },
+        appearance: { ...this.appearance }
       }
     },
-    loadPreferences() {
+    applySettingsPayload(saved = {}) {
+      this.notificationPreferences.forEach(item => {
+        if (typeof saved.notifications?.[item.id] === 'boolean') item.enabled = saved.notifications[item.id]
+      })
+      if (saved.learning?.deadlineReminder) this.learningPreferences.deadlineReminder = saved.learning.deadlineReminder
+      if (saved.appearance && typeof saved.appearance === 'object') this.appearance = { ...this.appearance, ...saved.appearance }
+      this.applyAppearance()
+    },
+    async savePreferences() {
+      this.isSavingPreferences = true
       try {
-        const saved = JSON.parse(localStorage.getItem(this.preferenceStorageKey()) || '{}')
-        this.notificationPreferences.forEach(item => {
-          if (typeof saved.notifications?.[item.id] === 'boolean') item.enabled = saved.notifications[item.id]
-        })
-        if (saved.learning?.deadlineReminder) this.learningPreferences.deadlineReminder = saved.learning.deadlineReminder
-        if (saved.appearance && typeof saved.appearance === 'object') {
-          this.appearance = { ...this.appearance, ...saved.appearance }
-        }
-      } catch (_error) {
+        const payload = this.settingsPayload()
+        const response = await axios.put(`${this.resolveApiBaseUrl()}/student/settings`, payload, this.authConfig())
+        const saved = response.data?.settings || payload
+        this.applySettingsPayload(saved)
+        localStorage.setItem(this.preferenceStorageKey(), JSON.stringify(payload))
+        window.dispatchEvent(new CustomEvent('edumatch-student-preferences-changed', { detail: saved }))
+        this.showToast('success', 'Preferences saved to your account.')
+      } catch (error) {
+        this.showToast('error', error.response?.data?.message || 'Unable to save preferences.')
+      } finally {
+        this.isSavingPreferences = false
+      }
+    },
+    async loadPreferences() {
+      try {
+        const cached = JSON.parse(localStorage.getItem(this.preferenceStorageKey()) || '{}')
+        this.applySettingsPayload(cached)
+      } catch (_cacheError) {
         localStorage.removeItem(this.preferenceStorageKey())
       }
-      this.applyAppearance()
+      try {
+        const response = await axios.get(`${this.resolveApiBaseUrl()}/student/settings`, this.authConfig())
+        const saved = response.data?.settings || {}
+        this.applySettingsPayload(saved)
+        localStorage.setItem(this.preferenceStorageKey(), JSON.stringify(saved))
+        window.dispatchEvent(new CustomEvent('edumatch-student-preferences-changed', { detail: saved }))
+      } catch (error) {
+        this.showToast('error', error.response?.data?.message || 'Using locally saved preferences because account settings could not be loaded.')
+      }
     },
     applyAppearance() {
       this.isSystemDark = this.appearance.theme === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches === true
@@ -652,6 +683,35 @@ export default {
       URL.revokeObjectURL(url)
       this.showToast('success', 'Settings snapshot downloaded.')
     },
+    async loadAccountRequest() {
+      try {
+        const response = await axios.get(`${this.resolveApiBaseUrl()}/student/account-requests/current`, this.authConfig())
+        this.accountRequest = response.data?.request || null
+      } catch (error) {
+        this.showToast('error', error.response?.data?.message || 'Unable to load account request status.')
+      }
+    },
+    async submitAccountRequest() {
+      if (this.accountRequestForm.reason.length < 10) return
+      if (this.accountRequestForm.action === 'delete' && !window.confirm('Deletion is permanent after administrator approval and may remove associated records. Submit this request?')) return
+      this.isSubmittingAccountRequest = true
+      try {
+        const response = await axios.post(`${this.resolveApiBaseUrl()}/student/account-requests`, this.accountRequestForm, this.authConfig())
+        this.accountRequest = response.data?.request || null
+        this.accountRequestForm.reason = ''
+        this.showToast('success', response.data?.message || 'Account request submitted for review.')
+      } catch (error) {
+        this.showToast('error', error.response?.data?.message || 'Unable to submit account request.')
+      } finally {
+        this.isSubmittingAccountRequest = false
+      }
+    },
+    formatRequestStatus(status) {
+      return ({ pending: 'Pending review', approved: 'Approved', rejected: 'Rejected', completed: 'Completed' })[status] || 'Unknown'
+    },
+    formatRequestAction(action) {
+      return action === 'delete' ? 'Account deletion' : 'Account deactivation'
+    },
 
     showToast(type, message) {
       this.toast = {
@@ -675,6 +735,7 @@ export default {
     const availableTabs = this.settingsTabs.map((tab) => tab.id)
     this.activeTab = savedTab && availableTabs.includes(savedTab) ? savedTab : 'notifications'
     this.loadPreferences()
+    this.loadAccountRequest()
     if (this.activeTab === 'security') this.loadActiveSessions()
     document.addEventListener('keydown', this.handleEscape)
   },
@@ -1772,6 +1833,13 @@ export default {
 .privacy-card p { margin: 0.35rem 0 0; color: #64748b; line-height: 1.55; }
 .privacy-card .btn { margin-top: 0.75rem; }
 .privacy-card-warning { border-color: #fde68a; background: #fffbeb; }
+.account-request-form { display: grid; gap: 0.85rem; padding: 1rem; border: 1px solid #dbe3ec; border-radius: 14px; background: #fff; }
+.account-request-form > div { display: grid; gap: 0.4rem; }
+.account-request-form label { color: #1e293b; font-weight: 700; }
+.account-request-form select, .account-request-form textarea { width: 100%; padding: 0.7rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #1e293b; font: inherit; }
+.account-request-form small { color: #64748b; }
+.account-request-form .btn { justify-self: start; display: inline-flex; align-items: center; gap: 0.45rem; }
+.account-request-status { border-color: #bfd399; background: #f8fbf3; }
 
 .student-text-large { font-size: 1.08rem; }
 .student-text-larger { font-size: 1.16rem; }
@@ -1779,7 +1847,7 @@ export default {
 .student-reduce-motion *, .student-reduce-motion *::before, .student-reduce-motion *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 .student-theme-dark { color: #e2e8f0; }
 .student-theme-dark .settings-hero, .student-theme-dark .settings-panel, .student-theme-dark .student-settings-nav { background: #152019 !important; border-color: #405348; }
-.student-theme-dark .preference-row, .student-theme-dark .inline-setting, .student-theme-dark .theme-option, .student-theme-dark .session-item, .student-theme-dark .privacy-card, .student-theme-dark .security-card, .student-theme-dark .password-form-side, .student-theme-dark .password-strength-card, .student-theme-dark .password-requirements { background: #1e2b23 !important; border-color: #405348 !important; }
+.student-theme-dark .preference-row, .student-theme-dark .inline-setting, .student-theme-dark .theme-option, .student-theme-dark .session-item, .student-theme-dark .privacy-card, .student-theme-dark .account-request-form, .student-theme-dark .security-card, .student-theme-dark .password-form-side, .student-theme-dark .password-strength-card, .student-theme-dark .password-requirements { background: #1e2b23 !important; border-color: #405348 !important; }
 .student-theme-dark h2, .student-theme-dark h3, .student-theme-dark h4, .student-theme-dark h5, .student-theme-dark strong, .student-theme-dark label, .student-theme-dark .security-field-label > span { color: #f8fafc !important; }
 .student-theme-dark p, .student-theme-dark small, .student-theme-dark .field-help, .student-theme-dark .password-action-note, .student-theme-dark .strength-text { color: #b9c5bd !important; }
 .student-theme-dark input, .student-theme-dark select { background: #111b15 !important; border-color: #506157 !important; color: #f8fafc !important; }
