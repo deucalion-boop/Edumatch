@@ -370,7 +370,7 @@ import { useUserNotifications } from '../../composables/useUserNotifications.js'
 
 const CURRENT_PAGE_ROUTE = '/teacher/dashboard'
 const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records']
-const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_'
+const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_v3_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
 
@@ -443,9 +443,37 @@ export default {
     const tourSteps = [
       {
         key: 'navigation-overview',
-        title: 'Navigation Overview',
-        description: 'Use the sidebar to move through the four core teacher pages: Dashboard, Activities, Students, and Records.',
-        selector: '[data-tour="teacher-navigation"]',
+        title: 'Teacher Sidebar',
+        description: 'This sidebar is your main navigation area. The next steps explain each of its core teacher pages before showing what is inside them.',
+        selector: '[data-tour="teacher-sidebar"]',
+        openSidebar: true
+      },
+      {
+        key: 'dashboard-link',
+        title: 'Dashboard',
+        description: 'Open Dashboard for a quick overview of your classes, activities, assessments, and schedule.',
+        selector: '[data-tour="teacher-dashboard-link"]',
+        openSidebar: true
+      },
+      {
+        key: 'activities-link',
+        title: 'Activities',
+        description: 'Open Activities to upload lessons and create or generate assessments for your students.',
+        selector: '[data-tour="teacher-activities-link"]',
+        openSidebar: true
+      },
+      {
+        key: 'students-link',
+        title: 'Students',
+        description: 'Open Students to invite learners, manage your class list, and monitor participation and progress.',
+        selector: '[data-tour="teacher-students-link"]',
+        openSidebar: true
+      },
+      {
+        key: 'records-link',
+        title: 'Records',
+        description: 'Open Records to review lesson history, assessment results, submissions, attendance, and performance.',
+        selector: '[data-tour="teacher-records-link"]',
         openSidebar: true
       },
       {

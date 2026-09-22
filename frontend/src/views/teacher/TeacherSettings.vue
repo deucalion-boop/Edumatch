@@ -275,7 +275,7 @@ const tourTooltipStyle = ref({})
 const hasAttemptedAutoTour = ref(false)
 const CURRENT_PAGE_ROUTE = '/teacher/settings'
 const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records']
-const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_'
+const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_v3_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
 
