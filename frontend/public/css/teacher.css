@@ -6562,3 +6562,61 @@ html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .sett
 ) {
     color: #b7c5d8 !important;
 }
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .teacher-security-tip {
+    background: #1b2e22 !important;
+    border-color: #4f8f2f !important;
+    color: #c7efb3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .teacher-security-tip i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .danger-action {
+    background: #3f1723 !important;
+    border-color: #9f1239 !important;
+    color: #fda4af !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .danger-action i {
+    color: #fb7185 !important;
+    -webkit-text-fill-color: #fb7185 !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .danger-action:hover:not(:disabled) {
+    background: #521728 !important;
+    border-color: #be123c !important;
+    color: #fecdd3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .teacher-security-field-label > span {
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .teacher-security-field-label > small {
+    background: #263449 !important;
+    border-color: #475569 !important;
+    color: #dbe7f5 !important;
+    -webkit-text-fill-color: #dbe7f5 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .teacher-security-actions {
+    border-top-color: #475569 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .teacher-security-action-note {
+    color: #b7c5d8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .teacher-security-submit:disabled {
+    background: #35483b !important;
+    border-color: #4b6653 !important;
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+}
