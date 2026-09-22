@@ -369,7 +369,7 @@ import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
 
 const CURRENT_PAGE_ROUTE = '/teacher/dashboard'
-const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records', '/teacher/profile', '/teacher/settings']
+const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records']
 const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
@@ -450,36 +450,21 @@ export default {
       },
       {
         key: 'dashboard-overview',
-        title: 'Dashboard Overview',
+        title: 'Dashboard Summary',
         description: 'These summary cards show important teacher insights such as total students, total activities, completed assessments, and recent system updates.',
         selector: '[data-tour="teacher-kpi"]'
       },
       {
-        key: 'activities-link',
-        title: 'Activities Page',
-        description: 'The Activities page is your main content management area for creating lessons, challenges, assessments, and AI-based assessment drafts.',
-        selector: '[data-tour="teacher-activities-link"]',
-        openSidebar: true
+        key: 'dashboard-content',
+        title: 'Dashboard Workspace',
+        description: 'Use this area to review your teaching overview, recent updates, and the information that needs your attention.',
+        selector: '[data-tour="teacher-main-content"]'
       },
       {
-        key: 'students-link',
-        title: 'Students Page',
-        description: 'The Students page lets you invite learners, review student profiles, and monitor learning progress and activity status.',
-        selector: '[data-tour="teacher-students-link"]',
-        openSidebar: true
-      },
-      {
-        key: 'records-link',
-        title: 'Records Page',
-        description: 'The Records page helps you review assessment submissions, student scores, completion rates, and overall performance trends.',
-        selector: '[data-tour="teacher-records-link"]',
-        openSidebar: true
-      },
-      {
-        key: 'finish',
-        title: 'Tour Guide',
-        description: 'Restart this tour anytime from the Help or Tour Guide button. Select Next to continue through the teacher workspace.',
-        selector: '[data-tour="teacher-help-button"]'
+        key: 'dashboard-calendar',
+        title: 'Calendar and Schedule',
+        description: 'Track lessons, deadlines, and completed assessments from the dashboard calendar before continuing to Activities.',
+        selector: '[data-tour="teacher-calendar-panel"]'
       }
     ]
     const activeTourStep = computed(() => tourSteps[tourStepIndex.value] || null)

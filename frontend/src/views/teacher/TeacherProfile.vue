@@ -341,7 +341,7 @@ const tourTargetRect = ref(null)
 const tourTooltipStyle = ref({})
 const hasAttemptedAutoTour = ref(false)
 const CURRENT_PAGE_ROUTE = '/teacher/profile'
-const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records', '/teacher/profile', '/teacher/settings']
+const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records']
 const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
@@ -826,6 +826,7 @@ const skipTour = () => { closeTour({ markSeen: true }) }
 const maybeAutoStartTour = async () => {
   if (hasAttemptedAutoTour.value) return
   hasAttemptedAutoTour.value = true
+  if (!TOUR_ROUTE_ORDER.includes(CURRENT_PAGE_ROUTE)) return
   const progress = readTourProgress()
   if (progress?.active) {
     const resolvedStep = progress.step === 'last' ? tourSteps.length - 1 : Number(progress.step || 0)
