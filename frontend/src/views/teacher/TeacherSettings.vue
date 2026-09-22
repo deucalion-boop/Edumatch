@@ -84,8 +84,31 @@
           <span>{{ toast.message }}</span>
         </section>
 
-        <div class="settings-grid">
-          <section class="settings-panel preference-panel" data-tour="settings-notifications-section">
+        <div class="settings-workspace">
+          <aside class="settings-section-sidebar" aria-label="Settings sections">
+            <div class="settings-sidebar-heading">
+              <span>Settings</span>
+              <small>Manage your preferences</small>
+            </div>
+            <nav class="settings-section-nav">
+              <button
+                v-for="section in settingsSections"
+                :key="section.id"
+                type="button"
+                class="settings-section-nav-item"
+                :class="{ active: activeSettingsSection === section.id }"
+                :aria-current="activeSettingsSection === section.id ? 'page' : undefined"
+                @click="activeSettingsSection = section.id"
+              >
+                <i :class="section.icon"></i>
+                <span>{{ section.label }}</span>
+                <i class="fas fa-chevron-right settings-nav-chevron"></i>
+              </button>
+            </nav>
+          </aside>
+
+          <div class="settings-section-content settings-grid">
+          <section v-show="activeSettingsSection === 'notifications'" class="settings-panel preference-panel" data-tour="settings-notifications-section">
             <div class="panel-header settings-section-heading">
               <span class="settings-section-icon"><i class="fas fa-bell"></i></span>
               <div>
@@ -118,7 +141,7 @@
             </div>
           </section>
 
-          <section class="settings-panel appearance-panel" data-tour="settings-appearance-section">
+          <section v-show="activeSettingsSection === 'appearance'" class="settings-panel appearance-panel" data-tour="settings-appearance-section">
             <div class="panel-header settings-section-heading">
               <span class="settings-section-icon"><i class="fas fa-palette"></i></span>
               <div>
@@ -143,7 +166,7 @@
             </div>
           </section>
 
-          <section class="settings-panel sessions-panel" data-tour="settings-sessions-section">
+          <section v-show="activeSettingsSection === 'security'" class="settings-panel sessions-panel" data-tour="settings-sessions-section">
             <div class="panel-header sessions-panel-header">
               <div class="settings-section-heading">
                 <span class="settings-section-icon"><i class="fas fa-laptop"></i></span>
@@ -184,7 +207,7 @@
             </div>
           </section>
 
-          <section class="settings-panel teacher-security-panel" data-tour="settings-security-section">
+          <section v-show="activeSettingsSection === 'security'" class="settings-panel teacher-security-panel" data-tour="settings-security-section">
             <div class="panel-header teacher-security-panel-header">
               <div class="teacher-security-panel-copy">
                 <h3>Account Security</h3>
@@ -320,6 +343,7 @@
             </div>
           </section>
 
+          </div>
         </div>
       </div>
 
@@ -415,6 +439,12 @@ const isLoadingSessions = ref(false)
 const sessionError = ref('')
 const revokingSessionId = ref('')
 const isLoggingOutAll = ref(false)
+const activeSettingsSection = ref('notifications')
+const settingsSections = [
+  { id: 'notifications', label: 'Notification Preferences', icon: 'fas fa-bell' },
+  { id: 'appearance', label: 'Appearance', icon: 'fas fa-palette' },
+  { id: 'security', label: 'Security', icon: 'fas fa-shield-alt' },
+]
 const profileForm = reactive({
   displayName: '',
   email: '',
@@ -1148,9 +1178,90 @@ onBeforeUnmount(() => {
   background: #fef2f2;
 }
 
+.settings-workspace {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  align-items: start;
+  gap: 1.1rem;
+}
+
+.settings-section-sidebar {
+  position: sticky;
+  top: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+  padding: 0.8rem;
+}
+
+.settings-sidebar-heading {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.55rem 0.65rem 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0.55rem;
+}
+
+.settings-sidebar-heading span {
+  color: #0f172a;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.settings-sidebar-heading small {
+  color: #64748b;
+  font-size: 0.73rem;
+}
+
+.settings-section-nav {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.settings-section-nav-item {
+  width: 100%;
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-section-nav-item:hover {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.settings-section-nav-item.active {
+  border-color: #cfe5c3;
+  background: #eef8e9;
+  color: #4f8f2f;
+}
+
+.settings-section-nav-item > i:first-child {
+  text-align: center;
+}
+
+.settings-nav-chevron {
+  font-size: 0.65rem;
+  opacity: 0.55;
+}
+
+.settings-section-content,
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.1rem;
 }
 
@@ -1964,6 +2075,7 @@ onBeforeUnmount(() => {
 .session-revoke-button { margin-left: auto; }
 
 :global(html[data-teacher-theme='dark']) .settings-panel,
+:global(html[data-teacher-theme='dark']) .settings-section-sidebar,
 :global(html[data-teacher-theme='dark']) .preference-row,
 :global(html[data-teacher-theme='dark']) .theme-option,
 :global(html[data-teacher-theme='dark']) .session-item,
@@ -1977,6 +2089,7 @@ onBeforeUnmount(() => {
 }
 
 :global(html[data-teacher-theme='dark']) .settings-panel h3,
+:global(html[data-teacher-theme='dark']) .settings-sidebar-heading span,
 :global(html[data-teacher-theme='dark']) .settings-panel strong,
 :global(html[data-teacher-theme='dark']) .teacher-security-field-label > span,
 :global(html[data-teacher-theme='dark']) .teacher-security-side-header h5 {
@@ -1994,10 +2107,27 @@ onBeforeUnmount(() => {
     padding: 0.85rem !important;
   }
 
+  .settings-workspace,
   .settings-grid,
   .field-row,
   .teacher-security-form {
     grid-template-columns: 1fr;
+  }
+
+  .settings-section-sidebar {
+    position: static;
+  }
+
+  .settings-section-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .settings-section-nav-item {
+    grid-template-columns: 20px minmax(0, 1fr);
+  }
+
+  .settings-nav-chevron {
+    display: none;
   }
 
   .teacher-security-panel-header,
@@ -2016,6 +2146,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 640px) {
+  .settings-section-nav {
+    grid-template-columns: 1fr;
+  }
+
   .teacher-security-pills {
     width: 100%;
   }
