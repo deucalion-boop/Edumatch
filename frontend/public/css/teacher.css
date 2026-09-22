@@ -6161,6 +6161,31 @@ html[data-teacher-theme='dark'] body.teacher-dashboard :is(
 }
 
 /* Final dark-mode contrast pass for strongly scoped Teacher page styles. */
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section .nav-link {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section .nav-link > span,
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section .nav-link .nav-link-title {
+    color: #cbd5e1 !important;
+    -webkit-text-fill-color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section .nav-link i:not(.nav-link-caret) {
+    background: #263449 !important;
+    border-color: #475569 !important;
+    color: #dbe7f5 !important;
+    -webkit-text-fill-color: #dbe7f5 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section .nav-link .nav-link-caret {
+    background: transparent !important;
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+}
+
 html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section :is(
     .nav-link.active,
     .nav-link.router-link-active,
