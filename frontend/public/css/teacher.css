@@ -5853,3 +5853,309 @@ html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .nav-sec
     color: #94a3b8 !important;
     -webkit-text-fill-color: #94a3b8 !important;
 }
+
+/* Activities: scoped builder controls and question panels. */
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .lesson-form-section,
+    .essay-question-settings,
+    .submission-settings-panel,
+    .essay-assist-fields,
+    .activity-setting-option,
+    .activity-toggle,
+    .lesson-upload-box,
+    .answer-key-panel,
+    .answer-highlight,
+    .draft-empty-state,
+    .draft-question-card,
+    .question-card,
+    .pdf-viewer
+) {
+    background: #172033 !important;
+    background-image: none !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .lesson-section-header,
+    .form-section-break,
+    .question-card-header,
+    .submission-settings-heading
+) {
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .section-state-pill.inactive,
+    .row-type-badge,
+    .wizard-step-marker,
+    .attachment-remove-btn
+) {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+/* Students: class management, roster, and dialogs. */
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .student-header-context,
+    .student-kpi-card,
+    .dashboard-panel,
+    .student-list-panel,
+    .subject-management-card,
+    .class-list-table-wrap,
+    .modal-panel,
+    .subject-student-card,
+    .student-roster-tabs,
+    .student-list-toolbar,
+    .dashboard-empty-state,
+    .request-class-row
+) {
+    background: #172033 !important;
+    background-image: none !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .student-search-field,
+    .student-toolbar-select,
+    .subject-menu-trigger,
+    .toolbar-icon-btn,
+    .subject-copy-btn,
+    .subject-students-btn,
+    .subject-announcement-btn,
+    .meta-chip,
+    .lessons-pill,
+    .student-roster-tab
+) {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .student-kpi-icon,
+    .student-context-icon,
+    .student-avatar,
+    .dashboard-empty-icon
+) {
+    background: #263449 !important;
+    border-color: #3b4d63 !important;
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .student-header-context.is-unassigned {
+    background: #422006 !important;
+    border-color: #92400e !important;
+    color: #fcd34d !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .dashboard-panel .subject-management-actions.subject-actions-menu {
+    background: #111827 !important;
+    border-color: #475569 !important;
+    box-shadow: 0 16px 32px rgb(0 0 0 / 35%) !important;
+}
+
+/* Records: lessons, assessments, grading, attendance, and modal workspaces. */
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    #teacherRecordsLessonsPanel,
+    #teacherRecordsAssessmentsPanel,
+    #teacherRecordsAttendancePanel,
+    .records-section,
+    .records-filters,
+    .record-card,
+    .records-table-wrap,
+    .records-modal-dialog,
+    .activity-result-section,
+    .activity-result-file,
+    .activity-result-feedback,
+    .activity-ai-review,
+    .activity-ai-review__item,
+    .activity-grading-panel,
+    .essay-review-body,
+    .answer-key-dialog,
+    .answer-options-shell,
+    .attendance-context-card,
+    .attendance-panel,
+    .attendance-roster-table-wrap,
+    .attendance-toolbar-card,
+    .attendance-toolbar-field-card,
+    .attendance-scope-panel,
+    .attendance-bulk-toolbar,
+    .attendance-bulk-action-row,
+    .attendance-history-item,
+    .attendance-history-stat,
+    .attendance-summary-card,
+    .integrity-log-popover,
+    .assessment-edit-dropzone
+) {
+    background: #172033 !important;
+    background-image: none !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel :is(
+    .lessons-toolbar,
+    .lessons-search,
+    .lessons-select-field,
+    .record-card-date-group,
+    .attachment-row,
+    .records-pagination,
+    .pagination-btn,
+    .lessons-page-btn,
+    .record-link,
+    .table-state
+),
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel :is(
+    .assessments-toolbar,
+    .assessments-search,
+    .assessments-select-field,
+    .record-card-date-group,
+    .assessment-results-block,
+    .inline-empty-state,
+    .results-summary-item,
+    .records-pagination,
+    .pagination-btn,
+    .assessments-page-btn,
+    .table-state
+),
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .attendance-toolbar-note,
+    .attendance-scope-btn,
+    .attendance-date-input-wrap,
+    .attendance-date-chip,
+    .attendance-lock-btn,
+    .table-state,
+    .attendance-roster-toolbar,
+    .attendance-control-input,
+    .attendance-control-readonly,
+    .attendance-bulk-btn,
+    .attendance-clear-filters-btn
+) {
+    background: #111827 !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .record-chip,
+    .chip-neutral,
+    .chip-class,
+    .chip-type,
+    .meta-item,
+    .record-type-label,
+    .inline-empty-state,
+    .results-summary-item,
+    .pagination-btn,
+    .attendance-step-badge,
+    .attendance-bulk-btn,
+    .attendance-clear-filters-btn,
+    .lesson-secondary-btn
+) {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .attendance-roster-row,
+    .attendance-roster-row:nth-child(even),
+    .attendance-roster-cell-student,
+    .attendance-roster-row:nth-child(even) .attendance-roster-cell-student
+) {
+    background: #172033 !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .attendance-roster-row:hover,
+    .attendance-roster-row:hover .attendance-roster-cell-student
+) {
+    background: #1e293b !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .records-modal-footer,
+    .answer-key-footer
+) {
+    background: #111827 !important;
+    border-color: #334155 !important;
+}
+
+/* Profile: details, tabs, and editable form sections. */
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .profile-details-card,
+    .profile-tab-content,
+    .profile-form-section,
+    .detail-item
+) {
+    background: #172033 !important;
+    background-image: none !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .profile-details-card .detail-icon {
+    background: #263449 !important;
+    border-color: #3b4d63 !important;
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .detail-value,
+    .form-section-title,
+    .tab-header h2,
+    .tab-header h3
+) {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .detail-label,
+    .profile-form-section .form-group label
+) {
+    color: #94a3b8 !important;
+}
+
+/* Settings: left navigation and nested preference/security surfaces. */
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .settings-panel,
+    .settings-section-sidebar,
+    .teacher-security-strength-card,
+    .teacher-security-rules-card,
+    .teacher-security-field-label small,
+    .password-toggle
+) {
+    background: #172033 !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-section-nav-item {
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-section-nav-item:hover {
+    background: #1e293b !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-section-nav-item.active {
+    background: #1b2e22 !important;
+    border-color: #4f8f2f !important;
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .teacher-security-pill-idle,
+    .teacher-security-match,
+    .session-item.current
+) {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
