@@ -6159,3 +6159,292 @@ html[data-teacher-theme='dark'] body.teacher-dashboard :is(
     border-color: #475569 !important;
     color: #cbd5e1 !important;
 }
+
+/* Final dark-mode contrast pass for strongly scoped Teacher page styles. */
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section :is(
+    .nav-link.active,
+    .nav-link.router-link-active,
+    .nav-link.router-link-exact-active,
+    .nav-link-dropdown.is-expanded
+) {
+    background:
+        linear-gradient(#1e293b, #1e293b) padding-box,
+        linear-gradient(135deg, #4f8f2f 0%, #d7c83f 48%, #69aa47 100%) border-box !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    box-shadow: 0 12px 24px rgb(0 0 0 / 22%) !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section :is(
+    .nav-link.active,
+    .nav-link.router-link-active,
+    .nav-link.router-link-exact-active,
+    .nav-link-dropdown.is-expanded
+) :is(span, .nav-link-title) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section :is(
+    .nav-link.active,
+    .nav-link.router-link-active,
+    .nav-link.router-link-exact-active,
+    .nav-link-dropdown.is-expanded
+) i:not(.nav-link-caret) {
+    background: #263449 !important;
+    border-color: #69aa47 !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section .nav-link:hover {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-section .nav-link:hover :is(span, .nav-link-title),
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-link-dropdown:is(:hover, .active, .is-expanded) .nav-link-caret {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-sublink {
+    color: #94a3b8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-sublink :is(.nav-sublink-title, .nav-sublink-caption) {
+    color: #94a3b8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-sublink:is(:hover, .active) {
+    background: #263449 !important;
+    border-color: #475569 !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-nav .nav-sublink:is(:hover, .active) :is(.nav-sublink-title, .nav-sublink-caption) {
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .account-menu-dropdown {
+    background: #172033 !important;
+    border-color: #475569 !important;
+    box-shadow: 0 24px 50px rgb(0 0 0 / 38%) !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .account-menu-dropdown::before {
+    background: #172033 !important;
+    border-color: #475569 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .account-menu-dropdown .account-menu-item {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .account-menu-dropdown .account-menu-item i {
+    background: #263449 !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .account-menu-dropdown .account-menu-item:hover {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .account-menu-dropdown .account-menu-item.danger {
+    color: #fda4af !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .account-menu-dropdown .account-menu-item.danger i {
+    background: #3f1723 !important;
+    border-color: #881337 !important;
+    color: #fda4af !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .notification-dropdown {
+    background: #172033 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Activities builder shells use ID selectors and important light gradients. */
+html[data-teacher-theme='dark'] body.teacher-dashboard #lessonPanel,
+html[data-teacher-theme='dark'] body.teacher-dashboard #challengePanel {
+    background:
+        linear-gradient(#172033, #172033) padding-box,
+        linear-gradient(135deg, #4f8f2f 0%, #334155 48%, #69aa47 100%) border-box !important;
+    border-color: transparent !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(#lessonPanel, #challengePanel) :is(
+    .form-section-break,
+    .lesson-form-section,
+    .assessment-mode-hint,
+    .lesson-upload-box
+) {
+    background: #111827 !important;
+    background-image: none !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(#lessonPanel, #challengePanel) :is(
+    .panel-header h2,
+    .form-section-break h3,
+    .lesson-form-section-head h3,
+    .form-group label,
+    .wizard-step-copy strong,
+    .lesson-upload-content h4
+) {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(#lessonPanel, #challengePanel) :is(
+    .panel-header p,
+    .form-section-break p,
+    .lesson-form-section-head p,
+    .wizard-step-copy small,
+    .lesson-upload-content p,
+    .field-help
+) {
+    color: #aebed2 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(#lessonPanel, #challengePanel) :is(
+    .panel-badge,
+    .builder-section-step,
+    .wizard-ready-pill
+) {
+    background: #1b2e22 !important;
+    border-color: #4f8f2f !important;
+    color: #b9e3a3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(#lessonPanel, #challengePanel) .wizard-progress-track {
+    background: #334155 !important;
+}
+
+/* Student page chips and controls that retained a white fill. */
+html[data-teacher-theme='dark'] body.teacher-dashboard .dashboard-panel .subject-metric-chip,
+html[data-teacher-theme='dark'] body.teacher-dashboard .student-context-subject,
+html[data-teacher-theme='dark'] body.teacher-dashboard .subject-management-code,
+html[data-teacher-theme='dark'] body.teacher-dashboard .student-roster-tab {
+    background: #263449 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .dashboard-panel .subject-metric-chip :is(i, strong),
+html[data-teacher-theme='dark'] body.teacher-dashboard .student-roster-tab :is(i, span, strong) {
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .student-roster-tab.active {
+    background: #1b2e22 !important;
+    border-color: #69aa47 !important;
+    color: #ffffff !important;
+}
+
+/* Records hero banners and summary boxes. */
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .lessons-hero,
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessments-hero,
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-hero-card {
+    background:
+        radial-gradient(circle at 88% 12%, rgb(105 170 71 / 14%), transparent 31%),
+        linear-gradient(135deg, #172033 0%, #1b2e22 100%) !important;
+    border-color: #3f5b45 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel :is(
+    .section-title,
+    .lessons-summary-copy strong
+),
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel :is(
+    .section-title,
+    .assessments-summary-item strong
+),
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .section-title,
+    .attendance-hero-copy h4
+) {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel :is(
+    .section-subtitle,
+    .lessons-summary-copy span
+),
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel :is(
+    .section-subtitle,
+    .assessments-summary-item small
+),
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .section-subtitle,
+    .attendance-hero-copy p
+) {
+    color: #b7c5d8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .lessons-upload-summary,
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessments-summary {
+    background: #111827 !important;
+    border-color: #475569 !important;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 20%) !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .lessons-summary-icon,
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessments-summary-icon {
+    background: #263449 !important;
+    color: #b9e3a3 !important;
+}
+
+/* Profile cards have high-specificity light gradients in the page component. */
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page .profile-content :is(
+    .profile-card,
+    .profile-details-card,
+    .profile-tab-content
+) {
+    background:
+        linear-gradient(#172033, #172033) padding-box,
+        linear-gradient(135deg, #4f8f2f 0%, #706b32 48%, #69aa47 100%) border-box !important;
+    border-color: transparent !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page .profile-content .profile-form-section {
+    background: #111827 !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page :is(
+    .profile-info h2,
+    .details-title,
+    .detail-value,
+    .form-section-title,
+    .tab-header h3
+) {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page :is(
+    .profile-role,
+    .detail-label,
+    .tab-header p
+) {
+    color: #aebed2 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page .profile-actions .btn-outline {
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page .profile-actions .btn-outline:hover {
+    color: #ffffff !important;
+}
