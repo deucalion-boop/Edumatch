@@ -5704,3 +5704,152 @@ html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-page-tour-toolti
     border-color: #475569 !important;
     color: #f8fafc !important;
 }
+
+/* Dashboard components with page-scoped light backgrounds. */
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-card.section-card {
+    background:
+        linear-gradient(#172033, #172033) padding-box,
+        linear-gradient(135deg, #4f8f2f 0%, #334155 48%, #69aa47 100%) border-box !important;
+    border-color: transparent !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-day {
+    background: #111827 !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-day.is-empty {
+    background: #0f172a !important;
+    border-color: #273449 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-day.has-events {
+    background: #172554 !important;
+    border-color: #3b4d6b !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-day.is-today {
+    background: #1b2e22 !important;
+    border-color: #69aa47 !important;
+    box-shadow: inset 0 0 0 1px #69aa47 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .calendar-title,
+    .calendar-day .day-number,
+    .kpi-value
+) {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .calendar-weekdays span,
+    .calendar-filter-label,
+    .kpi-label,
+    .kpi-note
+) {
+    color: #94a3b8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard :is(
+    .calendar-nav-btn,
+    .header-tour-btn,
+    .notification-bell,
+    .account-menu-trigger
+) {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-today-btn {
+    background: #1b2e22 !important;
+    border-color: #4f8f2f !important;
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-filter-btn {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-filter-btn.is-all.active,
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-filter-btn.is-completed.active {
+    background: #1b2e22 !important;
+    border-color: #4f8f2f !important;
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-filter-btn.is-lesson.active {
+    background: #172554 !important;
+    border-color: #3b82f6 !important;
+    color: #93c5fd !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-filter-btn.is-deadline.active {
+    background: #422006 !important;
+    border-color: #d97706 !important;
+    color: #fcd34d !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .kpi-icon {
+    background: #263449 !important;
+    border: 1px solid #3b4d63 !important;
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .kpi-icon i {
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .teacher-logo-icon,
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .nav-link i:not(.nav-link-caret) {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+    box-shadow: none !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .teacher-logo-icon i {
+    color: #a7d88c !important;
+    -webkit-text-fill-color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar :is(
+    .nav-link,
+    .nav-link-dropdown,
+    .nav-link-title
+) {
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar :is(
+    .nav-link:hover,
+    .nav-link-dropdown:hover
+) {
+    background: #1e293b !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .nav-link:hover :is(span, .nav-link-title),
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .nav-link.active :is(span, .nav-link-title),
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .nav-link-dropdown.is-expanded :is(span, .nav-link-title) {
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar :is(
+    .nav-link:hover,
+    .nav-link.active,
+    .nav-link-dropdown.is-expanded
+) i:not(.nav-link-caret) {
+    background: #263449 !important;
+    border-color: #69aa47 !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .nav-section-title {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+}
