@@ -785,9 +785,9 @@
           <p>{{ activeTourStep?.description }}</p>
           <div class="teacher-page-tour-actions">
             <button type="button" class="teacher-page-tour-btn teacher-page-tour-btn-ghost" @click="skipTour">Skip</button>
-            <button type="button" class="teacher-page-tour-btn teacher-page-tour-btn-ghost" :disabled="tourStepIndex === 0" @click="goToPreviousTourStep">Back</button>
+            <button type="button" class="teacher-page-tour-btn teacher-page-tour-btn-ghost" :disabled="isFirstTourStep" @click="goToPreviousTourStep">Back</button>
             <button type="button" class="teacher-page-tour-btn teacher-page-tour-btn-primary" @click="goToNextTourStep">
-              {{ isLastTourStep ? 'Finish' : 'Next' }}
+              {{ isFinalTourStep ? 'Finish' : 'Next' }}
             </button>
           </div>
         </section>
@@ -819,7 +819,7 @@ const tourTargetRect = ref(null)
 const tourTooltipStyle = ref({})
 const hasAttemptedAutoTour = ref(false)
 const CURRENT_PAGE_ROUTE = '/teacher/students'
-const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records']
+const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records', '/teacher/profile', '/teacher/settings']
 const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
@@ -1833,6 +1833,8 @@ const clearTourProgress = () => {
 const hasSeenTour = () => authStore.user?.hasCompletedTeacherTour === true
 const activeTourStep = computed(() => tourSteps[tourStepIndex.value] || null)
 const isLastTourStep = computed(() => tourStepIndex.value >= tourSteps.length - 1)
+const isFirstTourStep = computed(() => tourStepIndex.value === 0 && TOUR_ROUTE_ORDER.indexOf(CURRENT_PAGE_ROUTE) === 0)
+const isFinalTourStep = computed(() => isLastTourStep.value && TOUR_ROUTE_ORDER.indexOf(CURRENT_PAGE_ROUTE) === TOUR_ROUTE_ORDER.length - 1)
 const updateTourPlacement = () => {
   if (!isTourActive.value) return
   const target = activeTourStep.value?.selector ? document.querySelector(activeTourStep.value.selector) : null

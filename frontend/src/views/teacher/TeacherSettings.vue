@@ -239,9 +239,9 @@
           <p>{{ activeTourStep?.description }}</p>
           <div class="teacher-page-tour-actions">
             <button type="button" class="teacher-page-tour-btn teacher-page-tour-btn-ghost" @click="skipTour">Skip</button>
-            <button type="button" class="teacher-page-tour-btn teacher-page-tour-btn-ghost" :disabled="tourStepIndex === 0" @click="goToPreviousTourStep">Back</button>
+            <button type="button" class="teacher-page-tour-btn teacher-page-tour-btn-ghost" :disabled="isFirstTourStep" @click="goToPreviousTourStep">Back</button>
             <button type="button" class="teacher-page-tour-btn teacher-page-tour-btn-primary" @click="goToNextTourStep">
-              {{ isLastTourStep ? 'Finish' : 'Next' }}
+              {{ isFinalTourStep ? 'Finish' : 'Next' }}
             </button>
           </div>
         </section>
@@ -273,10 +273,8 @@ const tourStepIndex = ref(0)
 const tourTargetRect = ref(null)
 const tourTooltipStyle = ref({})
 const hasAttemptedAutoTour = ref(false)
-const TOUR_STORAGE_PREFIX = 'edumatch_teacher_has_seen_tour_'
-const PAGE_TOUR_KEY = 'teacher_journey_v2'
 const CURRENT_PAGE_ROUTE = '/teacher/settings'
-const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/records', '/teacher/students', '/teacher/activities', '/teacher/profile', '/teacher/settings']
+const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records', '/teacher/profile', '/teacher/settings']
 const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
@@ -343,6 +341,8 @@ const tourSteps = [
 ]
 const activeTourStep = computed(() => tourSteps[tourStepIndex.value] || null)
 const isLastTourStep = computed(() => tourStepIndex.value >= tourSteps.length - 1)
+const isFirstTourStep = computed(() => tourStepIndex.value === 0 && TOUR_ROUTE_ORDER.indexOf(CURRENT_PAGE_ROUTE) === 0)
+const isFinalTourStep = computed(() => isLastTourStep.value && TOUR_ROUTE_ORDER.indexOf(CURRENT_PAGE_ROUTE) === TOUR_ROUTE_ORDER.length - 1)
 
 const displayName = computed(() => settings.fullName || 'Teacher')
 const teacherFullName = computed(() => displayName.value)
@@ -614,11 +614,6 @@ const smoothScrollIntoView = async (element) => {
   element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
   await wait(320)
 }
-const getTourStorageKey = () => {
-  const authUser = authStore.user || {}
-  const identifier = String(authUser._id || authUser.id || authUser.email || authUser.username || 'teacher').trim().toLowerCase()
-  return `${TOUR_STORAGE_PREFIX}${identifier || 'teacher'}_${PAGE_TOUR_KEY}`
-}
 const getProgressStorageKey = () => {
   const authUser = authStore.user || {}
   const identifier = String(authUser._id || authUser.id || authUser.email || authUser.username || 'teacher').trim().toLowerCase()
@@ -639,10 +634,20 @@ const clearTourProgress = () => {
   try { localStorage.removeItem(getProgressStorageKey()) } catch (_error) {}
 }
 const hasSeenTour = () => {
-  try { return localStorage.getItem(getTourStorageKey()) === 'true' } catch (_error) { return false }
+  return authStore.user?.hasCompletedTeacherTour === true
 }
-const setHasSeenTour = (value = true) => {
-  try { localStorage.setItem(getTourStorageKey(), value ? 'true' : 'false') } catch (_error) {}
+const persistTeacherTourPreference = async (value = true) => {
+  if (!authStore.token) return
+  try {
+    const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+    const baseUrl = configured ? (configured.endsWith('/api') ? configured : `${configured}/api`) : '/api'
+    const response = await axios.patch(`${baseUrl}/teacher/tour-preference`, { hasCompletedTeacherTour: value === true }, {
+      headers: { Authorization: `Bearer ${authStore.token}` }
+    })
+    authStore.setUser({ ...(response.data?.user || {}), hasCompletedTeacherTour: value === true })
+  } catch (error) {
+    console.error('Failed to persist teacher tour preference:', error)
+  }
 }
 const updateTourPlacement = () => {
   if (!isTourActive.value) return
@@ -698,8 +703,11 @@ const closeTour = ({ markSeen = true } = {}) => {
   isTourActive.value = false
   tourTargetRect.value = null
   tourTooltipStyle.value = {}
-  if (markSeen) setHasSeenTour(true)
-  if (markSeen) clearTourProgress()
+  if (markSeen) {
+    authStore.setUser({ hasCompletedTeacherTour: true })
+    clearTourProgress()
+    persistTeacherTourPreference(true)
+  }
 }
 const startTour = async ({ force = false } = {}) => {
   if (!force && hasSeenTour()) return

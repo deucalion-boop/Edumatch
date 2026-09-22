@@ -350,9 +350,9 @@
         <p>{{ activeTourStep?.description }}</p>
         <div class="teacher-tour-actions">
           <button type="button" class="teacher-tour-btn teacher-tour-btn-ghost" @click="skipTour">Skip</button>
-          <button type="button" class="teacher-tour-btn teacher-tour-btn-ghost" :disabled="tourStepIndex === 0" @click="goToPreviousTourStep">Back</button>
+          <button type="button" class="teacher-tour-btn teacher-tour-btn-ghost" :disabled="isFirstTourStep" @click="goToPreviousTourStep">Back</button>
           <button type="button" class="teacher-tour-btn teacher-tour-btn-primary" @click="goToNextTourStep">
-            {{ isLastTourStep ? 'Finish' : 'Next' }}
+            {{ isFinalTourStep ? 'Finish' : 'Next' }}
           </button>
         </div>
       </section>
@@ -369,7 +369,7 @@ import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
 
 const CURRENT_PAGE_ROUTE = '/teacher/dashboard'
-const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records']
+const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher/students', '/teacher/records', '/teacher/profile', '/teacher/settings']
 const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
@@ -477,13 +477,15 @@ export default {
       },
       {
         key: 'finish',
-        title: 'Tour Complete',
-        description: 'You are ready to start managing activities and students. Restart this tour anytime from the Help or Tour Guide button.',
+        title: 'Tour Guide',
+        description: 'Restart this tour anytime from the Help or Tour Guide button. Select Next to continue through the teacher workspace.',
         selector: '[data-tour="teacher-help-button"]'
       }
     ]
     const activeTourStep = computed(() => tourSteps[tourStepIndex.value] || null)
     const isLastTourStep = computed(() => tourStepIndex.value >= tourSteps.length - 1)
+    const isFirstTourStep = computed(() => tourStepIndex.value === 0 && TOUR_ROUTE_ORDER.indexOf(CURRENT_PAGE_ROUTE) === 0)
+    const isFinalTourStep = computed(() => isLastTourStep.value && TOUR_ROUTE_ORDER.indexOf(CURRENT_PAGE_ROUTE) === TOUR_ROUTE_ORDER.length - 1)
     const weekDays = computed(() => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'])
     const calendarTitle = computed(() => new Intl.DateTimeFormat('en-US', {
       month: 'long',
@@ -1453,6 +1455,8 @@ export default {
       tourStepIndex,
       activeTourStep,
       isLastTourStep,
+      isFirstTourStep,
+      isFinalTourStep,
       tourTooltipStyle,
       tourSpotlightStyle,
       launchManualTour,
