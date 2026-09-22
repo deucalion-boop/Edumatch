@@ -2051,6 +2051,9 @@ onMounted(async () => {
   window.addEventListener('resize', syncMobileMenuBodyState)
   window.addEventListener('focus', handleWindowFocus)
 
+  // Resume the tour immediately; loading teacher and student data must not block it.
+  await maybeAutoStartTour()
+
   await authStore.refreshProfile().catch((error) => {
     console.error('Failed to refresh teacher profile:', error)
   })
@@ -2068,7 +2071,6 @@ onMounted(async () => {
   fetchSubjects()
   fetchStudents()
   fetchEnrollmentRequests()
-  maybeAutoStartTour()
   syncMobileMenuBodyState()
   startTeacherAssignmentRefreshLoop()
 })

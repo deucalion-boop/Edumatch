@@ -4078,6 +4078,9 @@ onMounted(async () => {
   window.addEventListener('teacher-assessment-created', handleAssessmentCreatedEvent)
   window.addEventListener('storage', handleRecordsStorageSignal)
 
+  // Resume the tour immediately; record and profile requests can finish behind it.
+  await maybeAutoStartTour()
+
   await authStore.refreshProfile().catch((error) => {
     console.error('Failed to refresh teacher profile:', error)
   })
@@ -4090,7 +4093,6 @@ onMounted(async () => {
   teacher.email = authUser.email || ''
 
   fetchRecords()
-  maybeAutoStartTour()
   syncMobileMenuBodyState()
   startTeacherSectionRefreshLoop()
 })

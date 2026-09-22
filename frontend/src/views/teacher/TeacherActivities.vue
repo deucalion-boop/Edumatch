@@ -2536,6 +2536,10 @@ onMounted(async () => {
   window.addEventListener("scroll", handleTourViewportChange, true);
   window.addEventListener("resize", syncMobileMenuBodyState);
 
+  // Resume a cross-page tour before waiting on page data requests.
+  // The first tour target is part of the static page shell and is already available.
+  await maybeAutoStartTour();
+
   await authStore.refreshProfile().catch((error) => {
     console.error("Failed to refresh teacher profile:", error);
   });
@@ -2552,7 +2556,6 @@ onMounted(async () => {
   await refreshAiStatus();
   await loadClassOptions();
   await loadLessonOptions();
-  await maybeAutoStartTour();
   syncMobileMenuBodyState();
 });
 
