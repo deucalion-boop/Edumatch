@@ -4017,7 +4017,8 @@ export default {
 
 /* Focused Recent Results — isolated from the recommendation view. */
 .premium-dashboard .premium-grades-panel {
-  width: min(100%, 88rem);
+  width: 100%;
+  max-width: none;
   min-height: auto;
   margin: 0 auto;
   padding: 0;
