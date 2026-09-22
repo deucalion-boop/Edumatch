@@ -1343,5 +1343,189 @@ body.student-dashboard .dashboard-home-btn {
   }
 }
 
+/* Final student dark-mode layer: overrides legacy light surfaces and !important rules. */
+body.student-dashboard .student-dashboard.student-theme-dark {
+  background: #0b120e !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar,
+body.student-dashboard .student-dashboard.student-theme-dark .top-header {
+  background: #101a14 !important;
+  border-color: #34483b !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link > span,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link-title,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar :is(.student-logo-text h2, .student-logo-text p, .nav-section-title, .user-info h5, .user-info p, .user-status) {
+  color: #b9c5bd !important;
+  -webkit-text-fill-color: #b9c5bd !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link:hover,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link.active,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link.router-link-active,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link.router-link-exact-active,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link-dropdown.is-expanded {
+  background: #1c2921 !important;
+  border-color: #4f6d58 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link:is(:hover, .active, .router-link-active, .router-link-exact-active) > span,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link-dropdown.is-expanded > span,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link:is(:hover, .active, .router-link-active, .router-link-exact-active) .nav-link-title,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link-dropdown.is-expanded .nav-link-title {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .nav-link i,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .nav-link.active i:not(.nav-link-caret-icon),
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .nav-link.router-link-active i:not(.nav-link-caret-icon) {
+  background: #26362b !important;
+  border-color: #4a6151 !important;
+  color: #e8f0ea !important;
+  -webkit-text-fill-color: #e8f0ea !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .sidebar-footer .user-profile {
+  background: #162019 !important;
+  border-color: #405348 !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .header-actions :is(.header-tour-btn, .notification-bell[data-tour='notifications']) {
+  background: #1c2921 !important;
+  border-color: #4a6151 !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .header-actions :is(.header-tour-btn, .notification-bell[data-tour='notifications']):hover {
+  background: #26362b !important;
+  border-color: #6b8974 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .header-actions :is(.header-tour-btn, .notification-bell[data-tour='notifications']) i {
+  background: transparent !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(
+  .premium-summary-card,
+  .premium-panel,
+  .premium-course-card,
+  .premium-task,
+  .premium-empty-state,
+  .premium-results-list article,
+  .grades-results-feed,
+  .grades-premium-empty,
+  .complete-grade-history,
+  .strand-ranking-list > li,
+  .strand-subject-evidence article,
+  .pathway-milestone,
+  .academic-progress-counts > span,
+  .subject-score-pair > div,
+  .period-grade-grid > span,
+  .category-score-grid > span
+) {
+  background: #162019 !important;
+  border-color: #34483b !important;
+  color: #f1f5f2 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(
+  .premium-summary-card__icon,
+  .premium-summary-card__arrow,
+  .premium-task__rail > span,
+  .premium-course-card__metrics span,
+  .premium-course-card__actions a,
+  .premium-focus-stats > div,
+  .grades-empty-guidance span
+) {
+  background: #202f25 !important;
+  border-color: #405348 !important;
+  color: #e2ebe4 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.visual-chip, .premium-text-link, .premium-button--soft) {
+  background: #202f25 !important;
+  border-color: #496050 !important;
+  color: #f1f5f2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.visual-chip, .premium-text-link, .premium-button--soft) :is(i, span) {
+  color: #f1f5f2 !important;
+  -webkit-text-fill-color: #f1f5f2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-summary-card::after {
+  opacity: 0.2;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.premium-summary-card__copy > span, .premium-summary-card__copy p, .premium-panel__header p, .premium-course-card__teacher, .premium-course-card__schedule) {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.premium-summary-card__copy strong, .premium-task h3, .premium-course-card h3, .premium-panel h2, .premium-focus-card h2) {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.premium-task__progress > span, .premium-progress-track, .academic-progress-track, .subject-progress-track, .strand-fit-track) {
+  background: #2a3b30 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.visual-book, .pathway-progress-ring > div) {
+  background: #162019 !important;
+  border-color: #496050 !important;
+  color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-focus-ring::before {
+  background: #162019 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-focus-ring {
+  background: conic-gradient(var(--leaf) var(--focus-progress), #2a3b30 0deg) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.premium-due-badge, .premium-result-count, .grades-result-count, .pathway-status) {
+  background: #26362b !important;
+  border-color: #496050 !important;
+  color: #e4ede6 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.premium-task__chips span, .premium-task__progress small, .premium-focus-stats span, .premium-course-card__metrics span) {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.complete-grade-history__table-wrap, .strand-ranking-section, .subject-performance-section) {
+  background: #101913 !important;
+  border-color: #34483b !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.complete-grade-history tbody tr, .complete-grade-history th, .complete-grade-history td) {
+  background: #162019 !important;
+  border-color: #34483b !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark :is(.student-tour-tooltip, .confirm-dialog, .confirmation-modal, .join-class-modal, .exam-modal) {
+  background: #162019 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark :is(.account-menu-dropdown, .notification-dropdown) {
+  background: #162019 !important;
+  border-color: #405348 !important;
+}
+
 </style>
 
