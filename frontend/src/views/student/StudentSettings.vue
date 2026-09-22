@@ -1,42 +1,117 @@
 <template>
-  <div class="student-dashboard-page">
+  <div class="student-dashboard-page" :class="appearanceClasses">
     <section class="settings-hero">
       <div class="settings-hero-icon"><i class="fas fa-cogs"></i></div>
       <div>
+        <span class="settings-eyebrow">My preferences</span>
         <h2>Student Settings</h2>
-        <p>Manage notifications, security, and account preferences from one organized workspace.</p>
+        <p>Choose how EduMatch notifies you, looks on this device, and protects your account.</p>
       </div>
     </section>
 
-    <section v-if="toast.show" class="settings-toast" :class="`toast-${toast.type}`">
+    <section v-if="toast.show" class="settings-toast" :class="`toast-${toast.type}`" role="status" aria-live="polite">
       <i class="fas" :class="toast.type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'"></i>
       <span>{{ toast.message }}</span>
     </section>
 
-    <div class="settings-grid student-settings-grid">
-      <section class="settings-panel" data-tour="student-settings-security">
-        <div class="panel-header security-panel-header">
-          <div class="security-panel-copy">
-            <span class="security-panel-eyebrow">Student account protection</span>
-            <h3>Security Settings</h3>
-            <p>Manage your account password and authentication preferences with confidence.</p>
-          </div>
-          <div class="security-panel-pills" aria-label="Security overview">
-            <span class="security-pill security-pill-shield">
-              <i class="fas fa-shield-alt"></i>
-              Protected account
-            </span>
-            <span class="security-pill" :class="`security-pill-${passwordStrengthTone}`">
-              <i class="fas" :class="passwordStrengthIcon"></i>
-              {{ passwordRequirementsMetCount }}/{{ passwordRequirements.length }} checks
-            </span>
-          </div>
+    <div class="student-settings-workspace">
+      <aside class="student-settings-nav" aria-label="Student settings sections">
+        <div class="settings-nav-heading">
+          <strong>Settings</strong>
+          <small>Saved on this device</small>
         </div>
+        <button
+          v-for="tab in settingsTabs"
+          :key="tab.id"
+          type="button"
+          class="settings-nav-item"
+          :class="{ active: activeTab === tab.id }"
+          :aria-current="activeTab === tab.id ? 'page' : undefined"
+          @click="setActiveTab(tab.id)"
+        >
+          <i :class="tab.icon"></i>
+          <span>{{ tab.label }}</span>
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </aside>
 
-        <div class="student-settings-stack security-grid">
-          <div class="settings-card security-card security-password-card student-settings-card">
-            <div class="settings-card-body">
-              <form class="settings-form settings-password-form" @submit.prevent="updatePassword">
+      <main class="student-settings-content">
+        <section v-show="activeTab === 'notifications'" class="settings-panel preference-panel">
+          <div class="panel-header section-heading">
+            <span class="section-icon"><i class="fas fa-bell"></i></span>
+            <div><h3>Notification Preferences</h3><p>Choose the school updates that should get your attention.</p></div>
+          </div>
+          <div class="preference-list">
+            <label v-for="preference in notificationPreferences" :key="preference.id" class="preference-row">
+              <span><strong>{{ preference.name }}</strong><small>{{ preference.description }}</small></span>
+              <input v-model="preference.enabled" type="checkbox" class="settings-toggle-input">
+            </label>
+          </div>
+          <div class="inline-setting">
+            <label for="deadline-reminder">Deadline reminder</label>
+            <select id="deadline-reminder" v-model="learningPreferences.deadlineReminder">
+              <option value="none">No reminder</option>
+              <option value="same-day">On the due date</option>
+              <option value="one-day">1 day before</option>
+              <option value="three-days">3 days before</option>
+            </select>
+          </div>
+          <div class="panel-actions">
+            <small>These preferences are saved in this browser.</small>
+            <button type="button" class="btn btn-primary" @click="savePreferences"><i class="fas fa-save"></i> Save preferences</button>
+          </div>
+        </section>
+
+        <section v-show="activeTab === 'appearance'" class="settings-panel preference-panel">
+          <div class="panel-header section-heading">
+            <span class="section-icon"><i class="fas fa-palette"></i></span>
+            <div><h3>Appearance &amp; Accessibility</h3><p>Make your learning space more comfortable to read and use.</p></div>
+          </div>
+          <div class="theme-options" role="radiogroup" aria-label="Color theme">
+            <button v-for="option in themeOptions" :key="option.value" type="button" class="theme-option" :class="{ active: appearance.theme === option.value }" role="radio" :aria-checked="appearance.theme === option.value" @click="appearance.theme = option.value; applyAppearance()">
+              <i :class="option.icon"></i><span><strong>{{ option.label }}</strong><small>{{ option.description }}</small></span>
+            </button>
+          </div>
+          <div class="inline-setting">
+            <label for="text-size">Text size</label>
+            <select id="text-size" v-model="appearance.textSize" @change="applyAppearance">
+              <option value="normal">Normal</option><option value="large">Large</option><option value="larger">Larger</option>
+            </select>
+          </div>
+          <div class="preference-list compact-list">
+            <label class="preference-row"><span><strong>Higher contrast</strong><small>Increase borders and text contrast.</small></span><input v-model="appearance.highContrast" type="checkbox" class="settings-toggle-input" @change="applyAppearance"></label>
+            <label class="preference-row"><span><strong>Reduce motion</strong><small>Limit non-essential interface animation.</small></span><input v-model="appearance.reduceMotion" type="checkbox" class="settings-toggle-input" @change="applyAppearance"></label>
+          </div>
+          <div class="panel-actions"><small>Appearance applies immediately on this device.</small><button type="button" class="btn btn-primary" @click="savePreferences"><i class="fas fa-save"></i> Save appearance</button></div>
+        </section>
+
+        <template v-if="activeTab === 'security'">
+          <section class="settings-panel sessions-panel">
+            <div class="panel-header sessions-header">
+              <div class="section-heading"><span class="section-icon"><i class="fas fa-laptop"></i></span><div><h3>Active Sessions</h3><p>Review devices signed in to your account.</p></div></div>
+              <button type="button" class="btn btn-outline" :disabled="isLoadingSessions" @click="loadActiveSessions"><i class="fas" :class="isLoadingSessions ? 'fa-spinner fa-spin' : 'fa-rotate'"></i> Refresh</button>
+            </div>
+            <div v-if="isLoadingSessions" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading sessions...</div>
+            <div v-else-if="sessionError" class="empty-state error-state">{{ sessionError }}</div>
+            <div v-else-if="activeSessions.length === 0" class="empty-state">No active sessions were found.</div>
+            <div v-else class="session-list">
+              <article v-for="session in sortedSessions" :key="session.id" class="session-item" :class="{ current: session.current }">
+                <span class="session-icon"><i class="fas fa-display"></i></span>
+                <div><strong>{{ formatSessionDevice(session.userAgent) }}</strong><span v-if="session.current" class="current-badge">Current device</span><small>{{ session.ipAddress || 'Unknown IP' }} · Last active {{ formatSessionTime(session.lastSeenAt || session.createdAt) }}</small></div>
+                <button v-if="!session.current" type="button" class="btn btn-outline" :disabled="revokingSessionId === session.id" @click="revokeSession(session.id)">{{ revokingSessionId === session.id ? 'Logging out...' : 'Log out' }}</button>
+              </article>
+            </div>
+          </section>
+
+          <section class="settings-panel" data-tour="student-settings-security">
+            <div class="panel-header security-panel-header">
+              <div class="security-panel-copy"><span class="security-panel-eyebrow">Student account protection</span><h3>Change Password</h3><p>Use a unique password to keep your learning records secure.</p></div>
+              <div class="security-panel-pills" aria-label="Security overview"><span class="security-pill security-pill-shield"><i class="fas fa-shield-alt"></i> Protected account</span><span class="security-pill" :class="`security-pill-${passwordStrengthTone}`"><i class="fas" :class="passwordStrengthIcon"></i>{{ passwordRequirementsMetCount }}/{{ passwordRequirements.length }} checks</span></div>
+            </div>
+            <div class="student-settings-stack security-grid">
+              <div class="settings-card security-card security-password-card student-settings-card">
+                <div class="settings-card-body">
+                  <form class="settings-form settings-password-form" @submit.prevent="updatePassword">
                 <div class="password-form-main">
                   <div class="security-form-banner">
                     <div class="security-form-banner-icon">
@@ -125,10 +200,10 @@
                     <button
                       type="submit"
                       class="btn btn-primary password-submit-btn"
-                      :disabled="!isPasswordValid"
+                      :disabled="!isPasswordValid || isUpdatingPassword"
                     >
-                      <i class="fas fa-shield-alt"></i>
-                      Update Password
+                      <i class="fas" :class="isUpdatingPassword ? 'fa-spinner fa-spin' : 'fa-shield-alt'"></i>
+                      {{ isUpdatingPassword ? 'Updating...' : 'Update Password' }}
                     </button>
                   </div>
                 </div>
@@ -180,16 +255,32 @@
                     Avoid using your name, birthday, or previously used passwords.
                   </p>
                 </aside>
-              </form>
+                  </form>
+                </div>
+              </div>
             </div>
+          </section>
+        </template>
+
+        <section v-show="activeTab === 'privacy'" class="settings-panel privacy-panel">
+          <div class="panel-header section-heading"><span class="section-icon"><i class="fas fa-user-shield"></i></span><div><h3>Privacy &amp; Account Data</h3><p>Understand what is stored and take a copy of your account preferences.</p></div></div>
+          <div class="privacy-grid">
+            <article class="privacy-card"><i class="fas fa-database"></i><div><h4>Your information</h4><p>EduMatch stores your profile, class enrollment, learning progress, submissions, grades, and attendance as part of your school record.</p></div></article>
+            <article class="privacy-card"><i class="fas fa-file-arrow-down"></i><div><h4>Download settings snapshot</h4><p>Download your visible profile details and settings from this device as a JSON file.</p><button type="button" class="btn btn-outline" @click="downloadData"><i class="fas fa-download"></i> Download snapshot</button></div></article>
+            <article class="privacy-card privacy-card-warning"><i class="fas fa-school"></i><div><h4>Deactivate or delete an account</h4><p>Student accounts and academic records are managed by the school. Contact your teacher or school administrator to request account changes.</p></div></article>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
     </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios'
+import { useAuthStore } from '../../stores/auth'
+
+const STUDENT_SETTINGS_KEY = 'edumatch_student_settings_v2'
+
 export default {
   name: 'StudentSettings',
   data() {
@@ -203,22 +294,34 @@ export default {
       },
       notificationCount: 0,
       isSidebarOpen: false,
-      activeTab: 'notification-settings',
+      activeTab: 'notifications',
       settingsTabs: [
-        { id: 'notification-settings', label: 'Notifications', icon: 'fas fa-bell' },
-        { id: 'security-settings', label: 'Security', icon: 'fas fa-lock' }
+        { id: 'notifications', label: 'Notifications', icon: 'fas fa-bell' },
+        { id: 'appearance', label: 'Appearance', icon: 'fas fa-palette' },
+        { id: 'security', label: 'Security', icon: 'fas fa-lock' },
+        { id: 'privacy', label: 'Privacy & Data', icon: 'fas fa-user-shield' }
       ],
-
-      emailSettings: {
-        primaryEmail: '',
-        secondaryEmail: ''
-      },
-
-      notificationChannels: [
-        { id: 'email', name: 'Email Notifications', description: 'Receive notifications via email', enabled: true },
-        { id: 'push', name: 'Push Notifications', description: 'Receive browser push notifications', enabled: true },
-        { id: 'sms', name: 'SMS Notifications', description: 'Receive text message notifications', enabled: false }
+      notificationPreferences: [
+        { id: 'announcements', name: 'Announcements', description: 'Notify me when a teacher posts an announcement.', enabled: true },
+        { id: 'lessons', name: 'Lessons and activities', description: 'Notify me when new learning materials are available.', enabled: true },
+        { id: 'deadlines', name: 'Upcoming deadlines', description: 'Remind me before an activity or assessment is due.', enabled: true },
+        { id: 'results', name: 'Grades and results', description: 'Notify me when a result or grade is released.', enabled: true },
+        { id: 'enrollment', name: 'Class enrollment', description: 'Notify me when a class request changes status.', enabled: true },
+        { id: 'email', name: 'Email notifications', description: 'Also send enabled updates to my registered email.', enabled: false }
       ],
+      learningPreferences: { deadlineReminder: 'one-day' },
+      appearance: { theme: 'system', textSize: 'normal', highContrast: false, reduceMotion: false },
+      isSystemDark: false,
+      themeOptions: [
+        { value: 'system', label: 'System', description: 'Follow this device', icon: 'fas fa-desktop' },
+        { value: 'light', label: 'Light', description: 'Bright workspace', icon: 'fas fa-sun' },
+        { value: 'dark', label: 'Dark', description: 'Dim workspace', icon: 'fas fa-moon' }
+      ],
+      activeSessions: [],
+      isLoadingSessions: false,
+      sessionError: '',
+      revokingSessionId: '',
+      isUpdatingPassword: false,
 
       passwordData: {
         currentPassword: '',
@@ -236,13 +339,6 @@ export default {
         { key: 'number', label: 'One number', met: false },
         { key: 'special', label: 'One special character', met: false }
       ],
-
-      showConfirmationModal: false,
-      confirmationModalTitle: '',
-      confirmationModalMessage: '',
-      confirmationModalConfirmText: '',
-      confirmationModalButtonClass: '',
-      pendingAction: null,
 
       toast: {
         show: false,
@@ -349,9 +445,35 @@ export default {
              Boolean(this.passwordData.confirmPassword) &&
              this.passwordsMatch &&
              this.passwordRequirements.every(req => req.met)
+    },
+    sortedSessions() {
+      return [...this.activeSessions].sort((left, right) => Number(right.current) - Number(left.current))
+    },
+    appearanceClasses() {
+      return {
+        'student-theme-dark': this.appearance.theme === 'dark' || (this.appearance.theme === 'system' && this.isSystemDark),
+        'student-theme-light': this.appearance.theme === 'light',
+        'student-text-large': this.appearance.textSize === 'large',
+        'student-text-larger': this.appearance.textSize === 'larger',
+        'student-high-contrast': this.appearance.highContrast,
+        'student-reduce-motion': this.appearance.reduceMotion
+      }
     }
   },
   methods: {
+    resolveApiBaseUrl() {
+      const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+      if (!configured) return '/api'
+      return configured.endsWith('/api') ? configured : `${configured}/api`
+    },
+    authConfig() {
+      const authStore = useAuthStore()
+      return { headers: { Authorization: `Bearer ${authStore.token}` } }
+    },
+    preferenceStorageKey() {
+      const identity = this.user.id || this.user._id || this.user.username || 'student'
+      return `${STUDENT_SETTINGS_KEY}_${identity}`
+    },
     closeSidebar() {
       this.isSidebarOpen = false
     },
@@ -371,22 +493,45 @@ export default {
     },
     setActiveTab(tabId) {
       this.activeTab = tabId
-      localStorage.setItem('settingsActiveTab', tabId)
+      localStorage.setItem('edumatch_student_settings_tab', tabId)
+      if (tabId === 'security' && this.activeSessions.length === 0) this.loadActiveSessions()
     },
-    tabIconClass(tabId) {
-      const iconByTab = {
-        'notification-settings': 'icon-sem-assignments',
-        'security-settings': 'icon-sem-settings'
-      }
-      return iconByTab[tabId] || 'icon-sem-neutral'
-    },
-
-    async saveNotificationChannels() {
+    savePreferences() {
       try {
-        this.showToast('success', 'Notification channels updated successfully')
+        const payload = {
+          notifications: Object.fromEntries(this.notificationPreferences.map(item => [item.id, item.enabled])),
+          learning: { ...this.learningPreferences },
+          appearance: { ...this.appearance }
+        }
+        localStorage.setItem(this.preferenceStorageKey(), JSON.stringify(payload))
+        this.applyAppearance()
+        window.dispatchEvent(new CustomEvent('edumatch-student-preferences-changed', { detail: payload }))
+        this.showToast('success', 'Preferences saved on this device.')
       } catch (error) {
-        this.showToast('error', 'Failed to update notification channels')
+        this.showToast('error', 'Unable to save preferences on this device.')
       }
+    },
+    loadPreferences() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(this.preferenceStorageKey()) || '{}')
+        this.notificationPreferences.forEach(item => {
+          if (typeof saved.notifications?.[item.id] === 'boolean') item.enabled = saved.notifications[item.id]
+        })
+        if (saved.learning?.deadlineReminder) this.learningPreferences.deadlineReminder = saved.learning.deadlineReminder
+        if (saved.appearance && typeof saved.appearance === 'object') {
+          this.appearance = { ...this.appearance, ...saved.appearance }
+        }
+      } catch (_error) {
+        localStorage.removeItem(this.preferenceStorageKey())
+      }
+      this.applyAppearance()
+    },
+    applyAppearance() {
+      this.isSystemDark = this.appearance.theme === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches === true
+      document.documentElement.dataset.studentTheme = this.appearance.theme
+      document.documentElement.dataset.studentTextSize = this.appearance.textSize
+      document.documentElement.classList.toggle('student-reduce-motion-enabled', this.appearance.reduceMotion)
+      document.documentElement.classList.toggle('student-high-contrast-enabled', this.appearance.highContrast)
     },
 
     checkPasswordStrength() {
@@ -422,11 +567,21 @@ export default {
         return
       }
 
+      this.isUpdatingPassword = true
+      const authStore = useAuthStore()
       try {
-        this.showToast('success', 'Password updated successfully')
+        await authStore.changePassword({
+          currentPassword: this.passwordData.currentPassword,
+          newPassword: this.passwordData.newPassword,
+          confirmNewPassword: this.passwordData.confirmPassword
+        })
         this.resetPasswordForm()
+        this.showToast('success', 'Password updated. Please sign in again with your new password.')
+        setTimeout(() => this.$router.replace('/auth/login?message=Password updated successfully'), 900)
       } catch (error) {
-        this.showToast('error', error.response?.data?.message || 'Failed to update password')
+        this.showToast('error', authStore.error || error.message || 'Failed to update password')
+      } finally {
+        this.isUpdatingPassword = false
       }
     },
 
@@ -439,64 +594,63 @@ export default {
       this.passwordRequirements.forEach(req => req.met = false)
     },
 
+    async loadActiveSessions() {
+      if (this.isLoadingSessions) return
+      this.isLoadingSessions = true
+      this.sessionError = ''
+      try {
+        const response = await axios.get(`${this.resolveApiBaseUrl()}/auth/sessions`, this.authConfig())
+        this.activeSessions = Array.isArray(response.data?.sessions) ? response.data.sessions : []
+      } catch (error) {
+        this.sessionError = error.response?.data?.message || 'Unable to load active sessions.'
+      } finally {
+        this.isLoadingSessions = false
+      }
+    },
+    async revokeSession(sessionId) {
+      this.revokingSessionId = sessionId
+      try {
+        await axios.delete(`${this.resolveApiBaseUrl()}/auth/sessions/${encodeURIComponent(sessionId)}`, this.authConfig())
+        this.activeSessions = this.activeSessions.filter(session => session.id !== sessionId)
+        this.showToast('success', 'The selected device has been logged out.')
+      } catch (error) {
+        this.showToast('error', error.response?.data?.message || 'Unable to log out that device.')
+      } finally {
+        this.revokingSessionId = ''
+      }
+    },
+    formatSessionDevice(userAgent) {
+      const value = String(userAgent || '')
+      const browser = value.includes('Edg/') ? 'Microsoft Edge' : value.includes('Firefox/') ? 'Firefox' : value.includes('Chrome/') ? 'Chrome' : value.includes('Safari/') ? 'Safari' : 'Browser'
+      const device = /Android|iPhone|iPad|Mobile/i.test(value) ? 'mobile device' : 'computer'
+      return `${browser} on ${device}`
+    },
+    formatSessionTime(value) {
+      if (!value) return 'unknown'
+      const date = new Date(value)
+      return Number.isNaN(date.getTime()) ? 'unknown' : date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+    },
     downloadData() {
-      this.showToast('info', 'Preparing your data for download...')
-    },
-
-    confirmDeactivateAccount() {
-      this.showConfirmationModal = true
-      this.confirmationModalTitle = 'Deactivate Account'
-      this.confirmationModalMessage = 'Are you sure you want to temporarily deactivate your account? You can reactivate it later by logging in again.'
-      this.confirmationModalConfirmText = 'Deactivate'
-      this.confirmationModalButtonClass = 'btn-warning'
-      this.pendingAction = 'deactivateAccount'
-    },
-
-    async deactivateAccount() {
-      try {
-        this.showToast('success', 'Account deactivated successfully')
-        setTimeout(() => {
-          this.$router.push('/logout')
-        }, 2000)
-      } catch (error) {
-        this.showToast('error', 'Failed to deactivate account')
+      const snapshot = {
+        exportedAt: new Date().toISOString(),
+        profile: {
+          displayName: this.user.displayName || '', username: this.user.username || '',
+          email: this.user.email || '', role: this.user.role || 'student', gradeLevel: this.user.gradeLevel || ''
+        },
+        preferences: {
+          notifications: Object.fromEntries(this.notificationPreferences.map(item => [item.id, item.enabled])),
+          learning: { ...this.learningPreferences }, appearance: { ...this.appearance }
+        },
+        notice: 'This snapshot does not include official academic records. Contact the school for a complete record request.'
       }
-    },
-
-    confirmDeleteAccount() {
-      this.showConfirmationModal = true
-      this.confirmationModalTitle = 'Delete Account'
-      this.confirmationModalMessage = 'This action is permanent and cannot be undone. All your data will be permanently removed. Are you absolutely sure?'
-      this.confirmationModalConfirmText = 'Delete Permanently'
-      this.confirmationModalButtonClass = 'btn-danger'
-      this.pendingAction = 'deleteAccount'
-    },
-
-    async deleteAccount() {
-      try {
-        this.showToast('success', 'Account scheduled for deletion')
-        setTimeout(() => {
-          this.$router.push('/logout')
-        }, 2000)
-      } catch (error) {
-        this.showToast('error', 'Failed to delete account')
-      }
-    },
-
-    handleConfirmation() {
-      switch (this.pendingAction) {
-        case 'logout':
-          this.$emit('logout')
-          break
-        case 'deactivateAccount':
-          this.deactivateAccount()
-          break
-        case 'deleteAccount':
-          this.deleteAccount()
-          break
-      }
-      this.showConfirmationModal = false
-      this.pendingAction = null
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `edumatch-student-settings-${new Date().toISOString().slice(0, 10)}.json`
+      anchor.click()
+      URL.revokeObjectURL(url)
+      this.showToast('success', 'Settings snapshot downloaded.')
     },
 
     showToast(type, message) {
@@ -510,39 +664,22 @@ export default {
       }, 3000)
     },
 
-    async fetchSettings() {
-      try {
-        // const response = await this.$api.get('/student/settings')
-        // this.emailSettings = response.data.email
-        // this.notificationChannels = response.data.notificationChannels
-      } catch (error) {
-        this.showToast('error', 'Failed to load settings')
-      }
+    handleEscape(event) {
+      if (event.key === 'Escape' && this.isSidebarOpen) this.closeSidebar()
     }
   },
   mounted() {
-    const savedTab = localStorage.getItem('settingsActiveTab')
+    const authStore = useAuthStore()
+    if (authStore.user) this.user = { ...this.user, ...authStore.user }
+    const savedTab = localStorage.getItem('edumatch_student_settings_tab')
     const availableTabs = this.settingsTabs.map((tab) => tab.id)
-    if (savedTab && availableTabs.includes(savedTab)) {
-      this.activeTab = savedTab
-    } else {
-      this.activeTab = 'notification-settings'
-    }
-
-    this.emailSettings.primaryEmail = this.user.email
-    this.fetchSettings()
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.showConfirmationModal) {
-        this.showConfirmationModal = false
-      }
-      if (e.key === 'Escape' && this.isSidebarOpen) {
-        this.closeSidebar()
-      }
-    })
+    this.activeTab = savedTab && availableTabs.includes(savedTab) ? savedTab : 'notifications'
+    this.loadPreferences()
+    if (this.activeTab === 'security') this.loadActiveSessions()
+    document.addEventListener('keydown', this.handleEscape)
   },
   beforeUnmount() {
-    document.removeEventListener('keydown', this.closeSidebar)
+    document.removeEventListener('keydown', this.handleEscape)
   }
 }
 </script>
@@ -1537,5 +1674,135 @@ export default {
   .security-password-card .password-form-side {
     padding: 0.85rem;
   }
+}
+
+.settings-eyebrow {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #365b0d;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.student-settings-workspace {
+  display: grid;
+  grid-template-columns: minmax(210px, 250px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.student-settings-nav {
+  position: sticky;
+  top: 1rem;
+  padding: 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.settings-nav-heading { padding: 0.35rem 0.55rem 0.8rem; }
+.settings-nav-heading strong, .settings-nav-heading small { display: block; }
+.settings-nav-heading strong { color: #0f172a; }
+.settings-nav-heading small { margin-top: 0.2rem; color: #64748b; }
+
+.settings-nav-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.settings-nav-item:hover { background: #f5f8f0; color: #1e4307; }
+.settings-nav-item.active { background: #edf5e2; color: #1e4307; font-weight: 700; }
+.settings-nav-item > .fa-chevron-right { font-size: 0.68rem; }
+
+.student-settings-content { min-width: 0; display: grid; gap: 1rem; }
+.section-heading { display: flex; align-items: flex-start; gap: 0.8rem; }
+.section-icon, .session-icon {
+  width: 42px; height: 42px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px; color: #fff; background: linear-gradient(135deg, #1e4307, #5f7418);
+}
+.preference-list { margin-top: 1rem; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+.preference-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; background: #fff; }
+.preference-row + .preference-row { border-top: 1px solid #e2e8f0; }
+.preference-row strong, .preference-row small { display: block; }
+.preference-row strong { color: #1e293b; font-size: 0.9rem; }
+.preference-row small { margin-top: 0.2rem; color: #64748b; line-height: 1.4; }
+.settings-toggle-input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: #365b0d; }
+.inline-setting { margin-top: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; }
+.inline-setting label { color: #1e293b; font-weight: 700; }
+.inline-setting select { min-width: 170px; padding: 0.65rem; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #1e293b; }
+.panel-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; }
+.panel-actions small { color: #64748b; }
+.panel-actions .btn, .sessions-header .btn, .session-item .btn, .privacy-card .btn { display: inline-flex; align-items: center; gap: 0.45rem; }
+
+.theme-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+.theme-option { display: flex; align-items: center; gap: 0.7rem; padding: 0.9rem; border: 1px solid #dbe3ec; border-radius: 14px; background: #fff; color: #475569; text-align: left; cursor: pointer; }
+.theme-option > i { font-size: 1.15rem; }
+.theme-option strong, .theme-option small { display: block; }
+.theme-option small { margin-top: 0.15rem; color: #64748b; }
+.theme-option.active { border-color: #5f7418; background: #f2f7e9; color: #1e4307; box-shadow: 0 0 0 3px rgba(95, 116, 24, 0.12); }
+.compact-list { margin-top: 1rem; }
+
+.sessions-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.empty-state { margin-top: 1rem; padding: 1rem; border: 1px dashed #cbd5e1; border-radius: 12px; color: #64748b; text-align: center; }
+.error-state { border-color: #fecaca; background: #fff7f7; color: #b91c1c; }
+.session-list { margin-top: 1rem; display: grid; gap: 0.65rem; }
+.session-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.8rem; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; }
+.session-item.current { border-color: #bfd399; background: #f8fbf3; }
+.session-item strong, .session-item small { display: block; }
+.session-item small { margin-top: 0.3rem; color: #64748b; }
+.current-badge { display: inline-flex; margin-left: 0.5rem; padding: 0.15rem 0.45rem; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 0.68rem; font-weight: 700; }
+
+.privacy-grid { display: grid; gap: 0.75rem; margin-top: 1rem; }
+.privacy-card { display: grid; grid-template-columns: 38px 1fr; gap: 0.8rem; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; }
+.privacy-card > i { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 11px; background: #edf5e2; color: #365b0d; }
+.privacy-card h4 { margin: 0; color: #1e293b; }
+.privacy-card p { margin: 0.35rem 0 0; color: #64748b; line-height: 1.55; }
+.privacy-card .btn { margin-top: 0.75rem; }
+.privacy-card-warning { border-color: #fde68a; background: #fffbeb; }
+
+.student-text-large { font-size: 1.08rem; }
+.student-text-larger { font-size: 1.16rem; }
+.student-high-contrast .settings-panel, .student-high-contrast .student-settings-nav, .student-high-contrast .preference-row, .student-high-contrast .privacy-card { border-color: #64748b; }
+.student-reduce-motion *, .student-reduce-motion *::before, .student-reduce-motion *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+.student-theme-dark { color: #e2e8f0; }
+.student-theme-dark .settings-hero, .student-theme-dark .settings-panel, .student-theme-dark .student-settings-nav { background: #152019 !important; border-color: #405348; }
+.student-theme-dark .preference-row, .student-theme-dark .inline-setting, .student-theme-dark .theme-option, .student-theme-dark .session-item, .student-theme-dark .privacy-card, .student-theme-dark .security-card, .student-theme-dark .password-form-side, .student-theme-dark .password-strength-card, .student-theme-dark .password-requirements { background: #1e2b23 !important; border-color: #405348 !important; }
+.student-theme-dark h2, .student-theme-dark h3, .student-theme-dark h4, .student-theme-dark h5, .student-theme-dark strong, .student-theme-dark label, .student-theme-dark .security-field-label > span { color: #f8fafc !important; }
+.student-theme-dark p, .student-theme-dark small, .student-theme-dark .field-help, .student-theme-dark .password-action-note, .student-theme-dark .strength-text { color: #b9c5bd !important; }
+.student-theme-dark input, .student-theme-dark select { background: #111b15 !important; border-color: #506157 !important; color: #f8fafc !important; }
+
+@media (prefers-color-scheme: dark) {
+  .student-dashboard-page:not(.student-theme-light):not(.student-theme-dark) .settings-panel,
+  .student-dashboard-page:not(.student-theme-light):not(.student-theme-dark) .student-settings-nav { border-color: #405348; }
+}
+
+@media (max-width: 900px) {
+  .student-settings-workspace { grid-template-columns: 1fr; }
+  .student-settings-nav { position: static; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.35rem; }
+  .settings-nav-heading { grid-column: 1 / -1; }
+  .settings-nav-item { grid-template-columns: auto 1fr; justify-items: center; text-align: center; }
+  .settings-nav-item > .fa-chevron-right { display: none; }
+}
+
+@media (max-width: 640px) {
+  .student-settings-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .theme-options { grid-template-columns: 1fr; }
+  .panel-actions, .sessions-header, .inline-setting { align-items: stretch; flex-direction: column; }
+  .panel-actions .btn, .inline-setting select { width: 100%; }
+  .session-item { grid-template-columns: auto minmax(0, 1fr); }
+  .session-item .btn { grid-column: 1 / -1; justify-content: center; }
 }
 </style>
