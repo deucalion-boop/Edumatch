@@ -289,6 +289,7 @@ export default {
       profile: {}
     })
     const studentAppearance = reactive({ theme: 'system', textSize: 'normal', highContrast: false, reduceMotion: false })
+    const studentColorScheme = window.matchMedia?.('(prefers-color-scheme: dark)')
     const systemDark = ref(false)
     const studentAppearanceClasses = computed(() => ({
       'student-theme-dark': studentAppearance.theme === 'dark' || (studentAppearance.theme === 'system' && systemDark.value),
@@ -301,7 +302,16 @@ export default {
 
     const applyStudentPreferences = (settings = {}) => {
       if (settings.appearance && typeof settings.appearance === 'object') Object.assign(studentAppearance, settings.appearance)
-      systemDark.value = studentAppearance.theme === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches === true
+      systemDark.value = studentAppearance.theme === 'system' && studentColorScheme?.matches === true
+      const resolvedTheme = studentAppearance.theme === 'system'
+        ? (studentColorScheme?.matches ? 'dark' : 'light')
+        : studentAppearance.theme
+      document.documentElement.dataset.studentTheme = studentAppearance.theme
+      document.documentElement.dataset.studentThemeResolved = resolvedTheme
+    }
+
+    const handleStudentColorSchemeChange = () => {
+      if (studentAppearance.theme === 'system') applyStudentPreferences()
     }
 
     const loadStudentPreferences = async () => {
@@ -873,6 +883,7 @@ export default {
       fetchUserData()
       loadStudentPreferences()
       window.addEventListener('edumatch-student-preferences-changed', handleStudentPreferencesChanged)
+      studentColorScheme?.addEventListener('change', handleStudentColorSchemeChange)
       maybeAutoStartTour()
       syncMobileMenuBodyState()
     })
@@ -884,6 +895,7 @@ export default {
       window.removeEventListener('scroll', handleTourViewportChange, true)
       window.removeEventListener('resize', syncMobileMenuBodyState)
       window.removeEventListener('edumatch-student-preferences-changed', handleStudentPreferencesChanged)
+      studentColorScheme?.removeEventListener('change', handleStudentColorSchemeChange)
       closeTour({ markSeen: false })
       document.body.classList.remove('student-mobile-menu-open')
     })
@@ -950,13 +962,139 @@ body.student-dashboard .student-dashboard.no-route-sidebar .student-main {
 .student-dashboard.student-reduce-motion *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 .student-dashboard.student-high-contrast { --border-color: #475569; }
 .student-dashboard.student-high-contrast :is(.section-card, .settings-panel, .student-card, .dashboard-card, table, input, select, textarea) { border-color: #475569 !important; }
-.student-dashboard.student-theme-dark { color-scheme: dark; color: #e2e8f0; background: #0f1712; }
-.student-dashboard.student-theme-dark .student-main,
-.student-dashboard.student-theme-dark .student-dashboard-page { background: #0f1712 !important; }
-.student-dashboard.student-theme-dark :is(.top-header, .section-card, .settings-panel, .student-card, .dashboard-card, .stat-card, .lesson-card, .activity-card, .profile-card, .notification-dropdown) { background-color: #18221c !important; border-color: #405348 !important; color: #e2e8f0 !important; }
-.student-dashboard.student-theme-dark :is(h1, h2, h3, h4, h5, strong, label, .detail-value) { color: #f8fafc !important; }
-.student-dashboard.student-theme-dark :is(p, small, .header-subtitle, .detail-label) { color: #b9c5bd !important; }
-.student-dashboard.student-theme-dark :is(input, select, textarea) { background: #101813 !important; border-color: #506157 !important; color: #f8fafc !important; }
+html[data-student-theme-resolved='dark'],
+html[data-student-theme-resolved='dark'] body.student-dashboard {
+  color-scheme: dark;
+  background: #0b120e;
+}
+
+.student-dashboard.student-theme-dark {
+  --background-color: #0b120e;
+  --surface-color: #162019;
+  --text-primary: #f1f5f2;
+  --text-secondary: #bdc9c0;
+  --text-tertiary: #91a096;
+  --border-color: #34483b;
+  --shadow-color: rgba(0, 0, 0, 0.32);
+  --primary-lighter: #202d24;
+  --bg-light: #101913;
+  --bg-hover: #26362b;
+  color-scheme: dark;
+  color: var(--text-primary);
+  background: var(--background-color);
+}
+
+.student-dashboard.student-theme-dark :is(.student-main, .student-dashboard-page, .premium-dashboard, .announcement-page) {
+  background-color: var(--background-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.student-dashboard.student-theme-dark :is(.student-sidebar, .top-header, .notification-dropdown, .account-menu-dropdown) {
+  background: #121c16 !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3) !important;
+}
+
+.student-dashboard.student-theme-dark :is(.sidebar-header, .sidebar-footer) {
+  border-color: var(--border-color) !important;
+}
+
+.student-dashboard.student-theme-dark :is(.nav-link, .nav-sublink, .account-menu-item, .notification-dropdown-clear, .notification-dropdown-close) {
+  color: var(--text-secondary) !important;
+}
+
+.student-dashboard.student-theme-dark :is(.nav-link:hover, .nav-link.active, .nav-sublink:hover, .nav-sublink.active, .account-menu-item:hover) {
+  background-color: #223128 !important;
+  border-color: #496050 !important;
+  color: #ffffff !important;
+}
+
+.student-dashboard.student-theme-dark :is(.nav-link i, .nav-sublink i, .user-avatar) {
+  background-color: #202d24 !important;
+  border-color: #425749 !important;
+}
+
+.student-dashboard.student-theme-dark .premium-dashboard {
+  --canvas: #0b120e !important;
+  --ink: #f1f5f2 !important;
+  --muted: #adbbb1 !important;
+  --line: #34483b !important;
+  --white: #ffffff !important;
+}
+
+.student-dashboard.student-theme-dark :is(
+  .section-card,
+  .settings-panel,
+  .student-settings-nav,
+  .student-card,
+  .dashboard-card,
+  .stat-card,
+  .lesson-card,
+  .activity-card,
+  .profile-card,
+  .profile-details-card,
+  .activity-response-shell,
+  .classes-panel,
+  .lessons-panel,
+  .announcement-card,
+  .state-card,
+  .grades-stat-card,
+  .grades-performance-card,
+  .grades-table-wrap,
+  .pathway-progress-card,
+  .pathway-stat-card,
+  .academic-progress-overview,
+  .subject-performance-card,
+  .recommendation-ranking-section,
+  .recommendation-highlight-grid article,
+  .modal-content,
+  .dialog-content
+) {
+  background-color: #162019 !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+.student-dashboard.student-theme-dark :is(.grades-premium-header, .pathway-premium-header, .section-header, .page-header, table th, table td) {
+  border-color: var(--border-color) !important;
+}
+
+.student-dashboard.student-theme-dark :is(table, thead, tbody, tr, td, th) {
+  color: var(--text-primary);
+}
+
+.student-dashboard.student-theme-dark :is(table th, .table-header) {
+  background-color: #101913 !important;
+}
+
+.student-dashboard.student-theme-dark :is(table tr:hover td, .table-row:hover) {
+  background-color: #202d24 !important;
+}
+
+.student-dashboard.student-theme-dark :is(h1, h2, h3, h4, h5, h6, strong, label, .detail-value, .section-title) {
+  color: #f8fafc !important;
+}
+
+.student-dashboard.student-theme-dark :is(p, small, .header-subtitle, .detail-label, .section-subtitle, .field-help) {
+  color: #b9c5bd !important;
+}
+
+.student-dashboard.student-theme-dark :is(input, select, textarea) {
+  background: #0e1711 !important;
+  border-color: #506157 !important;
+  color: #f8fafc !important;
+}
+
+.student-dashboard.student-theme-dark :is(input, textarea)::placeholder {
+  color: #839188 !important;
+}
+
+.student-dashboard.student-theme-dark :is(.preference-row, .inline-setting, .theme-option, .session-item, .privacy-card, .account-request-form) {
+  background: #1b2820 !important;
+  border-color: var(--border-color) !important;
+}
 
 body.student-dashboard .dashboard-home-btn {
   display: inline-flex !important;

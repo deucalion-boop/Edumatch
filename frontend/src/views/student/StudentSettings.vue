@@ -563,6 +563,9 @@ export default {
       document.documentElement.dataset.studentTextSize = this.appearance.textSize
       document.documentElement.classList.toggle('student-reduce-motion-enabled', this.appearance.reduceMotion)
       document.documentElement.classList.toggle('student-high-contrast-enabled', this.appearance.highContrast)
+      window.dispatchEvent(new CustomEvent('edumatch-student-preferences-changed', {
+        detail: { appearance: { ...this.appearance } }
+      }))
     },
 
     checkPasswordStrength() {
