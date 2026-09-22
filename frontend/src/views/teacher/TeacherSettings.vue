@@ -521,7 +521,10 @@ const settingsAuthConfig = () => ({ headers: { Authorization: `Bearer ${authStor
 const applyTeacherTheme = (theme) => {
   const normalizedTheme = themeOptions.some((option) => option.value === theme) ? theme : 'system'
   selectedTheme.value = normalizedTheme
-  document.documentElement.dataset.teacherTheme = normalizedTheme
+  document.documentElement.dataset.teacherThemePreference = normalizedTheme
+  document.documentElement.dataset.teacherTheme = normalizedTheme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : normalizedTheme
 }
 const selectTheme = (theme) => {
   applyTeacherTheme(theme)
