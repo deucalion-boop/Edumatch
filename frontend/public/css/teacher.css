@@ -3758,6 +3758,42 @@ body.teacher-dashboard .btn-success {
     background-image: none !important;
 }
 
+:root[data-teacher-theme='dark'] {
+    color-scheme: dark;
+    --background-color: #0f172a;
+    --surface-color: #172033;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --border-color: #334155;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --sidebar-bg: #111827;
+    --sidebar-border: #334155;
+    --sidebar-hover: #1e293b;
+    --sidebar-active-bg: #263449;
+    --primary-lighter: #172033;
+    --bg-hover: #1e293b;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root[data-teacher-theme='system'] {
+        color-scheme: dark;
+        --background-color: #0f172a;
+        --surface-color: #172033;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-tertiary: #94a3b8;
+        --border-color: #334155;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --sidebar-bg: #111827;
+        --sidebar-border: #334155;
+        --sidebar-hover: #1e293b;
+        --sidebar-active-bg: #263449;
+        --primary-lighter: #172033;
+        --bg-hover: #1e293b;
+    }
+}
+
 body.teacher-dashboard .btn-primary:hover,
 body.teacher-dashboard .btn-success:hover {
     background: #3f702b !important;

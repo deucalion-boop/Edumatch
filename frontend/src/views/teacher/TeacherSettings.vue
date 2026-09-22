@@ -85,6 +85,105 @@
         </section>
 
         <div class="settings-grid">
+          <section class="settings-panel preference-panel" data-tour="settings-notifications-section">
+            <div class="panel-header settings-section-heading">
+              <span class="settings-section-icon"><i class="fas fa-bell"></i></span>
+              <div>
+                <h3>Notification Preferences</h3>
+                <p>Choose which teaching updates should get your attention on this device.</p>
+              </div>
+            </div>
+            <div class="preference-list">
+              <label class="preference-row">
+                <span><strong>Enrollment requests</strong><small>Notify me when a student requests to join a class.</small></span>
+                <input v-model="notificationPreferences.enrollmentRequests" type="checkbox" class="settings-toggle-input">
+              </label>
+              <label class="preference-row">
+                <span><strong>Assessment submissions</strong><small>Notify me when students submit assessments.</small></span>
+                <input v-model="notificationPreferences.assessmentSubmissions" type="checkbox" class="settings-toggle-input">
+              </label>
+              <label class="preference-row">
+                <span><strong>Upcoming deadlines</strong><small>Show reminders for lessons and assessment deadlines.</small></span>
+                <input v-model="notificationPreferences.deadlineReminders" type="checkbox" class="settings-toggle-input">
+              </label>
+              <label class="preference-row">
+                <span><strong>In-app notifications</strong><small>Display notifications inside EduMatch.</small></span>
+                <input v-model="notificationPreferences.inApp" type="checkbox" class="settings-toggle-input">
+              </label>
+            </div>
+            <div class="preference-actions">
+              <button type="button" class="btn btn-primary settings-save-button" @click="savePreferences">
+                <i class="fas fa-save"></i> Save preferences
+              </button>
+            </div>
+          </section>
+
+          <section class="settings-panel appearance-panel" data-tour="settings-appearance-section">
+            <div class="panel-header settings-section-heading">
+              <span class="settings-section-icon"><i class="fas fa-palette"></i></span>
+              <div>
+                <h3>Appearance</h3>
+                <p>Select how the Teacher workspace looks on this device.</p>
+              </div>
+            </div>
+            <div class="theme-options" role="radiogroup" aria-label="Teacher workspace theme">
+              <button
+                v-for="option in themeOptions"
+                :key="option.value"
+                type="button"
+                class="theme-option"
+                :class="{ active: selectedTheme === option.value }"
+                role="radio"
+                :aria-checked="selectedTheme === option.value"
+                @click="selectTheme(option.value)"
+              >
+                <span class="theme-option-preview" :class="`theme-preview-${option.value}`"><i :class="option.icon"></i></span>
+                <span><strong>{{ option.label }}</strong><small>{{ option.description }}</small></span>
+              </button>
+            </div>
+          </section>
+
+          <section class="settings-panel sessions-panel" data-tour="settings-sessions-section">
+            <div class="panel-header sessions-panel-header">
+              <div class="settings-section-heading">
+                <span class="settings-section-icon"><i class="fas fa-laptop"></i></span>
+                <div>
+                  <h3>Active Sessions</h3>
+                  <p>Review devices signed in to your account and remove access you do not recognize.</p>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline" :disabled="isLoadingSessions" @click="loadActiveSessions">
+                <i class="fas" :class="isLoadingSessions ? 'fa-spinner fa-spin' : 'fa-rotate'"></i>
+                Refresh
+              </button>
+            </div>
+            <div v-if="isLoadingSessions" class="sessions-state"><i class="fas fa-spinner fa-spin"></i> Loading sessions...</div>
+            <div v-else-if="sessionError" class="sessions-state sessions-state-error">{{ sessionError }}</div>
+            <div v-else-if="activeSessions.length === 0" class="sessions-state">No active sessions were found.</div>
+            <div v-else class="session-list">
+              <article v-for="session in sortedSessions" :key="session.id" class="session-item" :class="{ current: session.current }">
+                <span class="session-device-icon"><i class="fas" :class="session.current ? 'fa-laptop' : 'fa-display'"></i></span>
+                <div class="session-copy">
+                  <div class="session-title-line">
+                    <strong>{{ formatSessionDevice(session.userAgent) }}</strong>
+                    <span v-if="session.current" class="current-session-badge">Current device</span>
+                  </div>
+                  <small>{{ session.ipAddress || 'Unknown IP' }} · Last active {{ formatSessionTime(session.lastSeenAt || session.createdAt) }}</small>
+                </div>
+                <button v-if="!session.current" type="button" class="btn btn-outline session-revoke-button" :disabled="revokingSessionId === session.id" @click="revokeActiveSession(session.id)">
+                  {{ revokingSessionId === session.id ? 'Removing...' : 'Log out' }}
+                </button>
+              </article>
+            </div>
+            <div class="sessions-footer">
+              <p>This action signs out every device, including this one.</p>
+              <button type="button" class="btn danger-action" :disabled="isLoggingOutAll" @click="logoutAllDevices">
+                <i class="fas fa-right-from-bracket"></i>
+                {{ isLoggingOutAll ? 'Signing out...' : 'Log out all devices' }}
+              </button>
+            </div>
+          </section>
+
           <section class="settings-panel teacher-security-panel" data-tour="settings-security-section">
             <div class="panel-header teacher-security-panel-header">
               <div class="teacher-security-panel-copy">
@@ -278,6 +377,8 @@ const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher
 const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_v3_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
+const TEACHER_PREFERENCES_KEY = 'edumatch_teacher_settings_v1'
+const TEACHER_THEME_KEY = 'edumatch_teacher_theme'
 
 const {
   notifications,
@@ -297,6 +398,23 @@ const settings = reactive({
   twoFactor: false,
   passwordUpdatedAt: 'Not set'
 })
+const notificationPreferences = reactive({
+  enrollmentRequests: true,
+  assessmentSubmissions: true,
+  deadlineReminders: true,
+  inApp: true,
+})
+const themeOptions = [
+  { value: 'light', label: 'Light', description: 'Bright and clear', icon: 'fas fa-sun' },
+  { value: 'system', label: 'System', description: 'Match this device', icon: 'fas fa-desktop' },
+  { value: 'dark', label: 'Dark', description: 'Comfortable in low light', icon: 'fas fa-moon' },
+]
+const selectedTheme = ref('system')
+const activeSessions = ref([])
+const isLoadingSessions = ref(false)
+const sessionError = ref('')
+const revokingSessionId = ref('')
+const isLoggingOutAll = ref(false)
 const profileForm = reactive({
   displayName: '',
   email: '',
@@ -357,6 +475,115 @@ const teacherAvatarUrl = computed(() => {
   if (profileImage) return profileImage
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName.value)}&background=334155&color=fff`
 })
+const sortedSessions = computed(() => [...activeSessions.value].sort((left, right) => {
+  if (left.current !== right.current) return left.current ? -1 : 1
+  const leftTime = Date.parse(left.lastSeenAt || left.createdAt) || 0
+  const rightTime = Date.parse(right.lastSeenAt || right.createdAt) || 0
+  return rightTime - leftTime
+}))
+
+const resolveSettingsApiBaseUrl = () => {
+  const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+  if (!configured) return '/api'
+  return configured.endsWith('/api') ? configured : `${configured}/api`
+}
+const settingsAuthConfig = () => ({ headers: { Authorization: `Bearer ${authStore.token}` } })
+const applyTeacherTheme = (theme) => {
+  const normalizedTheme = themeOptions.some((option) => option.value === theme) ? theme : 'system'
+  selectedTheme.value = normalizedTheme
+  document.documentElement.dataset.teacherTheme = normalizedTheme
+}
+const selectTheme = (theme) => {
+  applyTeacherTheme(theme)
+  try { localStorage.setItem(TEACHER_THEME_KEY, selectedTheme.value) } catch (_error) {}
+  showToast('success', `${themeOptions.find((option) => option.value === selectedTheme.value)?.label || 'System'} theme applied.`)
+}
+const loadPreferences = () => {
+  try {
+    const savedPreferences = JSON.parse(localStorage.getItem(TEACHER_PREFERENCES_KEY) || '{}')
+    Object.keys(notificationPreferences).forEach((key) => {
+      if (typeof savedPreferences[key] === 'boolean') notificationPreferences[key] = savedPreferences[key]
+    })
+    applyTeacherTheme(localStorage.getItem(TEACHER_THEME_KEY) || 'system')
+  } catch (_error) {
+    applyTeacherTheme('system')
+  }
+}
+const savePreferences = () => {
+  try {
+    localStorage.setItem(TEACHER_PREFERENCES_KEY, JSON.stringify({ ...notificationPreferences }))
+    window.dispatchEvent(new CustomEvent('edumatch-teacher-preferences-changed'))
+    showToast('success', 'Notification preferences saved on this device.')
+  } catch (_error) {
+    showToast('error', 'Unable to save notification preferences.')
+  }
+}
+const formatSessionDevice = (userAgent) => {
+  const agent = String(userAgent || '')
+  const browsers = [
+    [/Edg(?:e|A|iOS)?\/(\d+)/, 'Edge'],
+    [/OPR\/(\d+)/, 'Opera'],
+    [/SamsungBrowser\/(\d+)/, 'Samsung Internet'],
+    [/(?:Chrome|CriOS)\/(\d+)/, 'Chrome'],
+    [/(?:Firefox|FxiOS)\/(\d+)/, 'Firefox'],
+    [/Version\/(\d+).*Safari/, 'Safari'],
+  ]
+  const match = browsers.find(([pattern]) => pattern.test(agent))
+  const browserName = match ? `${match[1]} ${agent.match(match[0])?.[1] || ''}`.trim() : 'Unknown browser'
+  const platform = /iPad/.test(agent) ? 'iPad' : /iPhone|iPod/.test(agent) ? 'iPhone'
+    : /Android/.test(agent) ? 'Android' : /Windows/.test(agent) ? 'Windows'
+      : /Macintosh|Mac OS X/.test(agent) ? 'macOS' : /Linux/.test(agent) ? 'Linux' : ''
+  return platform ? `${browserName} on ${platform}` : browserName
+}
+const formatSessionTime = (value) => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'unknown'
+  return new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+}
+const loadActiveSessions = async () => {
+  if (!authStore.token || isLoadingSessions.value) return
+  isLoadingSessions.value = true
+  sessionError.value = ''
+  try {
+    const response = await axios.get(`${resolveSettingsApiBaseUrl()}/auth/sessions`, settingsAuthConfig())
+    activeSessions.value = Array.isArray(response.data?.sessions) ? response.data.sessions : []
+  } catch (error) {
+    sessionError.value = error.response?.data?.message || 'Unable to load active sessions.'
+  } finally {
+    isLoadingSessions.value = false
+  }
+}
+const revokeActiveSession = async (sessionId) => {
+  if (!sessionId || revokingSessionId.value) return
+  revokingSessionId.value = sessionId
+  try {
+    await axios.delete(`${resolveSettingsApiBaseUrl()}/auth/sessions/${encodeURIComponent(sessionId)}`, settingsAuthConfig())
+    activeSessions.value = activeSessions.value.filter((session) => session.id !== sessionId)
+    showToast('success', 'The selected device has been logged out.')
+  } catch (error) {
+    showToast('error', error.response?.data?.message || 'Unable to log out that device.')
+  } finally {
+    revokingSessionId.value = ''
+  }
+}
+const logoutAllDevices = async () => {
+  if (isLoggingOutAll.value) return
+  const confirmed = window.confirm('Log out every device, including this one? You will need to sign in again.')
+  if (!confirmed) return
+  isLoggingOutAll.value = true
+  try {
+    const otherSessionIds = activeSessions.value.filter((session) => !session.current).map((session) => session.id)
+    await Promise.all(otherSessionIds.map((sessionId) => axios.delete(
+      `${resolveSettingsApiBaseUrl()}/auth/sessions/${encodeURIComponent(sessionId)}`,
+      settingsAuthConfig(),
+    )))
+    authStore.logout()
+    await router.push('/auth/login')
+  } catch (error) {
+    showToast('error', error.response?.data?.message || 'Unable to log out all devices.')
+    isLoggingOutAll.value = false
+  }
+}
 
 const isActiveRoute = (path) => route.path === path || route.path.startsWith(`${path}/`)
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
@@ -794,6 +1021,8 @@ onMounted(() => {
   profileForm.displayName = settings.fullName
   profileForm.email = settings.email
   profileForm.contactNumber = settings.contactNumber
+  loadPreferences()
+  loadActiveSessions()
   maybeAutoStartTour()
   syncMobileMenuBodyState()
 })
@@ -1546,6 +1775,214 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
 }
 
+.preference-panel,
+.appearance-panel {
+  align-content: start;
+}
+
+.settings-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.settings-section-icon,
+.session-device-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f8f2f;
+  background: #eef8e9;
+  border: 1px solid #cfe5c3;
+}
+
+.preference-list,
+.theme-options,
+.session-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.preference-row,
+.theme-option,
+.session-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.preference-row {
+  padding: 0.8rem 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.preference-row span,
+.theme-option > span:last-child,
+.session-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.preference-row strong,
+.theme-option strong,
+.session-copy strong {
+  color: #1e293b;
+  font-size: 0.86rem;
+}
+
+.preference-row small,
+.theme-option small,
+.session-copy small,
+.sessions-footer p {
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.settings-toggle-input {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  accent-color: #5b9b3c;
+}
+
+.preference-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-save-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #5b9b3c !important;
+  border-color: #5b9b3c !important;
+}
+
+.theme-option {
+  width: 100%;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.theme-option:hover,
+.theme-option.active {
+  border-color: #8fbd76;
+  background: #f3faef;
+  transform: translateY(-1px);
+}
+
+.theme-option-preview {
+  width: 46px;
+  height: 38px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cbd5e1;
+}
+
+.theme-preview-light { background: #ffffff; color: #f59e0b; }
+.theme-preview-system { background: linear-gradient(135deg, #ffffff 50%, #1e293b 50%); color: #69aa47; }
+.theme-preview-dark { background: #172033; color: #cbd5e1; }
+
+.sessions-panel,
+.teacher-security-panel {
+  grid-column: 1 / -1;
+}
+
+.sessions-panel-header,
+.sessions-footer,
+.session-item,
+.session-title-line {
+  display: flex;
+  align-items: center;
+}
+
+.sessions-panel-header,
+.sessions-footer {
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.session-item {
+  padding: 0.8rem 0.9rem;
+  gap: 0.8rem;
+}
+
+.session-item.current {
+  border-color: #b9dca7;
+  background: #f5fbf2;
+}
+
+.session-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-title-line {
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.current-session-badge {
+  border-radius: 999px;
+  padding: 0.18rem 0.5rem;
+  color: #3f7627;
+  background: #e7f4df;
+  font-size: 0.67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sessions-state {
+  padding: 1rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  color: #64748b;
+  text-align: center;
+}
+
+.sessions-state-error { color: #b91c1c; border-color: #fecaca; background: #fff7f7; }
+.sessions-footer { border-top: 1px solid #e2e8f0; padding-top: 0.9rem; }
+.sessions-footer p { margin: 0; }
+.danger-action { background: #fff1f2; border: 1px solid #fecdd3; color: #be123c; }
+.danger-action:hover:not(:disabled) { background: #ffe4e6; }
+.session-revoke-button { margin-left: auto; }
+
+:global(html[data-teacher-theme='dark']) .settings-panel,
+:global(html[data-teacher-theme='dark']) .preference-row,
+:global(html[data-teacher-theme='dark']) .theme-option,
+:global(html[data-teacher-theme='dark']) .session-item,
+:global(html[data-teacher-theme='dark']) .teacher-security-card,
+:global(html[data-teacher-theme='dark']) .teacher-security-side,
+:global(html[data-teacher-theme='dark']) .teacher-security-strength-card,
+:global(html[data-teacher-theme='dark']) .teacher-security-rules-card {
+  background: #172033;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+:global(html[data-teacher-theme='dark']) .settings-panel h3,
+:global(html[data-teacher-theme='dark']) .settings-panel strong,
+:global(html[data-teacher-theme='dark']) .teacher-security-field-label > span,
+:global(html[data-teacher-theme='dark']) .teacher-security-side-header h5 {
+  color: #f8fafc;
+}
+
 .btn:focus-visible,
 .password-toggle:focus-visible {
   outline: none;
@@ -1597,6 +2034,18 @@ onBeforeUnmount(() => {
   .teacher-security-card,
   .teacher-security-side {
     padding: 0.85rem;
+  }
+
+  .sessions-panel-header,
+  .sessions-footer,
+  .session-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .session-revoke-button,
+  .danger-action {
+    width: 100%;
   }
 }
 .teacher-security-form input[aria-invalid="true"] { border-color: #dc2626; }

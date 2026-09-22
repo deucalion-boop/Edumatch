@@ -18,6 +18,22 @@ export function useUserNotifications(options = {}) {
   let disposed = false
   let mutating = false
   const config = () => ({ headers: { Authorization: 'Bearer ' + authStore.token } })
+  const applyTeacherPreferences = (items) => {
+    if (String(authStore.user?.role || '').toLowerCase() !== 'teacher') return items
+    try {
+      const preferences = JSON.parse(localStorage.getItem('edumatch_teacher_settings_v1') || '{}')
+      if (preferences.inApp === false) return []
+      return items.filter((notification) => {
+        const type = String(notification?.type || '').toLowerCase()
+        if (type === 'enrollment_request') return preferences.enrollmentRequests !== false
+        if (['student_submission', 'grading_queue'].includes(type)) return preferences.assessmentSubmissions !== false
+        if (['deadline_missed', 'deadline_upcoming_teacher'].includes(type)) return preferences.deadlineReminders !== false
+        return true
+      })
+    } catch (_error) {
+      return items
+    }
+  }
   const fetchNotifications = async ({ silent = false } = {}) => {
     if (disposed || mutating || !authStore.token) return
     const requestVersion = ++version
@@ -25,8 +41,9 @@ export function useUserNotifications(options = {}) {
     try {
       const response = await axios.get(resolveApiBaseUrl() + '/notifications', { ...config(), params: { limit: options.limit || 8 } })
       if (disposed || requestVersion !== version) return
-      notifications.value = Array.isArray(response.data?.notifications) ? response.data.notifications : []
-      unreadCount.value = Number(response.data?.unreadCount || 0)
+      const receivedNotifications = Array.isArray(response.data?.notifications) ? response.data.notifications : []
+      notifications.value = applyTeacherPreferences(receivedNotifications)
+      unreadCount.value = notifications.value.filter((notification) => !notification.isViewed).length
       notificationError.value = ''
     } catch (error) {
       console.error('Failed to refresh notifications:', error)
@@ -74,10 +91,12 @@ export function useUserNotifications(options = {}) {
     if (await mutate('/notifications', 'delete', () => { notifications.value = []; unreadCount.value = 0 })) closeNotificationsPanel()
   }
   const refreshVisible = () => { if (!document.hidden) fetchNotifications({ silent: true }) }
+  const refreshPreferences = () => { fetchNotifications({ silent: true }) }
   onMounted(() => {
     fetchNotifications()
     pollTimer = window.setInterval(refreshVisible, Math.max(5000, Number(options.pollIntervalMs || 15000)))
     window.addEventListener('focus', refreshVisible)
+    window.addEventListener('edumatch-teacher-preferences-changed', refreshPreferences)
     document.addEventListener('visibilitychange', refreshVisible)
   })
   onBeforeUnmount(() => {
@@ -85,6 +104,7 @@ export function useUserNotifications(options = {}) {
     ++version
     window.clearInterval(pollTimer)
     window.removeEventListener('focus', refreshVisible)
+    window.removeEventListener('edumatch-teacher-preferences-changed', refreshPreferences)
     document.removeEventListener('visibilitychange', refreshVisible)
   })
   return { notifications, unreadCount, isLoading, notificationError, showNotificationsPanel, fetchNotifications, markNotificationViewed, markAllViewed, clearAllNotifications, toggleNotificationsPanel, closeNotificationsPanel }
