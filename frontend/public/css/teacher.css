@@ -6682,3 +6682,380 @@ html[data-teacher-theme='dark'] body.teacher-dashboard .calendar-filter-btn i {
     opacity: 1 !important;
     filter: none !important;
 }
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .record-card-title h4 {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .record-type-label {
+    color: #b9e3a3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .record-type-label i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .record-card-date-group {
+    background: #111827 !important;
+    border: 1px solid #334155 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .record-card-date-group > i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .record-date-label {
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .record-card-date {
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .lesson-manage-actions button {
+    background: #1b2e22 !important;
+    border-color: #4f8f2f !important;
+    color: #c7efb3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .lesson-manage-actions button i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .lesson-manage-actions button:hover {
+    background: #263d2b !important;
+    border-color: #69aa47 !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .attachment-row {
+    background: #111827 !important;
+    border-color: #475569 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .attachment-row:hover {
+    background: #1e293b !important;
+    border-color: #64748b !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .file-name {
+    color: #f1f5f9 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .attachment-icon {
+    background: #263449 !important;
+    border: 1px solid #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .attachment-icon.file-pdf {
+    background: #3f1723 !important;
+    border-color: #881337 !important;
+    color: #fb7185 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .attachment-icon i {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .file-type {
+    background: #263449 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .file-type.file-pdf {
+    background: #3f1723 !important;
+    color: #fda4af !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-card-header {
+    border-color: #475569 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-kind-icon {
+    background: #1b2e22 !important;
+    border: 1px solid #4f8f2f !important;
+    color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-kind-quiz .assessment-kind-icon {
+    background: #172554 !important;
+    border-color: #1d4ed8 !important;
+    color: #93c5fd !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-kind-activity .assessment-kind-icon {
+    background: #422006 !important;
+    border-color: #b45309 !important;
+    color: #fbbf24 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-kind-icon i {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-type-label {
+    color: #b9e3a3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-kind-quiz .record-type-label {
+    color: #93c5fd !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-kind-activity .record-type-label {
+    color: #fbbf24 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-card-title h4 {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-card-title p {
+    color: #b7c5d8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-card-title p i {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-card-date-group {
+    background: #111827 !important;
+    border: 1px solid #334155 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-card-date-group > i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-date-label {
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .record-card-date {
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .meta-item-icon {
+    background: #263449 !important;
+    border: 1px solid #475569 !important;
+    color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .meta-item-icon i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .meta-item-copy span {
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .meta-item-copy strong {
+    color: #f1f5f9 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-results-heading-icon,
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .inline-empty-icon {
+    background: #263449 !important;
+    border: 1px solid #475569 !important;
+    color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel :is(
+    .assessment-results-heading-icon,
+    .inline-empty-icon
+) i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-results-title > div > span {
+    color: #f1f5f9 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-results-title p {
+    color: #b7c5d8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .assessment-results-count {
+    background: #1b2e22 !important;
+    border: 1px solid #4f8f2f !important;
+    color: #c7efb3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessmentsPanel .inline-empty-state {
+    background: #111827 !important;
+    border-color: #475569 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-workspace-hero {
+    background:
+        radial-gradient(circle at 90% 8%, rgb(105 170 71 / 14%), transparent 30%),
+        linear-gradient(135deg, #172033 0%, #1b2e22 100%) !important;
+    border-bottom-color: #3f5b45 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .attendance-workspace-kicker,
+    .attendance-toolbar-kicker,
+    .attendance-legend-title,
+    .attendance-search-field > span,
+    .attendance-filter-field > span,
+    .attendance-bulk-actions > span
+) {
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .section-title,
+    .attendance-toolbar-header-copy h5,
+    .attendance-scope-panel-copy strong,
+    .attendance-date-card-copy strong,
+    .attendance-panel-kicker,
+    .attendance-student-copy strong,
+    .attendance-history-copy strong
+) {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .section-subtitle,
+    .attendance-toolbar-header-copy p,
+    .attendance-scope-panel-copy small,
+    .attendance-date-card-copy small,
+    .attendance-date-helper,
+    .attendance-actions-hint,
+    .attendance-panel-title p,
+    .attendance-roster-results,
+    .attendance-student-email,
+    .attendance-roster-section,
+    .attendance-history-copy small,
+    .attendance-history-count
+) {
+    color: #b7c5d8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-workspace-context span {
+    background: #111827 !important;
+    border-color: #475569 !important;
+    color: #dbe7f5 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-workspace-context span i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-summary-card,
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-summary-card:is(
+    .status-present,
+    .status-late,
+    .status-absent,
+    .status-excused
+) {
+    background: #172033 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-summary-card .attendance-summary-icon {
+    background: #263449 !important;
+    border: 1px solid #475569 !important;
+    color: #b9e3a3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-summary-card .attendance-summary-icon i {
+    color: #b9e3a3 !important;
+    -webkit-text-fill-color: #b9e3a3 !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-summary-card span {
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-summary-card strong,
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-summary-card:is(
+    .status-present,
+    .status-late,
+    .status-absent,
+    .status-excused
+) strong {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-summary-card small {
+    color: #b7c5d8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .attendance-toolbar-card,
+    .attendance-scope-panel,
+    .attendance-toolbar-field-card,
+    .attendance-panel,
+    .attendance-roster-toolbar,
+    .attendance-history-stat,
+    .attendance-history-item
+) {
+    background: #172033 !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-toolbar-note {
+    background: #111827 !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .attendance-date-card-icon,
+    .attendance-panel-title-icon,
+    .attendance-panel-title-icon.history,
+    .attendance-student-avatar
+) {
+    background: #263449 !important;
+    border-color: #475569 !important;
+    color: #86d567 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel :is(
+    .attendance-date-card-icon,
+    .attendance-panel-title-icon,
+    .attendance-student-avatar
+) i {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-student-grade {
+    background: #1b2e22 !important;
+    border: 1px solid #4f8f2f !important;
+    color: #c7efb3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-history-stat span {
+    color: #a7d88c !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-history-stat strong {
+    color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendancePanel .attendance-history-chevron {
+    color: #86d567 !important;
+    -webkit-text-fill-color: #86d567 !important;
+}
