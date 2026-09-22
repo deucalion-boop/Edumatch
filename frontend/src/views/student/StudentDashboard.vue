@@ -289,13 +289,13 @@
             <thead><tr><th>Subject</th><th>P1</th><th>P2</th><th>P3</th><th>Final Grade</th></tr></thead>
             <tbody>
               <tr v-for="record in subjectGradeRecords" :key="record.subjectId">
-                <th><strong>{{ record.subjectName }}</strong><small>{{ record.subjectCode || 'No subject code' }}</small></th>
-                <td v-for="period in ['1st', '2nd', '3rd']" :key="`${record.subjectId}-${period}`">
+                <th data-label="Subject"><strong>{{ record.subjectName }}</strong><small>{{ record.subjectCode || 'No subject code' }}</small></th>
+                <td v-for="period in ['1st', '2nd', '3rd']" :key="`${record.subjectId}-${period}`" :data-label="period === '1st' ? 'P1' : period === '2nd' ? 'P2' : 'P3'">
                   <strong>{{ formatPeriodGrade(gradePeriod(record, period)?.grade) }}</strong>
                   <small v-if="gradePeriod(record, period)?.source?.examType">{{ formatLabel(gradePeriod(record, period).source.examType) }}</small>
                   <small v-else>Awaiting result</small>
                 </td>
-                <td class="is-final"><strong>{{ formatPeriodGrade(record.finalGrade) }}</strong><small>{{ record.finalGrade === null ? `${record.completedPeriods || 0}/3 periods` : 'Complete' }}</small></td>
+                <td class="is-final" data-label="Final Grade"><strong>{{ formatPeriodGrade(record.finalGrade) }}</strong><small>{{ record.finalGrade === null ? `${record.completedPeriods || 0}/3 periods` : 'Complete' }}</small></td>
               </tr>
             </tbody>
           </table>
@@ -4619,6 +4619,48 @@ export default {
 }
 
 /* Focused Personalized Pathway — isolated from the grades view. */
+/* Grade view: phone-first refinements and a non-scrolling record layout. */
+@media (max-width: 640px) {
+  .premium-dashboard .premium-grades-panel { width: 100%; min-width: 0; }
+  .grades-premium-header { gap: 0.8rem; margin-bottom: 1rem; padding-bottom: 1rem; }
+  .grades-premium-header__copy { width: 100%; min-width: 0; }
+  .premium-dashboard .grades-premium-header h1 { font-size: clamp(1.55rem, 8vw, 1.9rem); overflow-wrap: anywhere; }
+  .premium-dashboard .grades-premium-header p { font-size: 0.86rem; }
+  .grades-stat-grid { grid-template-columns: minmax(0, 1fr); }
+  .grades-stat-card,
+  .grades-stat-card.grades-stat-card--skeleton { grid-template-columns: auto minmax(0, 1fr); min-height: 6.4rem; padding: 0.9rem; }
+  .grades-premium-empty { padding: 1.1rem; border-radius: 16px; }
+  .grades-premium-empty__visual { min-height: 8.5rem; margin: -1rem 0; transform: scale(0.7); }
+  .grades-empty-guidance { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: start; text-align: left; }
+  .grades-premium-empty__copy .premium-eyebrow { justify-content: center; }
+
+  .complete-grade-history { padding: 0.85rem; border-radius: 16px; }
+  .complete-grade-history > header { gap: 0.55rem; margin-bottom: 0.75rem; }
+  .complete-grade-history > header > p { max-width: none; font-size: 0.7rem; }
+  .complete-grade-history__table-wrap { overflow: visible; border: 0; border-radius: 0; }
+  .complete-grade-history table,
+  .complete-grade-history tbody,
+  .complete-grade-history tr,
+  .complete-grade-history th,
+  .complete-grade-history td { display: block; width: 100%; min-width: 0; }
+  .complete-grade-history table { min-width: 0; }
+  .complete-grade-history thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .complete-grade-history tbody { display: grid; gap: 0.75rem; }
+  .complete-grade-history tbody tr { overflow: hidden; border: 1px solid #dfe8d8; border-radius: 14px; background: #fff; box-shadow: 0 5px 14px rgba(30, 67, 7, 0.05); }
+  .complete-grade-history tbody th,
+  .complete-grade-history tbody td { position: relative; min-height: 3.25rem; padding: 0.7rem 0.75rem 0.7rem 42%; border-bottom: 1px solid #edf1e9; text-align: right; }
+  .complete-grade-history tbody th { padding-left: 0.75rem; background: #f7faf3; text-align: left; }
+  .complete-grade-history tbody td::before { position: absolute; top: 50%; left: 0.75rem; max-width: 36%; color: #60705c; content: attr(data-label); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.04em; text-align: left; text-transform: uppercase; transform: translateY(-50%); }
+  .complete-grade-history td.is-final { background: #eef8ec; }
+}
+
+@media (max-width: 420px) {
+  .premium-dashboard .premium-grades-panel { padding-inline: 0; }
+  .grades-back-button,
+  .grades-primary-button { min-height: 2.75rem; padding-inline: 0.85rem; }
+  .grades-premium-empty__visual { transform: scale(0.62); }
+}
+
 .premium-dashboard .premium-pathway-panel {
   width: min(100%, 88rem);
   min-height: auto;
