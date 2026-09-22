@@ -4663,7 +4663,8 @@ export default {
 }
 
 .premium-dashboard .premium-pathway-panel {
-  width: min(100%, 88rem);
+  width: 100%;
+  max-width: none;
   min-height: auto;
   margin: 0 auto;
   padding: clamp(1.25rem, 2.2vw, 1.75rem);
