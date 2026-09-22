@@ -6473,3 +6473,92 @@ html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page .pr
 html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page .profile-actions .btn-outline:hover {
     color: #ffffff !important;
 }
+
+/* Settings sidebar and content contrast. */
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-sidebar .settings-sidebar-heading {
+    border-bottom-color: #475569 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-sidebar .settings-sidebar-heading > span {
+    color: #f8fafc !important;
+    -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-sidebar .settings-sidebar-heading > small {
+    color: #b7c5d8 !important;
+    -webkit-text-fill-color: #b7c5d8 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-nav .settings-section-nav-item {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: #dbe7f5 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-nav .settings-section-nav-item > :is(i, span) {
+    color: #dbe7f5 !important;
+    -webkit-text-fill-color: #dbe7f5 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-nav .settings-section-nav-item .settings-nav-chevron {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-nav .settings-section-nav-item:hover {
+    background: #1e293b !important;
+    border-color: #475569 !important;
+    color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-nav .settings-section-nav-item:hover > :is(i, span) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-nav .settings-section-nav-item.active {
+    background: #1b2e22 !important;
+    border-color: #69aa47 !important;
+    color: #c7efb3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-nav .settings-section-nav-item.active > :is(i, span) {
+    color: #c7efb3 !important;
+    -webkit-text-fill-color: #c7efb3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-content .settings-section-icon,
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-content .session-device-icon {
+    background: #263449 !important;
+    border-color: #4f8f2f !important;
+    color: #b9e3a3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-content .settings-section-icon i,
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-content .session-device-icon i {
+    color: #b9e3a3 !important;
+    -webkit-text-fill-color: #b9e3a3 !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-content :is(
+    .panel-header h3,
+    .preference-row strong,
+    .theme-option strong,
+    .session-copy strong
+) {
+    color: #f8fafc !important;
+    -webkit-text-fill-color: #f8fafc !important;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard .settings-workspace .settings-section-content :is(
+    .panel-header p,
+    .preference-row small,
+    .theme-option small,
+    .session-copy small,
+    .sessions-footer p,
+    .teacher-security-field-help,
+    .teacher-security-banner-copy p
+) {
+    color: #b7c5d8 !important;
+}
