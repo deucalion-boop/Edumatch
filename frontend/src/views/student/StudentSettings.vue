@@ -1794,7 +1794,8 @@ export default {
   width: 42px; height: 42px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 12px; color: #fff; background: linear-gradient(135deg, #1e4307, #5f7418);
 }
-.section-icon .fa-bell {
+.section-icon i,
+.session-icon i {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
