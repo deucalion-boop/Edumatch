@@ -1547,6 +1547,16 @@ body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(p
   -webkit-text-fill-color: #b9c5bd !important;
 }
 
+body.student-dashboard .student-dashboard.student-theme-dark :is(.student-main, .student-sidebar, .top-header) span {
+  color: #dce7df !important;
+  -webkit-text-fill-color: #dce7df !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark :is(.account-menu-dropdown, .notification-dropdown, .student-tour-tooltip) span {
+  color: #dce7df !important;
+  -webkit-text-fill-color: #dce7df !important;
+}
+
 body.student-dashboard .student-dashboard.student-theme-dark :is(.student-main, .student-sidebar, .top-header) i,
 body.student-dashboard .student-dashboard.student-theme-dark :is(.student-main, .student-sidebar, .top-header) i::before {
   color: #eaf2ec !important;
@@ -1561,6 +1571,11 @@ body.student-dashboard .student-dashboard.student-theme-dark :is(.premium-button
 
 body.student-dashboard .student-dashboard.student-theme-dark :is(.notification-count, .status-indicator, .premium-status--danger, .premium-status--warning, .premium-status--success) {
   -webkit-text-fill-color: currentColor !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark :is(.notification-count, .premium-button, .pathway-primary-button, .grades-primary-button, .btn-primary) span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 </style>
