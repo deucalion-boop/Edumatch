@@ -4671,6 +4671,7 @@ export default {
   overflow: hidden;
   border: 0;
   border-radius: 0;
+  background: transparent;
   box-shadow: none;
   animation: grades-fade-up 420ms ease both;
 }

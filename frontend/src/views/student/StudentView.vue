@@ -1440,6 +1440,7 @@ body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard 
   .period-grade-grid > span,
   .category-score-grid > span
 ) {
+  background: transparent !important;
   border-color: #34483b !important;
   color: #f1f5f2 !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
