@@ -1613,5 +1613,123 @@ body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .s
   -webkit-text-fill-color: #e3ece6 !important;
 }
 
+/* Grade Results dark-mode contrast. */
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-back-button {
+  background: #1b2a20 !important;
+  border-color: #526b59 !important;
+  color: #f4f8f5 !important;
+  -webkit-text-fill-color: #f4f8f5 !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-back-button:hover {
+  background: #294032 !important;
+  border-color: #779580 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card__icon {
+  background: #203127 !important;
+  border: 1px solid #526b59 !important;
+  color: #f4f8f5 !important;
+  -webkit-text-fill-color: #f4f8f5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card__icon :is(i, i::before) {
+  color: #f4f8f5 !important;
+  -webkit-text-fill-color: #f4f8f5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card::after {
+  background: #2a3e31 !important;
+  opacity: 0.58 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-visual-sheet {
+  background: #1b2a20 !important;
+  border-color: #526b59 !important;
+  color: #eef5f0 !important;
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.32) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-visual-badge {
+  background: #315a3c !important;
+  border-color: #162019 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .complete-grade-history thead th {
+  background: #101913 !important;
+  color: #b9c8bd !important;
+  -webkit-text-fill-color: #b9c8bd !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .complete-grade-history tbody :is(th, td, strong) {
+  color: #edf4ef !important;
+  -webkit-text-fill-color: #edf4ef !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .complete-grade-history tbody small {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
+
+/* Recommendation Progress dark-mode contrast. */
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-back-button {
+  background: #1b2a20 !important;
+  border-color: #526b59 !important;
+  color: #f4f8f5 !important;
+  -webkit-text-fill-color: #f4f8f5 !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-back-button:hover {
+  background: #294032 !important;
+  border-color: #779580 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(.pathway-stat-card__icon, .pathway-milestone__icon) {
+  background: #203127 !important;
+  border: 1px solid #526b59 !important;
+  color: #f4f8f5 !important;
+  -webkit-text-fill-color: #f4f8f5 !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(.pathway-stat-card__icon, .pathway-milestone__icon) :is(i, i::before) {
+  color: #f4f8f5 !important;
+  -webkit-text-fill-color: #f4f8f5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-primary-button {
+  background: #315a3c !important;
+  border: 1px solid #6f8c76 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-primary-button:hover {
+  background: #3e704b !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-progress-ring {
+  background: conic-gradient(#74a85f var(--pathway-progress), #2a3b30 0deg) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-progress-ring::before {
+  background: #101913 !important;
+  box-shadow: inset 0 0 0 1px #405348 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .subject-performance-head > span {
+  background: #24352a !important;
+  border: 1px solid #526b59 !important;
+  color: #e7efe9 !important;
+  -webkit-text-fill-color: #e7efe9 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .academic-progress-counts > span {
+  background: #1b2a20 !important;
+  border-color: #405348 !important;
+}
+
 </style>
 
