@@ -1578,5 +1578,40 @@ body.student-dashboard .student-dashboard.student-theme-dark :is(.notification-c
   -webkit-text-fill-color: #ffffff !important;
 }
 
+/* Dark icon tiles: override the legacy white navigation and course icon boxes. */
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-course-card .premium-course-card__banner .premium-course-card__icon {
+  background: #18261d !important;
+  border: 1px solid #6f8c76 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-course-card .premium-course-card__banner .premium-course-card__icon i,
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-course-card .premium-course-card__banner .premium-course-card__icon i::before {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link > i,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link .nav-link-main > i {
+  background: #1b2a20 !important;
+  border: 1px solid #526b59 !important;
+  color: #f4f8f5 !important;
+  -webkit-text-fill-color: #f4f8f5 !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link > i::before,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link .nav-link-main > i::before {
+  color: #f4f8f5 !important;
+  -webkit-text-fill-color: #f4f8f5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link > span,
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link .nav-link-title {
+  color: #e3ece6 !important;
+  -webkit-text-fill-color: #e3ece6 !important;
+}
+
 </style>
 
