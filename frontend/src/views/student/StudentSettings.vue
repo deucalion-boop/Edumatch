@@ -68,7 +68,7 @@
             <div><h3>Appearance &amp; Accessibility</h3><p>Make your learning space more comfortable to read and use.</p></div>
           </div>
           <div class="theme-options" role="radiogroup" aria-label="Color theme">
-            <button v-for="option in themeOptions" :key="option.value" type="button" class="theme-option" :class="{ active: appearance.theme === option.value }" role="radio" :aria-checked="appearance.theme === option.value" @click="appearance.theme = option.value; applyAppearance()">
+            <button v-for="option in themeOptions" :key="option.value" type="button" class="theme-option" :class="{ active: appearance.theme === option.value }" role="radio" :aria-checked="appearance.theme === option.value" :disabled="isSavingPreferences" @click="selectTheme(option.value)">
               <i :class="option.icon"></i><span><strong>{{ option.label }}</strong><small>{{ option.description }}</small></span>
             </button>
           </div>
@@ -563,9 +563,26 @@ export default {
       document.documentElement.dataset.studentTextSize = this.appearance.textSize
       document.documentElement.classList.toggle('student-reduce-motion-enabled', this.appearance.reduceMotion)
       document.documentElement.classList.toggle('student-high-contrast-enabled', this.appearance.highContrast)
+      try {
+        const cacheKey = this.preferenceStorageKey()
+        const cached = JSON.parse(localStorage.getItem(cacheKey) || '{}')
+        localStorage.setItem(cacheKey, JSON.stringify({
+          ...cached,
+          appearance: { ...this.appearance }
+        }))
+      } catch (_error) {
+        // The live theme still works if browser storage is unavailable.
+      }
       window.dispatchEvent(new CustomEvent('edumatch-student-preferences-changed', {
         detail: { appearance: { ...this.appearance } }
       }))
+    },
+
+    async selectTheme(theme) {
+      if (!this.themeOptions.some(option => option.value === theme)) return
+      this.appearance.theme = theme
+      this.applyAppearance()
+      await this.savePreferences()
     },
 
     checkPasswordStrength() {

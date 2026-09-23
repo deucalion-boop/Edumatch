@@ -288,9 +288,19 @@ export default {
       profileImage: '',
       profile: {}
     })
-    const studentAppearance = reactive({ theme: 'system', textSize: 'normal', highContrast: false, reduceMotion: false })
+    const defaultStudentAppearance = { theme: 'system', textSize: 'normal', highContrast: false, reduceMotion: false }
+    const preferenceIdentity = authStore.user?.id || authStore.user?._id || authStore.user?.username || 'student'
+    const studentPreferenceCacheKey = `edumatch_student_settings_v2_${preferenceIdentity}`
+    let cachedStudentAppearance = {}
+    try {
+      const cachedSettings = JSON.parse(localStorage.getItem(studentPreferenceCacheKey) || '{}')
+      if (cachedSettings.appearance && typeof cachedSettings.appearance === 'object') cachedStudentAppearance = cachedSettings.appearance
+    } catch (_error) {
+      localStorage.removeItem(studentPreferenceCacheKey)
+    }
+    const studentAppearance = reactive({ ...defaultStudentAppearance, ...cachedStudentAppearance })
     const studentColorScheme = window.matchMedia?.('(prefers-color-scheme: dark)')
-    const systemDark = ref(false)
+    const systemDark = ref(studentAppearance.theme === 'system' && studentColorScheme?.matches === true)
     const studentAppearanceClasses = computed(() => ({
       'student-theme-dark': studentAppearance.theme === 'dark' || (studentAppearance.theme === 'system' && systemDark.value),
       'student-theme-light': studentAppearance.theme === 'light',
@@ -315,9 +325,7 @@ export default {
     }
 
     const loadStudentPreferences = async () => {
-      const identity = authStore.user?.id || authStore.user?._id || authStore.user?.username || 'student'
-      const cacheKey = `edumatch_student_settings_v2_${identity}`
-      try { applyStudentPreferences(JSON.parse(localStorage.getItem(cacheKey) || '{}')) } catch (_error) { localStorage.removeItem(cacheKey) }
+      try { applyStudentPreferences(JSON.parse(localStorage.getItem(studentPreferenceCacheKey) || '{}')) } catch (_error) { localStorage.removeItem(studentPreferenceCacheKey) }
       if (!authStore.token) return
       try {
         const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
@@ -327,7 +335,7 @@ export default {
         const payload = await response.json()
         const settings = payload?.settings || {}
         applyStudentPreferences(settings)
-        localStorage.setItem(cacheKey, JSON.stringify(settings))
+        localStorage.setItem(studentPreferenceCacheKey, JSON.stringify(settings))
       } catch (_error) {
         // Cached preferences remain active when the server is temporarily unavailable.
       }
@@ -1525,6 +1533,34 @@ body.student-dashboard .student-dashboard.student-theme-dark :is(.student-tour-t
 body.student-dashboard .student-dashboard.student-theme-dark :is(.account-menu-dropdown, .notification-dropdown) {
   background: #162019 !important;
   border-color: #405348 !important;
+}
+
+/* Keep foreground content readable over every dark student surface. */
+body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(h1, h2, h3, h4, h5, h6, strong, label),
+body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(h1, h2, h3, h4, h5, h6, strong, label) * {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(p, small, .header-subtitle, .section-subtitle, .detail-label) {
+  color: #b9c5bd !important;
+  -webkit-text-fill-color: #b9c5bd !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark :is(.student-main, .student-sidebar, .top-header) i,
+body.student-dashboard .student-dashboard.student-theme-dark :is(.student-main, .student-sidebar, .top-header) i::before {
+  color: #eaf2ec !important;
+  -webkit-text-fill-color: #eaf2ec !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-hero :is(h1, h2, h3, p, span, strong, i, i::before),
+body.student-dashboard .student-dashboard.student-theme-dark :is(.premium-button, .pathway-primary-button, .grades-primary-button) :is(span, strong, i, i::before) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark :is(.notification-count, .status-indicator, .premium-status--danger, .premium-status--warning, .premium-status--success) {
+  -webkit-text-fill-color: currentColor !important;
 }
 
 </style>
