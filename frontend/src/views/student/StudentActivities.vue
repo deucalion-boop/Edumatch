@@ -2789,4 +2789,136 @@ export default {
     max-height: calc(100vh - 320px);
   }
 }
+
+/* Dark-mode surfaces live here so scoped light styles cannot override them. */
+:global(.student-dashboard.student-theme-dark .student-activity-response-page) {
+  --workspace-border: #34483b;
+  --workspace-ink: #f8fafc;
+  --workspace-muted: #aebdb2;
+  --workspace-soft: linear-gradient(180deg, #162019 0%, #101913 100%);
+  --workspace-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+  --activity-accent: #8dd8cc;
+  --activity-accent-soft: #1d3832;
+  --quiz-accent: #a9c8ff;
+  --quiz-accent-soft: #1b3047;
+  --exam-accent: #f3c77a;
+  --exam-accent-soft: #3b2d18;
+  --status-assigned: #8dd8cc;
+  --status-assigned-bg: #1d3832;
+  --status-draft: #c4b5fd;
+  --status-draft-bg: #30264a;
+  --status-submitted: #a7d89a;
+  --status-submitted-bg: #203724;
+  --status-graded: #a9c8ff;
+  --status-graded-bg: #1b3047;
+  --status-missing: #f4aaaa;
+  --status-missing-bg: #482526;
+  --status-closed: #f3c49f;
+  --status-closed-bg: #402c20;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
+  .response-shell-body,
+  .activity-sidebar,
+  .activity-list-card,
+  .workspace-focus-card,
+  .workspace-card,
+  .teacher-brief-card,
+  .teacher-brief-stat,
+  .brief-meta-item,
+  .brief-section-card,
+  .material-card,
+  .answer-meta-banner,
+  .answer-chip,
+  .upload-dropzone,
+  .attachment-card,
+  .exam-brief-section,
+  .resource-empty,
+  .exam-start-panel,
+  .submission-result-card
+)) {
+  background: #101913 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+  box-shadow: none !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
+  .activity-list-card:hover,
+  .activity-list-card.active,
+  .brief-section-card.is-instructions,
+  .brief-section-card.is-materials,
+  .exam-brief-section.is-instructions
+)) {
+  background: #162019 !important;
+  border-color: #526b59 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
+  .response-progress,
+  .response-progress b,
+  .activity-sidebar-count,
+  .workspace-focus-deadline,
+  .teacher-brief-badge,
+  .brief-section-icon,
+  .material-icon,
+  .attachment-icon,
+  .inline-action,
+  .secondary-btn,
+  .ghost-btn,
+  .chip-remove
+)) {
+  background: #203127 !important;
+  border-color: #526b59 !important;
+  color: #e7efe9 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
+  .answer-textarea,
+  .link-composer input
+)) {
+  background: #0b120e !important;
+  border-color: #526b59 !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
+  .activity-list-card strong,
+  .workspace-card-head h4,
+  .teacher-brief-stat strong,
+  .brief-meta-item strong,
+  .brief-section-head h5,
+  .material-copy strong,
+  .attachment-copy strong,
+  .answer-meta-banner strong,
+  .exam-start-panel strong
+)) {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
+  .activity-list-card p,
+  .activity-list-meta,
+  .activity-list-meta i,
+  .card-eyebrow,
+  .teacher-brief-subtitle,
+  .teacher-brief-stat span,
+  .teacher-brief-stat small,
+  .brief-meta-item span,
+  .brief-meta-item small,
+  .brief-section-head span,
+  .instruction-copy,
+  .empty-copy,
+  .material-copy small,
+  .attachment-copy small,
+  .answer-field > span,
+  .answer-field-head span,
+  .answer-field-head small,
+  .submission-note
+)) {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
 </style>
