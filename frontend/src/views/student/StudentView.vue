@@ -1104,66 +1104,6 @@ html[data-student-theme-resolved='dark'] body.student-dashboard {
   border-color: var(--border-color) !important;
 }
 
-body.student-dashboard .student-dashboard.student-theme-dark .lessons-page :is(
-  .classes-empty-state,
-  .pending-subjects,
-  .pending-list > li,
-  .subject-card,
-  .active-subject-banner,
-  .courses-lessons-feed-wrap,
-  .lesson-feed-card,
-  .lesson-detail-panel,
-  .lesson-progress-card,
-  .lesson-attachment-card
-) {
-  background: #101913 !important;
-  border-color: #405348 !important;
-  color: #f1f5f2 !important;
-  box-shadow: none !important;
-}
-
-body.student-dashboard .student-dashboard.student-theme-dark .lessons-page :is(
-  .classes-empty-icon,
-  .section-count,
-  .active-subject-count,
-  .lesson-feed-status,
-  .pending-count
-) {
-  background: #203127 !important;
-  border-color: #526b59 !important;
-  color: #e7efe9 !important;
-}
-
-body.student-dashboard .student-dashboard.student-theme-dark .lessons-page :is(
-  .section-head,
-  .section-header,
-  .subject-card-hint,
-  .lesson-detail-panel
-) {
-  border-color: #34483b !important;
-}
-
-body.student-dashboard .student-dashboard.student-theme-dark .lessons-page :is(
-  .classes-empty-copy strong,
-  .lesson-feed-copy strong,
-  .lesson-detail-header h3,
-  .lesson-progress-copy strong
-) {
-  color: #f8fafc !important;
-  -webkit-text-fill-color: #f8fafc !important;
-}
-
-body.student-dashboard .student-dashboard.student-theme-dark .lessons-page :is(
-  .classes-empty-copy p,
-  .lesson-feed-copy small,
-  .lesson-detail-header p,
-  .lesson-progress-copy small,
-  .feed-state
-) {
-  color: #aebdb2 !important;
-  -webkit-text-fill-color: #aebdb2 !important;
-}
-
 body.student-dashboard .dashboard-home-btn {
   display: inline-flex !important;
   align-items: center;

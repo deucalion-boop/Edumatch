@@ -2214,4 +2214,69 @@ export default {
     padding: 1.25rem;
   }
 }
+
+/* Keep nested lesson surfaces dark even though this component's light styles are scoped. */
+:global(.student-dashboard.student-theme-dark .lessons-page :is(
+  .classes-empty-state,
+  .pending-subjects,
+  .pending-list > li,
+  .subject-card,
+  .active-subject-banner,
+  .courses-lessons-feed-wrap,
+  .lesson-feed-card,
+  .lesson-detail-panel,
+  .lesson-progress-card,
+  .lesson-attachment-card,
+  .subject-metrics > span
+)) {
+  background: #101913 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+  box-shadow: none !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page :is(
+  .classes-empty-icon,
+  .section-count,
+  .active-subject-count,
+  .lesson-feed-status,
+  .pending-count
+)) {
+  background: #203127 !important;
+  border-color: #526b59 !important;
+  color: #e7efe9 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page :is(
+  .section-head,
+  .section-header,
+  .subject-card-hint,
+  .lesson-detail-panel
+)) {
+  border-color: #34483b !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page :is(
+  .classes-empty-copy strong,
+  .subject-card-head strong,
+  .lesson-feed-copy strong,
+  .lesson-detail-header h3,
+  .lesson-progress-copy strong
+)) {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page :is(
+  .classes-empty-copy p,
+  .subject-card-head small,
+  .subject-teacher,
+  .lesson-feed-copy small,
+  .lesson-detail-header p,
+  .lesson-progress-copy small,
+  .feed-state
+)) {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
 </style>
