@@ -1059,7 +1059,6 @@ html[data-student-theme-resolved='dark'] body.student-dashboard {
   .modal-content,
   .dialog-content
 ) {
-  background-color: #162019 !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
