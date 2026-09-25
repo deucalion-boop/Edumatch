@@ -2855,6 +2855,19 @@ export default {
 }
 
 :global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
+  .activity-list-card,
+  .activity-list-card:hover,
+  .activity-list-card.active,
+  .activity-list-card.locked
+)) {
+  background: transparent !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page .activity-list-card.locked) {
+  border-style: solid !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
   .response-progress,
   .response-progress b,
   .workspace-state-icon,
