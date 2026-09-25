@@ -2857,6 +2857,7 @@ export default {
 :global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
   .response-progress,
   .response-progress b,
+  .workspace-state-icon,
   .activity-sidebar-count,
   .workspace-focus-deadline,
   .teacher-brief-badge,
@@ -2871,6 +2872,26 @@ export default {
   background: #203127 !important;
   border-color: #526b59 !important;
   color: #e7efe9 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page .workspace-state-icon) {
+  box-shadow: inset 0 0 0 1px rgba(126, 159, 136, 0.18) !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page .assessment-lock-notice) {
+  background: #332914 !important;
+  border-color: #80682e !important;
+  color: #f6dda2 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page .assessment-lock-notice > span) {
+  background: #493a19 !important;
+  color: #f6dda2 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .student-activity-response-page .assessment-lock-notice p) {
+  color: #ddc88f !important;
+  -webkit-text-fill-color: #ddc88f !important;
 }
 
 :global(.student-dashboard.student-theme-dark .student-activity-response-page :is(
