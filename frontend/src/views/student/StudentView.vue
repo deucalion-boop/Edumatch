@@ -1534,6 +1534,109 @@ body.student-dashboard .student-dashboard.student-theme-dark :is(.account-menu-d
   border-color: #405348 !important;
 }
 
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown-actions :is(
+  .notification-dropdown-clear,
+  .notification-dropdown-close
+) {
+  background: #203127 !important;
+  border-color: #526b59 !important;
+  color: #e7efe9 !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown-actions :is(
+  .notification-dropdown-clear,
+  .notification-dropdown-close
+):hover:not(:disabled) {
+  background: #293d30 !important;
+  border-color: #6b8974 !important;
+  color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown-actions :is(
+  .notification-dropdown-clear,
+  .notification-dropdown-close
+) i,
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown-actions :is(
+  .notification-dropdown-clear,
+  .notification-dropdown-close
+) i::before {
+  color: #e7efe9 !important;
+  -webkit-text-fill-color: #e7efe9 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown-actions .notification-dropdown-clear:disabled {
+  background: #1a2820 !important;
+  border-color: #405348 !important;
+  color: #8fa096 !important;
+  opacity: 0.65 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-item {
+  background: #101913 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-item.unread {
+  border-left-color: #78b957 !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-item.urgent {
+  background: #261f14 !important;
+  border-color: #806739 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-item.clickable:hover,
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-item.clickable:focus-visible {
+  background: #18251d !important;
+  border-color: #6b8974 !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown :is(
+  .user-notification-title,
+  .user-notification-subject
+) {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown :is(
+  .user-notification-preview,
+  .user-notification-meta,
+  .user-notification-state,
+  .empty-subtext
+) {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-icon {
+  background: #203127 !important;
+  color: #b9dfa5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-icon i,
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-icon i::before,
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-chevron {
+  color: #b9dfa5 !important;
+  -webkit-text-fill-color: #b9dfa5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .notification-read-action {
+  background: #203127 !important;
+  border-color: #526b59 !important;
+  color: #dcefd2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .notification-read-action:hover {
+  background: #293d30 !important;
+  border-color: #78a865 !important;
+}
+
 /* Keep foreground content readable over every dark student surface. */
 body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(h1, h2, h3, h4, h5, h6, strong, label),
 body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(h1, h2, h3, h4, h5, h6, strong, label) * {
