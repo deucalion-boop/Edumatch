@@ -108,9 +108,6 @@
               <p class="auth-form-helper">
                 Enter the 6-digit one-time password sent to {{ otpDeliveryHint || 'your registered email address' }}.
               </p>
-              <p class="auth-form-helper" :class="{ 'otp-expired': otpSecondsRemaining === 0 }">
-                {{ otpSecondsRemaining > 0 ? `OTP expires in ${otpSecondsRemaining}s` : 'OTP expired. Request a new code below.' }}
-              </p>
               <div class="auth-form-input-wrapper has-icon">
                 <i class="auth-form-icon fas fa-shield-halved"></i>
                 <input
@@ -120,19 +117,29 @@
                   placeholder="6-digit OTP"
                   required
                   maxlength="6"
+                  inputmode="numeric"
+                  pattern="[0-9]{6}"
                   autocomplete="one-time-code"
                   @input="clearValidation('otp')"
                 />
               </div>
+              <div class="otp-status-row" aria-live="polite">
+                <span class="otp-expiry" :class="{ 'otp-expiry--expired': otpSecondsRemaining === 0 }">
+                  {{ otpSecondsRemaining > 0 ? `OTP expires in ${otpSecondsRemaining}s` : 'OTP expired' }}
+                </span>
+                <span class="otp-resend-prompt">
+                  <span>Didn’t receive the code?</span>
+                  <button
+                    type="button"
+                    class="otp-resend-button"
+                    :disabled="isLoading || isResendingOtp || otpResendSecondsRemaining > 0"
+                    @click="handleResendOtp"
+                  >
+                    {{ isResendingOtp ? 'Sending…' : otpResendSecondsRemaining > 0 ? `Resend in ${otpResendSecondsRemaining}s` : 'Resend OTP' }}
+                  </button>
+                </span>
+              </div>
               <div class="validation-message">{{ validation.otp }}</div>
-              <button
-                type="button"
-                class="otp-resend-button"
-                :disabled="isLoading || isResendingOtp || otpResendSecondsRemaining > 0"
-                @click="handleResendOtp"
-              >
-                {{ isResendingOtp ? 'Sending...' : otpResendSecondsRemaining > 0 ? `Resend OTP in ${otpResendSecondsRemaining}s` : 'Resend OTP' }}
-              </button>
             </div>
 
             <div class="auth-form-group captcha-group">
@@ -748,28 +755,65 @@ export default {
   color: #ffffff !important;
 }
 
-.auth-form-helper.otp-expired {
+.otp-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(105, 170, 71, 0.22);
+  border-radius: 12px;
+  background: rgba(248, 251, 243, 0.78);
+  color: #4b5563;
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.otp-expiry {
+  flex: 0 0 auto;
+  color: #365b0d;
+  font-weight: 700;
+}
+
+.otp-expiry--expired {
   color: #b91c1c;
-  font-weight: 600;
+}
+
+.otp-resend-prompt {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.28rem;
+  min-width: 0;
+  text-align: right;
 }
 
 .otp-resend-button {
-  margin-top: 0.65rem;
+  display: inline;
+  flex: 0 0 auto;
   padding: 0;
   border: 0;
   background: transparent;
-  color: #9a3412;
+  color: #3f7f2a;
   font: inherit;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
 }
 
 .otp-resend-button:hover:not(:disabled) {
   text-decoration: underline;
+  color: #2f641f;
+}
+
+.otp-resend-button:focus-visible {
+  outline: 2px solid rgba(63, 127, 42, 0.5);
+  outline-offset: 3px;
+  border-radius: 3px;
 }
 
 .otp-resend-button:disabled {
-  color: #6b7280;
+  color: #9ca3af;
   cursor: not-allowed;
 }
 
@@ -1328,6 +1372,17 @@ export default {
   .auth-submit-btn {
     font-size: 0.9rem;
     padding: 0.68rem 0.85rem;
+  }
+
+  .otp-status-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .otp-resend-prompt {
+    justify-content: flex-start;
+    text-align: left;
   }
 
 }
