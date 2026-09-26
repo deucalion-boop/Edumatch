@@ -1696,7 +1696,7 @@ body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard 
 
 body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link > i,
 body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link .nav-link-main > i {
-  background: #1b2a20 !important;
+  background: transparent !important;
   border: 1px solid #526b59 !important;
   color: #f4f8f5 !important;
   -webkit-text-fill-color: #f4f8f5 !important;
@@ -1713,6 +1713,110 @@ body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .s
 body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-section .nav-link .nav-link-title {
   color: #e3ece6 !important;
   -webkit-text-fill-color: #e3ece6 !important;
+}
+
+/* Student Profile dark-mode surfaces and form contrast. */
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content :is(
+  .profile-card,
+  .profile-details-card,
+  .profile-tab-content
+) {
+  background:
+    linear-gradient(180deg, #162019 0%, #121c16 100%) padding-box,
+    linear-gradient(135deg, #405348 0%, #668b59 52%, #405348 100%) border-box !important;
+  border-color: transparent !important;
+  color: #f1f5f2 !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.26) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-header,
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-details-card .detail-item {
+  border-color: #34483b !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content :is(
+  .profile-info h2,
+  .details-title,
+  .tab-header h3,
+  .form-section-title,
+  .detail-value
+) {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content :is(
+  .profile-role,
+  .profile-status,
+  .detail-label,
+  .tab-header p,
+  .form-group label
+) {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-details-card .detail-icon {
+  background: #203127 !important;
+  border: 1px solid #405348 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-details-card .detail-icon i,
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-details-card .detail-icon i::before {
+  color: #b9dfa5 !important;
+  -webkit-text-fill-color: #b9dfa5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-form-section {
+  background: #101913 !important;
+  border-color: #34483b !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content :is(
+  .form-group input,
+  .form-group select,
+  .form-group textarea
+) {
+  background: #0e1711 !important;
+  border-color: #506157 !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content :is(
+  .form-group input:read-only,
+  .form-group textarea:read-only,
+  .form-group select:disabled
+) {
+  background: #111b15 !important;
+  border-color: #405348 !important;
+  color: #dce7df !important;
+  -webkit-text-fill-color: #dce7df !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content :is(
+  .form-group input,
+  .form-group select,
+  .form-group textarea
+):focus {
+  border-color: #78a865 !important;
+  box-shadow: 0 0 0 3px rgba(120, 168, 101, 0.18) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-actions .btn-outline {
+  color: #dce7df !important;
+  -webkit-text-fill-color: #dce7df !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-actions .btn-outline:hover {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-actions .btn-outline i,
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-actions .btn-outline i::before {
+  color: #b9dfa5 !important;
+  -webkit-text-fill-color: #b9dfa5 !important;
 }
 
 /* Grade Results dark-mode contrast. */
