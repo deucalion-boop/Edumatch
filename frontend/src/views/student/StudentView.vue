@@ -1391,7 +1391,7 @@ body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .s
 body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .nav-link i,
 body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .nav-link.active i:not(.nav-link-caret-icon),
 body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .nav-link.router-link-active i:not(.nav-link-caret-icon) {
-  background: #26362b !important;
+  background: transparent !important;
   border-color: #4a6151 !important;
   color: #e8f0ea !important;
   -webkit-text-fill-color: #e8f0ea !important;
