@@ -150,6 +150,80 @@ watch(() => route.query.event, (eventKey, previousEventKey) => {
 .empty-state { padding: 3rem 1.5rem; }
 .empty-state > i { color: #93c5fd; font-size: 2rem; }
 .empty-state h2 { margin: .8rem 0 .25rem; color: #0f172a; }
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .announcement-card,
+  .announcement-detail,
+  .state-card
+)) {
+  background: #101913 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+  box-shadow: none !important;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page .announcement-card:hover) {
+  background: #18251d !important;
+  border-color: #6b8974 !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24) !important;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .announcement-summary strong,
+  .announcement-detail h2,
+  .empty-state h2
+)) {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .announcement-preview,
+  .meta,
+  .content,
+  .state-card p
+)) {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .eyebrow,
+  .announcement-subject
+)) {
+  color: #b9dfa5 !important;
+  -webkit-text-fill-color: #b9dfa5 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page .announcement-icon) {
+  background: #203127 !important;
+  color: #b9dfa5 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page .announcement-icon i),
+:global(.student-dashboard.student-theme-dark .announcement-page .announcement-icon i::before),
+:global(.student-dashboard.student-theme-dark .announcement-page .card-arrow) {
+  color: #b9dfa5 !important;
+  -webkit-text-fill-color: #b9dfa5 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .back-button,
+  .state-card button
+)) {
+  background: #203127 !important;
+  border-color: #526b59 !important;
+  color: #e7efe9 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .back-button,
+  .state-card button
+):hover) {
+  background: #293d30 !important;
+  border-color: #6b8974 !important;
+}
+
 @media (max-width: 640px) {
   .announcement-page { padding: 1.25rem; }
   .page-header { flex-direction: column; }
