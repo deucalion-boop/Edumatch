@@ -2217,6 +2217,23 @@ export default {
 
 /* Keep nested lesson surfaces dark even though this component's light styles are scoped. */
 :global(.student-dashboard.student-theme-dark .lessons-page :is(
+  .section-card,
+  .active-courses-section
+)) {
+  background: #162019 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page :is(
+  .section-head,
+  .section-header
+)) {
+  border-color: #34483b !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page :is(
   .classes-empty-state,
   .pending-subjects,
   .pending-list > li,
