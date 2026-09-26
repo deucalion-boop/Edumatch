@@ -1729,6 +1729,34 @@ body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-pan
   border-color: #779580 !important;
 }
 
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card {
+  background: #162019 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card:hover {
+  background: #1b2a20 !important;
+  border-color: #6b8974 !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card > div > span {
+  color: #b9c8bd !important;
+  -webkit-text-fill-color: #b9c8bd !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card small {
+  color: #9fafa4 !important;
+  -webkit-text-fill-color: #9fafa4 !important;
+}
+
 body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card__icon {
   background: #203127 !important;
   border: 1px solid #526b59 !important;
@@ -1742,8 +1770,8 @@ body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-pan
 }
 
 body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-stat-card::after {
-  background: #2a3e31 !important;
-  opacity: 0.58 !important;
+  background: #294032 !important;
+  opacity: 0.64 !important;
 }
 
 body.student-dashboard .student-dashboard.student-theme-dark .premium-grades-panel .grades-visual-sheet {
@@ -1786,6 +1814,135 @@ body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-pa
 body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-back-button:hover {
   background: #294032 !important;
   border-color: #779580 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(
+  .pathway-stat-card,
+  .academic-progress-overview,
+  .strand-ranking-section,
+  .subject-performance-section,
+  .recommendation-ranking-section,
+  .pathway-loading
+) {
+  background: #162019 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-stat-card:hover {
+  background: #1b2a20 !important;
+  border-color: #6b8974 !important;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.26) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-stat-card > div > span {
+  color: #b9c8bd !important;
+  -webkit-text-fill-color: #b9c8bd !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-stat-card strong {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .pathway-stat-card small {
+  color: #9fafa4 !important;
+  -webkit-text-fill-color: #9fafa4 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(
+  .subject-performance-card,
+  .strand-ranking-list > li,
+  .strand-subject-evidence article,
+  .academic-ranking-list li
+) {
+  background: #101913 !important;
+  border-color: #405348 !important;
+  color: #f1f5f2 !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .strand-ranking-list > li.is-top-strand {
+  background: #18271d !important;
+  border-color: #668b59 !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(
+  .academic-progress-counts > span,
+  .subject-score-pair > div,
+  .period-grade-grid > span,
+  .category-score-grid > span
+) {
+  background: #1b2a20 !important;
+  border-color: #405348 !important;
+  color: #b9c8bd !important;
+  box-shadow: none !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .period-grade-grid > span.is-final {
+  background: #203127 !important;
+  border-color: #668b59 !important;
+  color: #cde6c0 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(
+  .academic-progress-counts,
+  .subject-score-pair,
+  .period-grade-grid,
+  .category-score-grid
+) strong {
+  color: #f1f5f2 !important;
+  -webkit-text-fill-color: #f1f5f2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .recommendation-highlight-grid .strength {
+  background: #17271d !important;
+  border-color: #496b50 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .recommendation-highlight-grid .priority {
+  background: #281b1b !important;
+  border-color: #704848 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(
+  .recommendation-highlight-grid span,
+  .recommendation-highlight-grid p,
+  .subject-formula,
+  .subject-performance-section > header p,
+  .strand-ranking-section > header > p,
+  .strand-rank-name small,
+  .strand-rank-score span,
+  .strand-subject-evidence article small,
+  .academic-ranking-list small,
+  .academic-ranking-list em
+) {
+  color: #aebdb2 !important;
+  -webkit-text-fill-color: #aebdb2 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(
+  .recommendation-highlight-grid strong,
+  .subject-performance-head > div strong,
+  .strand-rank-name strong,
+  .strand-rank-score strong,
+  .strand-subject-evidence article strong,
+  .academic-ranking-list span
+) {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .strand-ranking-list details {
+  border-color: #34483b !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .strand-ranking-list summary,
+body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel .strand-ranking-list summary i {
+  color: #b9dfa5 !important;
+  -webkit-text-fill-color: #b9dfa5 !important;
 }
 
 body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-panel :is(.pathway-stat-card__icon, .pathway-milestone__icon) {
