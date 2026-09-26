@@ -803,6 +803,7 @@ export default {
 .lesson-progress-copy strong { color: #1e4307; font-size: 0.86rem; }
 .lesson-progress-copy small { color: #64748b; font-size: 0.72rem; line-height: 1.35; }
 .lesson-progress-icon { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 34px; background: #eaf3e4; color: #4f8a35; }
+.lessons-page .lesson-progress-icon i { color: #4f8a35 !important; -webkit-text-fill-color: #4f8a35 !important; }
 .lesson-progress-meter { height: 8px; overflow: hidden; border-radius: 999px; background: #e2e8f0; }
 .lesson-progress-meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f8a35, #8fc867); transition: width 300ms ease; }
 .lesson-complete-button { min-height: 38px; padding: 0.55rem 0.8rem; border: 1px solid #5f9a45; border-radius: 10px; background: #4f8a35; color: #fff; font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
@@ -1364,7 +1365,8 @@ export default {
 .status-badge.published {
   border: 1px solid rgba(169, 213, 95, 0.42);
   background: rgba(255, 253, 241, 0.92);
-  color: #4d6120;
+  color: #4d6120 !important;
+  -webkit-text-fill-color: #4d6120 !important;
 }
 
 .lesson-attachment-list {
@@ -2262,6 +2264,25 @@ export default {
   background: #203127 !important;
   border-color: #526b59 !important;
   color: #e7efe9 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page .status-badge.published) {
+  background: #203127 !important;
+  border-color: #526b59 !important;
+  color: #e7efe9 !important;
+  -webkit-text-fill-color: #e7efe9 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page .lesson-progress-icon) {
+  background: #26362b !important;
+  border: 1px solid #496050;
+  color: #b9dfa5 !important;
+}
+
+:global(.student-dashboard.student-theme-dark .lessons-page .lesson-progress-icon i),
+:global(.student-dashboard.student-theme-dark .lessons-page .lesson-progress-icon i::before) {
+  color: #b9dfa5 !important;
+  -webkit-text-fill-color: #b9dfa5 !important;
 }
 
 :global(.student-dashboard.student-theme-dark .lessons-page :is(
