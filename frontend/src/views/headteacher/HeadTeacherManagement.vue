@@ -112,19 +112,28 @@
             <h2 class="headteacher-section-title">Teacher Directory</h2>
             <p class="headteacher-section-subtitle">Manage faculty accounts, access, and advisory assignments for {{ departmentLabel }}.</p>
           </div>
-          <button
-            v-if="!isLoading && teachers.length > 0"
-            type="button"
-            class="headteacher-button headteacher-button-primary headteacher-directory-create-btn headteacher-directory-cta"
-            @click="isCreateModalOpen = true"
-          >
-            <span class="headteacher-directory-create-icon">
-              <i class="fas fa-user-plus"></i>
-            </span>
-            <span class="headteacher-directory-create-copy">
-              <strong>Create Teacher</strong>
-            </span>
-          </button>
+          <div v-if="!isLoading && teachers.length > 0" class="headteacher-directory-create-actions">
+            <button
+              type="button"
+              class="headteacher-button headteacher-button-outline headteacher-directory-create-btn"
+              @click="openStudentCreateModal()"
+            >
+              <i class="fas fa-user-graduate"></i>
+              <span>Create Student</span>
+            </button>
+            <button
+              type="button"
+              class="headteacher-button headteacher-button-primary headteacher-directory-create-btn headteacher-directory-cta"
+              @click="isCreateModalOpen = true"
+            >
+              <span class="headteacher-directory-create-icon">
+                <i class="fas fa-user-plus"></i>
+              </span>
+              <span class="headteacher-directory-create-copy">
+                <strong>Create Teacher</strong>
+              </span>
+            </button>
+          </div>
         </div>
 
         <div v-if="!isLoading && teachers.length > 0" class="headteacher-directory-summary" aria-label="Teacher account summary">
@@ -766,6 +775,80 @@
         </div>
       </div>
 
+      <div v-if="isStudentCreateModalOpen" class="headteacher-modal-shell" @click.self="closeStudentCreateModal">
+        <div class="headteacher-modal-panel">
+          <div class="headteacher-modal-head">
+            <div>
+              <h3>Create Student Account</h3>
+              <p>Select an advisory teacher to place the student in that teacher's section.</p>
+            </div>
+            <button type="button" class="headteacher-modal-close" aria-label="Close student form" @click="closeStudentCreateModal">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <form class="headteacher-form" novalidate @submit.prevent="createStudent">
+            <div class="headteacher-form-grid">
+              <label class="headteacher-form-group">
+                <span>Advisory Teacher</span>
+                <select v-model="studentForm.teacherId" required :aria-invalid="Boolean(studentErrors.teacherId)" @change="validateStudentForm">
+                  <option value="" disabled>Select an advisory teacher</option>
+                  <option v-for="teacher in studentEligibleTeachers" :key="`student-teacher-${teacher.id}`" :value="teacher.id">
+                    {{ teacher.name }} — {{ teacher.advisorySectionName }}
+                  </option>
+                </select>
+                <small v-if="studentErrors.teacherId" class="headteacher-field-error" role="alert">{{ studentErrors.teacherId }}</small>
+              </label>
+              <label class="headteacher-form-group">
+                <span>Section</span>
+                <input :value="selectedStudentSectionName" type="text" readonly placeholder="Select an advisory teacher">
+              </label>
+              <label class="headteacher-form-group">
+                <span>Full Name</span>
+                <input v-model.trim="studentForm.name" type="text" required maxlength="100" placeholder="Enter student name" :aria-invalid="Boolean(studentErrors.name)" @input="validateStudentForm">
+                <small v-if="studentErrors.name" class="headteacher-field-error" role="alert">{{ studentErrors.name }}</small>
+              </label>
+              <label class="headteacher-form-group">
+                <span>Email</span>
+                <input v-model.trim="studentForm.email" type="email" required placeholder="Enter student email" :aria-invalid="Boolean(studentErrors.email)" @input="validateStudentForm">
+                <small v-if="studentErrors.email" class="headteacher-field-error" role="alert">{{ studentErrors.email }}</small>
+              </label>
+              <label class="headteacher-form-group">
+                <span>Username</span>
+                <input v-model.trim="studentForm.username" type="text" required maxlength="50" placeholder="Enter student username" :aria-invalid="Boolean(studentErrors.username)" @input="validateStudentForm">
+                <small v-if="studentErrors.username" class="headteacher-field-error" role="alert">{{ studentErrors.username }}</small>
+              </label>
+              <label class="headteacher-form-group">
+                <span>Contact Number</span>
+                <input v-model.trim="studentForm.contactNumber" type="tel" inputmode="tel" placeholder="09123456789 or +639123456789" :aria-invalid="Boolean(studentErrors.contactNumber)" @input="validateStudentForm">
+                <small v-if="studentErrors.contactNumber" class="headteacher-field-error" role="alert">{{ studentErrors.contactNumber }}</small>
+              </label>
+              <label class="headteacher-form-group">
+                <span>Grade Level</span>
+                <input value="Grade 10" type="text" readonly>
+              </label>
+              <label class="headteacher-form-group">
+                <span>Access</span>
+                <input value="Temporary password is auto-generated and emailed" type="text" readonly>
+              </label>
+            </div>
+
+            <p v-if="studentFormMessage" class="headteacher-form-feedback" :class="studentFormMessageType">{{ studentFormMessage }}</p>
+            <p v-else-if="studentEligibleTeachers.length === 0" class="headteacher-form-feedback error">
+              Assign an advisory section to a managed teacher before creating a student.
+            </p>
+
+            <div class="headteacher-modal-actions">
+              <button type="button" class="headteacher-button headteacher-button-outline" @click="closeStudentCreateModal">Cancel</button>
+              <button type="submit" class="headteacher-button headteacher-button-primary" :disabled="isSubmittingStudent || studentEligibleTeachers.length === 0">
+                <i class="fas" :class="isSubmittingStudent ? 'fa-spinner fa-spin' : 'fa-user-plus'"></i>
+                {{ isSubmittingStudent ? 'Saving...' : 'Create Student & Email Credentials' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div v-if="isStudentsModalOpen" class="headteacher-modal-shell" @click.self="closeStudentsModal">
         <div class="headteacher-modal-panel headteacher-students-modal">
           <div class="headteacher-modal-head headteacher-students-modal-head">
@@ -788,6 +871,16 @@
                   <strong>{{ activeSelectedTeacherStudents }}</strong>
                 </div>
               </div>
+              <button
+                type="button"
+                class="headteacher-button headteacher-button-primary headteacher-button-sm"
+                :disabled="!selectedTeacher?.advisorySectionId"
+                :title="selectedTeacher?.advisorySectionId ? 'Create a student in this advisory section' : 'Assign an advisory section first'"
+                @click="openStudentCreateModal(selectedTeacher)"
+              >
+                <i class="fas fa-user-plus"></i>
+                Create Student
+              </button>
             </div>
             <button type="button" class="headteacher-modal-close headteacher-students-close-btn" @click="closeStudentsModal">
               <i class="fas fa-times"></i>
@@ -908,6 +1001,8 @@ const isAccountMenuOpen = ref(false)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
 const isCreateModalOpen = ref(false)
+const isSubmittingStudent = ref(false)
+const isStudentCreateModalOpen = ref(false)
 const isStudentsModalOpen = ref(false)
 const isAttendanceModalOpen = ref(false)
 const isAnnouncementModalOpen = ref(false)
@@ -916,6 +1011,8 @@ const isUpdatingTeacherAssignment = ref(false)
 const updatingTeacherAssignmentId = ref('')
 const formMessage = ref('')
 const formMessageType = ref('success')
+const studentFormMessage = ref('')
+const studentFormMessageType = ref('success')
 const assignmentMessage = ref('')
 const assignmentMessageType = ref('success')
 const teachers = ref([])
@@ -966,6 +1063,13 @@ const form = reactive({
   contactNumber: '',
   advisorySectionId: '',
 })
+const studentForm = reactive({
+  teacherId: '',
+  name: '',
+  email: '',
+  username: '',
+  contactNumber: '',
+})
 const announcementForm = reactive({
   subject: '',
   content: '',
@@ -987,6 +1091,13 @@ const getAuthConfig = () => ({
 
 const displayName = computed(() => authStore.user?.name || 'HeadTeacher')
 const departmentLabel = computed(() => authStore.user?.department || 'Department')
+const studentEligibleTeachers = computed(() => teachers.value.filter((teacher) => (
+  normalizeStatus(teacher.status) === 'active' && String(teacher.advisorySectionId || '').trim()
+)))
+const selectedStudentTeacher = computed(() => studentEligibleTeachers.value.find(
+  (teacher) => String(teacher.id) === String(studentForm.teacherId)
+) || null)
+const selectedStudentSectionName = computed(() => selectedStudentTeacher.value?.advisorySectionName || '')
 const attendanceStatuses = ['Present', 'Late', 'Absent', 'Excused']
 const activeSelectedTeacherStudents = computed(() => selectedTeacherStudents.value.filter((student) => normalizeStatus(student.status) === 'active').length)
 const recentAttendanceRecords = computed(() => Array.isArray(attendanceOverview.value?.recentRecords) ? attendanceOverview.value.recentRecords.slice(0, 12) : [])
@@ -1252,6 +1363,44 @@ const closeModal = () => {
   resetForm()
 }
 
+const studentErrors = reactive({ teacherId: '', name: '', email: '', username: '', contactNumber: '' })
+
+const resetStudentForm = (teacherId = '') => {
+  Object.keys(studentErrors).forEach((field) => { studentErrors[field] = '' })
+  studentForm.teacherId = String(teacherId || '').trim()
+  studentForm.name = ''
+  studentForm.email = ''
+  studentForm.username = ''
+  studentForm.contactNumber = ''
+  studentFormMessage.value = ''
+  studentFormMessageType.value = 'success'
+}
+
+const openStudentCreateModal = (teacher = null) => {
+  const requestedTeacherId = normalizeTeacherId(teacher)
+  const eligibleTeacherId = studentEligibleTeachers.value.some(
+    (candidate) => String(candidate.id) === requestedTeacherId
+  ) ? requestedTeacherId : ''
+  const defaultTeacherId = eligibleTeacherId || (studentEligibleTeachers.value.length === 1
+    ? String(studentEligibleTeachers.value[0].id)
+    : '')
+
+  resetStudentForm(defaultTeacherId)
+  if (isStudentsModalOpen.value) {
+    isStudentsModalOpen.value = false
+    selectedTeacher.value = null
+    selectedTeacherStudents.value = []
+    studentsErrorMessage.value = ''
+  }
+  isStudentCreateModalOpen.value = true
+}
+
+const closeStudentCreateModal = () => {
+  if (isSubmittingStudent.value) return
+  isStudentCreateModalOpen.value = false
+  resetStudentForm()
+}
+
 const closeStudentsModal = () => {
   if (isStudentsLoading.value) return
   isStudentsModalOpen.value = false
@@ -1514,6 +1663,54 @@ const createTeacher = async () => {
   }
 }
 
+const validateStudentForm = () => {
+  studentErrors.teacherId = String(studentForm.teacherId || '').trim() ? '' : 'Select an advisory teacher.'
+  studentErrors.name = nameError(studentForm.name, 'Full name', 100)
+  studentErrors.username = !String(studentForm.username || '').trim()
+    ? 'Username is required.'
+    : studentForm.username.length > 50 ? 'Username must be 50 characters or fewer.' : ''
+  studentErrors.contactNumber = phoneError(studentForm.contactNumber)
+  studentErrors.email = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(studentForm.email)
+    ? '' : 'Enter a valid Gmail address (e.g., user@gmail.com).'
+  return !Object.values(studentErrors).some(Boolean)
+}
+
+const createStudent = async () => {
+  if (isSubmittingStudent.value || !validateStudentForm()) return
+  isSubmittingStudent.value = true
+  studentFormMessage.value = ''
+  try {
+    const contactNumber = normalizePhilippinePhone(studentForm.contactNumber)
+    if (!isValidPhilippinePhone(contactNumber)) {
+      studentFormMessage.value = 'Please enter a valid Philippine contact number beginning with +63.'
+      studentFormMessageType.value = 'error'
+      return
+    }
+
+    const response = await axios.post(`${resolveApiBaseUrl()}/headteacher/students`, {
+      teacherId: studentForm.teacherId,
+      name: studentForm.name,
+      email: studentForm.email,
+      username: studentForm.username,
+      contactNumber,
+    }, getAuthConfig())
+
+    const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()
+    const emailSent = response.data?.invite?.emailSent !== false
+    studentFormMessage.value = generatedPassword
+      ? `${emailSent ? 'Student account created and credentials emailed successfully.' : 'Student account created, but email sending failed.'} Section: ${selectedStudentSectionName.value || 'Assigned section'}. Temporary password: ${generatedPassword}`
+      : 'Student account created successfully.'
+    studentFormMessageType.value = emailSent ? 'success' : 'error'
+    await fetchTeachers()
+    if (emailSent) window.setTimeout(() => closeStudentCreateModal(), 800)
+  } catch (error) {
+    studentFormMessage.value = error.response?.data?.message || 'Failed to create student account.'
+    studentFormMessageType.value = 'error'
+  } finally {
+    isSubmittingStudent.value = false
+  }
+}
+
 const updateStatus = async (teacher, status) => {
   await axios.put(`${resolveApiBaseUrl()}/headteacher/teachers/${encodeURIComponent(teacher.id)}`, {
     status,
@@ -1652,6 +1849,25 @@ onBeforeUnmount(() => {
 .headteacher-directory-enterprise .headteacher-directory-head {
   align-items: center;
   margin-bottom: 1.25rem;
+}
+
+.headteacher-directory-create-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.headteacher-directory-create-actions > .headteacher-button-outline {
+  min-height: 44px;
+  border-radius: 14px;
+}
+
+.headteacher-students-head-actions {
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .headteacher-directory-enterprise.is-empty-directory .headteacher-directory-head {
@@ -2438,6 +2654,16 @@ onBeforeUnmount(() => {
   .headteacher-directory-enterprise .headteacher-directory-cta {
     width: 100%;
     min-width: 0;
+  }
+
+  .headteacher-directory-create-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .headteacher-directory-create-actions > .headteacher-button {
+    width: 100%;
   }
 
   .headteacher-directory-toolbar-main {

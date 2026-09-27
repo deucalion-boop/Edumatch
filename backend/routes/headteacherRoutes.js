@@ -5,6 +5,7 @@ const { lessonUpload } = require('../utils/uploadMiddleware');
 const {
   getManagedTeachers,
   createTeacherAccount,
+  createStudentAccount,
   updateManagedTeacher,
   getManagedTeacherStudents,
   getManagedTeacherLessons,
@@ -35,6 +36,7 @@ router.put('/assessments/:id', updateManagedTeacherAssessment);
 router.get('/ai/status', getAiStatus);
 router.post('/assessments/ai-generate', aiLimiter, generateAssessmentWithAi);
 router.post('/teachers', inviteLimiter, createTeacherAccount);
+router.post('/students', inviteLimiter, createStudentAccount);
 router.put('/teachers/:id', updateManagedTeacher);
 router.post('/teachers/:id/announcements', sendManagedTeacherAnnouncement);
 

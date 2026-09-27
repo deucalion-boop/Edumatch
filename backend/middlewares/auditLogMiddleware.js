@@ -67,6 +67,7 @@ const ACTION_LABELS = {
   'PUT /api/headteacher/assessments/:id': 'Managed assessment updated',
   'POST /api/headteacher/assessments/ai-generate': 'Managed AI assessment generated',
   'POST /api/headteacher/teachers': 'Teacher account created',
+  'POST /api/headteacher/students': 'Student account created',
   'PUT /api/headteacher/teachers/:id': 'Managed teacher updated',
   'POST /api/secretary/students/archived/export-requests': 'Archived PDF export requested',
   'POST /api/secretary/students/archived/export-requests/:id/consume': 'Archived PDF approval consumed',

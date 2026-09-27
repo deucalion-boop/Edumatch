@@ -535,6 +535,98 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
   });
 });
 
+const createStudentAccount = asyncHandler(async (req, res) => {
+  const department = ensureHeadTeacher(req);
+  const {
+    teacherId,
+    name,
+    email,
+    username,
+    contactNumber,
+  } = req.body || {};
+
+  if (!teacherId || !name || !email || !username) {
+    const error = new Error('teacherId, name, email, and username are required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const validationMessage = nameError(name, 'Full name', 100) || phoneError(contactNumber);
+  if (validationMessage) throw Object.assign(new Error(validationMessage), { statusCode: 400 });
+
+  const teacher = await findManagedTeacherForHeadTeacher(req, teacherId, { department });
+  const advisorySectionId = String(
+    teacher?.advisorySectionId?._id || teacher?.advisorySectionId?.id || teacher?.advisorySectionId || ''
+  ).trim();
+  if (!advisorySectionId) {
+    const error = new Error('The selected teacher must have an advisory section before a student can be created');
+    error.statusCode = 409;
+    throw error;
+  }
+  await getSectionOrThrow(advisorySectionId);
+
+  const normalizedEmail = String(email).toLowerCase().trim();
+  const normalizedUsername = String(username).trim();
+  if (normalizedUsername.length > 50) {
+    const error = new Error('username must be 50 characters or fewer');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const [existingEmail, existingUsername] = await Promise.all([
+    findSupabaseAccountByEmail(normalizedEmail),
+    findSupabaseAccountByUsername(normalizedUsername),
+  ]);
+  if (existingEmail) {
+    const error = new Error('Email already exists');
+    error.statusCode = 409;
+    throw error;
+  }
+  if (existingUsername) {
+    const error = new Error('Username already exists');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const now = new Date();
+  const normalizedTeacherId = String(teacher._id || teacher.id).trim();
+  const created = await createSupabaseAccount({
+    name: String(name).trim(),
+    email: normalizedEmail,
+    username: normalizedUsername,
+    role: ROLE_STUDENT,
+    status: 'active',
+    sectionId: advisorySectionId,
+    department,
+    gradeLevel: 'Grade 10',
+    contactNumber: normalizeContactNumber(contactNumber),
+    managedBy: normalizedTeacherId,
+    enrollment: {
+      teacherId: normalizedTeacherId,
+      status: 'approved',
+      requestedAt: now,
+      approvedAt: now,
+    },
+    invite: {
+      tokenHash: '',
+      expiresAt: null,
+      sentAt: null,
+      usedAt: null,
+    },
+  });
+  const inviteResult = await issueInviteForUser({ user: created, req });
+
+  return sendSuccess(res, 201, 'Student account created successfully', {
+    user: mapUserResponse(created, req),
+    teacher: {
+      id: normalizedTeacherId,
+      name: String(teacher.name || 'Teacher').trim() || 'Teacher',
+      advisorySectionId,
+    },
+    invite: inviteResult,
+  });
+});
+
 const updateManagedTeacher = asyncHandler(async (req, res) => {
   const department = ensureHeadTeacher(req);
   const { id } = req.params;
@@ -1125,6 +1217,7 @@ const sendManagedTeacherAnnouncement = asyncHandler(async (req, res) => {
 module.exports = {
   getManagedTeachers,
   createTeacherAccount,
+  createStudentAccount,
   updateManagedTeacher,
   getManagedTeacherStudents,
   getManagedTeacherLessons,
