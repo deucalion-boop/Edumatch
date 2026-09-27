@@ -1729,8 +1729,19 @@ body.student-dashboard .student-dashboard.student-theme-dark .student-main .secu
 
 body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-card .toggle-password,
 body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-card .toggle-password :is(i, i::before) {
-  color: #475569 !important;
-  -webkit-text-fill-color: #475569 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-card .toggle-password {
+  background: #365b0d !important;
+  border-color: #5f7418 !important;
+  opacity: 1 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-card .toggle-password:hover {
+  background: #4b7018 !important;
+  border-color: #7d942d !important;
 }
 
 body.student-dashboard .student-dashboard.student-theme-dark .premium-hero :is(h1, h2, h3, p, span, strong, i, i::before),

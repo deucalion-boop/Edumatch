@@ -1891,6 +1891,17 @@ export default {
   fill: #1e4307 !important;
   opacity: 1 !important;
 }
+.student-theme-dark .security-card .password-match,
+.student-theme-dark .security-card .password-match :is(span, i, i::before) {
+  color: #b91c1c !important;
+  -webkit-text-fill-color: #b91c1c !important;
+  opacity: 1 !important;
+}
+.student-theme-dark .security-card .password-match.valid,
+.student-theme-dark .security-card .password-match.valid :is(span, i, i::before) {
+  color: #166534 !important;
+  -webkit-text-fill-color: #166534 !important;
+}
 
 @media (prefers-color-scheme: dark) {
   .student-dashboard-page:not(.student-theme-light):not(.student-theme-dark) .settings-panel,
