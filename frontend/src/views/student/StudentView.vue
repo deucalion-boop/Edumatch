@@ -2173,5 +2173,30 @@ body.student-dashboard .student-dashboard.student-theme-dark .premium-pathway-pa
   border-color: #405348 !important;
 }
 
+/* Active dashboard submenu uses a light surface, so keep every label dark. */
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-sublink.active {
+  background: #edf5e2 !important;
+  border-color: #bfd399 !important;
+  color: #1e4307 !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-sublink.active::before {
+  background: #365b0d !important;
+  box-shadow: 0 0 0 3px rgba(54, 91, 13, 0.18) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-sublink.active .nav-sublink-title {
+  color: #1e4307 !important;
+  -webkit-text-fill-color: #1e4307 !important;
+  opacity: 1 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .sidebar-nav .nav-sublink.active .nav-sublink-caption {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+  opacity: 1 !important;
+}
+
 </style>
 
