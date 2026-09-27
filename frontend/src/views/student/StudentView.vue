@@ -1665,6 +1665,13 @@ body.student-dashboard .student-dashboard.student-theme-dark :is(.student-main, 
   -webkit-text-fill-color: #eaf2ec !important;
 }
 
+/* Keep light active controls readable when the dashboard is using the dark theme. */
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .settings-nav-item.active,
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .settings-nav-item.active :is(span, i, i::before) {
+  color: #1e4307 !important;
+  -webkit-text-fill-color: #1e4307 !important;
+}
+
 body.student-dashboard .student-dashboard.student-theme-dark .premium-hero :is(h1, h2, h3, p, span, strong, i, i::before),
 body.student-dashboard .student-dashboard.student-theme-dark :is(.premium-button, .pathway-primary-button, .grades-primary-button) :is(span, strong, i, i::before) {
   color: #ffffff !important;
