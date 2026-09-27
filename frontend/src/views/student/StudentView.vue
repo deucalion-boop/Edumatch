@@ -2198,5 +2198,24 @@ body.student-dashboard .student-dashboard.student-theme-dark .student-sidebar .s
   opacity: 1 !important;
 }
 
+/* Keep the profile editor canvas consistent with its dark form sections. */
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-main .profile-tab-content,
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-main .profile-tab-content .tab-pane.active {
+  background: #152019 !important;
+  border-color: #405348 !important;
+  color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-main .tab-header h3 {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-dashboard-page > .profile-content .profile-main .tab-header p {
+  color: #b9c5bd !important;
+  -webkit-text-fill-color: #b9c5bd !important;
+  opacity: 1 !important;
+}
+
 </style>
 
