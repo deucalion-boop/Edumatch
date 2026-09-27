@@ -1672,6 +1672,67 @@ body.student-dashboard .student-dashboard.student-theme-dark .student-main .sett
   -webkit-text-fill-color: #1e4307 !important;
 }
 
+/* Preserve dark foregrounds on the security panel's intentionally light surfaces. */
+body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(
+  .security-pill-shield,
+  .security-pill-strong,
+  .password-side-count,
+  .strength-badge,
+  .password-side-tip
+),
+body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(
+  .security-pill-shield,
+  .security-pill-strong,
+  .password-side-count,
+  .strength-badge,
+  .password-side-tip
+) :is(span, i, i::before) {
+  color: #1e4307 !important;
+  -webkit-text-fill-color: #1e4307 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(
+  .security-pill-idle,
+  .security-field-label small,
+  .strength-percent,
+  .password-action-note
+),
+body.student-dashboard .student-dashboard.student-theme-dark .student-main :is(
+  .security-pill-idle,
+  .security-field-label small
+) :is(i, i::before) {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-pill-medium,
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-pill-medium :is(i, i::before) {
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-pill-weak,
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-pill-weak :is(i, i::before) {
+  color: #b91c1c !important;
+  -webkit-text-fill-color: #b91c1c !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-form-banner-copy strong {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-form-banner-copy p {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-card .toggle-password,
+body.student-dashboard .student-dashboard.student-theme-dark .student-main .security-card .toggle-password :is(i, i::before) {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
 body.student-dashboard .student-dashboard.student-theme-dark .premium-hero :is(h1, h2, h3, p, span, strong, i, i::before),
 body.student-dashboard .student-dashboard.student-theme-dark :is(.premium-button, .pathway-primary-button, .grades-primary-button) :is(span, strong, i, i::before) {
   color: #ffffff !important;

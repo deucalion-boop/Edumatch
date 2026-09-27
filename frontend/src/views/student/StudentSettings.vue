@@ -1877,6 +1877,20 @@ export default {
 .student-theme-dark h2, .student-theme-dark h3, .student-theme-dark h4, .student-theme-dark h5, .student-theme-dark strong, .student-theme-dark label, .student-theme-dark .security-field-label > span { color: #f8fafc !important; }
 .student-theme-dark p, .student-theme-dark small, .student-theme-dark .field-help, .student-theme-dark .password-action-note, .student-theme-dark .strength-text { color: #b9c5bd !important; }
 .student-theme-dark input, .student-theme-dark select { background: #111b15 !important; border-color: #506157 !important; color: #f8fafc !important; }
+.student-theme-dark .student-settings-nav .settings-nav-item.active,
+.student-theme-dark .student-settings-nav .settings-nav-item.active > span,
+.student-theme-dark .student-settings-nav .settings-nav-item.active > i,
+.student-theme-dark .student-settings-nav .settings-nav-item.active > i::before {
+  color: #1e4307 !important;
+  -webkit-text-fill-color: #1e4307 !important;
+  opacity: 1 !important;
+}
+.student-theme-dark .student-settings-nav .settings-nav-item.active > svg,
+.student-theme-dark .student-settings-nav .settings-nav-item.active > svg path {
+  color: #1e4307 !important;
+  fill: #1e4307 !important;
+  opacity: 1 !important;
+}
 
 @media (prefers-color-scheme: dark) {
   .student-dashboard-page:not(.student-theme-light):not(.student-theme-dark) .settings-panel,
