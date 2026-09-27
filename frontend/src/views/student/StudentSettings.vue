@@ -1902,6 +1902,38 @@ export default {
   color: #166534 !important;
   -webkit-text-fill-color: #166534 !important;
 }
+.student-theme-dark .security-panel-pills .security-pill > i,
+.student-theme-dark .security-card .password-side-tip > i {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #365b0d !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+.student-theme-dark .security-panel-pills .security-pill > i::before,
+.student-theme-dark .security-card .password-side-tip > i::before {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+.student-theme-dark .security-card .password-input .toggle-password {
+  background: #365b0d !important;
+  border-color: #5f7418 !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+.student-theme-dark .security-card .password-input .toggle-password > i,
+.student-theme-dark .security-card .password-input .toggle-password > i::before {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
 
 @media (prefers-color-scheme: dark) {
   .student-dashboard-page:not(.student-theme-light):not(.student-theme-dark) .settings-panel,
