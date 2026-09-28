@@ -1580,7 +1580,6 @@ body.student-dashboard .student-dashboard.student-theme-dark .notification-dropd
 }
 
 body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-item.unread {
-  border-left-color: #78b957 !important;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2) !important;
 }
 

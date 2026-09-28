@@ -161,7 +161,6 @@ function formatTimestamp(value) {
 }
 
 .user-notification-item.unread {
-  border-left: 4px solid #2563eb;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
