@@ -216,14 +216,16 @@
     </section>
     </div>
 
-    <div
-      v-if="previewAttachment"
-      class="lesson-preview-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Lesson reader"
-      @click.self="requestCloseLessonReader"
-    >
+    <Teleport to="body">
+      <div
+        v-if="previewAttachment"
+        class="lesson-preview-modal"
+        :class="{ 'is-standalone-reader': isStandaloneLessonReader }"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Lesson reader"
+        @click.self="requestCloseLessonReader"
+      >
       <div class="lesson-preview-dialog">
         <div class="lesson-preview-head">
           <div class="lesson-preview-copy">
@@ -265,7 +267,19 @@
 
         <div class="lesson-preview-footer">
           <div v-if="readingLesson" class="lesson-reader-progress">
-            <strong>{{ lessonProgressLabel(readingLesson) }}</strong>
+            <div class="lesson-reader-progress__topline">
+              <strong>{{ lessonProgressLabel(readingLesson) }}</strong>
+              <b>{{ lessonProgressPercent(readingLesson) }}%</b>
+            </div>
+            <div
+              class="lesson-reader-progress__track"
+              role="progressbar"
+              :aria-valuenow="lessonProgressPercent(readingLesson)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <span :style="{ width: `${lessonProgressPercent(readingLesson)}%` }"></span>
+            </div>
             <span>{{ lessonEngagementSeconds(readingLesson) < 20 ? `Continue reading for ${20 - lessonEngagementSeconds(readingLesson)} more seconds.` : 'When you reach the end, mark this lesson complete.' }}</span>
             <small v-if="lessonProgressMessage">{{ lessonProgressMessage }}</small>
           </div>
@@ -289,8 +303,9 @@
             Lesson Complete — Close Tab
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </Teleport>
 
     <div v-if="isJoinClassModalOpen" class="join-class-modal" @click.self="closeJoinClassModal">
       <div class="join-class-dialog">
@@ -587,6 +602,12 @@ export default {
     },
     lessonProgressTone(lesson) {
       return `is-${String(lesson?.progress?.status || 'not_started').replace(/_/g, '-')}`
+    },
+    lessonProgressPercent(lesson) {
+      if (lesson?.progress?.status === 'completed') return 100
+      const storedPercent = Number(lesson?.progress?.progressPercent || 0)
+      const readingPercent = Math.round(this.lessonEngagementSeconds(lesson) / 60 * 90)
+      return Math.min(90, Math.max(storedPercent, readingPercent))
     },
     lessonEngagementSeconds(lesson) {
       return Number(lesson?.progress?.engagementSeconds || 0) + (this.activeReadingLessonId === lesson?.id ? this.activeLessonSeconds : 0)
@@ -1538,7 +1559,7 @@ export default {
 .lesson-preview-modal {
   position: fixed;
   inset: 0;
-  z-index: 1250;
+  z-index: 2147483000;
   background: rgba(15, 23, 42, 0.7);
   display: flex;
   align-items: center;
@@ -1546,8 +1567,10 @@ export default {
   padding: 1rem;
 }
 
-.lessons-page.is-standalone-reader .lesson-preview-modal {
+.lesson-preview-modal.is-standalone-reader {
   align-items: stretch;
+  width: 100vw;
+  height: 100dvh;
   padding: 0;
   background: #0f172a;
 }
@@ -1564,8 +1587,9 @@ export default {
   overflow: hidden;
 }
 
-.lessons-page.is-standalone-reader .lesson-preview-dialog {
+.lesson-preview-modal.is-standalone-reader .lesson-preview-dialog {
   width: 100%;
+  height: 100dvh;
   max-height: none;
   min-height: 100dvh;
   border: 0;
@@ -1666,13 +1690,17 @@ export default {
   background: #ffffff;
 }
 
-.lessons-page.is-standalone-reader .lesson-preview-pdf,
-.lessons-page.is-standalone-reader .lesson-preview-image {
+.lesson-preview-modal.is-standalone-reader .lesson-preview-pdf,
+.lesson-preview-modal.is-standalone-reader .lesson-preview-image {
   height: 100%;
   min-height: 0;
 }
 
 .lesson-reader-progress { display: grid; gap: 0.16rem; min-width: 0; }
+.lesson-reader-progress__topline { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.lesson-reader-progress__topline b { color: #1e4307; font-size: 0.84rem; }
+.lesson-reader-progress__track { width: min(30rem, 46vw); height: 8px; overflow: hidden; border-radius: 999px; background: #dce5d8; }
+.lesson-reader-progress__track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #4f8a35, #8fc867); transition: width 300ms ease; }
 .lesson-reader-progress strong { color: #1e4307; font-size: 0.8rem; }
 .lesson-reader-progress span { color: #64748b; font-size: 0.72rem; }
 .lesson-reader-progress small { color: #b45309; font-size: 0.7rem; font-weight: 650; }
