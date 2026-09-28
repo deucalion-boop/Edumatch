@@ -1,13 +1,12 @@
-const User = require('../models/User');
-const Recommendation = require('../models/Recommendation');
 const { sendSuccess } = require('../utils/responseHelper');
 const { ROLE_HEADTEACHER, ROLE_SECRETARY, ROLE_STUDENT, ROLE_TEACHER } = require('../constants/userRoles');
 const { mapUserResponse } = require('../services/userManagementService');
 const { formatRecommendationPayload } = require('../services/recommendationService');
+const { listSupabaseAccounts } = require('../services/supabaseAccountService');
+const { readProfileRows } = require('../services/supabaseUserProfileService');
 const {
-  buildArchivedStudentsFilter,
   buildDefaultSchoolYearLabel,
-  buildExcludeArchivedStudentsFilter,
+  isArchivedStudent,
   normalizeSchoolYearLabel,
 } = require('../utils/studentArchive');
 const {
@@ -38,51 +37,74 @@ function assertSecretaryAccess(req, message) {
   }
 }
 
-async function buildStudentRecordPayload(req, query = {}, { archived = false } = {}) {
-  const students = await User.find(query)
-    .select('-password +lastLoginAt')
-    .populate('managedBy', 'name email subject department')
-    .populate('enrollment.teacherId', 'name email subject department')
-    .populate('sectionId', 'name')
-    .populate('archive.archivedBy', 'name email')
-    .sort(
-      archived
-        ? { 'archive.schoolYear': -1, 'archive.archivedAt': -1, department: 1, gradeLevel: 1, name: 1 }
-        : { department: 1, gradeLevel: 1, name: 1 }
-    );
+function accountId(value) {
+  return String(value?._id || value?.id || value || '').trim();
+}
+
+function mapSecretaryUserResponse(user, req) {
+  const { password: _password, ...safeUser } = mapUserResponse(user, req);
+  return safeUser;
+}
+
+function compareStudentRecords(left, right, archived) {
+  if (archived) {
+    const schoolYearComparison = String(right?.archive?.schoolYear || '')
+      .localeCompare(String(left?.archive?.schoolYear || ''));
+    if (schoolYearComparison) return schoolYearComparison;
+    const archivedAtComparison = String(right?.archive?.archivedAt || '')
+      .localeCompare(String(left?.archive?.archivedAt || ''));
+    if (archivedAtComparison) return archivedAtComparison;
+  }
+
+  return String(left?.department || '').localeCompare(String(right?.department || ''))
+    || String(left?.gradeLevel || '').localeCompare(String(right?.gradeLevel || ''))
+    || String(left?.name || '').localeCompare(String(right?.name || ''));
+}
+
+async function buildStudentRecordPayload(req, { archived = false, schoolYear = '' } = {}) {
+  const accounts = await listSupabaseAccounts();
+  const students = accounts
+    .filter((account) => String(account?.role || '').trim() === ROLE_STUDENT)
+    .filter((student) => isArchivedStudent(student) === archived)
+    .filter((student) => !schoolYear || String(student?.archive?.schoolYear || '').trim() === schoolYear)
+    .sort((left, right) => compareStudentRecords(left, right, archived));
 
   const studentIds = students
-    .map((student) => student?._id)
+    .map(accountId)
     .filter(Boolean);
   const recommendationRows = studentIds.length > 0
-    ? await Recommendation.find({ studentId: { $in: studentIds } })
-      .select('studentId assessmentAttempts strandScores recommendedStrand recommendationExplanation updatedAt lastReason')
-      .lean()
+    ? await readProfileRows('recommendations', 'student_id', studentIds)
     : [];
   const recommendationsByStudentId = new Map(
     recommendationRows.map((row) => [String(row?.studentId || '').trim(), formatRecommendationPayload(row)])
   );
 
-  const sectionIds = students
-    .map((student) => String(student?.sectionId?._id || student?.sectionId || '').trim())
-    .filter(Boolean);
-  const advisers = sectionIds.length > 0
-    ? await User.find({
-      role: ROLE_TEACHER,
-      advisorySectionId: { $in: sectionIds },
-    })
-      .select('_id name email subject department advisorySectionId')
-      .lean()
+  const sectionIds = [...new Set(students.map((student) => accountId(student?.sectionId)).filter(Boolean))];
+  const sections = sectionIds.length > 0
+    ? await readProfileRows('sections', 'id', sectionIds)
     : [];
+  const sectionById = new Map(sections.map((section) => [accountId(section), section]));
+  const accountsById = new Map(accounts.map((account) => [accountId(account), account]));
+  const advisers = accounts.filter((account) => String(account?.role || '').trim() === ROLE_TEACHER);
   const adviserBySectionId = new Map(
-    advisers.map((teacher) => [String(teacher?.advisorySectionId || '').trim(), teacher])
+    advisers.map((teacher) => [accountId(teacher?.advisorySectionId), teacher]).filter(([sectionId]) => Boolean(sectionId))
   );
 
   return students.map((student) => {
-    const mapped = mapUserResponse(student, req);
-    const studentId = String(student?._id || mapped?.id || '').trim();
-    const sectionId = String(student?.sectionId?._id || student?.sectionId || '').trim();
-    const adviser = adviserBySectionId.get(sectionId) || student?.enrollment?.teacherId || student?.managedBy || null;
+    const studentId = accountId(student);
+    const sectionId = accountId(student?.sectionId);
+    const section = sectionById.get(sectionId) || null;
+    const adviserId = accountId(student?.enrollment?.teacherId || student?.managedBy);
+    const adviser = adviserBySectionId.get(sectionId) || accountsById.get(adviserId) || null;
+    const archivedById = accountId(student?.archive?.archivedBy);
+    const mapped = mapSecretaryUserResponse({
+      ...student,
+      sectionId: section || student?.sectionId,
+      archive: {
+        ...(student?.archive || {}),
+        archivedBy: accountsById.get(archivedById) || student?.archive?.archivedBy || null,
+      },
+    }, req);
     const recommendation = recommendationsByStudentId.get(studentId) || formatRecommendationPayload({
       studentId,
       assessmentAttempts: [],
@@ -101,10 +123,10 @@ async function buildStudentRecordPayload(req, query = {}, { archived = false } =
     return {
       ...mapped,
       gradeLevel: String(student?.gradeLevel || '').trim(),
-      section: student?.sectionId
+      section: section
         ? {
-          id: String(student.sectionId._id || ''),
-          name: String(student.sectionId.name || '').trim(),
+          id: accountId(section),
+          name: String(section.name || '').trim(),
         }
         : null,
       adviser: adviser ? {
@@ -164,14 +186,7 @@ function matchesArchivedPdfExportFilters(student, filters = {}) {
 async function buildArchivedPdfExportSelection(req, rawFilters = {}) {
   const filters = normalizeArchivedPdfExportFilters(rawFilters);
   const schoolYear = filters.schoolYear === 'all' ? '' : filters.schoolYear;
-  const students = await buildStudentRecordPayload(
-    req,
-    {
-      role: ROLE_STUDENT,
-      ...buildArchivedStudentsFilter({ schoolYear }),
-    },
-    { archived: true }
-  );
+  const students = await buildStudentRecordPayload(req, { archived: true, schoolYear });
   const filteredStudents = students.filter((student) => matchesArchivedPdfExportFilters(student, filters));
   const studentIds = filteredStudents
     .map((student) => String(student?.id || student?._id || '').trim())
@@ -204,25 +219,23 @@ async function findLatestArchivedPdfExportRequest(requesterId, requestSignature)
 const getDirectory = asyncHandler(async (req, res) => {
   assertSecretaryAccess(req, 'Only Secretaries can access this directory');
 
-  const users = await User.find({
-    role: { $in: [ROLE_HEADTEACHER, ROLE_TEACHER] },
-  })
-    .select('-password +lastLoginAt')
-    .populate('managedBy', 'name email')
-    .sort({ role: 1, department: 1, name: 1 });
+  const users = (await listSupabaseAccounts())
+    .filter((user) => [ROLE_HEADTEACHER, ROLE_TEACHER].includes(String(user?.role || '').trim()))
+    .sort((left, right) => (
+      String(left?.role || '').localeCompare(String(right?.role || ''))
+      || String(left?.department || '').localeCompare(String(right?.department || ''))
+      || String(left?.name || '').localeCompare(String(right?.name || ''))
+    ));
 
   return sendSuccess(res, 200, 'Directory fetched successfully', {
-    users: users.map((user) => mapUserResponse(user, req)),
+    users: users.map((user) => mapSecretaryUserResponse(user, req)),
   });
 });
 
 const getStudentRecords = asyncHandler(async (req, res) => {
   assertSecretaryAccess(req, 'Only Secretaries can access student records');
 
-  const students = await buildStudentRecordPayload(req, {
-    role: ROLE_STUDENT,
-    ...buildExcludeArchivedStudentsFilter(),
-  });
+  const students = await buildStudentRecordPayload(req);
 
   return sendSuccess(res, 200, 'Student records fetched successfully', {
     students,
@@ -241,14 +254,7 @@ const getArchivedStudentRecords = asyncHandler(async (req, res) => {
     ? normalizeSchoolYearLabel(requestedSchoolYear)
     : '';
 
-  const students = await buildStudentRecordPayload(
-    req,
-    {
-      role: ROLE_STUDENT,
-      ...buildArchivedStudentsFilter({ schoolYear }),
-    },
-    { archived: true }
-  );
+  const students = await buildStudentRecordPayload(req, { archived: true, schoolYear });
 
   const schoolYears = Array.from(
     new Set(
@@ -420,14 +426,11 @@ const endSchoolYearArchiveStudents = asyncHandler(async (req, res) => {
 
   const schoolYear = normalizeSchoolYearLabel(req.body?.schoolYear, buildDefaultSchoolYearLabel());
   const now = new Date();
-  const candidates = await User.find({
-    role: ROLE_STUDENT,
-    status: 'inactive',
-    ...buildExcludeArchivedStudentsFilter(),
-  })
-    .select('_id name email status gradeLevel department')
-    .sort({ name: 1 })
-    .lean();
+  const candidates = (await listSupabaseAccounts())
+    .filter((account) => String(account?.role || '').trim() === ROLE_STUDENT)
+    .filter((student) => String(student?.status || '').trim().toLowerCase() === 'inactive')
+    .filter((student) => !isArchivedStudent(student))
+    .sort((left, right) => String(left?.name || '').localeCompare(String(right?.name || '')));
 
   if (candidates.length === 0) {
     return sendSuccess(res, 200, 'No inactive student records were available to archive', {
@@ -438,24 +441,20 @@ const endSchoolYearArchiveStudents = asyncHandler(async (req, res) => {
     });
   }
 
-  const result = await User.updateMany(
-    {
-      _id: { $in: candidates.map((student) => student._id) },
-      ...buildExcludeArchivedStudentsFilter(),
-    },
-    {
-      $set: {
-        'archive.isArchived': true,
-        'archive.schoolYear': schoolYear,
-        'archive.archivedAt': now,
-        'archive.archivedBy': req.user._id,
-        'archive.reason': 'inactive',
-      },
-    }
-  );
+  await Promise.all(candidates.map(async (student) => {
+    student.archive = {
+      ...(student.archive || {}),
+      isArchived: true,
+      schoolYear,
+      archivedAt: now.toISOString(),
+      archivedBy: accountId(req.user),
+      reason: 'inactive',
+    };
+    await student.save();
+  }));
 
   return sendSuccess(res, 200, 'Inactive student records archived successfully', {
-    archivedCount: Number(result?.modifiedCount || 0),
+    archivedCount: candidates.length,
     schoolYear,
     archivedAt: now,
     archivedStudents: candidates.map((student) => ({
