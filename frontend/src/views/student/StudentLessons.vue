@@ -1,5 +1,5 @@
 <template>
-  <div class="student-dashboard-page lessons-page">
+  <div class="student-dashboard-page lessons-page" :class="{ 'is-standalone-reader': isStandaloneLessonReader }">
     <header class="lessons-page-hero">
       <div class="lessons-page-hero__copy">
         <span class="lessons-page-eyebrow"><i class="fas fa-book-open" aria-hidden="true"></i> Learning hub</span>
@@ -222,7 +222,7 @@
       role="dialog"
       aria-modal="true"
       aria-label="Lesson reader"
-      @click.self="closeAttachmentPreview"
+      @click.self="requestCloseLessonReader"
     >
       <div class="lesson-preview-dialog">
         <div class="lesson-preview-head">
@@ -231,7 +231,7 @@
             <h3>{{ previewAttachment.fileName || 'Attachment' }}</h3>
             <p>{{ readingLesson?.title || 'Learning material' }}</p>
           </div>
-          <button type="button" class="lesson-reader-close" aria-label="Close lesson reader" @click="closeAttachmentPreview">
+          <button v-if="canExitLessonReader" type="button" class="lesson-reader-close" aria-label="Close lesson reader" @click="requestCloseLessonReader">
             <i class="fas fa-xmark" aria-hidden="true"></i>
           </button>
         </div>
@@ -278,6 +278,15 @@
           >
             <i class="fas" :class="isSavingLessonProgress ? 'fa-spinner fa-spin' : 'fa-circle-check'"></i>
             {{ lessonEngagementSeconds(readingLesson) < 20 ? 'Keep Reading' : 'Complete Lesson' }}
+          </button>
+          <button
+            v-else-if="isStandaloneLessonReader"
+            type="button"
+            class="lesson-complete-button"
+            @click="requestCloseLessonReader"
+          >
+            <i class="fas fa-circle-check" aria-hidden="true"></i>
+            Lesson Complete — Close Tab
           </button>
         </div>
       </div>
@@ -372,6 +381,13 @@ export default {
     },
     readingLesson() {
       return this.lessons.find((lesson) => lesson.id === this.activeReadingLessonId) || null
+    },
+    isStandaloneLessonReader() {
+      return this.$route.query.reader === '1'
+    },
+    canExitLessonReader() {
+      if (!this.isStandaloneLessonReader) return true
+      return Boolean(this.lessonReaderError) || this.readingLesson?.progress?.status === 'completed'
     },
     currentLessonsEmptyMessage() {
       if (this.hasLessonsLoadError) return this.lessonsEmptyMessage
@@ -656,6 +672,8 @@ export default {
       this.selectedSubjectId = this.normalizeId(lesson.subjectId)
       this.selectedLessonId = lesson.id
       this.revealSelectedLesson()
+      window.history.replaceState({ lessonReader: true }, '', window.location.href)
+      window.history.pushState({ lessonReaderGuard: true }, '', window.location.href)
       await this.loadLessonReader(lesson, attachment)
     },
     async loadLessonReader(lesson, attachment) {
@@ -707,8 +725,25 @@ export default {
         }
       }
     },
+    async requestCloseLessonReader() {
+      if (!this.canExitLessonReader) return
+      if (this.isStandaloneLessonReader) {
+        window.close()
+        return
+      }
+      await this.closeAttachmentPreview()
+    },
+    handleLessonReaderBeforeUnload(event) {
+      if (!this.isStandaloneLessonReader || this.canExitLessonReader) return
+      event.preventDefault()
+      event.returnValue = ''
+    },
+    handleLessonReaderPopState() {
+      if (!this.isStandaloneLessonReader || this.canExitLessonReader) return
+      window.history.pushState({ lessonReaderGuard: true }, '', window.location.href)
+    },
     handleReaderKeydown(event) {
-      if (event.key === 'Escape' && this.previewAttachment) void this.closeAttachmentPreview()
+      if (event.key === 'Escape' && this.previewAttachment && this.canExitLessonReader) void this.requestCloseLessonReader()
     },
     openJoinClassModal() {
       this.isJoinClassModalOpen = true
@@ -811,12 +846,16 @@ export default {
     this.authStore = useAuthStore()
     window.addEventListener('edumatch-student-tour-focus', this.handleTourFocus)
     window.addEventListener('keydown', this.handleReaderKeydown)
+    window.addEventListener('beforeunload', this.handleLessonReaderBeforeUnload)
+    window.addEventListener('popstate', this.handleLessonReaderPopState)
     this.fetchLessons()
     this.fetchSubjects()
   },
   beforeUnmount() {
     window.removeEventListener('edumatch-student-tour-focus', this.handleTourFocus)
     window.removeEventListener('keydown', this.handleReaderKeydown)
+    window.removeEventListener('beforeunload', this.handleLessonReaderBeforeUnload)
+    window.removeEventListener('popstate', this.handleLessonReaderPopState)
     void this.closeAttachmentPreview()
   }
 }
@@ -1475,6 +1514,16 @@ export default {
 .lesson-read-action:hover:not(:disabled) { transform: translateY(-1px); background: #3f762b; box-shadow: 0 8px 18px rgba(79, 138, 53, 0.22); }
 .lesson-read-action:disabled { border-color: #cbd5e1; background: #e2e8f0; color: #64748b; cursor: not-allowed; }
 
+.lessons-page.is-standalone-reader {
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.lessons-page.is-standalone-reader > .lessons-page-hero,
+.lessons-page.is-standalone-reader > .lessons-workspace {
+  display: none;
+}
+
 .lesson-preview-modal {
   position: fixed;
   inset: 0;
@@ -1484,6 +1533,12 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 1rem;
+}
+
+.lessons-page.is-standalone-reader .lesson-preview-modal {
+  align-items: stretch;
+  padding: 0;
+  background: #0f172a;
 }
 
 .lesson-preview-dialog {
@@ -1496,6 +1551,15 @@ export default {
   background: #ffffff;
   box-shadow: 0 30px 70px rgba(15, 23, 42, 0.3);
   overflow: hidden;
+}
+
+.lessons-page.is-standalone-reader .lesson-preview-dialog {
+  width: 100%;
+  max-height: none;
+  min-height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .lesson-preview-head,
@@ -1589,6 +1653,12 @@ export default {
   padding: 0.85rem 1.1rem 1rem;
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
+}
+
+.lessons-page.is-standalone-reader .lesson-preview-frame,
+.lessons-page.is-standalone-reader .lesson-preview-image {
+  height: 100%;
+  min-height: 0;
 }
 
 .lesson-reader-progress { display: grid; gap: 0.16rem; min-width: 0; }
