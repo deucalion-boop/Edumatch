@@ -1996,17 +1996,6 @@ export default {
   box-shadow: 0 10px 24px rgba(30, 67, 7, 0.1);
 }
 
-.lessons-page .subject-card.active::before {
-  position: absolute;
-  top: 0.8rem;
-  bottom: 0.8rem;
-  left: 0;
-  width: 4px;
-  border-radius: 0 999px 999px 0;
-  background: #1e4307;
-  content: "";
-}
-
 .lessons-page .subject-card-head strong {
   color: #18320d !important;
   font-size: 0.9rem;
