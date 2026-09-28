@@ -1765,7 +1765,7 @@ export default {
 
 .activity-list-card.active {
   border-color: #1e4307;
-  box-shadow: 0 12px 28px rgba(30, 67, 7, 0.13), inset 3px 0 0 #1e4307;
+  box-shadow: 0 12px 28px rgba(30, 67, 7, 0.13);
 }
 
 .activity-list-card:focus-visible {
