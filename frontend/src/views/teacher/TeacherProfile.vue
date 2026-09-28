@@ -1604,5 +1604,3 @@ onBeforeUnmount(() => {
 .profile-form .field-error { display: block; color: #dc2626; font-size: 0.75rem; margin-top: 0.3rem; }
 .profile-form input[aria-invalid="true"] { border-color: #dc2626; }
 </style>
-
-
