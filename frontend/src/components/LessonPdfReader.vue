@@ -1,6 +1,6 @@
 <template>
   <div class="lesson-pdf-reader">
-    <div v-if="isLoading" class="lesson-pdf-state" role="status">
+    <div v-if="isLoading && pages.length === 0" class="lesson-pdf-state" role="status">
       <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
       <span>Preparing lesson pages...</span>
     </div>
@@ -72,11 +72,10 @@ async function renderDocument(source) {
       const viewport = page.getViewport({ scale: 1.5 })
       const canvas = canvases.get(pageNumber)
       if (!canvas) continue
-      const context = canvas.getContext('2d', { alpha: false })
       canvas.width = Math.ceil(viewport.width)
       canvas.height = Math.ceil(viewport.height)
       canvas.style.aspectRatio = `${viewport.width} / ${viewport.height}`
-      const task = page.render({ canvasContext: context, viewport })
+      const task = page.render({ canvas, viewport })
       renderTasks.push(task)
       await task.promise
     }
