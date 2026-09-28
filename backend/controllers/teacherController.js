@@ -1768,6 +1768,44 @@ const updateAssessmentQuestions = asyncHandler(async (req, res) => {
     activityPoints: activityPointsRaw,
   } = req.body;
 
+  const deadlineFieldNames = ['submissionDeadline', 'deadline', 'deadlineAt'];
+  const isDeadlineOnlyUpdate = Object.keys(req.body || {}).every((key) => deadlineFieldNames.includes(key))
+    && deadlineFieldNames.some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
+
+  // Assessments now live in Supabase and use UUIDs. Keep deadline-only edits on
+  // that storage path so UUID teacher IDs are never passed to a Mongoose
+  // ObjectId field (which previously caused the deadline editor to fail).
+  if (isDeadlineOnlyUpdate) {
+    const assessment = await findSupabaseAssessment(id, req.user._id);
+    if (!assessment) {
+      const error = new Error('Assessment not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const parsedDeadline = parseSubmissionDeadline(
+      submissionDeadlineRaw ?? deadlineRaw ?? deadlineAtRaw
+    );
+    if (parsedDeadline && isPastDate(parsedDeadline)) {
+      const error = new Error('submissionDeadline must be a future date and time');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    assessment.submissionDeadline = parsedDeadline ? parsedDeadline.toISOString() : null;
+    assessment.lastModifiedBy = req.user._id;
+    if (!assessment.publishedBy) assessment.publishedBy = req.user._id;
+
+    const updatedAssessment = await updateSupabaseAssessment(id, req.user._id, assessment);
+    if (!updatedAssessment) {
+      const error = new Error('Assessment not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return sendSuccess(res, 200, 'Assessment updated successfully', { assessment: updatedAssessment });
+  }
+
   const assessment = await Assessment.findOne({ _id: id, createdBy: req.user._id });
   if (!assessment) {
     const error = new Error('Assessment not found');

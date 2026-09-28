@@ -61,6 +61,52 @@ test('failed assignment cleanup leaves the enrollment available for retry', asyn
   assert.equal(client.tables.subject_enrollments[0].id, 'enrollment');
 });
 
+test('deadline edits accept Supabase UUIDs and persist without a Mongoose ObjectId cast', async () => {
+  const teacherId = 'b3bf29ca-2819-4ed4-a8bb-8673803b87ed';
+  const assessmentId = '926ea356-64bd-46b9-bf6f-68615de9eb42';
+  client = createFakeSupabase({
+    assessments: [{
+      id: assessmentId,
+      created_by: teacherId,
+      title: 'Tryy',
+      exam_type: 'activity',
+      subject: 'Science',
+      subject_id: subjectId,
+      subject_category: 'Science',
+      difficulty: 'medium',
+      number_of_items: 0,
+      assessment_mode: 'activity',
+      assignment_scope: 'handled_class',
+      questions: [],
+    }],
+  });
+
+  let response;
+  await controller.updateAssessmentQuestions({
+    params: { id: assessmentId },
+    body: { submissionDeadline: '2099-10-01T12:28:00.000Z' },
+    user: { _id: teacherId },
+  }, {
+    status() { return this; },
+    json(body) { response = body; },
+  }, error => { throw error; });
+
+  assert.equal(response.assessment.submissionDeadline, '2099-10-01T12:28:00.000Z');
+  assert.equal(client.tables.assessments[0].submission_deadline, '2099-10-01T12:28:00.000Z');
+
+  await controller.updateAssessmentQuestions({
+    params: { id: assessmentId },
+    body: { submissionDeadline: '' },
+    user: { _id: teacherId },
+  }, {
+    status() { return this; },
+    json(body) { response = body; },
+  }, error => { throw error; });
+
+  assert.equal(response.assessment.submissionDeadline, null);
+  assert.equal(client.tables.assessments[0].submission_deadline, null);
+});
+
 test('Add to Classes accepts Supabase text subject IDs without using Mongoose ObjectId casts', async () => {
   const sourceSubjectId = 'source-subject-id';
   client = createFakeSupabase({
