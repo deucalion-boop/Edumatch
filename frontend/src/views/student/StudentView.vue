@@ -1459,6 +1459,50 @@ body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard 
   color: #e2ebe4 !important;
 }
 
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-panel {
+  background: #101913 !important;
+  border-color: #405348 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-empty-state {
+  background: #162019 !important;
+  border-color: #526b59 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-empty-state__art {
+  background: linear-gradient(145deg, #2c4032, #203127) !important;
+  border: 1px solid #6b8974 !important;
+  color: #dff3d5 !important;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28) !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-empty-state__art > i,
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-empty-state__art > i::before {
+  color: #dff3d5 !important;
+  -webkit-text-fill-color: #dff3d5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-empty-state .premium-eyebrow {
+  color: #b9dfa5 !important;
+  -webkit-text-fill-color: #b9dfa5 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-empty-state h3 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-empty-state p {
+  color: #c4d0c7 !important;
+  -webkit-text-fill-color: #c4d0c7 !important;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard .premium-empty-state .empty-check {
+  border-color: #162019 !important;
+  background: #4f8a35 !important;
+}
+
 body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(.visual-chip, .premium-text-link, .premium-button--soft) {
   background: #202f25 !important;
   border-color: #496050 !important;
