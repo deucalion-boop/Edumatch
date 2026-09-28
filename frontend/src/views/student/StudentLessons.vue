@@ -177,7 +177,7 @@
                 </div>
                 <span v-if="lesson.progress?.status !== 'completed'" class="lesson-reader-hint">
                   <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                  Open the lesson reader to begin
+                  Open the lesson reader in a new tab to begin
                 </span>
                 <p v-if="lessonProgressMessage && selectedLessonId === lesson.id" class="lesson-progress-message">{{ lessonProgressMessage }}</p>
               </section>
@@ -337,6 +337,7 @@ export default {
       lessonReaderError: '',
       isLessonReaderLoading: false,
       lessonReaderRequestId: 0,
+      hasOpenedRequestedReader: false,
       isLessonsLoading: false,
       lessonsEmptyMessage: 'No lessons available yet. Join a class and wait for teacher approval to access lesson materials.',
       hasLessonsLoadError: false,
@@ -622,7 +623,42 @@ export default {
         this.isSavingLessonProgress = false
       }
     },
-    async openLessonReader(lesson, attachment) {
+    openLessonReader(lesson, attachment) {
+      if (!lesson?.id || !attachment?.url) return
+      const attachmentIndex = Array.isArray(lesson.attachments) ? lesson.attachments.indexOf(attachment) : -1
+      const readerRoute = this.$router.resolve({
+        path: this.$route.path,
+        query: {
+          lessonId: lesson.id,
+          reader: '1',
+          attachmentId: attachment.id || '',
+          attachmentIndex: attachmentIndex >= 0 ? String(attachmentIndex) : '0'
+        }
+      })
+      const readerWindow = window.open(readerRoute.href, '_blank')
+      if (!readerWindow) {
+        this.lessonProgressMessage = 'Allow pop-ups for EduMatch to open the lesson reader in a new tab.'
+        return
+      }
+      readerWindow.opener = null
+    },
+    async openRequestedLessonReader() {
+      if (this.$route.query.reader !== '1' || this.hasOpenedRequestedReader) return
+      const lesson = this.lessons.find((row) => String(row.id) === String(this.$route.query.lessonId || ''))
+      if (!lesson) return
+      const requestedAttachmentId = String(this.$route.query.attachmentId || '')
+      const requestedAttachmentIndex = Number.parseInt(String(this.$route.query.attachmentIndex || '0'), 10)
+      const attachments = Array.isArray(lesson.attachments) ? lesson.attachments : []
+      const attachment = attachments.find((item) => String(item.id || '') === requestedAttachmentId)
+        || attachments[Number.isInteger(requestedAttachmentIndex) ? requestedAttachmentIndex : 0]
+      if (!attachment?.url) return
+      this.hasOpenedRequestedReader = true
+      this.selectedSubjectId = this.normalizeId(lesson.subjectId)
+      this.selectedLessonId = lesson.id
+      this.revealSelectedLesson()
+      await this.loadLessonReader(lesson, attachment)
+    },
+    async loadLessonReader(lesson, attachment) {
       if (!lesson?.id || !attachment?.url) return
       await this.closeAttachmentPreview()
       const requestId = ++this.lessonReaderRequestId
@@ -758,6 +794,7 @@ export default {
         this.syncSelectedSubject()
         this.syncSelectedLesson()
         this.openNotificationLesson()
+        await this.openRequestedLessonReader()
         this.applyPendingTourAction()
       } catch (error) {
         console.error('[StudentLessons] Failed to fetch lessons:', error)
