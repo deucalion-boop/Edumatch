@@ -245,12 +245,12 @@
             <i class="fas fa-triangle-exclamation"></i>
             <span>{{ lessonReaderError }}</span>
           </div>
-          <iframe
-            v-else-if="isPreviewPdf(previewAttachment) && lessonReaderBlobUrl"
-            :src="lessonReaderBlobUrl"
-            :title="previewAttachment.fileName || 'Attachment preview'"
-            class="lesson-preview-frame"
-          ></iframe>
+          <LessonPdfReader
+            v-else-if="isPreviewPdf(previewAttachment) && lessonReaderPdfData"
+            :data="lessonReaderPdfData"
+            class="lesson-preview-pdf"
+            @error="handleLessonPdfError"
+          />
           <img
             v-else-if="isPreviewImage(previewAttachment) && lessonReaderBlobUrl"
             :src="lessonReaderBlobUrl"
@@ -326,12 +326,15 @@
 
 <script>
 import axios from 'axios'
+import { defineAsyncComponent } from 'vue'
 import { useAuthStore } from '../../stores/auth.js'
 
 const NEW_CONTENT_WINDOW_MS = 72 * 60 * 60 * 1000
+const LessonPdfReader = defineAsyncComponent(() => import('../../components/LessonPdfReader.vue'))
 
 export default {
   name: 'StudentLessons',
+  components: { LessonPdfReader },
   data() {
     return {
       lessons: [],
@@ -343,6 +346,7 @@ export default {
       previewAttachment: null,
       activeReadingLessonId: null,
       lessonReaderBlobUrl: '',
+      lessonReaderPdfData: null,
       lessonReaderError: '',
       isLessonReaderLoading: false,
       lessonReaderRequestId: 0,
@@ -687,15 +691,17 @@ export default {
       try {
         const response = await axios.get(this.resolveLessonReaderUrl(attachment.url), {
           ...this.getAuthConfig(),
-          responseType: 'blob'
+          responseType: 'arraybuffer'
         })
         const contentType = String(response.headers?.['content-type'] || attachment.fileType || 'application/pdf')
-        const blobUrl = window.URL.createObjectURL(new Blob([response.data], { type: contentType }))
         if (requestId !== this.lessonReaderRequestId || !this.previewAttachment) {
-          window.URL.revokeObjectURL(blobUrl)
           return
         }
-        this.lessonReaderBlobUrl = blobUrl
+        if (this.isPreviewPdf(attachment)) {
+          this.lessonReaderPdfData = response.data
+        } else {
+          this.lessonReaderBlobUrl = window.URL.createObjectURL(new Blob([response.data], { type: contentType }))
+        }
         this.startLessonEngagement(lesson)
       } catch (error) {
         if (requestId === this.lessonReaderRequestId) {
@@ -712,6 +718,7 @@ export default {
       this.stopLessonEngagement()
       if (this.lessonReaderBlobUrl) window.URL.revokeObjectURL(this.lessonReaderBlobUrl)
       this.lessonReaderBlobUrl = ''
+      this.lessonReaderPdfData = null
       this.lessonReaderError = ''
       this.isLessonReaderLoading = false
       this.previewAttachment = null
@@ -732,6 +739,10 @@ export default {
         return
       }
       await this.closeAttachmentPreview()
+    },
+    handleLessonPdfError() {
+      this.stopLessonEngagement()
+      this.lessonReaderError = 'This PDF could not be rendered. Ask your teacher to upload the lesson file again.'
     },
     handleLessonReaderBeforeUnload(event) {
       if (!this.isStandaloneLessonReader || this.canExitLessonReader) return
@@ -1619,7 +1630,7 @@ export default {
   background: #f8fafc;
 }
 
-.lesson-preview-frame,
+.lesson-preview-pdf,
 .lesson-preview-image {
   width: 100%;
   height: min(72vh, 760px);
@@ -1655,7 +1666,7 @@ export default {
   background: #ffffff;
 }
 
-.lessons-page.is-standalone-reader .lesson-preview-frame,
+.lessons-page.is-standalone-reader .lesson-preview-pdf,
 .lessons-page.is-standalone-reader .lesson-preview-image {
   height: 100%;
   min-height: 0;
