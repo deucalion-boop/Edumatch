@@ -209,6 +209,12 @@ function formatTimestamp(value) {
   color: #b45309;
 }
 
+.user-notification-icon .fa-book-open,
+.user-notification-icon .fa-book-open::before {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 .user-notification-chevron {
   align-self: center;
   color: #94a3b8;

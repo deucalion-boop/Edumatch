@@ -1625,6 +1625,12 @@ body.student-dashboard .student-dashboard.student-theme-dark .notification-dropd
   -webkit-text-fill-color: #b9dfa5 !important;
 }
 
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-icon i.fa-book-open,
+body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .user-notification-icon i.fa-book-open::before {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 body.student-dashboard .student-dashboard.student-theme-dark .notification-dropdown .notification-read-action {
   background: #203127 !important;
   border-color: #526b59 !important;
