@@ -251,12 +251,11 @@ export default {
     },
     watermarkLabel() {
       const user = this.authStore?.user || {}
-      const studentName = String(user.name || user.fullName || 'EduMatch Student').trim()
       const studentId = String(user.studentId || user.lrn || user.id || user._id || '').trim()
       const timeLabel = new Intl.DateTimeFormat('en-US', {
         month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
       }).format(new Date(this.nowMs))
-      return [studentName, studentId ? `ID ${studentId.slice(-8)}` : '', timeLabel].filter(Boolean).join(' • ')
+      return [studentId ? `ID ${studentId.slice(-8)}` : '', timeLabel].filter(Boolean).join(' • ')
     },
   },
   methods: {
