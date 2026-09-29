@@ -1182,6 +1182,7 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
+  margin-top: 1.25rem;
   margin-bottom: 1rem;
 }
 
@@ -2007,10 +2008,6 @@ small {
 .headteacher-lessons-page .headteacher-summary-item {
   border-color: var(--lessons-border);
   background: rgba(255, 255, 255, 0.88);
-}
-
-.headteacher-lessons-page .headteacher-summary-item.teachers {
-  border-left: 3px solid var(--lessons-forest);
 }
 
 .headteacher-lessons-page .headteacher-summary-item.lessons {
