@@ -1,6 +1,5 @@
 const { nameError, phoneError } = require('../utils/teacherValidation');
 const User = require('../models/User');
-const mongoose = require('mongoose');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
 const Submission = require('../models/Submission');
@@ -93,75 +92,38 @@ function buildRecentMonthBuckets(monthCount = DEFAULT_LESSON_ANALYTICS_MONTHS) {
   return buckets;
 }
 
-async function buildMonthlyCreationAnalytics(Model, teacherIds, monthCount) {
+function buildMonthlyCreationAnalytics(content, teacherIds, monthCount) {
   const analyticsBuckets = buildRecentMonthBuckets(monthCount);
-  if (!teacherIds.length) {
+  const teacherIdSet = teacherIds instanceof Set ? teacherIds : new Set(teacherIds);
+  if (!teacherIdSet.size) {
     return analyticsBuckets;
   }
 
-  const firstBucket = analyticsBuckets[0];
-  const trend = await Model.aggregate([
-    {
-      $match: {
-        createdBy: { $in: teacherIds },
-      },
-    },
-    {
-      $project: {
-        activityDate: { $ifNull: ['$createdAt', '$updatedAt'] },
-      },
-    },
-    {
-      $match: {
-        activityDate: {
-          $gte: new Date(Date.UTC(firstBucket.year, firstBucket.month - 1, 1)),
-        },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          year: { $year: '$activityDate' },
-          month: { $month: '$activityDate' },
-        },
-        count: { $sum: 1 },
-      },
-    },
-    {
-      $sort: {
-        '_id.year': 1,
-        '_id.month': 1,
-      },
-    },
-  ]);
-
-  const trendLookup = new Map(
-    trend.map((entry) => [`${entry._id.year}-${entry._id.month}`, Number(entry.count || 0)])
-  );
-
-  analyticsBuckets.forEach((bucket) => {
-    bucket.count = trendLookup.get(`${bucket.year}-${bucket.month}`) || 0;
+  const bucketLookup = new Map(analyticsBuckets.map((bucket) => [`${bucket.year}-${bucket.month}`, bucket]));
+  content.forEach((entry) => {
+    if (!teacherIdSet.has(String(entry?.createdBy || ''))) return;
+    const activityDate = entry?.createdAt || entry?.updatedAt;
+    const parsedDate = activityDate ? new Date(activityDate) : null;
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return;
+    const bucket = bucketLookup.get(`${parsedDate.getUTCFullYear()}-${parsedDate.getUTCMonth() + 1}`);
+    if (bucket) bucket.count += 1;
   });
 
   return analyticsBuckets;
 }
 
-async function buildLatestTeacherContentActivity(Model, teacherIds) {
-  if (!teacherIds.length) return [];
-
-  return Model.aggregate([
-    {
-      $match: {
-        createdBy: { $in: teacherIds },
-      },
-    },
-    {
-      $group: {
-        _id: '$createdBy',
-        lastCreatedAt: { $max: '$createdAt' },
-      },
-    },
-  ]);
+function buildLatestTeacherContentActivity(content, teacherIds) {
+  const teacherIdSet = teacherIds instanceof Set ? teacherIds : new Set(teacherIds);
+  const latestByTeacher = new Map();
+  content.forEach((entry) => {
+    const teacherId = String(entry?.createdBy || '');
+    if (!teacherIdSet.has(teacherId)) return;
+    const parsedDate = entry?.createdAt ? new Date(entry.createdAt) : null;
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return;
+    const current = latestByTeacher.get(teacherId);
+    if (!current || parsedDate > current) latestByTeacher.set(teacherId, parsedDate);
+  });
+  return latestByTeacher;
 }
 
 function ensureHeadTeacher(req) {
@@ -345,34 +307,24 @@ const getManagedTeachers = asyncHandler(async (req, res) => {
   const teacherAccountIds = teachers
     .map((teacher) => String(teacher?._id || teacher?.id || '').trim())
     .filter(Boolean);
-  const mongoTeacherIds = teacherAccountIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+  const teacherAccountIdSet = new Set(teacherAccountIds);
   const studentCount = accounts.filter((account) => (
     String(account?.role || '').trim() === ROLE_STUDENT
     && teacherAccountIds.includes(String(account?.managedBy?._id || account?.managedBy?.id || account?.managedBy || '').trim())
     && account?.archive?.isArchived !== true
   )).length;
-  const [
-    lessonCount,
-    assessmentCount,
-    latestLessonActivity,
-    latestAssessmentActivity,
-  ] = mongoTeacherIds.length > 0
-    ? await Promise.all([
-      Lesson.countDocuments({
-        createdBy: { $in: mongoTeacherIds },
-      }),
-      Assessment.countDocuments({
-        createdBy: { $in: mongoTeacherIds },
-      }),
-      buildLatestTeacherContentActivity(Lesson, mongoTeacherIds),
-      buildLatestTeacherContentActivity(Assessment, mongoTeacherIds),
-    ])
-    : [0, 0, [], []];
-
-  const [lessonAnalyticsBuckets, assessmentAnalyticsBuckets] = await Promise.all([
-    buildMonthlyCreationAnalytics(Lesson, mongoTeacherIds, analyticsMonthCount),
-    buildMonthlyCreationAnalytics(Assessment, mongoTeacherIds, analyticsMonthCount),
+  const [allLessons, allAssessments] = await Promise.all([
+    listSupabaseLessons(),
+    listSupabaseAssessments(),
   ]);
+  const lessons = allLessons.filter((lesson) => teacherAccountIdSet.has(String(lesson?.createdBy || '')));
+  const assessments = allAssessments.filter((assessment) => teacherAccountIdSet.has(String(assessment?.createdBy || '')));
+  const lessonCount = lessons.length;
+  const assessmentCount = assessments.length;
+  const latestLessonActivity = buildLatestTeacherContentActivity(lessons, teacherAccountIdSet);
+  const latestAssessmentActivity = buildLatestTeacherContentActivity(assessments, teacherAccountIdSet);
+  const lessonAnalyticsBuckets = buildMonthlyCreationAnalytics(lessons, teacherAccountIdSet, analyticsMonthCount);
+  const assessmentAnalyticsBuckets = buildMonthlyCreationAnalytics(assessments, teacherAccountIdSet, analyticsMonthCount);
 
   const teachersPayload = teachers.map((teacher) => {
     const mappedTeacher = mapUserResponse(teacher, req);
@@ -384,13 +336,11 @@ const getManagedTeachers = asyncHandler(async (req, res) => {
   const recentContentCutoff = new Date(now.getTime() - (RECENT_TEACHER_CONTENT_DAYS * 24 * 60 * 60 * 1000));
   const latestContentByTeacher = new Map();
 
-  [...latestLessonActivity, ...latestAssessmentActivity].forEach((entry) => {
-    const teacherId = String(entry?._id || '');
-    const activityDate = entry?.lastCreatedAt ? new Date(entry.lastCreatedAt) : null;
-    const existingDate = latestContentByTeacher.get(teacherId);
-    if (activityDate && !Number.isNaN(activityDate.getTime()) && (!existingDate || activityDate > existingDate)) {
-      latestContentByTeacher.set(teacherId, activityDate);
-    }
+  [latestLessonActivity, latestAssessmentActivity].forEach((activityMap) => {
+    activityMap.forEach((activityDate, teacherId) => {
+      const existingDate = latestContentByTeacher.get(teacherId);
+      if (!existingDate || activityDate > existingDate) latestContentByTeacher.set(teacherId, activityDate);
+    });
   });
 
   const inactiveTeachers = teachersPayload.filter((teacher) => String(teacher.status || '').trim().toLowerCase() === 'inactive').length;
