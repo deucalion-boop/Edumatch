@@ -2010,10 +2010,6 @@ small {
   background: rgba(255, 255, 255, 0.88);
 }
 
-.headteacher-lessons-page .headteacher-summary-item.lessons {
-  border-left: 3px solid var(--lessons-leaf);
-}
-
 .headteacher-lessons-page .headteacher-summary-item.latest {
   border-left: 3px solid var(--lessons-gold);
 }
