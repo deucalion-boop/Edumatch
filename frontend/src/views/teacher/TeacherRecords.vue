@@ -343,11 +343,11 @@
                   <span class="record-chip chip-class">
                     <i class="fas fa-users" aria-hidden="true"></i>
                     <span class="record-chip-label">Class:</span>
-                    {{ lesson.className || 'Not assigned' }}
+                    <span class="record-chip-value">{{ lesson.className || 'Not assigned' }}</span>
                   </span>
                   <span class="record-chip chip-subject">
                     <i class="fas fa-book-open" aria-hidden="true"></i>
-                    {{ lesson.subject || 'N/A' }}
+                    <span class="record-chip-value">{{ lesson.subject || 'N/A' }}</span>
                   </span>
                   <span class="record-chip chip-neutral">
                     <i class="fas fa-paperclip" aria-hidden="true"></i>
@@ -4295,6 +4295,9 @@ onBeforeUnmount(() => {
   --lesson-green-soft: #6f9d58;
   --lesson-mint: #dcead3;
   --lesson-surface: #f7fbf4;
+  --lesson-hover-ring: rgba(79, 125, 58, 0.5);
+  --lesson-hover-shadow: 0 12px 28px rgba(30, 67, 7, 0.12);
+  --lesson-action-shadow: 0 3px 10px rgba(30, 67, 7, 0.14);
   @apply tw:[padding:0];
   @apply tw:overflow-hidden;
   @apply tw:[border-color:#d4e4ca];
@@ -4529,6 +4532,8 @@ onBeforeUnmount(() => {
   @apply tw:[border-color:#dce7d6];
   @apply tw:[border-radius:18px];
   @apply tw:[box-shadow:0_8px_22px_rgba(30,_67,_7,_0.055)];
+  @apply tw:transform-none;
+  @apply tw:[transition:box-shadow_180ms_ease];
   @apply tw:[animation:lesson-card-in_0.42s_both];
   @apply tw:[animation-delay:calc(var(--lesson-index)_*_55ms)];
 }
@@ -4536,20 +4541,19 @@ onBeforeUnmount(() => {
 #teacherRecordsLessonsPanel .lesson-document-card::before {
   @apply tw:[content:""];
   @apply tw:absolute;
-  @apply tw:[inset:0_auto_0_0];
-  @apply tw:[width:4px];
-  @apply tw:[background:linear-gradient(180deg,_#4f7d3a,_#8cb879)];
+  @apply tw:[inset:0];
+  @apply tw:[border-radius:inherit];
+  @apply tw:pointer-events-none;
+  @apply tw:[box-shadow:inset_0_0_0_1px_var(--lesson-hover-ring)];
   @apply tw:opacity-0;
-  @apply tw:[transition:opacity_0.22s_ease];
+  @apply tw:[transition:opacity_180ms_ease];
 }
 
-#teacherRecordsLessonsPanel .lesson-document-card:hover {
-  @apply tw:[transform:translateY(-3px)];
-  @apply tw:[border-color:#bfd5b2];
-  @apply tw:[box-shadow:0_16px_34px_rgba(30,_67,_7,_0.11)];
+#teacherRecordsLessonsPanel .lesson-document-card:has(:focus-visible) {
+  @apply tw:[box-shadow:var(--lesson-hover-shadow)];
 }
 
-#teacherRecordsLessonsPanel .lesson-document-card:hover::before {
+#teacherRecordsLessonsPanel .lesson-document-card:has(:focus-visible)::before {
   @apply tw:opacity-100;
 }
 
@@ -4613,13 +4617,7 @@ onBeforeUnmount(() => {
   @apply tw:[font-size:0.7rem];
   @apply tw:[font-weight:800];
   @apply tw:cursor-pointer;
-  @apply tw:[transition:background_0.2s_ease,_border-color_0.2s_ease,_transform_0.2s_ease];
-}
-
-#teacherRecordsLessonsPanel .lesson-manage-actions button:hover {
-  @apply tw:[border-color:#9fbd90];
-  @apply tw:[background:#f2f8ee];
-  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[transition:background_180ms_ease,_border-color_180ms_ease,_box-shadow_180ms_ease,_filter_180ms_ease];
 }
 
 #teacherRecordsLessonsPanel .record-card-date-group > i {
@@ -4710,11 +4708,6 @@ onBeforeUnmount(() => {
   @apply tw:[background:#f9fcf7];
   @apply tw:[box-shadow:none];
   @apply tw:[transition:background_0.2s_ease,_border-color_0.2s_ease];
-}
-
-#teacherRecordsLessonsPanel .attachment-row:hover {
-  @apply tw:[border-color:#c9dcc0];
-  @apply tw:[background:#f4f9f1];
 }
 
 #teacherRecordsLessonsPanel .attachment-row:last-child {
@@ -4815,28 +4808,64 @@ onBeforeUnmount(() => {
   @apply tw:items-center;
   @apply tw:justify-center;
   @apply tw:[box-shadow:none];
-  @apply tw:[transition:transform_0.18s_ease,_background_0.18s_ease,_color_0.18s_ease,_box-shadow_0.18s_ease];
-}
-
-#teacherRecordsLessonsPanel .record-link:hover {
-  @apply tw:[transform:translateY(-2px)];
-  @apply tw:[border-color:#6f9d58];
-  @apply tw:[background:#edf6e8];
-  @apply tw:[color:#1e4307];
+  @apply tw:transform-none;
   @apply tw:[text-decoration:none];
-  @apply tw:[box-shadow:0_6px_14px_rgba(30,_67,_7,_0.12)];
+  @apply tw:[transition:background_180ms_ease,_color_180ms_ease,_border-color_180ms_ease,_box-shadow_180ms_ease,_filter_180ms_ease];
 }
 
 #teacherRecordsLessonsPanel .record-link-button {
-  @apply tw:[border-color:#1e4307];
-  @apply tw:[background:#1e4307];
-  @apply tw:[color:#ffffff];
+  /* Match the global brand action, while avoiding its sticky touch hover. */
+  @apply tw:[border-color:#4f8a35]!;
+  @apply tw:[background:#4f8a35]!;
+  @apply tw:[color:#ffffff]!;
 }
 
-#teacherRecordsLessonsPanel .record-link-button:hover {
-  @apply tw:[border-color:#315f1e];
-  @apply tw:[background:#315f1e];
-  @apply tw:[color:#ffffff];
+#teacherRecordsLessonsPanel .lesson-manage-actions button:focus-visible,
+#teacherRecordsLessonsPanel .record-link:focus-visible {
+  @apply tw:[box-shadow:var(--lesson-action-shadow)];
+}
+
+/* Keep hover feedback on pointer devices, not after a phone tap. */
+@media (hover: hover) and (pointer: fine) {
+  #teacherRecordsLessonsPanel .lesson-document-card:hover {
+    @apply tw:[box-shadow:var(--lesson-hover-shadow)];
+  }
+
+  #teacherRecordsLessonsPanel .lesson-document-card:hover::before {
+    @apply tw:opacity-100;
+  }
+
+  #teacherRecordsLessonsPanel .attachment-row:hover {
+    @apply tw:[border-color:#c9dcc0];
+    @apply tw:[background:#f4f9f1];
+  }
+
+  #teacherRecordsLessonsPanel .lesson-manage-actions button:hover:not(:disabled),
+  #teacherRecordsLessonsPanel .record-link:hover {
+    @apply tw:[box-shadow:var(--lesson-action-shadow)];
+  }
+
+  #teacherRecordsLessonsPanel .lesson-manage-actions button:hover:not(:disabled) {
+    @apply tw:[border-color:#9fbd90];
+    @apply tw:[background:#f2f8ee];
+  }
+
+  #teacherRecordsLessonsPanel .record-link-preview:hover {
+    @apply tw:[border-color:#6f9d58];
+    @apply tw:[background:#edf6e8];
+    @apply tw:[color:#1e4307];
+  }
+
+  #teacherRecordsLessonsPanel .record-link-button:hover:not(:disabled) {
+    @apply tw:[border-color:#3f702b]!;
+    @apply tw:[background:#3f702b]!;
+  }
+}
+
+#teacherRecordsLessonsPanel .lesson-manage-actions button:active:not(:disabled),
+#teacherRecordsLessonsPanel .record-link:active {
+  @apply tw:[box-shadow:inset_0_2px_4px_rgba(0,_0,_0,_0.16)];
+  @apply tw:[filter:brightness(0.96)];
 }
 
 #teacherRecordsLessonsPanel .record-link::after,
@@ -4948,11 +4977,9 @@ onBeforeUnmount(() => {
 @keyframes lesson-card-in {
   from {
     opacity: 0;
-    transform: translateY(9px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -7139,21 +7166,42 @@ onBeforeUnmount(() => {
   }
 
   #teacherRecordsLessonsPanel .lessons-hero {
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
     @apply tw:items-start;
+    @apply tw:[gap:1rem];
     @apply tw:[padding:1.2rem];
   }
 
   #teacherRecordsLessonsPanel .lessons-upload-summary {
+    @apply tw:w-full;
+    @apply tw:min-w-0;
+    @apply tw:box-border;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:minmax(0,_1fr)_auto_minmax(0,_1fr)];
     @apply tw:[padding:0.65rem_0.75rem];
   }
 
-  #teacherRecordsLessonsPanel .lessons-summary-icon,
-  #teacherRecordsLessonsPanel .lessons-summary-divider {
+  #teacherRecordsLessonsPanel .lessons-summary-icon {
     @apply tw:hidden;
   }
 
+  #teacherRecordsLessonsPanel .lessons-summary-copy {
+    @apply tw:min-w-0;
+    @apply tw:text-center;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-summary-copy span {
+    @apply tw:whitespace-normal;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-summary-divider {
+    @apply tw:block;
+    @apply tw:[height:28px];
+  }
+
   #teacherRecordsLessonsPanel .lessons-toolbar {
-    @apply tw:[grid-template-columns:1fr_1fr];
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
     @apply tw:[margin:0.9rem_0.9rem_0];
   }
 
@@ -7161,41 +7209,169 @@ onBeforeUnmount(() => {
     @apply tw:[grid-column:1_/_-1];
   }
 
+  #teacherRecordsLessonsPanel .lessons-search input,
+  #teacherRecordsLessonsPanel .lessons-select-field select {
+    @apply tw:[min-height:44px];
+    @apply tw:[font-size:16px];
+  }
+
+  #teacherRecordsLessonsPanel .lessons-search input {
+    @apply tw:[padding-right:3rem];
+  }
+
+  #teacherRecordsLessonsPanel .lessons-search-clear {
+    @apply tw:[right:0];
+    @apply tw:[width:44px];
+    @apply tw:[height:44px];
+  }
+
   #teacherRecordsLessonsPanel .records-feed-wrap {
     @apply tw:[padding:0.85rem_0.9rem_1rem];
   }
 
+  #teacherRecordsLessonsPanel .records-feed,
+  #teacherRecordsLessonsPanel .lesson-document-card,
+  #teacherRecordsLessonsPanel .record-card-body {
+    @apply tw:min-w-0;
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
+  }
+
   #teacherRecordsLessonsPanel .lesson-document-card {
+    @apply tw:[gap:0.85rem];
     @apply tw:[padding:0.9rem];
     @apply tw:[border-radius:16px];
   }
 
   #teacherRecordsLessonsPanel .record-card-header {
-    @apply tw:flex-row;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
     @apply tw:items-start;
     @apply tw:[gap:0.75rem];
     @apply tw:[padding-bottom:0];
   }
 
+  #teacherRecordsLessonsPanel .record-card-title {
+    @apply tw:min-w-0;
+  }
+
   #teacherRecordsLessonsPanel .record-card-title h4 {
     @apply tw:[font-size:1rem];
+    @apply tw:[overflow-wrap:anywhere];
+  }
+
+  #teacherRecordsLessonsPanel .lesson-card-header-actions {
+    @apply tw:min-w-0;
+    @apply tw:w-full;
+    @apply tw:justify-items-stretch;
+    @apply tw:[gap:0.65rem];
   }
 
   #teacherRecordsLessonsPanel .record-card-date-group {
+    @apply tw:w-fit;
     @apply tw:[justify-items:initial];
     @apply tw:flex-none;
   }
 
+  #teacherRecordsLessonsPanel .record-card-date-group > span {
+    @apply tw:flex;
+    @apply tw:flex-wrap;
+    @apply tw:items-baseline;
+    @apply tw:[gap:0.35rem];
+  }
+
+  #teacherRecordsLessonsPanel .record-date-label {
+    @apply tw:[font-size:0.7rem];
+  }
+
+  #teacherRecordsLessonsPanel .lesson-manage-actions {
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:minmax(0,_1fr)_minmax(0,_1.4fr)];
+    @apply tw:[gap:0.5rem];
+  }
+
+  #teacherRecordsLessonsPanel .lesson-manage-actions button {
+    @apply tw:min-w-0;
+    @apply tw:[min-height:44px];
+    @apply tw:justify-center;
+    @apply tw:[font-size:0.75rem];
+    @apply tw:whitespace-normal;
+  }
+
+  #teacherRecordsLessonsPanel .record-chip {
+    @apply tw:min-w-0;
+    @apply tw:max-w-full;
+    @apply tw:items-start;
+    @apply tw:whitespace-normal;
+    @apply tw:[overflow-wrap:anywhere];
+    @apply tw:[font-size:0.75rem];
+    @apply tw:[line-height:1.45];
+    @apply tw:[padding:0.4rem_0.55rem];
+  }
+
+  #teacherRecordsLessonsPanel .chip-class {
+    @apply tw:[flex-basis:100%];
+    @apply tw:[border-radius:12px];
+  }
+
+  #teacherRecordsLessonsPanel .record-chip-value {
+    @apply tw:min-w-0;
+  }
+
+  #teacherRecordsLessonsPanel .record-chip > i,
+  #teacherRecordsLessonsPanel .record-chip-label {
+    @apply tw:shrink-0;
+  }
+
   #teacherRecordsLessonsPanel .attachment-row {
-    @apply tw:[grid-template-columns:auto_minmax(0,_1fr)_auto];
-    @apply tw:items-center;
+    @apply tw:[grid-template-columns:40px_minmax(0,_1fr)];
+    @apply tw:items-start;
     @apply tw:[gap:0.65rem];
     @apply tw:[padding:0.68rem];
   }
 
+  #teacherRecordsLessonsPanel .attachment-icon {
+    @apply tw:[width:40px];
+    @apply tw:[height:40px];
+  }
+
+  #teacherRecordsLessonsPanel .file-name {
+    @apply tw:whitespace-normal;
+    @apply tw:[overflow-wrap:anywhere];
+    @apply tw:[line-height:1.45];
+  }
+
   #teacherRecordsLessonsPanel .attachment-actions {
-    @apply tw:w-auto;
+    @apply tw:[grid-column:1_/_-1];
+    @apply tw:w-full;
     @apply tw:flex-nowrap;
+    @apply tw:[gap:0.5rem];
+  }
+
+  #teacherRecordsLessonsPanel .record-link {
+    @apply tw:flex-1;
+    @apply tw:min-w-0;
+    @apply tw:w-auto;
+    @apply tw:h-auto;
+    @apply tw:[min-height:44px];
+    @apply tw:[gap:0.4rem];
+    @apply tw:[padding:0.5rem_0.35rem];
+    @apply tw:[font-size:0.75rem];
+  }
+
+  #teacherRecordsLessonsPanel .record-link .sr-only {
+    @apply tw:not-sr-only;
+  }
+
+  #teacherRecordsLessonsPanel .lessons-results-bar button,
+  #teacherRecordsLessonsPanel .lessons-empty-action,
+  #teacherRecordsLessonsPanel .pagination-btn,
+  #teacherRecordsLessonsPanel .lessons-page-btn {
+    @apply tw:[min-width:44px];
+    @apply tw:[min-height:44px];
+  }
+
+  #teacherRecordsLessonsPanel .lessons-results-bar {
+    @apply tw:flex-wrap;
   }
 
   #teacherRecordsLessonsPanel .records-pagination {
@@ -7520,15 +7696,6 @@ onBeforeUnmount(() => {
     @apply tw:[grid-template-columns:auto_minmax(0,_1fr)];
   }
 
-  #teacherRecordsLessonsPanel .attachment-actions {
-    @apply tw:[grid-column:2];
-  }
-
-  #teacherRecordsLessonsPanel .record-link {
-    @apply tw:[width:36px];
-    @apply tw:[min-height:36px];
-  }
-
   #teacherRecordsLessonsPanel .records-pagination {
     @apply tw:[padding:0.75rem];
   }
@@ -7536,7 +7703,7 @@ onBeforeUnmount(() => {
   #teacherRecordsLessonsPanel .records-pagination-actions {
     @apply tw:w-full;
     @apply tw:grid;
-    @apply tw:[grid-template-columns:1fr_auto_1fr];
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   #teacherRecordsLessonsPanel .pagination-btn {
@@ -7587,6 +7754,13 @@ onBeforeUnmount(() => {
   }
 }
 
+/* Keep filter labels readable on phones; wider tablets retain two columns. */
+@media (max-width: 560px) {
+  #teacherRecordsLessonsPanel .lessons-toolbar {
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   #teacherRecordsAssessmentsPanel .assessment-record-card {
     @apply tw:animate-none;
@@ -7605,9 +7779,16 @@ onBeforeUnmount(() => {
   }
 
   #teacherRecordsLessonsPanel .record-link,
+  #teacherRecordsLessonsPanel .lesson-manage-actions button,
+  #teacherRecordsLessonsPanel .attachment-row,
+  #teacherRecordsLessonsPanel .lesson-document-card::before,
   #teacherRecordsLessonsPanel .pagination-btn,
   #teacherRecordsLessonsPanel .lessons-page-btn {
     @apply tw:[transition:none];
+  }
+
+  #teacherRecordsLessonsPanel .record-link:active::after {
+    @apply tw:animate-none;
   }
 }
 
