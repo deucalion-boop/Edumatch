@@ -202,5 +202,5 @@ export default {
 </script>
 
 <style scoped>
-@import '/css/auth.css';
+@import url('/css/auth.css');
 </style>

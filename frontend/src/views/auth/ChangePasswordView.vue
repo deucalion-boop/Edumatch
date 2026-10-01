@@ -302,7 +302,7 @@ export default {
 </script>
 
 <style scoped>
-@import '/css/auth.css';
+@import url('/css/auth.css');
 
 .password-change-page {
   min-height: 100vh;

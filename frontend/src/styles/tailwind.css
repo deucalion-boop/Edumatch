@@ -1,0 +1,13 @@
+/*
+ * Tailwind is introduced without Preflight while legacy pages are migrated.
+ * This prevents the CSS reset from changing pages that still use the old
+ * stylesheets. Preflight can be enabled after the final legacy page moves.
+ */
+@layer theme, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+
+@source "../**/*.{js,vue}";
+
+@custom-variant student-dark (.student-dashboard.student-theme-dark &);

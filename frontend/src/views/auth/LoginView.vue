@@ -703,7 +703,7 @@ export default {
 
 <style scoped>
 
-@import '/css/auth.css';
+@import url('/css/auth.css');
 
 .login-page {
   min-height: 100dvh;
