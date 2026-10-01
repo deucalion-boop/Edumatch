@@ -101,38 +101,41 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../styles/tailwind.css";
+
 .lesson-pdf-reader {
-  height: 100%;
-  overflow: auto;
-  background: #d8dee7;
+  @apply tw:h-full;
+  @apply tw:overflow-auto;
+  @apply tw:[background:#d8dee7];
 }
 
 .lesson-pdf-pages {
-  display: grid;
-  justify-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  @apply tw:grid;
+  @apply tw:justify-items-center;
+  @apply tw:[gap:1rem];
+  @apply tw:[padding:1rem];
 }
 
 .lesson-pdf-page {
-  width: min(100%, 920px);
-  background: #ffffff;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.2);
+  @apply tw:[width:min(100%,_920px)];
+  @apply tw:[background:#ffffff];
+  @apply tw:[box-shadow:0_4px_18px_rgba(15,_23,_42,_0.2)];
 }
 
 .lesson-pdf-page canvas {
-  display: block;
-  width: 100%;
-  height: auto;
+  @apply tw:block;
+  @apply tw:w-full;
+  @apply tw:h-auto;
 }
 
 .lesson-pdf-state {
-  min-height: 20rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-  color: #334155;
-  font-weight: 700;
+  @apply tw:[min-height:20rem];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.65rem];
+  @apply tw:[color:#334155];
+  @apply tw:[font-weight:700];
 }
+
 </style>

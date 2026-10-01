@@ -1171,667 +1171,669 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../../styles/tailwind.css";
+
 .headteacher-lessons-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
-  gap: 1.25rem;
-  margin-bottom: 0;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(0,_1.6fr)_minmax(280px,_0.8fr)];
+  @apply tw:[gap:1.25rem];
+  @apply tw:[margin-bottom:0];
 }
 
 .headteacher-workspace-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin-top: 1.25rem;
-  margin-bottom: 1rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:[gap:0.85rem];
+  @apply tw:[margin-top:1.25rem];
+  @apply tw:[margin-bottom:1rem];
 }
 
 .headteacher-workspace-tab {
-  border: 1px solid #dbe2ea;
-  border-radius: 20px;
-  background: #ffffff;
-  padding: 0.95rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.9rem;
-  text-align: left;
-  cursor: pointer;
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.04);
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[border-radius:20px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:0.95rem_1rem];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.9rem];
+  @apply tw:text-left;
+  @apply tw:cursor-pointer;
+  @apply tw:[box-shadow:0_10px_26px_rgba(15,_23,_42,_0.04)];
+  @apply tw:[transition:border-color_0.2s_ease,_transform_0.2s_ease,_box-shadow_0.2s_ease,_background_0.2s_ease];
 }
 
 .headteacher-workspace-tab:hover {
-  transform: translateY(-1px);
-  border-color: #cbd5e1;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[border-color:#cbd5e1];
+  @apply tw:[box-shadow:0_14px_30px_rgba(15,_23,_42,_0.08)];
 }
 
 .headteacher-workspace-tab.active {
-  border-color: #bfdbfe;
-  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
-  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.12);
+  @apply tw:[border-color:#bfdbfe];
+  @apply tw:[background:linear-gradient(180deg,_#eff6ff_0%,_#ffffff_100%)];
+  @apply tw:[box-shadow:0_14px_30px_rgba(37,_99,_235,_0.12)];
 }
 
 .headteacher-workspace-tab-copy {
-  display: grid;
-  gap: 0.18rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.18rem];
 }
 
 .headteacher-workspace-tab-copy strong {
-  color: #0f172a;
-  font-size: 0.92rem;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.92rem];
 }
 
 .headteacher-workspace-tab-copy small {
-  color: #64748b;
-  font-size: 0.76rem;
-  line-height: 1.45;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[line-height:1.45];
 }
 
 .headteacher-workspace-tab-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.2rem;
-  min-height: 2.2rem;
-  padding: 0 0.75rem;
-  border-radius: 999px;
-  background: #f8fafc;
-  color: #1e293b;
-  font-size: 0.82rem;
-  font-weight: 800;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[min-width:2.2rem];
+  @apply tw:[min-height:2.2rem];
+  @apply tw:[padding:0_0.75rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[color:#1e293b];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:800];
 }
 
 .headteacher-workspace-tab.active .headteacher-workspace-tab-count {
-  background: #dbeafe;
-  color: #1d4ed8;
+  @apply tw:[background:#dbeafe];
+  @apply tw:[color:#1d4ed8];
 }
 
 .headteacher-workspace-panel {
-  display: grid;
-  gap: 1.5rem;
+  @apply tw:grid;
+  @apply tw:[gap:1.5rem];
 }
 
 .headteacher-lessons-form-card,
 .headteacher-lessons-summary-card,
 .headteacher-lesson-card {
-  border: 1px solid #d9e2ee;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #ffffff, #f8fbff);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  @apply tw:[border:1px_solid_#d9e2ee];
+  @apply tw:[border-radius:22px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff,_#f8fbff)];
+  @apply tw:[box-shadow:0_18px_40px_rgba(15,_23,_42,_0.06)];
 }
 
 .headteacher-lessons-form-card,
 .headteacher-lessons-summary-card {
-  padding: 1.35rem;
+  @apply tw:[padding:1.35rem];
 }
 
 .headteacher-lessons-form-card {
-  position: relative;
-  overflow: hidden;
+  @apply tw:relative;
+  @apply tw:overflow-hidden;
 }
 
 .headteacher-lessons-form-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(14, 116, 144, 0.12), transparent 68%);
-  pointer-events: none;
+  @apply tw:[content:''];
+  @apply tw:absolute;
+  @apply tw:[inset:0_auto_auto_0];
+  @apply tw:[width:220px];
+  @apply tw:[height:220px];
+  @apply tw:[background:radial-gradient(circle,_rgba(14,_116,_144,_0.12),_transparent_68%)];
+  @apply tw:pointer-events-none;
 }
 
 .headteacher-lessons-hero-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
 }
 
 .headteacher-eyebrow {
-  display: inline-block;
-  margin-bottom: 0.45rem;
-  padding: 0.28rem 0.65rem;
-  border-radius: 999px;
-  background: #e0f2fe;
-  color: #0f766e;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:inline-block;
+  @apply tw:[margin-bottom:0.45rem];
+  @apply tw:[padding:0.28rem_0.65rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#e0f2fe];
+  @apply tw:[color:#0f766e];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .headteacher-mini-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 0.85rem;
-  border-radius: 14px;
-  border: 1px solid #d7e3f1;
-  background: rgba(255, 255, 255, 0.9);
-  color: #334155;
-  font-weight: 700;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.5rem];
+  @apply tw:[padding:0.65rem_0.85rem];
+  @apply tw:[border-radius:14px];
+  @apply tw:[border:1px_solid_#d7e3f1];
+  @apply tw:[background:rgba(255,_255,_255,_0.9)];
+  @apply tw:[color:#334155];
+  @apply tw:[font-weight:700];
 }
 
 .headteacher-form {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 1rem;
+  @apply tw:relative;
+  @apply tw:[z-index:1];
+  @apply tw:grid;
+  @apply tw:[gap:1rem];
 }
 
 .headteacher-form-group-full {
-  grid-column: 1 / -1;
+  @apply tw:[grid-column:1_/_-1];
 }
 
 .headteacher-form-section {
-  display: grid;
-  gap: 0.95rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.95rem];
 }
 
 .headteacher-step-break {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.9rem;
-  padding: 1rem 1rem 0.95rem;
-  border: 1px solid #dbe2ea;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.9rem];
+  @apply tw:[padding:1rem_1rem_0.95rem];
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
 }
 
 .headteacher-step-label {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[min-height:26px];
+  @apply tw:[padding:0.2rem_0.6rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#dbeafe];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .headteacher-step-break h3 {
-  margin: 0.18rem 0 0.25rem;
-  color: #0f172a;
-  font-size: 1rem;
+  @apply tw:[margin:0.18rem_0_0.25rem];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1rem];
 }
 
 .headteacher-step-break p {
-  margin: 0;
-  color: #475569;
-  font-size: 0.84rem;
-  line-height: 1.5;
+  @apply tw:[margin:0];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[line-height:1.5];
 }
 
 .headteacher-selected-teacher-card {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 0.95rem 1rem;
-  margin-bottom: 1rem;
-  border-radius: 18px;
-  border: 1px solid #d8e4ef;
-  background: linear-gradient(135deg, #ffffff, #eff6ff);
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.9rem];
+  @apply tw:[padding:0.95rem_1rem];
+  @apply tw:[margin-bottom:1rem];
+  @apply tw:[border-radius:18px];
+  @apply tw:[border:1px_solid_#d8e4ef];
+  @apply tw:[background:linear-gradient(135deg,_#ffffff,_#eff6ff)];
 }
 
 .headteacher-selected-teacher-card.empty {
-  justify-content: center;
-  background: linear-gradient(135deg, #fff, #f8fafc);
+  @apply tw:justify-center;
+  @apply tw:[background:linear-gradient(135deg,_#fff,_#f8fafc)];
 }
 
 .headteacher-selected-teacher-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #0f766e, #155e75);
-  color: #fff;
-  font-weight: 800;
+  @apply tw:[width:48px];
+  @apply tw:[height:48px];
+  @apply tw:[border-radius:16px];
+  @apply tw:grid;
+  @apply tw:place-items-center;
+  @apply tw:[background:linear-gradient(135deg,_#0f766e,_#155e75)];
+  @apply tw:[color:#fff];
+  @apply tw:[font-weight:800];
 }
 
 .headteacher-selected-teacher-copy {
-  display: grid;
-  gap: 0.2rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.2rem];
 }
 
 .headteacher-selected-teacher-copy strong {
-  color: #0f172a;
+  @apply tw:[color:#0f172a];
 }
 
 .headteacher-selected-teacher-copy span {
-  color: #64748b;
-  font-size: 0.88rem;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.88rem];
 }
 
 .headteacher-selected-teacher-status {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: #0f766e;
-  font-size: 0.82rem;
-  font-weight: 700;
+  @apply tw:ml-auto;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[color:#0f766e];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:700];
 }
 
 .headteacher-status-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
-  background: #10b981;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14);
+  @apply tw:[width:9px];
+  @apply tw:[height:9px];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#10b981];
+  @apply tw:[box-shadow:0_0_0_4px_rgba(16,_185,_129,_0.14)];
 }
 
 .headteacher-selected-teacher-empty {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  color: #64748b;
-  font-weight: 600;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.65rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-weight:600];
 }
 
 .headteacher-helper-copy {
-  display: block;
-  margin-top: 0.45rem;
-  color: #64748b;
+  @apply tw:block;
+  @apply tw:[margin-top:0.45rem];
+  @apply tw:[color:#64748b];
 }
 
 .headteacher-file-input {
-  display: none;
+  @apply tw:hidden;
 }
 
 .headteacher-upload-dropzone {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 1rem;
-  border: 1px dashed #94a3b8;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #fff, #f8fafc);
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  @apply tw:w-full;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.9rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_dashed_#94a3b8];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:linear-gradient(135deg,_#fff,_#f8fafc)];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:transform_0.2s_ease,_border-color_0.2s_ease,_box-shadow_0.2s_ease];
 }
 
 .headteacher-upload-dropzone:hover {
-  transform: translateY(-1px);
-  border-color: #0f766e;
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[border-color:#0f766e];
+  @apply tw:[box-shadow:0_14px_28px_rgba(15,_23,_42,_0.08)];
 }
 
 .headteacher-upload-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  background: #fee2e2;
-  color: #b91c1c;
-  flex-shrink: 0;
+  @apply tw:[width:48px];
+  @apply tw:[height:48px];
+  @apply tw:[border-radius:16px];
+  @apply tw:grid;
+  @apply tw:place-items-center;
+  @apply tw:[background:#fee2e2];
+  @apply tw:[color:#b91c1c];
+  @apply tw:shrink-0;
 }
 
 .headteacher-upload-copy {
-  display: grid;
-  text-align: left;
+  @apply tw:grid;
+  @apply tw:text-left;
 }
 
 .headteacher-upload-copy strong {
-  color: #0f172a;
+  @apply tw:[color:#0f172a];
 }
 
 .headteacher-upload-copy small {
-  margin-top: 0.2rem;
-  color: #64748b;
+  @apply tw:[margin-top:0.2rem];
+  @apply tw:[color:#64748b];
 }
 
 .headteacher-upload-action {
-  margin-left: auto;
-  color: #0f766e;
-  font-size: 0.84rem;
-  font-weight: 800;
+  @apply tw:ml-auto;
+  @apply tw:[color:#0f766e];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[font-weight:800];
 }
 
 .headteacher-lessons-actions {
-  margin-top: 1.1rem;
+  @apply tw:[margin-top:1.1rem];
 }
 
 .headteacher-summary-stack {
-  display: grid;
-  gap: 0.9rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.9rem];
 }
 
 .headteacher-summary-item {
-  padding: 1rem;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  @apply tw:[padding:1rem];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#fff];
+  @apply tw:[border:1px_solid_#e2e8f0];
 }
 
 .headteacher-summary-item span {
-  display: block;
-  color: #64748b;
-  font-size: 0.86rem;
+  @apply tw:block;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.86rem];
 }
 
 .headteacher-summary-item strong {
-  display: block;
-  margin-top: 0.35rem;
-  font-size: 1.35rem;
-  color: #0f172a;
+  @apply tw:block;
+  @apply tw:[margin-top:0.35rem];
+  @apply tw:[font-size:1.35rem];
+  @apply tw:[color:#0f172a];
 }
 
 .headteacher-summary-item small {
-  display: block;
-  margin-top: 0.35rem;
-  color: #64748b;
+  @apply tw:block;
+  @apply tw:[margin-top:0.35rem];
+  @apply tw:[color:#64748b];
 }
 
 .headteacher-lesson-list {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.25rem;
+  @apply tw:grid;
+  @apply tw:[gap:1rem];
+  @apply tw:[margin-top:1.25rem];
 }
 
 .headteacher-lesson-card {
-  padding: 1.2rem 1.25rem;
+  @apply tw:[padding:1.2rem_1.25rem];
 }
 
 .headteacher-lesson-card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.9rem;
-  margin-bottom: 0.95rem;
-  border-bottom: 1px solid #edf2f7;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:[padding-bottom:0.9rem];
+  @apply tw:[margin-bottom:0.95rem];
+  @apply tw:[border-bottom:1px_solid_#edf2f7];
 }
 
 .headteacher-lesson-card-copy {
-  flex: 1;
+  @apply tw:[flex:1];
 }
 
 .headteacher-lesson-card-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 0.65rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[margin-bottom:0.65rem];
 }
 
 .headteacher-lesson-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.34rem 0.65rem;
-  border-radius: 999px;
-  background: #dcfce7;
-  color: #166534;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[padding:0.34rem_0.65rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#dcfce7];
+  @apply tw:[color:#166534];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.02em];
+  @apply tw:uppercase;
 }
 
 .headteacher-lesson-pill.subtle {
-  background: #eef2ff;
-  color: #3730a3;
+  @apply tw:[background:#eef2ff];
+  @apply tw:[color:#3730a3];
 }
 
 .headteacher-lesson-card-top h3 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 1.08rem;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.08rem];
 }
 
 .headteacher-lesson-card-top p {
-  margin: 0.45rem 0 0;
-  color: #475569;
-  line-height: 1.55;
+  @apply tw:[margin:0.45rem_0_0];
+  @apply tw:[color:#475569];
+  @apply tw:[line-height:1.55];
 }
 
 .headteacher-lesson-file-chip {
-  min-width: 160px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 0.85rem;
-  border-radius: 16px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #9a3412;
-  font-size: 0.84rem;
-  font-weight: 700;
+  @apply tw:[min-width:160px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.5rem];
+  @apply tw:[padding:0.75rem_0.85rem];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#fff7ed];
+  @apply tw:[border:1px_solid_#fed7aa];
+  @apply tw:[color:#9a3412];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[font-weight:700];
 }
 
 .headteacher-lesson-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 0.25rem;
-  color: #475569;
-  font-size: 0.9rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[margin-top:0.25rem];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.9rem];
 }
 
 .headteacher-lesson-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.4rem];
 }
 
 .headteacher-lesson-creator small {
-  margin: 0;
-  padding: 0.18rem 0.42rem;
-  border-radius: 999px;
-  background: #dcebd0;
-  color: var(--lessons-forest);
-  font-size: 0.64rem;
-  font-weight: 750;
-  line-height: 1.2;
-  white-space: nowrap;
+  @apply tw:[margin:0];
+  @apply tw:[padding:0.18rem_0.42rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#dcebd0];
+  @apply tw:[color:var(--lessons-forest)];
+  @apply tw:[font-size:0.64rem];
+  @apply tw:[font-weight:750];
+  @apply tw:[line-height:1.2];
+  @apply tw:whitespace-nowrap;
 }
 
 .headteacher-lesson-meta span i.fa-book-open,
 .headteacher-lesson-meta span i.fa-book-open::before {
-  color: #f97316 !important;
+  @apply tw:[color:#f97316]!;
 }
 
 textarea {
-  resize: vertical;
-  min-height: 120px;
+  @apply tw:resize-y;
+  @apply tw:[min-height:120px];
 }
 
 small {
-  margin-top: 0.35rem;
-  color: #64748b;
+  @apply tw:[margin-top:0.35rem];
+  @apply tw:[color:#64748b];
 }
 
 .headteacher-assessment-shell {
-  margin-top: 0;
+  @apply tw:[margin-top:0];
 }
 
 .headteacher-assessment-form-grid {
-  margin-top: 1rem;
+  @apply tw:[margin-top:1rem];
 }
 
 .headteacher-context-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(4,_minmax(0,_1fr))];
+  @apply tw:[gap:0.75rem];
 }
 
 .headteacher-context-card {
-  border: 1px solid #dbe4ef;
-  border-radius: 16px;
-  padding: 0.85rem 0.9rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  display: grid;
-  gap: 0.22rem;
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:16px];
+  @apply tw:[padding:0.85rem_0.9rem];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
+  @apply tw:grid;
+  @apply tw:[gap:0.22rem];
 }
 
 .headteacher-context-card span {
-  color: #64748b;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .headteacher-context-card strong {
-  color: #0f172a;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.9rem];
+  @apply tw:[line-height:1.4];
 }
 
 .headteacher-policy-note {
-  margin-top: 1rem;
-  padding: 1rem 1.05rem;
-  border-radius: 16px;
-  border: 1px solid #c7d2fe;
-  background: linear-gradient(135deg, #eef2ff, #f8fafc);
-  color: #334155;
-  line-height: 1.55;
+  @apply tw:[margin-top:1rem];
+  @apply tw:[padding:1rem_1.05rem];
+  @apply tw:[border-radius:16px];
+  @apply tw:[border:1px_solid_#c7d2fe];
+  @apply tw:[background:linear-gradient(135deg,_#eef2ff,_#f8fafc)];
+  @apply tw:[color:#334155];
+  @apply tw:[line-height:1.55];
 }
 
 .headteacher-policy-note strong {
-  color: #312e81;
+  @apply tw:[color:#312e81];
 }
 
 .headteacher-draft-box {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid #dbe4ef;
-  border-radius: 18px;
-  background: #fff;
+  @apply tw:[margin-top:1rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#fff];
 }
 
 .headteacher-draft-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:[margin-bottom:1rem];
 }
 
 .headteacher-draft-head h3,
 .headteacher-draft-item h4,
 .headteacher-assessment-card h3 {
-  margin: 0;
-  color: #0f172a;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
 }
 
 .headteacher-draft-head p,
 .headteacher-assessment-card p {
-  margin: 0.35rem 0 0;
-  color: #64748b;
+  @apply tw:[margin:0.35rem_0_0];
+  @apply tw:[color:#64748b];
 }
 
 .headteacher-draft-list,
 .headteacher-assessment-list {
-  display: grid;
-  gap: 1rem;
+  @apply tw:grid;
+  @apply tw:[gap:1rem];
 }
 
 .headteacher-draft-item,
 .headteacher-assessment-card {
-  padding: 1rem;
-  border-radius: 18px;
-  border: 1px solid #e2e8f0;
-  background: linear-gradient(135deg, #fff, #f8fafc);
+  @apply tw:[padding:1rem];
+  @apply tw:[border-radius:18px];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[background:linear-gradient(135deg,_#fff,_#f8fafc)];
 }
 
 .headteacher-assessment-actions {
-  margin-top: 1rem;
+  @apply tw:[margin-top:1rem];
 }
 
 .headteacher-ai-config-warning {
-  margin-top: 0.85rem;
-  color: #b91c1c;
-  font-weight: 700;
+  @apply tw:[margin-top:0.85rem];
+  @apply tw:[color:#b91c1c];
+  @apply tw:[font-weight:700];
 }
 
 .headteacher-assessment-card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.85rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:[margin-bottom:0.85rem];
 }
 
 .headteacher-assessment-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 0.55rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[margin-bottom:0.55rem];
 }
 
 .headteacher-lesson-pill.period {
-  background: #fff7ed;
-  color: #9a3412;
+  @apply tw:[background:#fff7ed];
+  @apply tw:[color:#9a3412];
 }
 
 .headteacher-assessment-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  color: #475569;
-  font-size: 0.9rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.9rem];
 }
 
 .headteacher-assessment-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.4rem];
 }
 
 @media (max-width: 980px) {
   .headteacher-workspace-tabs {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .headteacher-lessons-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .headteacher-lessons-hero-head,
   .headteacher-draft-head,
   .headteacher-assessment-card-top {
-    flex-direction: column;
+    @apply tw:flex-col;
   }
 
   .headteacher-context-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 }
 
 @media (max-width: 640px) {
   .headteacher-workspace-tab {
-    padding: 0.85rem 0.9rem;
-    border-radius: 16px;
+    @apply tw:[padding:0.85rem_0.9rem];
+    @apply tw:[border-radius:16px];
   }
 
   .headteacher-lesson-card-top {
-    flex-direction: column;
+    @apply tw:flex-col;
   }
 
   .headteacher-upload-dropzone,
   .headteacher-selected-teacher-card {
-    align-items: flex-start;
+    @apply tw:items-start;
   }
 
   .headteacher-upload-action,
   .headteacher-selected-teacher-status {
-    margin-left: 0;
+    @apply tw:[margin-left:0];
   }
 
   .headteacher-step-break {
-    padding: 0.85rem 0.9rem;
+    @apply tw:[padding:0.85rem_0.9rem];
   }
 
   .headteacher-context-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 }
 
@@ -1849,35 +1851,30 @@ small {
 }
 
 .headteacher-lessons-page .headteacher-main {
-  background:
-    radial-gradient(circle at 92% 3%, rgba(95, 143, 50, 0.16), transparent 26rem),
-    radial-gradient(circle at 24% 100%, rgba(184, 216, 138, 0.18), transparent 30rem),
-    linear-gradient(145deg, #f8fbf5 0%, #f1f6ed 54%, #edf3e8 100%);
+  @apply tw:[background:radial-gradient(circle_at_92%_3%,_rgba(95,_143,_50,_0.16),_transparent_26rem),______radial-gradient(circle_at_24%_100%,_rgba(184,_216,_138,_0.18),_transparent_30rem),______linear-gradient(145deg,_#f8fbf5_0%,_#f1f6ed_54%,_#edf3e8_100%)];
 }
 
 .headteacher-lessons-page .headteacher-panel {
-  border-color: var(--lessons-border);
-  background:
-    radial-gradient(circle at 98% 0%, rgba(184, 216, 138, 0.13), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 243, 0.98));
-  box-shadow: 0 18px 40px rgba(30, 67, 7, 0.075);
+  @apply tw:[border-color:var(--lessons-border)];
+  @apply tw:[background:radial-gradient(circle_at_98%_0%,_rgba(184,_216,_138,_0.13),_transparent_28%),______linear-gradient(180deg,_rgba(255,_255,_255,_0.98),_rgba(246,_250,_243,_0.98))];
+  @apply tw:[box-shadow:0_18px_40px_rgba(30,_67,_7,_0.075)];
 }
 
 .headteacher-lessons-page .headteacher-workspace-tab {
-  border-color: var(--lessons-border);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 26px rgba(30, 67, 7, 0.045);
+  @apply tw:[border-color:var(--lessons-border)];
+  @apply tw:[background:rgba(255,_255,_255,_0.9)];
+  @apply tw:[box-shadow:0_10px_26px_rgba(30,_67,_7,_0.045)];
 }
 
 .headteacher-lessons-page .headteacher-workspace-tab:hover {
-  border-color: rgba(30, 67, 7, 0.28);
-  box-shadow: 0 14px 30px rgba(30, 67, 7, 0.09);
+  @apply tw:[border-color:rgba(30,_67,_7,_0.28)];
+  @apply tw:[box-shadow:0_14px_30px_rgba(30,_67,_7,_0.09)];
 }
 
 .headteacher-lessons-page .headteacher-workspace-tab.active {
-  border-color: rgba(30, 67, 7, 0.3);
-  background: linear-gradient(180deg, var(--lessons-soft), #fff);
-  box-shadow: 0 14px 30px rgba(30, 67, 7, 0.12);
+  @apply tw:[border-color:rgba(30,_67,_7,_0.3)];
+  @apply tw:[background:linear-gradient(180deg,_var(--lessons-soft),_#fff)];
+  @apply tw:[box-shadow:0_14px_30px_rgba(30,_67,_7,_0.12)];
 }
 
 .headteacher-lessons-page .headteacher-workspace-tab-copy strong,
@@ -1890,7 +1887,7 @@ small {
 .headteacher-lessons-page .headteacher-draft-head h3,
 .headteacher-lessons-page .headteacher-draft-item h4,
 .headteacher-lessons-page .headteacher-assessment-card h3 {
-  color: var(--lessons-ink);
+  @apply tw:[color:var(--lessons-ink)];
 }
 
 .headteacher-lessons-page .headteacher-workspace-tab-copy small,
@@ -1907,249 +1904,250 @@ small {
 .headteacher-lessons-page .headteacher-draft-head p,
 .headteacher-lessons-page .headteacher-assessment-card p,
 .headteacher-lessons-page .headteacher-assessment-meta {
-  color: var(--lessons-muted);
+  @apply tw:[color:var(--lessons-muted)];
 }
 
 .headteacher-lessons-page .headteacher-workspace-tab-count {
-  background: #f1f6ed;
-  color: var(--lessons-forest-deep);
+  @apply tw:[background:#f1f6ed];
+  @apply tw:[color:var(--lessons-forest-deep)];
 }
 
 .headteacher-lessons-page .headteacher-workspace-tab.active .headteacher-workspace-tab-count {
-  background: #dcebd0;
-  color: var(--lessons-forest);
+  @apply tw:[background:#dcebd0];
+  @apply tw:[color:var(--lessons-forest)];
 }
 
 .headteacher-lessons-page .headteacher-lessons-form-card,
 .headteacher-lessons-page .headteacher-lessons-summary-card,
 .headteacher-lessons-page .headteacher-lesson-card {
-  border-color: var(--lessons-border);
-  background: linear-gradient(180deg, #fff, #f6faf3);
-  box-shadow: 0 18px 40px rgba(30, 67, 7, 0.065);
+  @apply tw:[border-color:var(--lessons-border)];
+  @apply tw:[background:linear-gradient(180deg,_#fff,_#f6faf3)];
+  @apply tw:[box-shadow:0_18px_40px_rgba(30,_67,_7,_0.065)];
 }
 
 .headteacher-lessons-page .headteacher-lessons-form-card::before {
-  background: radial-gradient(circle, rgba(95, 143, 50, 0.16), transparent 68%);
+  @apply tw:[background:radial-gradient(circle,_rgba(95,_143,_50,_0.16),_transparent_68%)];
 }
 
 .headteacher-lessons-page .headteacher-eyebrow,
 .headteacher-lessons-page .headteacher-step-label {
-  background: #dcebd0;
-  color: var(--lessons-forest);
+  @apply tw:[background:#dcebd0];
+  @apply tw:[color:var(--lessons-forest)];
 }
 
 .headteacher-lessons-page .headteacher-mini-badge {
-  border-color: var(--lessons-border);
-  background: rgba(255, 255, 255, 0.88);
-  color: #46543f;
+  @apply tw:[border-color:var(--lessons-border)];
+  @apply tw:[background:rgba(255,_255,_255,_0.88)];
+  @apply tw:[color:#46543f];
 }
 
 .headteacher-lessons-page .headteacher-step-break,
 .headteacher-lessons-page .headteacher-context-card {
-  border-color: var(--lessons-border);
-  background: linear-gradient(180deg, #fff, #f4f8f1);
+  @apply tw:[border-color:var(--lessons-border)];
+  @apply tw:[background:linear-gradient(180deg,_#fff,_#f4f8f1)];
 }
 
 .headteacher-lessons-page .headteacher-selected-teacher-card {
-  border-color: rgba(30, 67, 7, 0.16);
-  background: linear-gradient(135deg, #fff, var(--lessons-soft));
+  @apply tw:[border-color:rgba(30,_67,_7,_0.16)];
+  @apply tw:[background:linear-gradient(135deg,_#fff,_var(--lessons-soft))];
 }
 
 .headteacher-lessons-page .headteacher-selected-teacher-card.empty {
-  background: linear-gradient(135deg, #fff, #f5f8f3);
+  @apply tw:[background:linear-gradient(135deg,_#fff,_#f5f8f3)];
 }
 
 .headteacher-lessons-page .headteacher-selected-teacher-avatar {
-  background: linear-gradient(135deg, var(--lessons-forest), #477b22);
-  box-shadow: 0 8px 17px rgba(30, 67, 7, 0.18);
+  @apply tw:[background:linear-gradient(135deg,_var(--lessons-forest),_#477b22)];
+  @apply tw:[box-shadow:0_8px_17px_rgba(30,_67,_7,_0.18)];
 }
 
 .headteacher-lessons-page .headteacher-selected-teacher-status,
 .headteacher-lessons-page .headteacher-upload-action {
-  color: var(--lessons-forest);
+  @apply tw:[color:var(--lessons-forest)];
 }
 
 .headteacher-lessons-page .headteacher-status-dot {
-  background: var(--lessons-leaf);
-  box-shadow: 0 0 0 4px rgba(95, 143, 50, 0.15);
+  @apply tw:[background:var(--lessons-leaf)];
+  @apply tw:[box-shadow:0_0_0_4px_rgba(95,_143,_50,_0.15)];
 }
 
 .headteacher-lessons-page .headteacher-form-group input,
 .headteacher-lessons-page .headteacher-form-group select,
 .headteacher-lessons-page .headteacher-form-group textarea {
-  border-color: rgba(30, 67, 7, 0.18);
-  background: #fff;
-  color: var(--lessons-ink);
+  @apply tw:[border-color:rgba(30,_67,_7,_0.18)];
+  @apply tw:[background:#fff];
+  @apply tw:[color:var(--lessons-ink)];
 }
 
 .headteacher-lessons-page .headteacher-form-group input:focus,
 .headteacher-lessons-page .headteacher-form-group select:focus,
 .headteacher-lessons-page .headteacher-form-group textarea:focus {
-  border-color: rgba(30, 67, 7, 0.55);
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(30, 67, 7, 0.11);
+  @apply tw:[border-color:rgba(30,_67,_7,_0.55)];
+  @apply tw:[outline:none];
+  @apply tw:[box-shadow:0_0_0_4px_rgba(30,_67,_7,_0.11)];
 }
 
 .headteacher-lessons-page .headteacher-upload-dropzone {
-  border-color: rgba(30, 67, 7, 0.32);
-  background: linear-gradient(135deg, #fff, #f4f8f1);
+  @apply tw:[border-color:rgba(30,_67,_7,_0.32)];
+  @apply tw:[background:linear-gradient(135deg,_#fff,_#f4f8f1)];
 }
 
 .headteacher-lessons-page .headteacher-upload-dropzone:hover {
-  border-color: var(--lessons-forest);
-  box-shadow: 0 14px 28px rgba(30, 67, 7, 0.1);
+  @apply tw:[border-color:var(--lessons-forest)];
+  @apply tw:[box-shadow:0_14px_28px_rgba(30,_67,_7,_0.1)];
 }
 
 .headteacher-lessons-page .headteacher-upload-icon {
-  background: #fbe9e6;
-  color: #a73825;
+  @apply tw:[background:#fbe9e6];
+  @apply tw:[color:#a73825];
 }
 
 .headteacher-lessons-page .headteacher-summary-item {
-  border-color: var(--lessons-border);
-  background: rgba(255, 255, 255, 0.88);
+  @apply tw:[border-color:var(--lessons-border)];
+  @apply tw:[background:rgba(255,_255,_255,_0.88)];
 }
 
 .headteacher-lessons-page .headteacher-lesson-card-top {
-  border-bottom-color: rgba(30, 67, 7, 0.1);
+  @apply tw:[border-bottom-color:rgba(30,_67,_7,_0.1)];
 }
 
 .headteacher-lessons-page .headteacher-lesson-pill {
-  background: #dcebd0;
-  color: var(--lessons-forest);
+  @apply tw:[background:#dcebd0];
+  @apply tw:[color:var(--lessons-forest)];
 }
 
 .headteacher-lessons-page .headteacher-lesson-pill.subtle {
-  background: var(--lessons-soft);
-  color: #315f13;
+  @apply tw:[background:var(--lessons-soft)];
+  @apply tw:[color:#315f13];
 }
 
 .headteacher-lessons-page .headteacher-lesson-pill.period,
 .headteacher-lessons-page .headteacher-lesson-file-chip {
-  border-color: rgba(212, 170, 47, 0.3);
-  background: #fff8df;
-  color: #765600;
+  @apply tw:[border-color:rgba(212,_170,_47,_0.3)];
+  @apply tw:[background:#fff8df];
+  @apply tw:[color:#765600];
 }
 
 .headteacher-lessons-page .headteacher-lesson-meta i,
 .headteacher-lessons-page .headteacher-assessment-meta i {
-  color: var(--lessons-leaf);
+  @apply tw:[color:var(--lessons-leaf)];
 }
 
 .headteacher-lessons-page .headteacher-lesson-meta span i.fa-book-open,
 .headteacher-lessons-page .headteacher-lesson-meta span i.fa-book-open::before {
-  color: var(--lessons-gold) !important;
+  @apply tw:[color:var(--lessons-gold)]!;
 }
 
 .headteacher-lessons-page .headteacher-policy-note {
-  border-color: rgba(30, 67, 7, 0.18);
-  background: linear-gradient(135deg, var(--lessons-soft), #f9fbf7);
-  color: #46543f;
+  @apply tw:[border-color:rgba(30,_67,_7,_0.18)];
+  @apply tw:[background:linear-gradient(135deg,_var(--lessons-soft),_#f9fbf7)];
+  @apply tw:[color:#46543f];
 }
 
 .headteacher-lessons-page .headteacher-policy-note strong {
-  color: var(--lessons-forest-deep);
+  @apply tw:[color:var(--lessons-forest-deep)];
 }
 
 .headteacher-lessons-page .headteacher-draft-box,
 .headteacher-lessons-page .headteacher-draft-item,
 .headteacher-lessons-page .headteacher-assessment-card {
-  border-color: var(--lessons-border);
-  background: linear-gradient(135deg, #fff, #f5f9f1);
+  @apply tw:[border-color:var(--lessons-border)];
+  @apply tw:[background:linear-gradient(135deg,_#fff,_#f5f9f1)];
 }
 
 .headteacher-lessons-page .headteacher-button-primary {
-  border-color: var(--lessons-forest);
-  background: linear-gradient(135deg, var(--lessons-forest), #3f751d);
-  color: #fff;
-  box-shadow: 0 11px 24px rgba(30, 67, 7, 0.22);
+  @apply tw:[border-color:var(--lessons-forest)];
+  @apply tw:[background:linear-gradient(135deg,_var(--lessons-forest),_#3f751d)];
+  @apply tw:[color:#fff];
+  @apply tw:[box-shadow:0_11px_24px_rgba(30,_67,_7,_0.22)];
 }
 
 .headteacher-lessons-page .headteacher-button-primary:hover:not(:disabled) {
-  border-color: #28580b;
-  background: linear-gradient(135deg, #28580b, #4d8427);
-  box-shadow: 0 14px 28px rgba(30, 67, 7, 0.27);
+  @apply tw:[border-color:#28580b];
+  @apply tw:[background:linear-gradient(135deg,_#28580b,_#4d8427)];
+  @apply tw:[box-shadow:0_14px_28px_rgba(30,_67,_7,_0.27)];
 }
 
 .headteacher-lessons-page .headteacher-button-outline:hover:not(:disabled) {
-  border-color: rgba(30, 67, 7, 0.28);
-  background: var(--lessons-soft);
-  color: var(--lessons-forest);
+  @apply tw:[border-color:rgba(30,_67,_7,_0.28)];
+  @apply tw:[background:var(--lessons-soft)];
+  @apply tw:[color:var(--lessons-forest)];
 }
 
 .headteacher-lessons-page .headteacher-banner.success {
-  border-color: rgba(30, 67, 7, 0.15);
-  background: linear-gradient(180deg, #fff, var(--lessons-soft));
-  color: var(--lessons-forest);
+  @apply tw:[border-color:rgba(30,_67,_7,_0.15)];
+  @apply tw:[background:linear-gradient(180deg,_#fff,_var(--lessons-soft))];
+  @apply tw:[color:var(--lessons-forest)];
 }
 
 .headteacher-lessons-page .headteacher-table-state {
-  border-color: var(--lessons-border);
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--lessons-muted);
+  @apply tw:[border-color:var(--lessons-border)];
+  @apply tw:[background:rgba(255,_255,_255,_0.82)];
+  @apply tw:[color:var(--lessons-muted)];
 }
 
 .headteacher-lessons-page .headteacher-lesson-pagination {
-  margin-top: 0.25rem;
-  border: 1px solid var(--lessons-border);
-  border-radius: 16px;
-  background: rgba(237, 245, 232, 0.78);
+  @apply tw:[margin-top:0.25rem];
+  @apply tw:[border:1px_solid_var(--lessons-border)];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:rgba(237,_245,_232,_0.78)];
 }
 
 .headteacher-lessons-page .headteacher-pagination-info {
-  color: var(--lessons-muted);
+  @apply tw:[color:var(--lessons-muted)];
 }
 
 .headteacher-lessons-page .headteacher-page-btn {
-  border-color: rgba(30, 67, 7, 0.16);
-  color: #46543f;
+  @apply tw:[border-color:rgba(30,_67,_7,_0.16)];
+  @apply tw:[color:#46543f];
 }
 
 .headteacher-lessons-page .headteacher-page-btn:hover:not(:disabled):not(.active) {
-  border-color: rgba(30, 67, 7, 0.3);
-  background: var(--lessons-soft);
-  color: var(--lessons-forest);
+  @apply tw:[border-color:rgba(30,_67,_7,_0.3)];
+  @apply tw:[background:var(--lessons-soft)];
+  @apply tw:[color:var(--lessons-forest)];
 }
 
 .headteacher-lessons-page .headteacher-page-btn.active {
-  border-color: var(--lessons-forest);
-  background: linear-gradient(135deg, var(--lessons-forest), #3f751d);
-  color: #fff;
-  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.18);
+  @apply tw:[border-color:var(--lessons-forest)];
+  @apply tw:[background:linear-gradient(135deg,_var(--lessons-forest),_#3f751d)];
+  @apply tw:[color:#fff];
+  @apply tw:[box-shadow:0_7px_16px_rgba(30,_67,_7,_0.18)];
 }
 
 .headteacher-lessons-page .headteacher-page-btn:focus-visible {
-  outline: 3px solid rgba(30, 67, 7, 0.16);
-  outline-offset: 2px;
+  @apply tw:[outline:3px_solid_rgba(30,_67,_7,_0.16)];
+  @apply tw:[outline-offset:2px];
 }
 
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.active,
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-active,
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active {
-  border-color: var(--lessons-forest) !important;
-  background: linear-gradient(135deg, var(--lessons-forest), #3e711d) !important;
-  box-shadow: 0 12px 22px rgba(30, 67, 7, 0.18) !important;
+  @apply tw:[border-color:var(--lessons-forest)]!;
+  @apply tw:[background:linear-gradient(135deg,_var(--lessons-forest),_#3e711d)]!;
+  @apply tw:[box-shadow:0_12px_22px_rgba(30,_67,_7,_0.18)]!;
 }
 
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.active > span,
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-active > span,
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active > span {
-  color: #fff !important;
+  @apply tw:[color:#fff]!;
 }
 
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.active i,
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-active i,
 body.headteacher-dashboard .headteacher-lessons-page .headteacher-sidebar .headteacher-nav-link.router-link-exact-active i {
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  background: rgba(255, 255, 255, 0.14) !important;
-  color: #fff !important;
+  @apply tw:[border-color:rgba(255,_255,_255,_0.16)]!;
+  @apply tw:[background:rgba(255,_255,_255,_0.14)]!;
+  @apply tw:[color:#fff]!;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .headteacher-lessons-page .headteacher-workspace-tab,
   .headteacher-lessons-page .headteacher-upload-dropzone,
   .headteacher-lessons-page .headteacher-button {
-    transition: none;
+    @apply tw:[transition:none];
   }
 }
+
 </style>

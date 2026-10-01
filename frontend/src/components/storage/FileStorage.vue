@@ -197,171 +197,174 @@ onMounted(() => {
 </template>
 
 <style scoped>
+@reference "../../styles/tailwind.css";
+
 .file-storage-card {
-  display: grid;
-  gap: 1rem;
-  padding: 1.5rem;
-  border: 1px solid #dbe4f0;
-  border-radius: 20px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  @apply tw:grid;
+  @apply tw:[gap:1rem];
+  @apply tw:[padding:1.5rem];
+  @apply tw:[border:1px_solid_#dbe4f0];
+  @apply tw:[border-radius:20px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fbff_100%)];
+  @apply tw:[box-shadow:0_18px_40px_rgba(15,_23,_42,_0.08)];
 }
 
 .file-storage-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
 }
 
 .file-storage-header h2 {
-  margin: 0 0 0.25rem;
-  font-size: 1.35rem;
-  color: #10213a;
+  @apply tw:[margin:0_0_0.25rem];
+  @apply tw:[font-size:1.35rem];
+  @apply tw:[color:#10213a];
 }
 
 .file-storage-header p {
-  margin: 0;
-  color: #51627a;
+  @apply tw:[margin:0];
+  @apply tw:[color:#51627a];
 }
 
 .file-storage-dot {
-  margin: 0 0.45rem;
+  @apply tw:[margin:0_0.45rem];
 }
 
 .upload-button {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.8rem 1.1rem;
-  border-radius: 999px;
-  background: #10213a;
-  color: #ffffff;
-  font-weight: 600;
-  cursor: pointer;
-  overflow: hidden;
+  @apply tw:relative;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[padding:0.8rem_1.1rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#10213a];
+  @apply tw:[color:#ffffff];
+  @apply tw:[font-weight:600];
+  @apply tw:cursor-pointer;
+  @apply tw:overflow-hidden;
 }
 
 .upload-button.disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  @apply tw:[opacity:0.7];
+  @apply tw:cursor-not-allowed;
 }
 
 .upload-button input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+  @apply tw:absolute;
+  @apply tw:[inset:0];
+  @apply tw:opacity-0;
+  @apply tw:cursor-pointer;
 }
 
 .status-copy {
-  margin: 0;
-  color: #4b5563;
+  @apply tw:[margin:0];
+  @apply tw:[color:#4b5563];
 }
 
 .status-copy--error {
-  color: #b42318;
+  @apply tw:[color:#b42318];
 }
 
 .status-copy--success {
-  color: #067647;
+  @apply tw:[color:#067647];
 }
 
 .file-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(auto-fit,_minmax(280px,_1fr))];
+  @apply tw:[gap:1rem];
 }
 
 .file-card {
-  display: grid;
-  gap: 0.85rem;
-  padding: 1rem;
-  border: 1px solid #d8e2ee;
-  border-radius: 16px;
-  background: #ffffff;
+  @apply tw:grid;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_solid_#d8e2ee];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#ffffff];
 }
 
 .file-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
 }
 
 .file-card-header h3 {
-  margin: 0 0 0.2rem;
-  font-size: 1rem;
-  word-break: break-word;
-  color: #10213a;
+  @apply tw:[margin:0_0_0.2rem];
+  @apply tw:[font-size:1rem];
+  @apply tw:[word-break:break-word];
+  @apply tw:[color:#10213a];
 }
 
 .file-card-header p {
-  margin: 0;
-  font-size: 0.92rem;
-  color: #64748b;
+  @apply tw:[margin:0];
+  @apply tw:[font-size:0.92rem];
+  @apply tw:[color:#64748b];
 }
 
 .delete-button {
-  border: none;
-  border-radius: 999px;
-  padding: 0.55rem 0.85rem;
-  background: #fee4e2;
-  color: #b42318;
-  font-weight: 600;
-  cursor: pointer;
+  @apply tw:[border:none];
+  @apply tw:[border-radius:999px];
+  @apply tw:[padding:0.55rem_0.85rem];
+  @apply tw:[background:#fee4e2];
+  @apply tw:[color:#b42318];
+  @apply tw:[font-weight:600];
+  @apply tw:cursor-pointer;
 }
 
 .preview-shell {
-  min-height: 220px;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #eef4fb;
+  @apply tw:[min-height:220px];
+  @apply tw:[border-radius:14px];
+  @apply tw:overflow-hidden;
+  @apply tw:[background:#eef4fb];
 }
 
 .preview-shell--link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
 }
 
 .image-preview,
 .pdf-preview {
-  width: 100%;
-  height: 220px;
-  border: 0;
-  display: block;
-  object-fit: cover;
+  @apply tw:w-full;
+  @apply tw:[height:220px];
+  @apply tw:[border:0];
+  @apply tw:block;
+  @apply tw:object-cover;
 }
 
 .file-card-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  font-size: 0.92rem;
-  color: #64748b;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[font-size:0.92rem];
+  @apply tw:[color:#64748b];
 }
 
 .file-card-actions a {
-  color: #0f62fe;
-  font-weight: 600;
-  text-decoration: none;
+  @apply tw:[color:#0f62fe];
+  @apply tw:[font-weight:600];
+  @apply tw:[text-decoration:none];
 }
 
 @media (max-width: 720px) {
   .file-storage-header {
-    flex-direction: column;
+    @apply tw:flex-col;
   }
 
   .upload-button {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   .file-card-actions {
-    flex-direction: column;
-    align-items: flex-start;
+    @apply tw:flex-col;
+    @apply tw:items-start;
   }
 }
+
 </style>

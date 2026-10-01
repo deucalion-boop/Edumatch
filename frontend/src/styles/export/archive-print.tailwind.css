@@ -1,0 +1,55 @@
+@reference "../tailwind.css";
+
+body {
+  @apply tw:[font-family:Inter,_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_Roboto,_sans-serif];
+  @apply tw:[margin:24px];
+  @apply tw:[color:#0f172a];
+}
+
+h1 {
+  @apply tw:[margin:0_0_6px];
+  @apply tw:[font-size:22px];
+}
+
+p {
+  @apply tw:[margin:0_0_8px];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:13px];
+}
+
+.meta {
+  @apply tw:[margin:16px_0];
+  @apply tw:[padding:12px_14px];
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#f8fafc];
+}
+
+.meta strong {
+  @apply tw:block;
+  @apply tw:[margin-bottom:6px];
+  @apply tw:[color:#0f172a];
+}
+
+table {
+  @apply tw:w-full;
+  @apply tw:border-collapse;
+  @apply tw:[font-size:12px];
+}
+
+th, td {
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[padding:8px_10px];
+  @apply tw:text-left;
+  @apply tw:align-top;
+}
+
+th {
+  @apply tw:[background:#e2e8f0];
+}
+
+@media print {
+  body {
+    @apply tw:[margin:12px];
+  }
+}

@@ -298,145 +298,148 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../../styles/tailwind.css";
+
 .secretary-settings-grid,
 .secretary-settings-hero,
 .secretary-banner {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 .secretary-settings-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)];
 }
 
 .secretary-settings-card {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 .secretary-security-form {
-  display: grid;
-  gap: 1rem;
+  @apply tw:grid;
+  @apply tw:[gap:1rem];
 }
 
 .secretary-field-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:[gap:1rem];
 }
 
 .secretary-field {
-  display: grid;
-  gap: 0.45rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.45rem];
 }
 
 .secretary-field span {
-  color: #475569;
-  font-size: 0.85rem;
-  font-weight: 700;
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.85rem];
+  @apply tw:[font-weight:700];
 }
 
 .secretary-password-wrap {
-  display: flex;
-  align-items: center;
-  border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  background: #fff;
-  overflow: hidden;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#fff];
+  @apply tw:overflow-hidden;
 }
 
 .secretary-input {
-  width: 100%;
-  min-height: 50px;
-  padding: 0.85rem 1rem;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: #0f172a;
+  @apply tw:w-full;
+  @apply tw:[min-height:50px];
+  @apply tw:[padding:0.85rem_1rem];
+  @apply tw:[border:0];
+  @apply tw:[outline:none];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#0f172a];
 }
 
 .secretary-password-toggle {
-  width: 48px;
-  min-width: 48px;
-  height: 48px;
-  border: 0;
-  background: transparent;
-  color: #64748b;
+  @apply tw:[width:48px];
+  @apply tw:[min-width:48px];
+  @apply tw:[height:48px];
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#64748b];
 }
 
 .secretary-field-error {
-  color: #b91c1c;
-  font-size: 0.8rem;
-  font-weight: 600;
+  @apply tw:[color:#b91c1c];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:600];
 }
 
 .secretary-password-rules {
-  padding: 1rem 1.1rem;
-  border: 1px solid #dbe4ec;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff, #f8fbfb);
+  @apply tw:[padding:1rem_1.1rem];
+  @apply tw:[border:1px_solid_#dbe4ec];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff,_#f8fbfb)];
 }
 
 .secretary-password-rules p {
-  margin: 0 0 0.6rem;
-  color: #334155;
-  font-weight: 700;
+  @apply tw:[margin:0_0_0.6rem];
+  @apply tw:[color:#334155];
+  @apply tw:[font-weight:700];
 }
 
 .secretary-password-rules ul {
-  margin: 0;
-  padding-left: 1.1rem;
-  color: #64748b;
+  @apply tw:[margin:0];
+  @apply tw:[padding-left:1.1rem];
+  @apply tw:[color:#64748b];
 }
 
 .secretary-password-rules li + li {
-  margin-top: 0.35rem;
+  @apply tw:[margin-top:0.35rem];
 }
 
 .secretary-password-rules li.met {
-  color: #15803d;
-  font-weight: 700;
+  @apply tw:[color:#15803d];
+  @apply tw:[font-weight:700];
 }
 
 .secretary-form-actions {
-  display: flex;
-  justify-content: flex-end;
+  @apply tw:flex;
+  @apply tw:justify-end;
 }
 
 .secretary-update-password-btn {
-  border-color: #4f8a35;
-  background: #4f8a35;
-  background-image: none;
-  color: #ffffff;
+  @apply tw:[border-color:#4f8a35];
+  @apply tw:[background:#4f8a35];
+  @apply tw:bg-none;
+  @apply tw:[color:#ffffff];
 }
 
 .secretary-update-password-btn:hover:not(:disabled),
 .secretary-update-password-btn:focus:not(:disabled) {
-  border-color: #416f2c;
-  background: #416f2c;
-  background-image: none;
+  @apply tw:[border-color:#416f2c];
+  @apply tw:[background:#416f2c];
+  @apply tw:bg-none;
 }
 
 .secretary-update-password-btn:active:not(:disabled) {
-  border-color: #365d25;
-  background: #365d25;
-  background-image: none;
+  @apply tw:[border-color:#365d25];
+  @apply tw:[background:#365d25];
+  @apply tw:bg-none;
 }
 
 @media (max-width: 768px) {
   .secretary-settings-card {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   .secretary-field-row {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .secretary-form-actions {
-    justify-content: stretch;
+    @apply tw:justify-stretch;
   }
 
   .secretary-form-actions .btn {
-    width: 100%;
+    @apply tw:w-full;
   }
 }
+
 </style>

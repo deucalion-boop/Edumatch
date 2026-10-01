@@ -25,13 +25,15 @@ onMounted(() => document.addEventListener('click', closeOutside))
 onBeforeUnmount(() => document.removeEventListener('click', closeOutside))
 </script>
 <style scoped>
-.headteacher-notifications { position: relative; flex-shrink: 0; pointer-events: auto; }
-.notification-trigger { position: relative; }
-.notification-count { position: absolute; top: -4px; right: -4px; min-width: 18px; padding: 2px 4px; border-radius: 12px; background: #b91c1c; color: white; font-size: 10px; line-height: 1.2; }
-.notification-panel { position: absolute; top: calc(100% + 10px); right: 0; width: min(360px, calc(100vw - 32px)); max-height: min(480px, 70vh); overflow-y: auto; background: white; border: 1px solid #dce5d7; border-radius: 14px; box-shadow: 0 12px 36px #17201424; z-index: 100; }
-.notification-panel-header { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid #edf2ea; color: #1e4307; }
-.notification-panel-header strong { flex: 1; }
-.notification-panel-header button { background: transparent; border: 0; color: inherit; cursor: pointer; }
-.notification-panel-header button:disabled { opacity: 0.5; cursor: default; }
-@media (max-width: 600px) { .notification-panel { position: fixed; top: 80px; right: 16px; } }
+@reference "../styles/tailwind.css";
+.headteacher-notifications { @apply tw:relative; @apply tw:shrink-0; @apply tw:pointer-events-auto; }
+.notification-trigger { @apply tw:relative; }
+.notification-count { @apply tw:absolute; @apply tw:[top:-4px]; @apply tw:[right:-4px]; @apply tw:[min-width:18px]; @apply tw:[padding:2px_4px]; @apply tw:[border-radius:12px]; @apply tw:[background:#b91c1c]; @apply tw:[color:white]; @apply tw:[font-size:10px]; @apply tw:[line-height:1.2]; }
+.notification-panel { @apply tw:absolute; @apply tw:[top:calc(100%_+_10px)]; @apply tw:[right:0]; @apply tw:[width:min(360px,_calc(100vw_-_32px))]; @apply tw:[max-height:min(480px,_70vh)]; @apply tw:overflow-y-auto; @apply tw:[background:white]; @apply tw:[border:1px_solid_#dce5d7]; @apply tw:[border-radius:14px]; @apply tw:[box-shadow:0_12px_36px_#17201424]; @apply tw:[z-index:100]; }
+.notification-panel-header { @apply tw:flex; @apply tw:items-center; @apply tw:[gap:12px]; @apply tw:[padding:14px]; @apply tw:[border-bottom:1px_solid_#edf2ea]; @apply tw:[color:#1e4307]; }
+.notification-panel-header strong { @apply tw:[flex:1]; }
+.notification-panel-header button { @apply tw:[background:transparent]; @apply tw:[border:0]; @apply tw:[color:inherit]; @apply tw:cursor-pointer; }
+.notification-panel-header button:disabled { @apply tw:[opacity:0.5]; @apply tw:cursor-default; }
+@media (max-width: 600px) { .notification-panel { @apply tw:fixed; @apply tw:[top:80px]; @apply tw:[right:16px]; } }
+
 </style>

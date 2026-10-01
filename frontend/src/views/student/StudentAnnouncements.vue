@@ -1,77 +1,53 @@
 <template>
-  <section class="announcement-page mx-auto max-w-[980px] p-8 text-slate-900 max-sm:p-5">
-    <header class="mb-6 flex items-start justify-between gap-4 max-sm:flex-col">
+  <section class="announcement-page">
+    <header class="page-header">
       <div>
-        <p class="m-0 text-xs font-bold uppercase tracking-[0.08em] text-blue-600! student-dark:text-[#b9dfa5]!">Class updates</p>
-        <h1 class="my-[0.15rem] mb-[0.35rem] [font-size:clamp(1.8rem,3vw,2.4rem)]">Announcements</h1>
-        <p class="m-0 text-slate-500">Important messages posted by your teachers appear here.</p>
+        <p class="eyebrow">Class updates</p>
+        <h1>Announcements</h1>
+        <p>Important messages posted by your teachers appear here.</p>
       </div>
-      <button
-        v-if="selectedAnnouncement"
-        type="button"
-        class="cursor-pointer rounded-[10px] border border-slate-300 bg-white px-4 py-[0.7rem] font-semibold text-blue-800 student-dark:border-[#526b59]! student-dark:bg-[#203127]! student-dark:text-[#e7efe9]! student-dark:hover:border-[#6b8974]! student-dark:hover:bg-[#293d30]!"
-        aria-label="Back to announcements"
-        @click="showAll"
-      >
+      <button v-if="selectedAnnouncement" type="button" class="back-button" aria-label="Back to announcements" @click="showAll">
         <i class="fas fa-arrow-left" aria-hidden="true"></i>
         Back
       </button>
     </header>
 
-    <p
-      v-if="loading"
-      class="[overflow-wrap:anywhere] rounded-[18px] border border-[#d8e1ef] bg-white p-6 text-center text-slate-500 student-dark:border-[#405348]! student-dark:bg-[#101913]! student-dark:text-[#f1f5f2]! student-dark:shadow-none!"
-      role="status"
-    >Loading announcements...</p>
-    <div
-      v-else-if="error"
-      class="[overflow-wrap:anywhere] rounded-[18px] border border-[#d8e1ef] bg-white p-6 text-center text-red-700 student-dark:border-[#405348]! student-dark:bg-[#101913]! student-dark:text-[#f1f5f2]! student-dark:shadow-none!"
-      role="alert"
-    >
-      <p class="mt-[0.35rem] mb-4 student-dark:text-[#aebdb2]!">{{ error }}</p>
-      <button
-        type="button"
-        class="cursor-pointer rounded-[10px] border border-slate-300 bg-white px-4 py-[0.7rem] font-semibold text-blue-800 student-dark:border-[#526b59]! student-dark:bg-[#203127]! student-dark:text-[#e7efe9]! student-dark:hover:border-[#6b8974]! student-dark:hover:bg-[#293d30]!"
-        @click="load"
-      >Try again</button>
+    <p v-if="loading" class="state-card" role="status">Loading announcements...</p>
+    <div v-else-if="error" class="state-card state-card-error" role="alert">
+      <p>{{ error }}</p>
+      <button type="button" @click="load">Try again</button>
     </div>
 
-    <article
-      v-else-if="selectedAnnouncement"
-      class="[overflow-wrap:anywhere] rounded-[18px] border border-[#d8e1ef] bg-white p-6 student-dark:border-[#405348]! student-dark:bg-[#101913]! student-dark:text-[#f1f5f2]! student-dark:shadow-none!"
-    >
-      <p class="m-0 text-xs font-bold uppercase tracking-[0.08em] text-blue-600! student-dark:text-[#b9dfa5]!">Announcement &middot; {{ selectedAnnouncement.subject }}</p>
-      <h2 class="my-2 text-[1.7rem] student-dark:text-slate-50!">{{ selectedAnnouncement.title }}</h2>
-      <p class="text-[0.88rem] text-slate-500 student-dark:text-[#aebdb2]!">{{ selectedAnnouncement.teacher }} &middot; {{ formatDate(selectedAnnouncement.createdAt) }}</p>
-      <p class="whitespace-pre-wrap leading-[1.7] student-dark:text-[#aebdb2]!">{{ selectedAnnouncement.content }}</p>
+    <article v-else-if="selectedAnnouncement" class="announcement-detail">
+      <p class="eyebrow">Announcement &middot; {{ selectedAnnouncement.subject }}</p>
+      <h2>{{ selectedAnnouncement.title }}</h2>
+      <p class="meta">{{ selectedAnnouncement.teacher }} &middot; {{ formatDate(selectedAnnouncement.createdAt) }}</p>
+      <p class="content">{{ selectedAnnouncement.content }}</p>
     </article>
 
-    <div v-else-if="announcements.length" class="grid gap-[0.85rem]">
+    <div v-else-if="announcements.length" class="announcement-list">
       <button
         v-for="item in announcements"
         :key="item.id"
         type="button"
-        class="grid w-full cursor-pointer grid-cols-[46px_minmax(0,1fr)_auto] items-center gap-4 rounded-2xl border border-[#d8e1ef] bg-white p-[1.1rem] text-left text-inherit transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] max-sm:grid-cols-[40px_minmax(0,1fr)] student-dark:border-[#405348]! student-dark:bg-[#101913]! student-dark:text-[#f1f5f2]! student-dark:shadow-none! student-dark:hover:border-[#6b8974]! student-dark:hover:bg-[#18251d]! student-dark:hover:shadow-[0_12px_28px_rgba(0,0,0,0.24)]!"
+        class="announcement-card"
         @click="openAnnouncement(item)"
       >
-        <span class="grid size-[46px] place-items-center rounded-[13px] bg-blue-100 text-blue-600 max-sm:size-10 student-dark:bg-[#203127]! student-dark:text-[#b9dfa5]!"><i class="fas fa-bullhorn student-dark:text-[#b9dfa5]!" aria-hidden="true"></i></span>
-        <span class="grid min-w-0 gap-1">
-          <span class="text-[0.78rem] font-bold uppercase text-blue-600 student-dark:text-[#b9dfa5]!">{{ item.subject }}</span>
-          <strong class="text-[1.05rem] student-dark:text-slate-50!">{{ item.title }}</strong>
-          <span class="overflow-hidden text-ellipsis whitespace-nowrap text-slate-600 student-dark:text-[#aebdb2]!">{{ item.content }}</span>
-          <span class="text-[0.88rem] text-slate-500 student-dark:text-[#aebdb2]!">{{ item.teacher }} &middot; {{ formatDate(item.createdAt) }}</span>
+        <span class="announcement-icon"><i class="fas fa-bullhorn" aria-hidden="true"></i></span>
+        <span class="announcement-summary">
+          <span class="announcement-subject">{{ item.subject }}</span>
+          <strong>{{ item.title }}</strong>
+          <span class="announcement-preview">{{ item.content }}</span>
+          <span class="meta">{{ item.teacher }} &middot; {{ formatDate(item.createdAt) }}</span>
         </span>
-        <i class="fas fa-chevron-right text-slate-400 max-sm:hidden student-dark:text-[#b9dfa5]!" aria-hidden="true"></i>
+        <i class="fas fa-chevron-right card-arrow" aria-hidden="true"></i>
       </button>
     </div>
 
-    <div
-      v-else
-      class="[overflow-wrap:anywhere] rounded-[18px] border border-[#d8e1ef] bg-white px-6 py-12 text-center text-slate-500 student-dark:border-[#405348]! student-dark:bg-[#101913]! student-dark:text-[#f1f5f2]! student-dark:shadow-none!"
-    >
-      <i class="fas fa-bullhorn text-2xl text-blue-300 student-dark:text-[#b9dfa5]!" aria-hidden="true"></i>
-      <h2 class="mt-3 mb-1 text-slate-900 student-dark:text-slate-50!">No announcements yet</h2>
-      <p class="mt-[0.35rem] mb-4 student-dark:text-[#aebdb2]!">Announcements from your teachers will appear here.</p>
+    <div v-else class="state-card empty-state">
+      <i class="fas fa-bullhorn" aria-hidden="true"></i>
+      <h2>No announcements yet</h2>
+      <p>Announcements from your teachers will appear here.</p>
     </div>
   </section>
 </template>
@@ -134,3 +110,127 @@ watch(() => route.query.event, (eventKey, previousEventKey) => {
   if (!announcements.value.length || (eventKey && eventKey !== previousEventKey && !selectedAnnouncement.value)) load()
 }, { immediate: true })
 </script>
+<style scoped>
+@reference "../../styles/tailwind.css";
+.announcement-page { @apply tw:[max-width:980px]; @apply tw:[margin:0_auto]; @apply tw:[padding:2rem]; @apply tw:[color:#0f172a]; }
+.announcement-page .page-header {
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:[margin-bottom:1.5rem];
+  @apply tw:[padding:0];
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:inherit];
+  @apply tw:text-left;
+  @apply tw:overflow-visible;
+}
+.announcement-page .page-header::before,
+.announcement-page .page-header::after { @apply tw:hidden; @apply tw:[content:none]; }
+.page-header h1 { @apply tw:[margin:.15rem_0_.35rem]; @apply tw:[font-size:clamp(1.8rem,_3vw,_2.4rem)]; }
+.page-header p { @apply tw:[margin:0]; @apply tw:[color:#64748b]; }
+.eyebrow { @apply tw:[margin:0]; @apply tw:[color:#2563eb]!; @apply tw:[font-size:.8rem]; @apply tw:[font-weight:700]; @apply tw:[letter-spacing:.08em]; @apply tw:uppercase; }
+.back-button, .state-card button { @apply tw:[border:1px_solid_#cbd5e1]; @apply tw:[border-radius:10px]; @apply tw:[background:#fff]; @apply tw:[color:#1e40af]; @apply tw:[padding:.7rem_1rem]; @apply tw:[font-weight:600]; @apply tw:cursor-pointer; }
+.announcement-list { @apply tw:grid; @apply tw:[gap:.85rem]; }
+.announcement-card { @apply tw:w-full; @apply tw:grid; @apply tw:[grid-template-columns:46px_minmax(0,_1fr)_auto]; @apply tw:items-center; @apply tw:[gap:1rem]; @apply tw:[padding:1.1rem]; @apply tw:[border:1px_solid_#d8e1ef]; @apply tw:[border-radius:16px]; @apply tw:[background:#fff]; @apply tw:[color:inherit]; @apply tw:text-left; @apply tw:cursor-pointer; @apply tw:[transition:transform_.18s_ease,_border-color_.18s_ease,_box-shadow_.18s_ease]; }
+.announcement-card:hover { @apply tw:[transform:translateY(-2px)]; @apply tw:[border-color:#93c5fd]; @apply tw:[box-shadow:0_10px_24px_rgba(15,_23,_42,_.08)]; }
+.announcement-icon { @apply tw:[width:46px]; @apply tw:[height:46px]; @apply tw:grid; @apply tw:place-items-center; @apply tw:[border-radius:13px]; @apply tw:[background:#dbeafe]; @apply tw:[color:#2563eb]; }
+.announcement-summary { @apply tw:[min-width:0]; @apply tw:grid; @apply tw:[gap:.25rem]; }
+.announcement-summary strong { @apply tw:[font-size:1.05rem]; }
+.announcement-subject { @apply tw:[color:#2563eb]; @apply tw:[font-size:.78rem]; @apply tw:[font-weight:700]; @apply tw:uppercase; }
+.announcement-preview { @apply tw:overflow-hidden; @apply tw:[color:#475569]; @apply tw:text-ellipsis; @apply tw:whitespace-nowrap; }
+.card-arrow { @apply tw:[color:#94a3b8]; }
+.announcement-detail, .state-card { @apply tw:[background:#fff]; @apply tw:[border:1px_solid_#d8e1ef]; @apply tw:[border-radius:18px]; @apply tw:[padding:1.5rem]; @apply tw:[overflow-wrap:anywhere]; }
+.announcement-detail h2 { @apply tw:[margin:.5rem_0]; @apply tw:[font-size:1.7rem]; }
+.meta { @apply tw:[color:#64748b]; @apply tw:[font-size:.88rem]; }
+.content { @apply tw:whitespace-pre-wrap; @apply tw:[line-height:1.7]; }
+.state-card { @apply tw:text-center; @apply tw:[color:#64748b]; }
+.state-card p { @apply tw:[margin:.35rem_0_1rem]; }
+.state-card-error { @apply tw:[color:#b91c1c]; }
+.empty-state { @apply tw:[padding:3rem_1.5rem]; }
+.empty-state > i { @apply tw:[color:#93c5fd]; @apply tw:[font-size:2rem]; }
+.empty-state h2 { @apply tw:[margin:.8rem_0_.25rem]; @apply tw:[color:#0f172a]; }
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .announcement-card,
+  .announcement-detail,
+  .state-card
+)) {
+  @apply tw:[background:#101913]!;
+  @apply tw:[border-color:#405348]!;
+  @apply tw:[color:#f1f5f2]!;
+  @apply tw:[box-shadow:none]!;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page .announcement-card:hover) {
+  @apply tw:[background:#18251d]!;
+  @apply tw:[border-color:#6b8974]!;
+  @apply tw:[box-shadow:0_12px_28px_rgba(0,_0,_0,_0.24)]!;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .announcement-summary strong,
+  .announcement-detail h2,
+  .empty-state h2
+)) {
+  @apply tw:[color:#f8fafc]!;
+  @apply tw:[-webkit-text-fill-color:#f8fafc]!;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .announcement-preview,
+  .meta,
+  .content,
+  .state-card p
+)) {
+  @apply tw:[color:#aebdb2]!;
+  @apply tw:[-webkit-text-fill-color:#aebdb2]!;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .eyebrow,
+  .announcement-subject
+)) {
+  @apply tw:[color:#b9dfa5]!;
+  @apply tw:[-webkit-text-fill-color:#b9dfa5]!;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page .announcement-icon) {
+  @apply tw:[background:#203127]!;
+  @apply tw:[color:#b9dfa5]!;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page .announcement-icon i),
+:global(.student-dashboard.student-theme-dark .announcement-page .announcement-icon i::before),
+:global(.student-dashboard.student-theme-dark .announcement-page .card-arrow) {
+  @apply tw:[color:#b9dfa5]!;
+  @apply tw:[-webkit-text-fill-color:#b9dfa5]!;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .back-button,
+  .state-card button
+)) {
+  @apply tw:[background:#203127]!;
+  @apply tw:[border-color:#526b59]!;
+  @apply tw:[color:#e7efe9]!;
+}
+
+:global(.student-dashboard.student-theme-dark .announcement-page :is(
+  .back-button,
+  .state-card button
+):hover) {
+  @apply tw:[background:#293d30]!;
+  @apply tw:[border-color:#6b8974]!;
+}
+
+@media (max-width: 640px) {
+  .announcement-page { @apply tw:[padding:1.25rem]; }
+  .page-header { @apply tw:flex-col; }
+  .announcement-card { @apply tw:[grid-template-columns:40px_minmax(0,_1fr)]; }
+  .announcement-icon { @apply tw:[width:40px]; @apply tw:[height:40px]; }
+  .card-arrow { @apply tw:hidden; }
+}
+
+</style>

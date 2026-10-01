@@ -982,10 +982,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../../styles/tailwind.css";
 .headteacher-brand-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
+  @apply tw:w-full;
+  @apply tw:h-full;
+  @apply tw:object-contain;
+  @apply tw:block;
 }
+
 </style>

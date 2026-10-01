@@ -202,5 +202,7 @@ export default {
 </script>
 
 <style scoped>
-@import url('/css/auth.css');
+
+@import '../../styles/auth.tailwind.css';
+
 </style>

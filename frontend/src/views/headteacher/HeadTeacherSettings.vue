@@ -304,92 +304,95 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../../styles/tailwind.css";
+
 .headteacher-main,
 .headteacher-main.headteacher-page-container {
-  width: 100%;
-  max-width: none !important;
-  margin: 0;
+  @apply tw:w-full;
+  @apply tw:max-w-none!;
+  @apply tw:[margin:0];
 }
 
 .headteacher-profile-grid,
 .headteacher-profile-hero,
 .headteacher-banner {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 .headteacher-profile-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)];
 }
 
 .headteacher-content-card {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 .headteacher-security-form {
-  display: grid;
-  gap: 1rem;
+  @apply tw:grid;
+  @apply tw:[gap:1rem];
 }
 
 .headteacher-password-wrap {
-  display: flex;
-  align-items: center;
-  border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  background: #fff;
-  overflow: hidden;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#fff];
+  @apply tw:overflow-hidden;
 }
 
 .headteacher-password-input {
-  width: 100%;
-  min-height: 50px;
-  padding: 0.85rem 1rem;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: #0f172a;
+  @apply tw:w-full;
+  @apply tw:[min-height:50px];
+  @apply tw:[padding:0.85rem_1rem];
+  @apply tw:[border:0];
+  @apply tw:[outline:none];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#0f172a];
 }
 
 .headteacher-password-toggle {
-  width: 48px;
-  min-width: 48px;
-  height: 48px;
-  border: 0;
-  background: transparent;
-  color: #64748b;
+  @apply tw:[width:48px];
+  @apply tw:[min-width:48px];
+  @apply tw:[height:48px];
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#64748b];
 }
 
 .headteacher-password-rules {
-  padding: 1rem 1.1rem;
-  border: 1px solid #dbe4ec;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff, #f8fbfb);
+  @apply tw:[padding:1rem_1.1rem];
+  @apply tw:[border:1px_solid_#dbe4ec];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff,_#f8fbfb)];
 }
 
 .headteacher-password-rules p {
-  margin: 0 0 0.6rem;
-  color: #334155;
-  font-weight: 700;
+  @apply tw:[margin:0_0_0.6rem];
+  @apply tw:[color:#334155];
+  @apply tw:[font-weight:700];
 }
 
 .headteacher-password-rules ul {
-  margin: 0;
-  padding-left: 1.1rem;
-  color: #64748b;
+  @apply tw:[margin:0];
+  @apply tw:[padding-left:1.1rem];
+  @apply tw:[color:#64748b];
 }
 
 .headteacher-password-rules li + li {
-  margin-top: 0.35rem;
+  @apply tw:[margin-top:0.35rem];
 }
 
 .headteacher-password-rules li.met {
-  color: #15803d;
-  font-weight: 700;
+  @apply tw:[color:#15803d];
+  @apply tw:[font-weight:700];
 }
 
 @media (max-width: 768px) {
   .headteacher-modal-actions .headteacher-button {
-    width: 100%;
+    @apply tw:w-full;
   }
 }
+
 </style>

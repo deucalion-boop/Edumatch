@@ -119,7 +119,7 @@
           <div class="section-header analytics-section-header">
             <div class="analytics-section-heading">
               <h3 class="section-title">
-                <i class="fas fa-chart-line" style="margin-right: 0.5rem; color: var(--edu-blue, #374151);"></i>
+                <i class="fas fa-chart-line tw:inline:[margin-right:0.5rem] tw:inline:[color:var(--edu-blue,_#374151)]" ></i>
                 Analytics & Platform Metrics
               </h3>
               <p class="analytics-section-subtitle">
@@ -128,7 +128,7 @@
             </div>
           </div>
 
-          <div v-if="loadingAnalytics" class="activity-item" style="margin-bottom: 0.75rem;">
+          <div v-if="loadingAnalytics" class="activity-item tw:inline:[margin-bottom:0.75rem]" >
             <div class="activity-content">
               <div class="activity-details">
                 <h4 class="activity-title">Loading analytics...</h4>
@@ -136,7 +136,7 @@
               </div>
             </div>
           </div>
-          <div v-else-if="analyticsError" class="activity-item" style="margin-bottom: 0.75rem;">
+          <div v-else-if="analyticsError" class="activity-item tw:inline:[margin-bottom:0.75rem]" >
             <div class="activity-content">
               <div class="activity-details">
                 <h4 class="activity-title">Unable to load analytics</h4>
@@ -282,8 +282,7 @@
 
         <section class="analytics-board-grid">
           <article
-            class="section-card chart-panel role-growth-panel"
-            style="border: 1px solid transparent !important; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) padding-box, linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;"
+            class="section-card chart-panel role-growth-panel tw:inline:[border:1px_solid_transparent]! tw:inline:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)_padding-box,_linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)_border-box]!"
           >
             <div class="panel-header">
               <div>
@@ -303,8 +302,7 @@
           </article>
 
           <article
-            class="section-card chart-panel learning-funnel-panel"
-            style="border: 1px solid transparent !important; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) padding-box, linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;"
+            class="section-card chart-panel learning-funnel-panel tw:inline:[border:1px_solid_transparent]! tw:inline:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)_padding-box,_linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)_border-box]!"
           >
             <div class="panel-header">
               <div>
@@ -331,7 +329,7 @@
             </div>
           </article>
 
-          <article class="section-card insight-panel" style="border-color: #69aa47 !important;">
+          <article class="section-card insight-panel tw:inline:[border-color:#69aa47]!" >
             <div class="panel-header">
               <div>
                 <h3 class="section-title">Top Performance Signals</h3>
@@ -371,11 +369,11 @@
           </article>
         </section>
 
-        <section class="ai-analytics-section section-card" style="border-color: #69aa47 !important;">
+        <section class="ai-analytics-section section-card tw:inline:[border-color:#69aa47]!" >
           <div class="section-header analytics-section-header">
             <div class="analytics-section-heading">
               <h3 class="section-title">
-                <i class="fas fa-robot" style="margin-right: 0.5rem; color: var(--edu-teal, #374151);"></i>
+                <i class="fas fa-robot tw:inline:[margin-right:0.5rem] tw:inline:[color:var(--edu-teal,_#374151)]" ></i>
                 AI Usage Quality
               </h3>
               <p class="analytics-section-subtitle">
@@ -439,7 +437,7 @@
           </div>
         </section>
 
-        <section class="section-card risk-section" style="border-color: #69aa47 !important;">
+        <section class="section-card risk-section tw:inline:[border-color:#69aa47]!" >
           <div class="panel-header">
             <div>
               <h3 class="section-title">At-Risk Engagement</h3>
@@ -1274,821 +1272,823 @@ export default {
 </script>
 
 <style scoped>
-@import url('/css/admin.css');
+@reference "../../styles/tailwind.css";
+
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
+@import '../../styles/roles/admin.tailwind.css';
+
+
 .ai-analytics-section {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
+  @apply tw:[background:#ffffff];
+  @apply tw:[border:1px_solid_#e5e7eb];
+  @apply tw:[border-radius:14px];
+  @apply tw:[box-shadow:0_8px_24px_rgba(17,_24,_39,_0.05)];
 }
 
 .analytics-section {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 18px !important;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06) !important;
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)]!;
+  @apply tw:[border:1px_solid_#e5e7eb]!;
+  @apply tw:[border-radius:18px]!;
+  @apply tw:[box-shadow:0_12px_30px_rgba(15,_23,_42,_0.06)]!;
 }
 
 .analytics-section--interactive {
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:transform_0.2s_ease,_box-shadow_0.2s_ease,_border-color_0.2s_ease];
 }
 
 .analytics-section--interactive:hover,
 .analytics-section--interactive:focus-visible {
-  transform: translateY(-2px);
-  border-color: #bfdbfe !important;
-  box-shadow: 0 18px 38px rgba(59, 130, 246, 0.12) !important;
-  outline: none;
+  @apply tw:[transform:translateY(-2px)];
+  @apply tw:[border-color:#bfdbfe]!;
+  @apply tw:[box-shadow:0_18px_38px_rgba(59,_130,_246,_0.12)]!;
+  @apply tw:[outline:none];
 }
 
 .admin-dashboard--modal-open .admin-header,
 .admin-dashboard--modal-open .admin-sidebar,
 .admin-dashboard--modal-open .sidebar-backdrop,
 .admin-dashboard--modal-open .admin-main > :not(.modal-shell--analytics) {
-  filter: blur(8px) saturate(0.95);
-  transition: filter 0.2s ease;
+  @apply tw:[filter:blur(8px)_saturate(0.95)];
+  @apply tw:[transition:filter_0.2s_ease];
 }
 
 .analytics-section-header {
-  display: flex !important;
-  align-items: flex-end !important;
-  justify-content: space-between !important;
-  gap: 1rem !important;
-  margin-bottom: 1.25rem !important;
+  @apply tw:flex!;
+  @apply tw:items-end!;
+  @apply tw:justify-between!;
+  @apply tw:[gap:1rem]!;
+  @apply tw:[margin-bottom:1.25rem]!;
 }
 
 .analytics-section-heading {
-  display: grid;
-  gap: 0.4rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.4rem];
 }
 
 .analytics-section-subtitle {
-  margin: 0;
-  max-width: 42rem;
-  color: #6b7280;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  @apply tw:[margin:0];
+  @apply tw:[max-width:42rem];
+  @apply tw:[color:#6b7280];
+  @apply tw:[font-size:0.95rem];
+  @apply tw:[line-height:1.5];
 }
 
 .analytics-grid {
-  align-items: stretch;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(155px, 16vw, 175px), 1fr)) !important;
-  gap: clamp(1rem, 1.5vw, 1.25rem) !important;
+  @apply tw:items-stretch;
+  @apply tw:[grid-template-columns:repeat(auto-fit,_minmax(clamp(155px,_16vw,_175px),_1fr))]!;
+  @apply tw:[gap:clamp(1rem,_1.5vw,_1.25rem)]!;
 }
 
 .analytics-card {
-  min-height: 0 !important;
-  aspect-ratio: 4 / 3 !important;
-  border-radius: clamp(12px, 1.2vw, 14px) !important;
-  padding: clamp(0.72rem, 1vw, 0.82rem) !important;
-  border: 1px solid rgba(169, 213, 95, 0.52) !important;
-  background: linear-gradient(180deg, #fbfce9 0%, #fbfce9 100%) !important;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-between !important;
+  @apply tw:[min-height:0]!;
+  @apply tw:[aspect-ratio:4_/_3]!;
+  @apply tw:[border-radius:clamp(12px,_1.2vw,_14px)]!;
+  @apply tw:[padding:clamp(0.72rem,_1vw,_0.82rem)]!;
+  @apply tw:[border:1px_solid_rgba(169,_213,_95,_0.52)]!;
+  @apply tw:[background:linear-gradient(180deg,_#fbfce9_0%,_#fbfce9_100%)]!;
+  @apply tw:[box-shadow:0_10px_24px_rgba(15,_23,_42,_0.06)]!;
+  @apply tw:flex!;
+  @apply tw:flex-col!;
+  @apply tw:justify-between!;
 }
 
 .analytics-card-header {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: flex-start !important;
-  gap: clamp(0.4rem, 0.7vw, 0.55rem) !important;
-  margin-bottom: clamp(0.45rem, 0.8vw, 0.6rem) !important;
+  @apply tw:flex!;
+  @apply tw:justify-between!;
+  @apply tw:items-start!;
+  @apply tw:[gap:clamp(0.4rem,_0.7vw,_0.55rem)]!;
+  @apply tw:[margin-bottom:clamp(0.45rem,_0.8vw,_0.6rem)]!;
 }
 
 .analytics-main {
-  gap: 0.2rem !important;
+  @apply tw:[gap:0.2rem]!;
 }
 
 .analytics-value {
-  font-size: clamp(1.4rem, 1.8vw, 1.8rem) !important;
-  line-height: 1.05 !important;
+  @apply tw:[font-size:clamp(1.4rem,_1.8vw,_1.8rem)]!;
+  @apply tw:[line-height:1.05]!;
 }
 
 .analytics-label {
-  letter-spacing: 0.07em !important;
-  font-size: clamp(0.59rem, 0.65vw, 0.64rem) !important;
-  line-height: 1.25 !important;
+  @apply tw:[letter-spacing:0.07em]!;
+  @apply tw:[font-size:clamp(0.59rem,_0.65vw,_0.64rem)]!;
+  @apply tw:[line-height:1.25]!;
 }
 
 .analytics-icon {
-  width: clamp(32px, 3vw, 36px) !important;
-  height: clamp(32px, 3vw, 36px) !important;
-  border-radius: clamp(10px, 1vw, 12px) !important;
-  font-size: clamp(0.78rem, 0.9vw, 0.86rem) !important;
+  @apply tw:[width:clamp(32px,_3vw,_36px)]!;
+  @apply tw:[height:clamp(32px,_3vw,_36px)]!;
+  @apply tw:[border-radius:clamp(10px,_1vw,_12px)]!;
+  @apply tw:[font-size:clamp(0.78rem,_0.9vw,_0.86rem)]!;
 }
 
 .analytics-card .trend-pill {
-  gap: 0.25rem;
-  padding: clamp(0.22rem, 0.35vw, 0.28rem) clamp(0.42rem, 0.6vw, 0.52rem);
-  font-size: clamp(0.62rem, 0.7vw, 0.68rem);
-  line-height: 1.15;
+  @apply tw:[gap:0.25rem];
+  @apply tw:[padding:clamp(0.22rem,_0.35vw,_0.28rem)_clamp(0.42rem,_0.6vw,_0.52rem)];
+  @apply tw:[font-size:clamp(0.62rem,_0.7vw,_0.68rem)];
+  @apply tw:[line-height:1.15];
 }
 
 /* Match the global dashboard selector so cards cannot overflow their tracks. */
 :global(body.admin-dashboard) .analytics-grid {
-  grid-template-columns: repeat(auto-fit, minmax(clamp(155px, 16vw, 175px), 1fr)) !important;
-  column-gap: clamp(1.25rem, 1.8vw, 1.5rem) !important;
-  row-gap: clamp(1.25rem, 1.8vw, 1.5rem) !important;
+  @apply tw:[grid-template-columns:repeat(auto-fit,_minmax(clamp(155px,_16vw,_175px),_1fr))]!;
+  @apply tw:[column-gap:clamp(1.25rem,_1.8vw,_1.5rem)]!;
+  @apply tw:[row-gap:clamp(1.25rem,_1.8vw,_1.5rem)]!;
 }
 
 :global(body.admin-dashboard) .analytics-grid > .analytics-card {
-  box-sizing: border-box !important;
-  width: auto !important;
-  inline-size: auto !important;
-  justify-self: stretch !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  min-height: 0 !important;
-  padding: clamp(0.72rem, 1vw, 0.82rem) !important;
+  @apply tw:box-border!;
+  @apply tw:w-auto!;
+  @apply tw:[inline-size:auto]!;
+  @apply tw:justify-self-stretch!;
+  @apply tw:[min-width:0]!;
+  @apply tw:max-w-full!;
+  @apply tw:[min-height:0]!;
+  @apply tw:[padding:clamp(0.72rem,_1vw,_0.82rem)]!;
 }
 
 .analytics-board-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1rem;
-  margin: 1rem 0;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)];
+  @apply tw:[gap:1rem];
+  @apply tw:[margin:1rem_0];
 }
 
 .chart-panel,
 .insight-panel,
 .risk-section {
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
+  @apply tw:[box-shadow:0_12px_24px_rgba(15,_23,_42,_0.06)];
 }
 
 .chart-panel:has(canvas[aria-label="Learning completion funnel bar chart"]) {
-  background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 38%),
-    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.14), transparent 34%),
-    linear-gradient(180deg, #ffffff 0%, #f8fbff 52%, #fff8ef 100%);
-  border-color: #d9e7fb;
+  @apply tw:[background:radial-gradient(circle_at_top_left,_rgba(59,_130,_246,_0.16),_transparent_38%),______radial-gradient(circle_at_bottom_right,_rgba(245,_158,_11,_0.14),_transparent_34%),______linear-gradient(180deg,_#ffffff_0%,_#f8fbff_52%,_#fff8ef_100%)];
+  @apply tw:[border-color:#d9e7fb];
 }
 
 .panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  @apply tw:flex;
+  @apply tw:justify-between;
+  @apply tw:items-start;
+  @apply tw:[gap:1rem];
+  @apply tw:[margin-bottom:1rem];
 }
 
 .panel-subtitle {
-  margin: 0.35rem 0 0;
-  color: #64748b;
-  font-size: 0.92rem;
-  line-height: 1.5;
+  @apply tw:[margin:0.35rem_0_0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.92rem];
+  @apply tw:[line-height:1.5];
 }
 
 .chart-wrap {
-  position: relative;
-  min-height: 280px;
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  background: #ffffff;
+  @apply tw:relative;
+  @apply tw:[min-height:280px];
+  @apply tw:[padding:0.75rem];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#ffffff];
 }
 
 .chart-panel:has(canvas[aria-label="Learning completion funnel bar chart"]) .chart-wrap {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(239, 246, 255, 0.92) 100%);
-  border-color: #d7e7fb;
+  @apply tw:[background:linear-gradient(180deg,_rgba(255,_255,_255,_0.96)_0%,_rgba(239,_246,_255,_0.92)_100%)];
+  @apply tw:[border-color:#d7e7fb];
 }
 
 .chart-wrap--lg {
-  min-height: 320px;
+  @apply tw:[min-height:320px];
 }
 
 .chart-wrap--hexagon {
-  min-height: 320px;
+  @apply tw:[min-height:320px];
 }
 
 .trend-badge-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: 1rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.65rem];
+  @apply tw:[margin-top:1rem];
 }
 
 .trend-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.4rem];
+  @apply tw:[padding:0.35rem_0.7rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[letter-spacing:0.02em];
 }
 
 .trend-pill--positive {
-  background: rgba(15, 118, 110, 0.12);
-  color: #0f766e;
+  @apply tw:[background:rgba(15,_118,_110,_0.12)];
+  @apply tw:[color:#0f766e];
 }
 
 .trend-pill--negative {
-  background: rgba(220, 38, 38, 0.1);
-  color: #b91c1c;
+  @apply tw:[background:rgba(220,_38,_38,_0.1)];
+  @apply tw:[color:#b91c1c];
 }
 
 .trend-pill--neutral {
-  background: rgba(100, 116, 139, 0.14);
-  color: #475569;
+  @apply tw:[background:rgba(100,_116,_139,_0.14)];
+  @apply tw:[color:#475569];
 }
 
 .funnel-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-top: 1rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
+  @apply tw:[gap:0.75rem];
+  @apply tw:[margin-top:1rem];
 }
 
 .funnel-metric {
-  padding: 0.85rem 0.9rem;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 20px rgba(148, 163, 184, 0.08);
+  @apply tw:[padding:0.85rem_0.9rem];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[box-shadow:0_10px_20px_rgba(148,_163,_184,_0.08)];
 }
 
 .chart-panel:has(canvas[aria-label="Learning completion funnel bar chart"]) .funnel-metric:nth-child(1) {
-  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
-  border-color: #bfdbfe;
+  @apply tw:[background:linear-gradient(135deg,_#dbeafe_0%,_#eff6ff_100%)];
+  @apply tw:[border-color:#bfdbfe];
 }
 
 .chart-panel:has(canvas[aria-label="Learning completion funnel bar chart"]) .funnel-metric:nth-child(2) {
-  background: linear-gradient(135deg, #ccfbf1 0%, #f0fdfa 100%);
-  border-color: #99f6e4;
+  @apply tw:[background:linear-gradient(135deg,_#ccfbf1_0%,_#f0fdfa_100%)];
+  @apply tw:[border-color:#99f6e4];
 }
 
 .chart-panel:has(canvas[aria-label="Learning completion funnel bar chart"]) .funnel-metric:nth-child(3) {
-  background: linear-gradient(135deg, #fef3c7 0%, #fff7ed 100%);
-  border-color: #fcd34d;
+  @apply tw:[background:linear-gradient(135deg,_#fef3c7_0%,_#fff7ed_100%)];
+  @apply tw:[border-color:#fcd34d];
 }
 
 .funnel-metric span {
-  display: block;
-  color: #64748b;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  @apply tw:block;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.06em];
 }
 
 .funnel-metric strong {
-  display: block;
-  margin-top: 0.35rem;
-  color: #0f172a;
-  font-size: 1.15rem;
+  @apply tw:block;
+  @apply tw:[margin-top:0.35rem];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.15rem];
 }
 
 .insight-block + .insight-block {
-  margin-top: 1.25rem;
+  @apply tw:[margin-top:1.25rem];
 }
 
 .insight-panel {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 1.5rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:[column-gap:1.5rem];
 }
 
 .insight-panel .panel-header {
-  grid-column: 1 / -1;
+  @apply tw:[grid-column:1_/_-1];
 }
 
 .insight-panel .insight-block + .insight-block {
-  margin-top: 0;
+  @apply tw:[margin-top:0];
 }
 
 .insight-title {
-  margin: 0 0 0.8rem;
-  color: #0f172a;
-  font-size: 0.95rem;
+  @apply tw:[margin:0_0_0.8rem];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.95rem];
 }
 
 .insight-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.8rem 0;
-  border-top: 1px solid #e2e8f0;
+  @apply tw:flex;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:items-center;
+  @apply tw:[padding:0.8rem_0];
+  @apply tw:[border-top:1px_solid_#e2e8f0];
 }
 
 .insight-row:first-of-type {
-  border-top: none;
-  padding-top: 0;
+  @apply tw:[border-top:none];
+  @apply tw:[padding-top:0];
 }
 
 .insight-row strong,
 .risk-card-header h4 {
-  display: block;
-  color: #0f172a;
-  font-size: 0.95rem;
+  @apply tw:block;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.95rem];
 }
 
 .insight-row small,
 .risk-card-header p,
 .risk-meta,
 .insight-empty {
-  color: #64748b;
-  font-size: 0.82rem;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.82rem];
 }
 
 .insight-stats {
-  display: grid;
-  justify-items: end;
-  gap: 0.2rem;
-  text-align: right;
-  color: #334155;
-  font-size: 0.8rem;
-  font-weight: 600;
+  @apply tw:grid;
+  @apply tw:justify-items-end;
+  @apply tw:[gap:0.2rem];
+  @apply tw:text-right;
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:600];
 }
 
 .risk-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.9rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(auto-fit,_minmax(220px,_1fr))];
+  @apply tw:[gap:0.9rem];
 }
 
 .risk-card {
-  border: 1px solid #fecaca;
-  background: linear-gradient(180deg, #fffefe 0%, #fff7f7 100%);
-  border-radius: 16px;
-  padding: 1rem;
+  @apply tw:[border:1px_solid_#fecaca];
+  @apply tw:[background:linear-gradient(180deg,_#fffefe_0%,_#fff7f7_100%)];
+  @apply tw:[border-radius:16px];
+  @apply tw:[padding:1rem];
 }
 
 .risk-card-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  align-items: flex-start;
+  @apply tw:flex;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:items-start;
 }
 
 .risk-card-header p {
-  margin: 0.25rem 0 0;
+  @apply tw:[margin:0.25rem_0_0];
 }
 
 .risk-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.65rem;
-  border-radius: 999px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #b91c1c;
-  font-size: 0.74rem;
-  font-weight: 700;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[padding:0.35rem_0.65rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:rgba(239,_68,_68,_0.1)];
+  @apply tw:[color:#b91c1c];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:700];
 }
 
 .risk-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.9rem 0 0.65rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.5rem];
+  @apply tw:[margin:0.9rem_0_0.65rem];
 }
 
 .risk-stats span,
 .ai-highlight {
-  border: 1px solid #e2e8f0;
-  border-radius: 999px;
-  background: #ffffff;
-  padding: 0.45rem 0.75rem;
-  color: #334155;
-  font-size: 0.78rem;
-  font-weight: 600;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:0.45rem_0.75rem];
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:600];
 }
 
 .ai-analytics-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.04);
+  @apply tw:[background:#ffffff];
+  @apply tw:[border:1px_solid_#e5e7eb];
+  @apply tw:[border-radius:12px];
+  @apply tw:[box-shadow:0_6px_16px_rgba(17,_24,_39,_0.04)];
 }
 
 .ai-chart-wrap {
-  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 12px;
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f9fafb_100%)];
+  @apply tw:[border:1px_solid_#e5e7eb];
+  @apply tw:[border-radius:10px];
+  @apply tw:[padding:12px];
 }
 
 .ai-kpi-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #fcfcfd;
+  @apply tw:[border:1px_solid_#e5e7eb];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#fcfcfd];
 }
 
 .ai-kpi-label {
-  color: #4b5563;
-  font-weight: 600;
+  @apply tw:[color:#4b5563];
+  @apply tw:[font-weight:600];
 }
 
 .ai-kpi-value {
-  color: #111827;
-  font-weight: 700;
+  @apply tw:[color:#111827];
+  @apply tw:[font-weight:700];
 }
 
 .ai-highlight {
-  display: grid;
-  gap: 0.2rem;
-  margin: 1rem 0 1.15rem;
-  border-radius: 16px;
-  padding: 0.9rem 1rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.2rem];
+  @apply tw:[margin:1rem_0_1.15rem];
+  @apply tw:[border-radius:16px];
+  @apply tw:[padding:0.9rem_1rem];
 }
 
 .ai-highlight-label {
-  color: #64748b;
-  font-size: 0.74rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[letter-spacing:0.06em];
+  @apply tw:uppercase;
 }
 
 .ai-highlight-value {
-  color: #0f172a;
-  font-size: 1.1rem;
-  text-transform: capitalize;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.1rem];
+  @apply tw:capitalize;
 }
 
 .modal-shell--analytics {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  display: block;
-  padding: 1.25rem;
-  overflow: hidden;
-  background: rgba(15, 23, 42, 0.32);
-  backdrop-filter: blur(8px) saturate(0.92);
-  -webkit-backdrop-filter: blur(8px) saturate(0.92);
+  @apply tw:fixed;
+  @apply tw:[inset:0];
+  @apply tw:[z-index:1200];
+  @apply tw:block;
+  @apply tw:[padding:1.25rem];
+  @apply tw:overflow-hidden;
+  @apply tw:[background:rgba(15,_23,_42,_0.32)];
+  @apply tw:[backdrop-filter:blur(8px)_saturate(0.92)];
+  @apply tw:[-webkit-backdrop-filter:blur(8px)_saturate(0.92)];
 }
 
 .modal-panel--analytics {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(920px, calc(100vw - 2.5rem));
-  max-height: calc(100vh - 2.5rem);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  box-shadow: 0 28px 65px rgba(15, 23, 42, 0.22);
+  @apply tw:fixed;
+  @apply tw:[top:50%];
+  @apply tw:[left:50%];
+  @apply tw:[transform:translate(-50%,_-50%)];
+  @apply tw:[width:min(920px,_calc(100vw_-_2.5rem))];
+  @apply tw:[max-height:calc(100vh_-_2.5rem)];
+  @apply tw:overflow-hidden;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[border-radius:22px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
+  @apply tw:[border:1px_solid_rgba(226,_232,_240,_0.95)];
+  @apply tw:[box-shadow:0_28px_65px_rgba(15,_23,_42,_0.22)];
 }
 
 .modal-panel-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
-  padding: 1.25rem 1.25rem 0;
+  @apply tw:flex;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:items-start;
+  @apply tw:[padding:1.25rem_1.25rem_0];
 }
 
 .modal-panel-head h3 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 1.15rem;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.15rem];
 }
 
 .modal-panel-head p {
-  margin: 0.35rem 0 0;
-  color: #64748b;
-  font-size: 0.9rem;
+  @apply tw:[margin:0.35rem_0_0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.9rem];
 }
 
 .modal-close-btn {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #dbe4ef;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #334155;
-  cursor: pointer;
+  @apply tw:[width:40px];
+  @apply tw:[height:40px];
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
+  @apply tw:cursor-pointer;
 }
 
 .modal-panel-body {
-  padding: 1rem 1.25rem;
-  overflow: auto;
-  min-height: 0;
-  flex: 1 1 auto;
+  @apply tw:[padding:1rem_1.25rem];
+  @apply tw:overflow-auto;
+  @apply tw:[min-height:0];
+  @apply tw:flex-auto;
 }
 
 .analytics-table-wrap {
-  overflow: auto;
-  max-height: 100%;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  background: #ffffff;
+  @apply tw:overflow-auto;
+  @apply tw:max-h-full;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#ffffff];
 }
 
 .analytics-table {
-  width: 100%;
-  border-collapse: collapse;
+  @apply tw:w-full;
+  @apply tw:border-collapse;
 }
 
 .analytics-table th,
 .analytics-table td {
-  padding: 0.9rem 1rem;
-  text-align: left;
-  border-bottom: 1px solid #edf2f7;
+  @apply tw:[padding:0.9rem_1rem];
+  @apply tw:text-left;
+  @apply tw:[border-bottom:1px_solid_#edf2f7];
 }
 
 .analytics-table th {
-  background: #f8fafc;
-  color: #475569;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.05em];
 }
 
 .analytics-table td {
-  color: #0f172a;
-  font-weight: 600;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-weight:600];
 }
 
 .analytics-table-empty {
-  text-align: center !important;
-  color: #64748b !important;
-  font-weight: 500 !important;
+  @apply tw:text-center!;
+  @apply tw:[color:#64748b]!;
+  @apply tw:[font-weight:500]!;
 }
 
 .analytics-table tbody tr:last-child td {
-  border-bottom: none;
+  @apply tw:[border-bottom:none];
 }
 
 :global(body.admin-modal-open) {
-  overflow: hidden;
+  @apply tw:overflow-hidden;
 }
 
 .ai-examtype-pill {
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
-  color: #1f2937;
-  font-weight: 600;
+  @apply tw:[border:1px_solid_#d1d5db];
+  @apply tw:[background:#f9fafb];
+  @apply tw:[color:#1f2937];
+  @apply tw:[font-weight:600];
 }
 
 .activity-item {
-  position: relative;
-  border: 1px solid #e7ecf2;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 1rem 1.05rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  @apply tw:relative;
+  @apply tw:[border:1px_solid_#e7ecf2];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:1rem_1.05rem];
+  @apply tw:[transition:transform_0.2s_ease,_box-shadow_0.2s_ease,_border-color_0.2s_ease,_background-color_0.2s_ease];
 }
 
 .activity-item:hover {
-  transform: translateY(-2px);
-  border-color: #cfd8e3;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+  @apply tw:[transform:translateY(-2px)];
+  @apply tw:[border-color:#cfd8e3];
+  @apply tw:[box-shadow:0_10px_22px_rgba(15,_23,_42,_0.07)];
 }
 
 .activity-content {
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 0.95rem !important;
-  width: 100%;
-  min-width: 0;
+  @apply tw:flex!;
+  @apply tw:items-start!;
+  @apply tw:[gap:0.95rem]!;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
 }
 
 .activity-icon {
-  width: 48px !important;
-  min-width: 48px !important;
-  height: 48px !important;
-  border-radius: 14px !important;
-  background: linear-gradient(135deg, #111827, #334155) !important;
-  color: #ffffff !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex: 0 0 48px !important;
-  overflow: hidden;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12) !important;
+  @apply tw:[width:48px]!;
+  @apply tw:[min-width:48px]!;
+  @apply tw:[height:48px]!;
+  @apply tw:[border-radius:14px]!;
+  @apply tw:[background:linear-gradient(135deg,_#111827,_#334155)]!;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:inline-flex!;
+  @apply tw:items-center!;
+  @apply tw:justify-center!;
+  @apply tw:[flex:0_0_48px]!;
+  @apply tw:overflow-hidden;
+  @apply tw:[box-shadow:0_10px_22px_rgba(15,_23,_42,_0.12)]!;
 }
 
 .activity-icon i {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.05rem;
-  line-height: 1;
-  color: #ffffff !important;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[font-size:1.05rem];
+  @apply tw:[line-height:1];
+  @apply tw:[color:#ffffff]!;
 }
 
 .activity-item:hover .activity-icon {
-  background: linear-gradient(135deg, #e5e7eb, #f3f4f6);
-  color: #111827;
-  box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.08), 0 8px 20px rgba(15, 23, 42, 0.08);
+  @apply tw:[background:linear-gradient(135deg,_#e5e7eb,_#f3f4f6)];
+  @apply tw:[color:#111827];
+  @apply tw:[box-shadow:inset_0_0_0_1px_rgba(17,_24,_39,_0.08),_0_8px_20px_rgba(15,_23,_42,_0.08)];
 }
 
 .activity-item:hover .activity-icon i {
-  color: #111827 !important;
+  @apply tw:[color:#111827]!;
 }
 
 .activity-details {
-  flex: 1 1 auto;
-  min-width: 0;
+  @apply tw:flex-auto;
+  @apply tw:[min-width:0];
 }
 
 .activity-title {
-  margin: 0;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: -0.01em;
+  @apply tw:[margin:0];
+  @apply tw:[font-size:0.98rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[color:#111827];
+  @apply tw:[letter-spacing:-0.01em];
 }
 
 .activity-description {
-  margin: 0.25rem 0 0;
-  color: #4b5563;
-  line-height: 1.45;
-  font-size: 0.88rem;
+  @apply tw:[margin:0.25rem_0_0];
+  @apply tw:[color:#4b5563];
+  @apply tw:[line-height:1.45];
+  @apply tw:[font-size:0.88rem];
 }
 
 .activity-time {
-  margin-top: 0.7rem;
-  padding-top: 0.65rem;
-  border-top: 1px dashed #e5e7eb;
-  color: #6b7280;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+  @apply tw:[margin-top:0.7rem];
+  @apply tw:[padding-top:0.65rem];
+  @apply tw:[border-top:1px_dashed_#e5e7eb];
+  @apply tw:[color:#6b7280];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:600];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.35rem];
 }
 
 @media (max-width: 768px) {
   :global(body.admin-dashboard) .analytics-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.9rem !important;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))]!;
+    @apply tw:[gap:0.9rem]!;
   }
 
   :global(body.admin-dashboard) .analytics-grid > .analytics-card {
-    min-width: 0 !important;
-    padding: 0.75rem !important;
+    @apply tw:[min-width:0]!;
+    @apply tw:[padding:0.75rem]!;
   }
 
   .analytics-board-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .insight-panel {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .insight-panel .insight-block + .insight-block {
-    margin-top: 1.25rem;
+    @apply tw:[margin-top:1.25rem];
   }
 
   .analytics-section {
-    padding: 1rem !important;
-    border-radius: 16px !important;
+    @apply tw:[padding:1rem]!;
+    @apply tw:[border-radius:16px]!;
   }
 
   .analytics-section-header {
-    align-items: flex-start !important;
-    margin-bottom: 1rem !important;
+    @apply tw:items-start!;
+    @apply tw:[margin-bottom:1rem]!;
   }
 
   .analytics-section-heading {
-    gap: 0.3rem;
+    @apply tw:[gap:0.3rem];
   }
 
   .analytics-section-subtitle {
-    font-size: 0.84rem;
-    line-height: 1.45;
-    max-width: none;
+    @apply tw:[font-size:0.84rem];
+    @apply tw:[line-height:1.45];
+    @apply tw:max-w-none;
   }
 
   .section-title {
-    font-size: 1.05rem !important;
-    line-height: 1.3 !important;
+    @apply tw:[font-size:1.05rem]!;
+    @apply tw:[line-height:1.3]!;
   }
 
   .analytics-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.9rem !important;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))]!;
+    @apply tw:[gap:0.9rem]!;
   }
 
   .analytics-card {
-    min-height: 0 !important;
-    aspect-ratio: 4 / 3 !important;
-    padding: 0.75rem !important;
-    border-radius: 14px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
+    @apply tw:[min-height:0]!;
+    @apply tw:[aspect-ratio:4_/_3]!;
+    @apply tw:[padding:0.75rem]!;
+    @apply tw:[border-radius:14px]!;
+    @apply tw:flex!;
+    @apply tw:flex-col!;
+    @apply tw:justify-between!;
   }
 
   .analytics-card-header {
-    align-items: flex-start !important;
-    gap: 0.5rem !important;
-    margin-bottom: 0.65rem !important;
+    @apply tw:items-start!;
+    @apply tw:[gap:0.5rem]!;
+    @apply tw:[margin-bottom:0.65rem]!;
   }
 
   .analytics-icon {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 11px !important;
-    font-size: 0.82rem !important;
+    @apply tw:[width:34px]!;
+    @apply tw:[height:34px]!;
+    @apply tw:[border-radius:11px]!;
+    @apply tw:[font-size:0.82rem]!;
   }
 
   .analytics-main {
-    gap: 0.25rem !important;
+    @apply tw:[gap:0.25rem]!;
   }
 
   .analytics-value {
-    font-size: 1.4rem !important;
-    letter-spacing: -0.05em !important;
+    @apply tw:[font-size:1.4rem]!;
+    @apply tw:[letter-spacing:-0.05em]!;
   }
 
   .analytics-label {
-    font-size: 0.64rem !important;
-    line-height: 1.25 !important;
+    @apply tw:[font-size:0.64rem]!;
+    @apply tw:[line-height:1.25]!;
   }
 
   .funnel-metrics {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .insight-row,
   .risk-card-header {
-    flex-direction: column;
-    align-items: flex-start;
+    @apply tw:flex-col;
+    @apply tw:items-start;
   }
 
   .insight-stats {
-    justify-items: start;
-    text-align: left;
+    @apply tw:justify-items-start;
+    @apply tw:text-left;
   }
 
   .chart-wrap,
   .chart-wrap--lg,
   .chart-wrap--hexagon {
-    min-height: 260px;
+    @apply tw:[min-height:260px];
   }
 
   .activity-content {
-    gap: 0.7rem !important;
+    @apply tw:[gap:0.7rem]!;
   }
 
   .activity-icon {
-    width: 38px !important;
-    min-width: 38px !important;
-    height: 38px !important;
-    flex-basis: 38px !important;
-    font-size: 0.9rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.1);
+    @apply tw:[width:38px]!;
+    @apply tw:[min-width:38px]!;
+    @apply tw:[height:38px]!;
+    @apply tw:[flex-basis:38px]!;
+    @apply tw:[font-size:0.9rem];
+    @apply tw:[border-radius:12px];
+    @apply tw:[box-shadow:0_8px_16px_rgba(15,_23,_42,_0.1)];
   }
 }
 
 @media (max-width: 480px) {
   :global(body.admin-dashboard) .analytics-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.75rem !important;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))]!;
+    @apply tw:[gap:0.75rem]!;
   }
 
   :global(body.admin-dashboard) .analytics-grid > .analytics-card {
-    min-height: clamp(138px, 42vw, 158px) !important;
-    padding: 0.7rem !important;
+    @apply tw:[min-height:clamp(138px,_42vw,_158px)]!;
+    @apply tw:[padding:0.7rem]!;
   }
 
   .analytics-section {
-    padding: 0.9rem !important;
+    @apply tw:[padding:0.9rem]!;
   }
 
   .chart-wrap,
   .chart-wrap--lg,
   .chart-wrap--hexagon {
-    min-height: 220px;
-    padding: 0.6rem;
+    @apply tw:[min-height:220px];
+    @apply tw:[padding:0.6rem];
   }
 
   .analytics-grid {
-    gap: 0.75rem !important;
+    @apply tw:[gap:0.75rem]!;
   }
 
   .analytics-card {
-    aspect-ratio: auto !important;
-    min-height: clamp(138px, 42vw, 158px) !important;
-    padding: 0.7rem !important;
-    border-radius: 12px !important;
+    @apply tw:[aspect-ratio:auto]!;
+    @apply tw:[min-height:clamp(138px,_42vw,_158px)]!;
+    @apply tw:[padding:0.7rem]!;
+    @apply tw:[border-radius:12px]!;
   }
 
   .analytics-value {
-    font-size: 1.28rem !important;
+    @apply tw:[font-size:1.28rem]!;
   }
 
   .analytics-icon {
-    width: 32px !important;
-    height: 32px !important;
+    @apply tw:[width:32px]!;
+    @apply tw:[height:32px]!;
   }
 
 }
+
 
 </style>

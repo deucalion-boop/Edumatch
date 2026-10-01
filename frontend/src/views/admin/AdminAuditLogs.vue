@@ -122,7 +122,7 @@
           </div>
         </div>
 
-        <section class="user-filters section-card fade-in" style="border-color: rgb(105, 170, 71) !important;">
+        <section class="user-filters section-card fade-in tw:inline:[border-color:rgb(105,_170,_71)]!" >
           <form class="filter-row audit-filter-row" @submit.prevent="applyFiltersAndFetch">
             <div class="filter-group audit-filter-group audit-filter-group--search">
               <label for="auditSearch"><i class="fas fa-search"></i> Search</label>
@@ -184,7 +184,7 @@
           </form>
         </section>
 
-        <section class="users-table-section section-card" style="border-color: rgb(105, 170, 71) !important;">
+        <section class="users-table-section section-card tw:inline:[border-color:rgb(105,_170,_71)]!" >
           <div class="table-header">
             <div class="table-info">
               <h3>System Activity Timeline</h3>
@@ -798,121 +798,125 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-@import url('/css/admin.css');
+@reference "../../styles/tailwind.css";
+
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
+@import '../../styles/roles/admin.tailwind.css';
+
+
 .audit-live-status {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.2rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.75rem];
+  @apply tw:flex-wrap;
+  @apply tw:[margin-top:0.2rem];
 }
 
 .audit-live-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.42rem 0.78rem;
-  border-radius: 999px;
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
-  color: #dc2626;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[padding:0.42rem_0.78rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#fef2f2];
+  @apply tw:[border:1px_solid_#fca5a5];
+  @apply tw:[color:#dc2626];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .audit-live-pill i {
-  font-size: 0.55rem;
+  @apply tw:[font-size:0.55rem];
 }
 
 .audit-live-pill--syncing {
-  background: #fee2e2;
-  border-color: #f87171;
-  color: #b91c1c;
+  @apply tw:[background:#fee2e2];
+  @apply tw:[border-color:#f87171];
+  @apply tw:[color:#b91c1c];
 }
 
 .audit-live-pill--syncing i {
-  font-size: 0.8rem;
+  @apply tw:[font-size:0.8rem];
 }
 
 .audit-live-caption {
-  color: #64748b;
-  font-size: 0.84rem;
-  line-height: 1.5;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[line-height:1.5];
 }
 
 .audit-filter-row {
-  align-items: flex-end;
+  @apply tw:items-end;
 }
 
 .audit-filter-group--search {
-  flex: 1 1 320px;
+  @apply tw:[flex:1_1_320px];
 }
 
 .audit-search {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 .audit-empty-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
-  min-height: 220px;
-  color: #64748b;
-  font-weight: 600;
-  text-align: center;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[min-height:220px];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-weight:600];
+  @apply tw:text-center;
 }
 
 .audit-empty-state i {
-  font-size: 1.1rem;
+  @apply tw:[font-size:1.1rem];
 }
 
 .audit-empty-state--error {
-  color: #991b1b;
+  @apply tw:[color:#991b1b];
 }
 
 .audit-logs-table .time-col {
-  width: 180px;
+  @apply tw:[width:180px];
 }
 
 .audit-logs-table .actor-col {
-  width: 230px;
+  @apply tw:[width:230px];
 }
 
 .audit-logs-table .module-col {
-  width: 140px;
+  @apply tw:[width:140px];
 }
 
 .audit-logs-table .action-col {
-  width: 270px;
+  @apply tw:[width:270px];
 }
 
 .audit-logs-table .result-col {
-  width: 150px;
+  @apply tw:[width:150px];
 }
 
 .audit-logs-table .endpoint-col {
-  width: 260px;
+  @apply tw:[width:260px];
 }
 
 .audit-time,
 .audit-actor,
 .audit-action,
 .audit-endpoint {
-  display: grid;
-  gap: 0.25rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.25rem];
 }
 
 .audit-time strong,
 .audit-actor strong,
 .audit-action strong,
 .audit-endpoint strong {
-  color: #111827;
-  font-size: 0.94rem;
+  @apply tw:[color:#111827];
+  @apply tw:[font-size:0.94rem];
 }
 
 .audit-time span,
@@ -921,97 +925,98 @@ onBeforeUnmount(() => {
 .audit-actor small,
 .audit-action small,
 .audit-endpoint small {
-  color: #64748b;
-  font-size: 0.82rem;
-  line-height: 1.45;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[line-height:1.45];
 }
 
 .audit-action small {
-  display: flex;
-  gap: 0.65rem;
-  flex-wrap: wrap;
+  @apply tw:flex;
+  @apply tw:[gap:0.65rem];
+  @apply tw:flex-wrap;
 }
 
 .audit-category-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  padding: 0.45rem 0.8rem;
-  border-radius: 999px;
-  background: #f8fafc;
-  border: 1px solid #dbe4ec;
-  color: #334155;
-  font-size: 0.8rem;
-  font-weight: 800;
-  white-space: nowrap;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[min-height:34px];
+  @apply tw:[padding:0.45rem_0.8rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border:1px_solid_#dbe4ec];
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:800];
+  @apply tw:whitespace-nowrap;
 }
 
 .audit-result-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.8rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  white-space: nowrap;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[padding:0.5rem_0.8rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:800];
+  @apply tw:whitespace-nowrap;
 }
 
 .audit-result-badge strong {
-  font-size: 0.76rem;
+  @apply tw:[font-size:0.76rem];
 }
 
 .audit-result-badge--success {
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #047857;
+  @apply tw:[background:#ecfdf5];
+  @apply tw:[border:1px_solid_#a7f3d0];
+  @apply tw:[color:#047857];
 }
 
 .audit-result-badge--failed {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  @apply tw:[background:#fef2f2];
+  @apply tw:[border:1px_solid_#fecaca];
+  @apply tw:[color:#b91c1c];
 }
 
 .audit-method-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-height: 32px;
-  padding: 0.35rem 0.68rem;
-  border-radius: 10px;
-  background: #e2e8f0;
-  color: #0f172a;
-  font-size: 0.76rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:w-fit;
+  @apply tw:[min-height:32px];
+  @apply tw:[padding:0.35rem_0.68rem];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#e2e8f0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:900];
+  @apply tw:[letter-spacing:0.04em];
 }
 
 .audit-method-badge--post {
-  background: #dbeafe;
-  color: #1d4ed8;
+  @apply tw:[background:#dbeafe];
+  @apply tw:[color:#1d4ed8];
 }
 
 .audit-method-badge--put {
-  background: #ede9fe;
-  color: #6d28d9;
+  @apply tw:[background:#ede9fe];
+  @apply tw:[color:#6d28d9];
 }
 
 .audit-method-badge--patch {
-  background: #fef3c7;
-  color: #b45309;
+  @apply tw:[background:#fef3c7];
+  @apply tw:[color:#b45309];
 }
 
 .audit-method-badge--delete {
-  background: #fee2e2;
-  color: #b91c1c;
+  @apply tw:[background:#fee2e2];
+  @apply tw:[color:#b91c1c];
 }
 
 @media (max-width: 768px) {
   .audit-filter-row {
-    align-items: stretch;
+    @apply tw:items-stretch;
   }
 }
+
 </style>

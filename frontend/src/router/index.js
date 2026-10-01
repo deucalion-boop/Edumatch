@@ -1,4 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import teacherStylesheetUrl from '../styles/roles/teacher.tailwind.css?url'
+import secretaryStylesheetUrl from '../styles/roles/secretary.tailwind.css?url'
+import headteacherStylesheetUrl from '../styles/roles/headteacher.tailwind.css?url'
 
 import StorageDemoView from '../views/StorageDemoView.vue'
 import LoginView from '../views/auth/LoginView.vue'
@@ -109,11 +112,11 @@ const applyRouteBodyClass = (path) => {
 }
 
 const TEACHER_STYLESHEET_ID = 'teacher-dashboard-css'
-const TEACHER_STYLESHEET_HREF = '/css/teacher.css'
+const TEACHER_STYLESHEET_HREF = teacherStylesheetUrl
 const SECRETARY_STYLESHEET_ID = 'secretary-dashboard-css'
-const SECRETARY_STYLESHEET_HREF = '/css/secretary.css'
+const SECRETARY_STYLESHEET_HREF = secretaryStylesheetUrl
 const HEADTEACHER_STYLESHEET_ID = 'headteacher-dashboard-css'
-const HEADTEACHER_STYLESHEET_HREF = '/css/headteacher.css'
+const HEADTEACHER_STYLESHEET_HREF = headteacherStylesheetUrl
 
 const ensureStylesheet = (id, href) => {
   if (typeof document === 'undefined') return

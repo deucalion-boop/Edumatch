@@ -58,94 +58,97 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../styles/tailwind.css";
+
 .pwa-install {
-  position: fixed;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: max(16px, env(safe-area-inset-bottom));
-  z-index: 10000;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 12px;
-  width: min(430px, calc(100vw - 32px));
-  padding: 12px;
-  color: #183027;
-  background: #fff;
-  border: 1px solid rgba(23, 99, 60, 0.2);
-  border-radius: 14px;
-  box-shadow: 0 12px 36px rgba(16, 44, 31, 0.2);
-  font-family: inherit;
+  @apply tw:fixed;
+  @apply tw:[right:max(16px,_env(safe-area-inset-right))];
+  @apply tw:[bottom:max(16px,_env(safe-area-inset-bottom))];
+  @apply tw:[z-index:10000];
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:auto_minmax(0,_1fr)_auto_auto];
+  @apply tw:items-center;
+  @apply tw:[gap:12px];
+  @apply tw:[width:min(430px,_calc(100vw_-_32px))];
+  @apply tw:[padding:12px];
+  @apply tw:[color:#183027];
+  @apply tw:[background:#fff];
+  @apply tw:[border:1px_solid_rgba(23,_99,_60,_0.2)];
+  @apply tw:[border-radius:14px];
+  @apply tw:[box-shadow:0_12px_36px_rgba(16,_44,_31,_0.2)];
+  @apply tw:[font-family:inherit];
 }
 
 .pwa-install img {
-  border-radius: 10px;
+  @apply tw:[border-radius:10px];
 }
 
 .pwa-install__copy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
+  @apply tw:grid;
+  @apply tw:[gap:2px];
+  @apply tw:[min-width:0];
 }
 
 .pwa-install__copy strong {
-  font-size: 0.95rem;
+  @apply tw:[font-size:0.95rem];
 }
 
 .pwa-install__copy span {
-  color: #5c6d66;
-  font-size: 0.8rem;
-  line-height: 1.3;
+  @apply tw:[color:#5c6d66];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[line-height:1.3];
 }
 
 .pwa-install__action {
-  padding: 8px 13px;
-  color: #fff;
-  background: #17633c;
-  border: 0;
-  border-radius: 8px;
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
+  @apply tw:[padding:8px_13px];
+  @apply tw:[color:#fff];
+  @apply tw:[background:#17633c];
+  @apply tw:[border:0];
+  @apply tw:[border-radius:8px];
+  @apply tw:[font:inherit];
+  @apply tw:[font-size:0.85rem];
+  @apply tw:[font-weight:700];
+  @apply tw:cursor-pointer;
 }
 
 .pwa-install__action:hover {
-  background: #0f5130;
+  @apply tw:[background:#0f5130];
 }
 
 .pwa-install__dismiss {
-  align-self: start;
-  padding: 0 3px;
-  color: #65736e;
-  background: transparent;
-  border: 0;
-  font-size: 1.45rem;
-  line-height: 1;
-  cursor: pointer;
+  @apply tw:[align-self:start];
+  @apply tw:[padding:0_3px];
+  @apply tw:[color:#65736e];
+  @apply tw:[background:transparent];
+  @apply tw:[border:0];
+  @apply tw:[font-size:1.45rem];
+  @apply tw:[line-height:1];
+  @apply tw:cursor-pointer;
 }
 
 @media (max-width: 520px) {
   .pwa-install {
-    right: 12px;
-    bottom: max(12px, env(safe-area-inset-bottom));
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    width: calc(100vw - 24px);
+    @apply tw:[right:12px];
+    @apply tw:[bottom:max(12px,_env(safe-area-inset-bottom))];
+    @apply tw:[grid-template-columns:auto_minmax(0,_1fr)_auto];
+    @apply tw:[width:calc(100vw_-_24px)];
   }
 
   .pwa-install__action {
-    grid-column: 2;
-    justify-self: start;
+    @apply tw:[grid-column:2];
+    @apply tw:[justify-self:start];
   }
 
   .pwa-install__dismiss {
-    grid-column: 3;
-    grid-row: 1;
+    @apply tw:[grid-column:3];
+    @apply tw:[grid-row:1];
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .pwa-install * {
-    scroll-behavior: auto;
+    @apply tw:scroll-auto;
   }
 }
+
 </style>

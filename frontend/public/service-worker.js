@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'edumatch-v14'
+const CACHE_VERSION = 'edumatch-v15'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const PAGE_CACHE = `${CACHE_VERSION}-pages`
 
@@ -13,14 +13,6 @@ const APP_SHELL = [
   '/icons/maskable-icon-192.png',
   '/icons/maskable-icon-512.png',
   '/icons/apple-touch-icon.png',
-  '/css/iabcc.css',
-  '/css/student.css',
-  '/css/notifications.css',
-  '/css/teacher.css',
-  '/css/secretary.css',
-  '/css/headteacher.css',
-  '/css/admin.css',
-  '/css/auth.css',
 ]
 
 const cacheBuiltAssets = async (cache) => {

@@ -298,8 +298,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-primary save-settings-btn"
-                style="background: #4f8a35 !important; background-image: none !important; border-color: #4f8a35 !important; color: #ffffff !important;"
+                class="btn btn-primary save-settings-btn tw:inline:[background:#4f8a35]! tw:inline:[background-image:none]! tw:inline:[border-color:#4f8a35]! tw:inline:[color:#ffffff]!"
                 @click="saveAllSettings"
                 :disabled="saving || !hasUnsavedChanges"
               >
@@ -349,8 +348,8 @@
           </button>
           <button
             class="btn btn-danger"
-            :style="['Reset Settings', 'Create Backup', 'Creating...'].includes(confirmButtonLabel)
-              ? 'background: #4f8a35 !important; background-image: none !important; border-color: #4f8a35 !important; color: #ffffff !important; box-shadow: none !important;'
+            :class="['Reset Settings', 'Create Backup', 'Creating...'].includes(confirmButtonLabel)
+              ? 'tw:inline:[background:#4f8a35]! tw:inline:[background-image:none]! tw:inline:[border-color:#4f8a35]! tw:inline:[color:#ffffff]! tw:inline:[box-shadow:none]!'
               : ''"
             @click="executeConfirmAction"
             :disabled="confirmSubmitting"
@@ -899,477 +898,480 @@ export default {
 </script>
 
 <style>
-@import url('/css/admin.css');
+@reference "../../styles/tailwind.css";
+
+@import '../../styles/roles/admin.tailwind.css';
 
 .save-settings-btn,
 .save-settings-btn:focus,
 .save-settings-btn:active {
-  background: #4f8a35 !important;
-  background-image: none !important;
-  border-color: #4f8a35 !important;
-  color: #ffffff !important;
+  @apply tw:[background:#4f8a35]!;
+  @apply tw:bg-none!;
+  @apply tw:[border-color:#4f8a35]!;
+  @apply tw:[color:#ffffff]!;
 }
 
 .save-settings-btn:hover:not(:disabled) {
-  background: #477d30 !important;
-  border-color: #477d30 !important;
+  @apply tw:[background:#477d30]!;
+  @apply tw:[border-color:#477d30]!;
 }
 
 .save-settings-btn:disabled {
-  background: #69aa47 !important;
-  border-color: #69aa47 !important;
-  color: #ffffff !important;
-  cursor: not-allowed;
-  opacity: 0.65 !important;
+  @apply tw:[background:#69aa47]!;
+  @apply tw:[border-color:#69aa47]!;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:cursor-not-allowed;
+  @apply tw:[opacity:0.65]!;
 }
 
 body.admin-dashboard .settings-section {
-  padding: 0 !important;
-  overflow: hidden;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 20px !important;
-  background: #f8fafc !important;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06) !important;
+  @apply tw:[padding:0]!;
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#e2e8f0]!;
+  @apply tw:[border-radius:20px]!;
+  @apply tw:[background:#f8fafc]!;
+  @apply tw:[box-shadow:0_12px_30px_rgba(15,_23,_42,_0.06)]!;
 }
 
 .settings-intro {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1.5rem 1.6rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: #ffffff;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1.5rem];
+  @apply tw:[padding:1.5rem_1.6rem];
+  @apply tw:[border-bottom:1px_solid_#e2e8f0];
+  @apply tw:[background:#ffffff];
 }
 
 .settings-eyebrow {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: #64748b;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  @apply tw:block;
+  @apply tw:[margin-bottom:0.35rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.09em];
+  @apply tw:uppercase;
 }
 
 .settings-intro h3 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 1.25rem;
-  letter-spacing: -0.025em;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.25rem];
+  @apply tw:[letter-spacing:-0.025em];
 }
 
 .settings-intro p {
-  margin: 0.35rem 0 0;
-  color: #64748b;
-  font-size: 0.88rem;
-  line-height: 1.55;
+  @apply tw:[margin:0.35rem_0_0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.88rem];
+  @apply tw:[line-height:1.55];
 }
 
 .change-status {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #bbf7d0;
-  border-radius: 999px;
-  background: #f0fdf4;
-  color: #15803d;
-  font-size: 0.76rem;
-  font-weight: 700;
-  white-space: nowrap;
+  @apply tw:inline-flex;
+  @apply tw:flex-none;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[padding:0.5rem_0.75rem];
+  @apply tw:[border:1px_solid_#bbf7d0];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#f0fdf4];
+  @apply tw:[color:#15803d];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:700];
+  @apply tw:whitespace-nowrap;
 }
 
 .change-status--pending {
-  border-color: #fde68a;
-  background: #fffbeb;
-  color: #b45309;
+  @apply tw:[border-color:#fde68a];
+  @apply tw:[background:#fffbeb];
+  @apply tw:[color:#b45309];
 }
 
 .change-status--pending i {
-  font-size: 0.5rem;
+  @apply tw:[font-size:0.5rem];
 }
 
 .settings-page {
-  padding: 1.25rem;
+  @apply tw:[padding:1.25rem];
 }
 
 body.admin-dashboard .settings-sections-container {
-  display: grid !important;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr) !important;
-  gap: 1rem !important;
-  align-items: start !important;
+  @apply tw:grid!;
+  @apply tw:[grid-template-columns:minmax(0,_0.9fr)_minmax(0,_1.3fr)]!;
+  @apply tw:[gap:1rem]!;
+  @apply tw:[align-items:start]!;
 }
 
 body.admin-dashboard .settings-card {
-  padding: 0 !important;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 16px !important;
-  background: #ffffff !important;
-  box-shadow: none !important;
+  @apply tw:[padding:0]!;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:0];
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#e2e8f0]!;
+  @apply tw:[border-radius:16px]!;
+  @apply tw:[background:#ffffff]!;
+  @apply tw:[box-shadow:none]!;
 }
 
 body.admin-dashboard .settings-card::before {
-  display: none;
+  @apply tw:hidden;
 }
 
 body.admin-dashboard .settings-header {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  margin: 0 !important;
-  padding: 1.1rem 1.2rem !important;
-  border-bottom: 1px solid #e2e8f0 !important;
-  background: #f8fafc;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[margin:0]!;
+  @apply tw:[padding:1.1rem_1.2rem]!;
+  @apply tw:[border-bottom:1px_solid_#e2e8f0]!;
+  @apply tw:[background:#f8fafc];
 }
 
 body.admin-dashboard .settings-title {
-  margin: 0 !important;
-  color: #0f172a !important;
-  font-size: 0.98rem !important;
-  letter-spacing: -0.015em;
+  @apply tw:[margin:0]!;
+  @apply tw:[color:#0f172a]!;
+  @apply tw:[font-size:0.98rem]!;
+  @apply tw:[letter-spacing:-0.015em];
 }
 
 body.admin-dashboard .settings-subtitle {
-  margin: 0.2rem 0 0 !important;
-  color: #64748b !important;
-  font-size: 0.76rem !important;
-  line-height: 1.45;
+  @apply tw:[margin:0.2rem_0_0]!;
+  @apply tw:[color:#64748b]!;
+  @apply tw:[font-size:0.76rem]!;
+  @apply tw:[line-height:1.45];
 }
 
 body.admin-dashboard .settings-body {
-  display: grid;
-  gap: 0 !important;
-  padding: 0 !important;
+  @apply tw:grid;
+  @apply tw:[gap:0]!;
+  @apply tw:[padding:0]!;
 }
 
 body.admin-dashboard .settings-row {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.8fr) !important;
-  align-items: center !important;
-  gap: 1rem !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 1rem 1.2rem !important;
-  border: 0 !important;
-  border-bottom: 1px solid #eef2f7 !important;
-  border-radius: 0 !important;
-  background: #ffffff !important;
-  box-shadow: none !important;
-  transform: none !important;
+  @apply tw:grid!;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)_minmax(150px,_0.8fr)]!;
+  @apply tw:items-center!;
+  @apply tw:[gap:1rem]!;
+  @apply tw:[min-height:0]!;
+  @apply tw:[margin:0]!;
+  @apply tw:[padding:1rem_1.2rem]!;
+  @apply tw:[border:0]!;
+  @apply tw:[border-bottom:1px_solid_#eef2f7]!;
+  @apply tw:rounded-none!;
+  @apply tw:[background:#ffffff]!;
+  @apply tw:[box-shadow:none]!;
+  @apply tw:transform-none!;
 }
 
 body.admin-dashboard .settings-row:last-child {
-  padding-bottom: 1rem !important;
-  border-bottom: 0 !important;
+  @apply tw:[padding-bottom:1rem]!;
+  @apply tw:[border-bottom:0]!;
 }
 
 body.admin-dashboard .settings-label {
-  display: grid;
-  gap: 0.25rem;
-  min-width: 0;
+  @apply tw:grid;
+  @apply tw:[gap:0.25rem];
+  @apply tw:[min-width:0];
 }
 
 body.admin-dashboard .settings-label label {
-  color: #1e293b;
-  font-size: 0.82rem;
-  font-weight: 750;
-  line-height: 1.4;
+  @apply tw:[color:#1e293b];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:750];
+  @apply tw:[line-height:1.4];
 }
 
 body.admin-dashboard .settings-desc {
-  color: #64748b;
-  font-size: 0.74rem;
-  line-height: 1.5;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[line-height:1.5];
 }
 
 body.admin-dashboard .settings-input {
-  display: flex;
-  min-width: 0;
-  width: 100%;
-  justify-content: flex-end;
+  @apply tw:flex;
+  @apply tw:[min-width:0];
+  @apply tw:w-full;
+  @apply tw:justify-end;
 }
 
 body.admin-dashboard .settings-input--stack {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.35rem;
+  @apply tw:flex-col;
+  @apply tw:items-stretch;
+  @apply tw:[gap:0.35rem];
 }
 
 body.admin-dashboard .settings-input--toggle {
-  align-items: center;
-  gap: 0.65rem;
+  @apply tw:items-center;
+  @apply tw:[gap:0.65rem];
 }
 
 .number-field {
-  display: grid;
-  width: 100%;
-  grid-template-columns: minmax(70px, 1fr) auto;
-  align-items: center;
-  overflow: hidden;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #ffffff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  @apply tw:grid;
+  @apply tw:w-full;
+  @apply tw:[grid-template-columns:minmax(70px,_1fr)_auto];
+  @apply tw:items-center;
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[transition:border-color_0.2s_ease,_box-shadow_0.2s_ease];
 }
 
 .number-field:focus-within {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  @apply tw:[border-color:#6366f1];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(99,_102,_241,_0.12)];
 }
 
 body.admin-dashboard .number-field .form-control {
-  min-width: 0;
-  min-height: 42px !important;
-  padding-right: 0.35rem !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:42px]!;
+  @apply tw:[padding-right:0.35rem]!;
+  @apply tw:[border:0]!;
+  @apply tw:rounded-none!;
+  @apply tw:[box-shadow:none]!;
 }
 
 .number-field span {
-  padding: 0 0.75rem 0 0.45rem;
-  color: #64748b;
-  font-size: 0.7rem;
-  font-weight: 650;
+  @apply tw:[padding:0_0.75rem_0_0.45rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[font-weight:650];
 }
 
 body.admin-dashboard .settings-input > .form-control,
 body.admin-dashboard .settings-input--stack .form-control {
-  width: 100%;
-  min-height: 42px !important;
-  border-color: #cbd5e1 !important;
-  border-radius: 10px !important;
+  @apply tw:w-full;
+  @apply tw:[min-height:42px]!;
+  @apply tw:[border-color:#cbd5e1]!;
+  @apply tw:[border-radius:10px]!;
 }
 
 body.admin-dashboard .settings-section .form-control:focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+  @apply tw:[border-color:#6366f1]!;
+  @apply tw:[box-shadow:0_0_0_3px_rgba(99,_102,_241,_0.12)]!;
 }
 
 body.admin-dashboard .settings-section .form-control--textarea {
-  min-height: 96px !important;
-  resize: vertical;
+  @apply tw:[min-height:96px]!;
+  @apply tw:resize-y;
 }
 
 body.admin-dashboard .settings-section .form-control[readonly] {
-  background: #f8fafc !important;
-  color: #475569 !important;
+  @apply tw:[background:#f8fafc]!;
+  @apply tw:[color:#475569]!;
 }
 
 body.admin-dashboard .settings-meta {
-  color: #64748b;
-  font-size: 0.7rem;
-  line-height: 1.4;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[line-height:1.4];
 }
 
 .settings-meta--count {
-  align-self: flex-end;
+  @apply tw:self-end;
 }
 
 .mode-state {
-  color: #64748b;
-  font-size: 0.72rem;
-  font-weight: 700;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:700];
 }
 
 .mode-state--active {
-  color: #0f766e;
+  @apply tw:[color:#0f766e];
 }
 
 body.admin-dashboard .settings-input--stack .btn {
-  width: 100%;
-  min-height: 42px;
-  justify-content: center;
-  border-radius: 10px !important;
+  @apply tw:w-full;
+  @apply tw:[min-height:42px];
+  @apply tw:justify-center;
+  @apply tw:[border-radius:10px]!;
 }
 
 body.admin-dashboard .settings-actions {
-  display: flex !important;
-  align-items: center;
-  justify-content: space-between !important;
-  gap: 1rem !important;
-  margin-top: 0 !important;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid #e2e8f0;
-  background: #ffffff;
+  @apply tw:flex!;
+  @apply tw:items-center;
+  @apply tw:justify-between!;
+  @apply tw:[gap:1rem]!;
+  @apply tw:[margin-top:0]!;
+  @apply tw:[padding:1rem_1.25rem];
+  @apply tw:[border-top:1px_solid_#e2e8f0];
+  @apply tw:[background:#ffffff];
 }
 
 body.admin-dashboard .settings-actions__primary {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.65rem];
 }
 
 body.admin-dashboard .settings-actions .btn {
-  min-height: 42px;
-  padding: 0.65rem 1rem !important;
-  border-radius: 10px !important;
-  font-weight: 700 !important;
+  @apply tw:[min-height:42px];
+  @apply tw:[padding:0.65rem_1rem]!;
+  @apply tw:[border-radius:10px]!;
+  @apply tw:[font-weight:700]!;
 }
 
 body.admin-dashboard .settings-actions .save-settings-btn {
-  min-width: 150px;
+  @apply tw:[min-width:150px];
 }
 
 body.admin-dashboard .settings-actions .reset-settings-btn {
-  padding-left: 0.25rem !important;
-  padding-right: 0.25rem !important;
-  color: #64748b !important;
-  background: transparent !important;
-  border-color: transparent !important;
+  @apply tw:[padding-left:0.25rem]!;
+  @apply tw:[padding-right:0.25rem]!;
+  @apply tw:[color:#64748b]!;
+  @apply tw:[background:transparent]!;
+  @apply tw:[border-color:transparent]!;
 }
 
 @media (max-width: 1180px) {
   body.admin-dashboard .settings-sections-container {
-    grid-template-columns: 1fr !important;
+    @apply tw:[grid-template-columns:1fr]!;
   }
 
   body.admin-dashboard .settings-body--security {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))]!;
   }
 
   body.admin-dashboard .settings-body--security .settings-row {
-    grid-template-columns: 1fr !important;
-    align-content: space-between !important;
-    border-right: 1px solid #eef2f7 !important;
-    border-bottom: 0 !important;
+    @apply tw:[grid-template-columns:1fr]!;
+    @apply tw:content-between!;
+    @apply tw:[border-right:1px_solid_#eef2f7]!;
+    @apply tw:[border-bottom:0]!;
   }
 
   body.admin-dashboard .settings-body--security .settings-row:last-child {
-    border-right: 0 !important;
+    @apply tw:[border-right:0]!;
   }
 }
 
 @media (max-width: 768px) {
   body.admin-dashboard .settings-section {
-    border-radius: 16px !important;
+    @apply tw:[border-radius:16px]!;
   }
 
   .settings-intro {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 0.85rem;
-    padding: 1.15rem;
+    @apply tw:items-stretch;
+    @apply tw:flex-col;
+    @apply tw:[gap:0.85rem];
+    @apply tw:[padding:1.15rem];
   }
 
   .change-status {
-    align-self: flex-start;
+    @apply tw:self-start;
   }
 
   .settings-page {
-    padding: 0.85rem;
+    @apply tw:[padding:0.85rem];
   }
 
   body.admin-dashboard .settings-sections-container {
-    gap: 0.85rem !important;
+    @apply tw:[gap:0.85rem]!;
   }
 
   body.admin-dashboard .settings-body--security {
-    grid-template-columns: 1fr !important;
+    @apply tw:[grid-template-columns:1fr]!;
   }
 
   body.admin-dashboard .settings-body--security .settings-row,
   body.admin-dashboard .settings-row {
-    grid-template-columns: 1fr !important;
-    gap: 0.7rem !important;
-    padding: 0.9rem 1rem !important;
-    border-right: 0 !important;
-    border-bottom: 1px solid #eef2f7 !important;
+    @apply tw:[grid-template-columns:1fr]!;
+    @apply tw:[gap:0.7rem]!;
+    @apply tw:[padding:0.9rem_1rem]!;
+    @apply tw:[border-right:0]!;
+    @apply tw:[border-bottom:1px_solid_#eef2f7]!;
   }
 
   body.admin-dashboard .settings-input {
-    justify-content: flex-start;
+    @apply tw:justify-start;
   }
 
   body.admin-dashboard .settings-actions {
-    align-items: stretch !important;
-    flex-direction: column-reverse !important;
-    padding: 0.9rem;
+    @apply tw:items-stretch!;
+    @apply tw:flex-col-reverse!;
+    @apply tw:[padding:0.9rem];
   }
 
   body.admin-dashboard .settings-actions__primary {
-    display: grid;
-    grid-template-columns: 0.75fr 1.25fr;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:0.75fr_1.25fr];
   }
 
   body.admin-dashboard .settings-actions .reset-settings-btn {
-    align-self: center;
+    @apply tw:self-center;
   }
 }
 
 @media (max-width: 480px) {
   .settings-intro h3 {
-    font-size: 1.1rem;
+    @apply tw:[font-size:1.1rem];
   }
 
   body.admin-dashboard .settings-header {
-    padding: 1rem !important;
+    @apply tw:[padding:1rem]!;
   }
 
   body.admin-dashboard .settings-actions__primary {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   body.admin-dashboard .settings-actions__primary .save-settings-btn {
-    grid-row: 1;
-    width: 100%;
+    @apply tw:[grid-row:1];
+    @apply tw:w-full;
   }
 
   body.admin-dashboard .settings-actions__primary .btn {
-    justify-content: center;
-    width: 100%;
+    @apply tw:justify-center;
+    @apply tw:w-full;
   }
 }
 
 body.admin-dashboard .settings-body--security .settings-row.settings-row--sessions {
-  grid-column: 1 / -1;
-  grid-template-columns: minmax(0, 1fr) !important;
-  border-right: 0 !important;
+  @apply tw:[grid-column:1_/_-1];
+  @apply tw:[grid-template-columns:minmax(0,_1fr)]!;
+  @apply tw:[border-right:0]!;
 }
-body.admin-dashboard .active-sessions { min-width: 0; }
+body.admin-dashboard .active-sessions { @apply tw:[min-width:0]; }
 .active-sessions-list {
-  width: 100%;
-  max-height: 260px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #fff;
+  @apply tw:w-full;
+  @apply tw:[max-height:260px];
+  @apply tw:overflow-y-auto;
+  @apply tw:overscroll-contain;
+  @apply tw:[scrollbar-width:thin];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#fff];
 }
-.active-sessions-list:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+.active-sessions-list:focus-visible { @apply tw:[outline:2px_solid_#6366f1]; @apply tw:[outline-offset:2px]; }
 body.admin-dashboard .session-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.55rem 0.75rem;
-  min-width: 460px;
-  box-sizing: border-box;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[padding:0.55rem_0.75rem];
+  @apply tw:[min-width:460px];
+  @apply tw:box-border;
 }
-.session-row + .session-row { border-top: 1px solid #eef2f7; }
-.session-row--current { background: #f8fafc; }
+.session-row + .session-row { @apply tw:[border-top:1px_solid_#eef2f7]; }
+.session-row--current { @apply tw:[background:#f8fafc]; }
 .session-details {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 100px minmax(110px, 1fr) minmax(95px, 0.8fr);
-  align-items: center;
-  gap: 0.75rem;
+  @apply tw:[flex:1];
+  @apply tw:[min-width:0];
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:100px_minmax(110px,_1fr)_minmax(95px,_0.8fr)];
+  @apply tw:items-center;
+  @apply tw:[gap:0.75rem];
 }
-.session-details strong { color: #334155; }
-.session-device, .session-ip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-details strong { @apply tw:[color:#334155]; }
+.session-device, .session-ip { @apply tw:overflow-hidden; @apply tw:text-ellipsis; @apply tw:whitespace-nowrap; }
 body.admin-dashboard .active-sessions .session-revoke {
-  flex: 0 0 auto;
-  width: auto;
-  min-height: 32px;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.7rem;
+  @apply tw:flex-none;
+  @apply tw:w-auto;
+  @apply tw:[min-height:32px];
+  @apply tw:[padding:0.35rem_0.65rem];
+  @apply tw:[font-size:0.7rem];
 }
-body.admin-dashboard .active-sessions .sessions-toggle { width: auto; align-self: flex-end; min-height: 36px; font-size: 0.75rem; }
+body.admin-dashboard .active-sessions .sessions-toggle { @apply tw:w-auto; @apply tw:self-end; @apply tw:[min-height:36px]; @apply tw:[font-size:0.75rem]; }
+
 
 </style>

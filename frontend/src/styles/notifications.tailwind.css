@@ -1,0 +1,175 @@
+@reference "./tailwind.css";
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-menu {
+    @apply tw:relative;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-bell {
+    @apply tw:relative;
+    @apply tw:[width:42px];
+    @apply tw:[min-width:42px];
+    @apply tw:[height:42px];
+    @apply tw:[min-height:42px];
+    @apply tw:flex;
+    @apply tw:items-center;
+    @apply tw:justify-center;
+    @apply tw:cursor-pointer;
+    @apply tw:[border:2px_solid_#111111]!;
+    @apply tw:[border-radius:50%];
+    @apply tw:[background:#ffffff]!;
+    @apply tw:[color:#111111]!;
+    @apply tw:[box-shadow:none]!;
+    @apply tw:[transition:all_var(--transition-speed)_var(--transition-easing)];
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-bell:hover {
+    @apply tw:[border-color:#111111]!;
+    @apply tw:[background:#f8fafc]!;
+    @apply tw:[color:#111111]!;
+    @apply tw:[box-shadow:none]!;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-bell i {
+    @apply tw:[font-size:1em];
+    @apply tw:[color:#111111]!;
+    @apply tw:[background:none]!;
+    @apply tw:[-webkit-text-fill-color:#111111]!;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-count {
+    @apply tw:absolute;
+    @apply tw:[top:-5px];
+    @apply tw:[right:-5px];
+    @apply tw:[width:20px];
+    @apply tw:[height:20px];
+    @apply tw:flex;
+    @apply tw:items-center;
+    @apply tw:justify-center;
+    @apply tw:[border-radius:50%];
+    @apply tw:[background:var(--danger-color)];
+    @apply tw:[color:#ffffff];
+    @apply tw:[font-size:0.75rem];
+    @apply tw:[animation:bounce_2s_infinite];
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown {
+    @apply tw:absolute;
+    @apply tw:[top:calc(100%_+_0.75rem)];
+    @apply tw:[right:0];
+    @apply tw:[width:min(92vw,_460px)];
+    @apply tw:[max-height:min(70vh,_560px)];
+    @apply tw:overflow-y-auto;
+    @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f9fbff_100%)];
+    @apply tw:[border:1px_solid_#dbe4f1];
+    @apply tw:[border-radius:20px];
+    @apply tw:[box-shadow:0_24px_48px_rgba(15,_23,_42,_0.16)];
+    @apply tw:[padding:0.95rem];
+    @apply tw:[z-index:1200];
+    @apply tw:opacity-100!;
+    @apply tw:visible!;
+    @apply tw:[transform:translateY(0)]!;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-header {
+    @apply tw:flex;
+    @apply tw:items-center;
+    @apply tw:justify-between;
+    @apply tw:[gap:0.75rem];
+    @apply tw:[margin-bottom:0.9rem];
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-header h3 {
+    @apply tw:[min-width:0];
+    @apply tw:flex-auto;
+    @apply tw:[margin:0];
+    @apply tw:[color:#0f172a];
+    @apply tw:[font-size:1.02rem];
+    @apply tw:[font-weight:800];
+    @apply tw:[letter-spacing:-0.01em];
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-actions {
+    @apply tw:inline-flex;
+    @apply tw:items-center;
+    @apply tw:[gap:0.5rem];
+    @apply tw:flex-none;
+    @apply tw:whitespace-nowrap;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-clear {
+    @apply tw:w-auto!;
+    @apply tw:[min-width:max-content]!;
+    @apply tw:[height:36px]!;
+    @apply tw:[min-height:36px];
+    @apply tw:[padding:0.45rem_0.8rem]!;
+    @apply tw:[border:1px_solid_#d7dfec]!;
+    @apply tw:[border-radius:12px];
+    @apply tw:[background:#ffffff]!;
+    @apply tw:[color:#334155]!;
+    @apply tw:[font-size:0.8rem];
+    @apply tw:[font-weight:700];
+    @apply tw:whitespace-nowrap;
+    @apply tw:overflow-visible!;
+    @apply tw:text-clip!;
+    @apply tw:shrink-0;
+    @apply tw:cursor-pointer;
+    @apply tw:[box-shadow:0_1px_2px_rgba(15,_23,_42,_0.04)]!;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-clear:hover:not(:disabled) {
+    @apply tw:[background:#f8fafc]!;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-clear:disabled {
+    @apply tw:[opacity:0.55]!;
+    @apply tw:cursor-not-allowed;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-close {
+    @apply tw:[width:36px]!;
+    @apply tw:[min-width:36px]!;
+    @apply tw:[height:36px]!;
+    @apply tw:inline-flex;
+    @apply tw:items-center;
+    @apply tw:justify-center;
+    @apply tw:shrink-0;
+    @apply tw:[border:1px_solid_#d7dfec]!;
+    @apply tw:[border-radius:12px];
+    @apply tw:[background:#ffffff]!;
+    @apply tw:[color:#475569]!;
+    @apply tw:cursor-pointer;
+    @apply tw:[box-shadow:0_1px_2px_rgba(15,_23,_42,_0.04)]!;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-close:hover {
+    @apply tw:[background:#f8fafc]!;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-close i {
+    @apply tw:[color:#475569]!;
+    @apply tw:[background:none]!;
+    @apply tw:[-webkit-text-fill-color:#475569]!;
+}
+
+:is(body.student-dashboard, body.teacher-dashboard) .notification-bell:focus-visible,
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-clear:focus-visible,
+:is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown-close:focus-visible {
+    @apply tw:[outline:2px_solid_#2563eb];
+    @apply tw:[outline-offset:2px];
+}
+
+@media (max-width: 768px) {
+    :is(body.student-dashboard, body.teacher-dashboard) .notification-dropdown {
+        @apply tw:fixed;
+        @apply tw:[top:78px];
+        @apply tw:[right:12px];
+        @apply tw:[left:12px];
+        @apply tw:w-auto;
+        @apply tw:[max-height:calc(100vh_-_96px)];
+    }
+}
+
+/* Keep the student read controls within the existing dropdown on small screens. */
+body.student-dashboard .notification-dropdown-header,
+body.student-dashboard .notification-dropdown-actions { @apply tw:flex-wrap; }
+body.student-dashboard .notification-count { @apply tw:w-auto; @apply tw:[min-width:20px]; @apply tw:[padding:0_4px]; }

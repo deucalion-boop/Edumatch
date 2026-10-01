@@ -113,7 +113,7 @@
 
             <div class="headteacher-modal-actions">
               <button type="button" class="headteacher-button headteacher-button-outline" @click="resetProfile">Reset</button>
-              <button type="submit" class="headteacher-button headteacher-button-primary" style="color: #ffffff !important;">Save Profile</button>
+              <button type="submit" class="headteacher-button headteacher-button-primary tw:inline:[color:#ffffff]!" >Save Profile</button>
             </div>
           </form>
         </article>
@@ -234,16 +234,19 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../../styles/tailwind.css";
+
 .headteacher-main,
 .headteacher-main.headteacher-page-container {
-  width: 100%;
-  max-width: none !important;
-  margin: 0;
+  @apply tw:w-full;
+  @apply tw:max-w-none!;
+  @apply tw:[margin:0];
 }
 
 .headteacher-profile-grid,
 .headteacher-stat-section,
 .headteacher-banner {
-  width: 100%;
+  @apply tw:w-full;
 }
+
 </style>

@@ -20,54 +20,55 @@ import FileStorage from '../components/storage/FileStorage.vue'
 </template>
 
 <style scoped>
+@reference "../styles/tailwind.css";
+
 .storage-demo-page {
-  min-height: 100vh;
-  padding: 2rem 1rem 3rem;
-  background:
-    radial-gradient(circle at top left, rgba(15, 98, 254, 0.08), transparent 26rem),
-    linear-gradient(180deg, #f7fbff 0%, #eef4fb 100%);
+  @apply tw:min-h-screen;
+  @apply tw:[padding:2rem_1rem_3rem];
+  @apply tw:[background:radial-gradient(circle_at_top_left,_rgba(15,_98,_254,_0.08),_transparent_26rem),_____linear-gradient(180deg,_#f7fbff_0%,_#eef4fb_100%)];
 }
 
 .storage-demo-shell {
-  max-width: 1100px;
-  margin: 0 auto;
-  display: grid;
-  gap: 1.5rem;
+  @apply tw:[max-width:1100px];
+  @apply tw:[margin:0_auto];
+  @apply tw:grid;
+  @apply tw:[gap:1.5rem];
 }
 
 .storage-demo-header {
-  padding: 1.5rem;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(15, 33, 58, 0.08);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  @apply tw:[padding:1.5rem];
+  @apply tw:[border-radius:22px];
+  @apply tw:[background:rgba(255,_255,_255,_0.88)];
+  @apply tw:[border:1px_solid_rgba(15,_33,_58,_0.08)];
+  @apply tw:[box-shadow:0_18px_40px_rgba(15,_23,_42,_0.08)];
 }
 
 .storage-demo-eyebrow {
-  margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #0f62fe;
+  @apply tw:[margin:0_0_0.5rem];
+  @apply tw:[font-size:0.85rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[letter-spacing:0.16em];
+  @apply tw:uppercase;
+  @apply tw:[color:#0f62fe];
 }
 
 .storage-demo-header h1 {
-  margin: 0 0 0.75rem;
-  color: #10213a;
-  line-height: 1.15;
+  @apply tw:[margin:0_0_0.75rem];
+  @apply tw:[color:#10213a];
+  @apply tw:[line-height:1.15];
 }
 
 .storage-demo-header p {
-  margin: 0;
-  color: #51627a;
-  line-height: 1.6;
+  @apply tw:[margin:0];
+  @apply tw:[color:#51627a];
+  @apply tw:[line-height:1.6];
 }
 
 .storage-demo-header code {
-  padding: 0.1rem 0.35rem;
-  border-radius: 6px;
-  background: #e8eef8;
-  color: #10213a;
+  @apply tw:[padding:0.1rem_0.35rem];
+  @apply tw:[border-radius:6px];
+  @apply tw:[background:#e8eef8];
+  @apply tw:[color:#10213a];
 }
+
 </style>

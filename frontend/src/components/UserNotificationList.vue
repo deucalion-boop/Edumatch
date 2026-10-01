@@ -130,153 +130,155 @@ function formatTimestamp(value) {
 </script>
 
 <style scoped>
-.notification-read-action { margin-top: .6rem; border: 1px solid #cbd5e1; border-radius: 6px; padding: .3rem .6rem; background: white; color: #2563eb; cursor: pointer; }
+@reference "../styles/tailwind.css";
+.notification-read-action { @apply tw:[margin-top:.6rem]; @apply tw:[border:1px_solid_#cbd5e1]; @apply tw:[border-radius:6px]; @apply tw:[padding:.3rem_.6rem]; @apply tw:[background:white]; @apply tw:[color:#2563eb]; @apply tw:cursor-pointer; }
 .user-notification-state {
-  padding: 1rem;
-  text-align: center;
-  color: #64748b;
+  @apply tw:[padding:1rem];
+  @apply tw:text-center;
+  @apply tw:[color:#64748b];
 }
 
 .user-notification-state i {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+  @apply tw:[font-size:1.1rem];
+  @apply tw:[margin-bottom:0.5rem];
 }
 
 .user-notification-state p {
-  margin: 0;
-  font-weight: 600;
+  @apply tw:[margin:0];
+  @apply tw:[font-weight:600];
 }
 
 .user-notification-list {
-  display: grid;
-  gap: 0.85rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.85rem];
 }
 
 .user-notification-item {
-  border: 1px solid #d8e1ef;
-  border-radius: 18px;
-  padding: 1rem 1.05rem 0.95rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  @apply tw:[border:1px_solid_#d8e1ef];
+  @apply tw:[border-radius:18px];
+  @apply tw:[padding:1rem_1.05rem_0.95rem];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fbff_100%)];
+  @apply tw:[box-shadow:inset_0_1px_0_rgba(255,_255,_255,_0.9)];
 }
 
 .user-notification-item.unread {
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  @apply tw:[box-shadow:0_10px_24px_rgba(15,_23,_42,_0.06)];
 }
 
 .user-notification-item.urgent {
-  border-color: #f3c37a;
-  background: linear-gradient(180deg, #fffaf0 0%, #fff6e8 100%);
+  @apply tw:[border-color:#f3c37a];
+  @apply tw:[background:linear-gradient(180deg,_#fffaf0_0%,_#fff6e8_100%)];
 }
 
 .user-notification-item.clickable {
-  cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:border-color_0.2s_ease,_box-shadow_0.2s_ease,_transform_0.2s_ease];
 }
 
 .user-notification-item.clickable:hover,
 .user-notification-item.clickable:focus-visible {
-  border-color: #93c5fd;
-  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.11);
-  outline: none;
-  transform: translateY(-1px);
+  @apply tw:[border-color:#93c5fd];
+  @apply tw:[box-shadow:0_12px_28px_rgba(37,_99,_235,_0.11)];
+  @apply tw:[outline:none];
+  @apply tw:[transform:translateY(-1px)];
 }
 
 .user-notification-layout {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.75rem;
-  align-items: flex-start;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:auto_minmax(0,_1fr)_auto];
+  @apply tw:[gap:0.75rem];
+  @apply tw:items-start;
 }
 
 .user-notification-content {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 .user-notification-icon {
-  width: 2.15rem;
-  height: 2.15rem;
-  border-radius: 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #eaf2ff;
-  color: #2563eb;
+  @apply tw:[width:2.15rem];
+  @apply tw:[height:2.15rem];
+  @apply tw:[border-radius:0.75rem];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[background:#eaf2ff];
+  @apply tw:[color:#2563eb];
 }
 
 .user-notification-item.urgent .user-notification-icon {
-  background: #ffedd5;
-  color: #b45309;
+  @apply tw:[background:#ffedd5];
+  @apply tw:[color:#b45309];
 }
 
 .user-notification-icon .fa-book-open,
 .user-notification-icon .fa-book-open::before {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[-webkit-text-fill-color:#ffffff]!;
 }
 
 .user-notification-chevron {
-  align-self: center;
-  color: #94a3b8;
-  font-size: 0.75rem;
+  @apply tw:self-center;
+  @apply tw:[color:#94a3b8];
+  @apply tw:[font-size:0.75rem];
 }
 
 .user-notification-topline {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:flex-wrap;
 }
 
 .user-notification-title,
 .user-notification-subject {
-  margin: 0;
-  color: #0f172a;
-  white-space: normal;
-  word-break: break-word;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:whitespace-normal;
+  @apply tw:[word-break:break-word];
 }
 
 .user-notification-title {
-  font-size: 0.92rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  @apply tw:[font-size:0.92rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:-0.01em];
 }
 
 .user-notification-subject {
-  margin-top: 0.55rem;
-  font-size: 0.96rem;
-  font-weight: 700;
+  @apply tw:[margin-top:0.55rem];
+  @apply tw:[font-size:0.96rem];
+  @apply tw:[font-weight:700];
 }
 
 .user-notification-preview {
-  margin: 0.45rem 0 0;
-  color: #475569;
-  line-height: 1.55;
-  font-size: 0.92rem;
-  white-space: normal;
-  word-break: break-word;
+  @apply tw:[margin:0.45rem_0_0];
+  @apply tw:[color:#475569];
+  @apply tw:[line-height:1.55];
+  @apply tw:[font-size:0.92rem];
+  @apply tw:whitespace-normal;
+  @apply tw:[word-break:break-word];
 }
 
 .user-notification-meta {
-  margin-top: 0.9rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  color: #6b7a90;
-  font-size: 0.82rem;
+  @apply tw:[margin-top:0.9rem];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:flex-wrap;
+  @apply tw:[color:#6b7a90];
+  @apply tw:[font-size:0.82rem];
 }
 
 .user-notification-badge {
-  background: #b45309;
-  color: #fff;
-  border-radius: 999px;
-  padding: 0.22rem 0.62rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  @apply tw:[background:#b45309];
+  @apply tw:[color:#fff];
+  @apply tw:[border-radius:999px];
+  @apply tw:[padding:0.22rem_0.62rem];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:700];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.04em];
 }
+
 </style>

@@ -121,196 +121,195 @@ export default {
 </script>
 
 <style scoped>
-@import url('/css/auth.css');
+@reference "../../styles/tailwind.css";
+
+@import '../../styles/auth.tailwind.css';
 
 .forgot-password-page {
-  background:
-    radial-gradient(circle at 15% 15%, rgba(105, 170, 71, 0.1), transparent 34%),
-    #ffffff;
+  @apply tw:[background:radial-gradient(circle_at_15%_15%,_rgba(105,_170,_71,_0.1),_transparent_34%),_____#ffffff];
 }
 
 .forgot-password-page .auth-floating-element,
 .forgot-password-page .auth-floating-element:nth-child(2),
 .forgot-password-page .auth-floating-element:nth-child(3) {
-  background: linear-gradient(135deg, #69aa47, #3f7f2a);
+  @apply tw:[background:linear-gradient(135deg,_#69aa47,_#3f7f2a)];
 }
 
 .forgot-password-page .auth-card-wrapper {
-  width: min(100%, 480px);
+  @apply tw:[width:min(100%,_480px)];
 }
 
 .forgot-password-card {
-  position: relative;
-  overflow: hidden;
-  padding: 2.25rem;
-  border: 2px solid transparent !important;
-  border-radius: 26px;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.94)) padding-box,
-    linear-gradient(135deg, #1e4307, #ffd542 42%, #bbff59) border-box !important;
-  box-shadow: 0 28px 70px rgba(63, 127, 42, 0.17);
-  backdrop-filter: blur(16px);
+  @apply tw:relative;
+  @apply tw:overflow-hidden;
+  @apply tw:[padding:2.25rem];
+  @apply tw:[border:2px_solid_transparent]!;
+  @apply tw:[border-radius:26px];
+  @apply tw:[background:linear-gradient(rgba(255,_255,_255,_0.94),_rgba(255,_255,_255,_0.94))_padding-box,_____linear-gradient(135deg,_#1e4307,_#ffd542_42%,_#bbff59)_border-box]!;
+  @apply tw:[box-shadow:0_28px_70px_rgba(63,_127,_42,_0.17)];
+  @apply tw:[backdrop-filter:blur(16px)];
 }
 
 .forgot-password-card .auth-card-header {
-  margin-bottom: 1.75rem;
-  text-align: center;
+  @apply tw:[margin-bottom:1.75rem];
+  @apply tw:text-center;
 }
 
 .forgot-password-card .auth-card-title {
-  margin-bottom: 0.55rem;
-  color: #3f7f2a;
-  font-size: clamp(1.7rem, 5vw, 2.1rem);
-  letter-spacing: -0.03em;
+  @apply tw:[margin-bottom:0.55rem];
+  @apply tw:[color:#3f7f2a];
+  @apply tw:[font-size:clamp(1.7rem,_5vw,_2.1rem)];
+  @apply tw:[letter-spacing:-0.03em];
 }
 
 .forgot-password-card .auth-card-subtitle {
-  max-width: 360px;
-  margin-inline: auto;
-  color: #64748b;
-  line-height: 1.65;
+  @apply tw:[max-width:360px];
+  @apply tw:[margin-inline:auto];
+  @apply tw:[color:#64748b];
+  @apply tw:[line-height:1.65];
 }
 
 .forgot-password-card .auth-form-label {
-  color: #3f7f2a;
-  font-weight: 700;
+  @apply tw:[color:#3f7f2a];
+  @apply tw:[font-weight:700];
 }
 
 .forgot-password-card .auth-form-label > i {
-  display: none;
+  @apply tw:hidden;
 }
 
 .forgot-password-card .auth-form-input-wrapper {
-  border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  background: #f8fafc;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[transition:border-color_0.2s_ease,_box-shadow_0.2s_ease,_background_0.2s_ease];
 }
 
 .forgot-password-card .auth-form-input-wrapper:focus-within {
-  border-color: #69aa47;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(105, 170, 71, 0.16);
+  @apply tw:[border-color:#69aa47];
+  @apply tw:[background:#ffffff];
+  @apply tw:[box-shadow:0_0_0_4px_rgba(105,_170,_71,_0.16)];
 }
 
 .forgot-password-card .auth-form-icon {
-  color: #69aa47;
+  @apply tw:[color:#69aa47];
 }
 
 .forgot-password-card .auth-submit-btn {
-  min-height: 52px;
-  border: 1px solid #3f7f2a !important;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #69aa47, #3f7f2a) !important;
-  color: #ffffff !important;
-  box-shadow: 0 12px 25px rgba(63, 127, 42, 0.26);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  @apply tw:[min-height:52px];
+  @apply tw:[border:1px_solid_#3f7f2a]!;
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:linear-gradient(135deg,_#69aa47,_#3f7f2a)]!;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[box-shadow:0_12px_25px_rgba(63,_127,_42,_0.26)];
+  @apply tw:[transition:transform_0.2s_ease,_box-shadow_0.2s_ease];
 }
 
 .forgot-password-card .auth-submit-btn:not(:disabled):hover {
-  border-color: #3f7f2a !important;
-  background: linear-gradient(135deg, #3f7f2a, #69aa47) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 16px 30px rgba(63, 127, 42, 0.32);
+  @apply tw:[border-color:#3f7f2a]!;
+  @apply tw:[background:linear-gradient(135deg,_#3f7f2a,_#69aa47)]!;
+  @apply tw:[transform:translateY(-2px)];
+  @apply tw:[box-shadow:0_16px_30px_rgba(63,_127,_42,_0.32)];
 }
 
 .forgot-password-card .auth-submit-btn:focus-visible {
-  outline: 3px solid rgba(105, 170, 71, 0.34);
-  outline-offset: 3px;
+  @apply tw:[outline:3px_solid_rgba(105,_170,_71,_0.34)];
+  @apply tw:[outline-offset:3px];
 }
 
 .forgot-password-card .auth-submit-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-  box-shadow: none;
+  @apply tw:cursor-not-allowed;
+  @apply tw:[opacity:0.65];
+  @apply tw:[box-shadow:none];
 }
 
 .forgot-password-card .auth-footer {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid #e2e8f0;
-  text-align: center;
+  @apply tw:[margin-top:1.5rem];
+  @apply tw:[padding-top:1.25rem];
+  @apply tw:[border-top:1px_solid_#e2e8f0];
+  @apply tw:text-center;
 }
 
 .forgot-password-card .auth-footer a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #3f7f2a;
-  font-weight: 700;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.5rem];
+  @apply tw:[color:#3f7f2a];
+  @apply tw:[font-weight:700];
 }
 
 .forgot-password-card .auth-footer .return-arrow-icon {
-  color: #3f7f2a !important;
+  @apply tw:[color:#3f7f2a]!;
 }
 
 .forgot-password-card .auth-footer a:hover {
-  color: #69aa47;
+  @apply tw:[color:#69aa47];
 }
 
 .forgot-password-card .auth-footer a::after {
-  background: #69aa47;
+  @apply tw:[background:#69aa47];
 }
 
 @media (max-width: 520px) {
   .forgot-password-page .auth-card-wrapper {
-    width: min(100%, 360px);
+    @apply tw:[width:min(100%,_360px)];
   }
 
   .forgot-password-card {
-    padding: 1.2rem 1rem;
-    border-radius: 18px;
+    @apply tw:[padding:1.2rem_1rem];
+    @apply tw:[border-radius:18px];
   }
 
   .forgot-password-card .auth-card-header {
-    margin-bottom: 0.9rem;
+    @apply tw:[margin-bottom:0.9rem];
   }
 
   .forgot-password-card .auth-card-title {
-    margin-bottom: 0.3rem;
-    font-size: 1.4rem;
+    @apply tw:[margin-bottom:0.3rem];
+    @apply tw:[font-size:1.4rem];
   }
 
   .forgot-password-card .auth-card-subtitle {
-    max-width: 290px;
-    font-size: 0.78rem;
-    line-height: 1.4;
+    @apply tw:[max-width:290px];
+    @apply tw:[font-size:0.78rem];
+    @apply tw:[line-height:1.4];
   }
 
   .forgot-password-card .auth-form {
-    gap: 0.7rem;
+    @apply tw:[gap:0.7rem];
   }
 
   .forgot-password-card .auth-form-label {
-    margin-bottom: 0.35rem;
-    font-size: 0.78rem;
+    @apply tw:[margin-bottom:0.35rem];
+    @apply tw:[font-size:0.78rem];
   }
 
   .forgot-password-card .auth-form-input {
-    min-height: 42px;
-    padding-block: 0.6rem;
-    font-size: 0.8rem;
+    @apply tw:[min-height:42px];
+    @apply tw:[padding-block:0.6rem];
+    @apply tw:[font-size:0.8rem];
   }
 
   .forgot-password-card .auth-actions {
-    margin-top: 0.55rem;
+    @apply tw:[margin-top:0.55rem];
   }
 
   .forgot-password-card .auth-submit-btn {
-    min-height: 44px;
-    padding: 0.65rem;
-    border-radius: 11px;
-    font-size: 0.8rem;
+    @apply tw:[min-height:44px];
+    @apply tw:[padding:0.65rem];
+    @apply tw:[border-radius:11px];
+    @apply tw:[font-size:0.8rem];
   }
 
   .forgot-password-card .auth-footer {
-    margin-top: 0.9rem;
-    padding-top: 0.75rem;
+    @apply tw:[margin-top:0.9rem];
+    @apply tw:[padding-top:0.75rem];
   }
 
   .forgot-password-card .auth-footer a {
-    gap: 0.4rem;
-    font-size: 0.8rem;
+    @apply tw:[gap:0.4rem];
+    @apply tw:[font-size:0.8rem];
   }
 }
+
 </style>

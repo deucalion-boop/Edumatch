@@ -122,7 +122,7 @@
           </div>
         </div>
 
-        <section class="user-filters section-card fade-in" style="border-color: rgb(105, 170, 71) !important;">
+        <section class="user-filters section-card fade-in tw:inline:[border-color:rgb(105,_170,_71)]!" >
           <form class="filter-row login-attempts-filter-row" @submit.prevent="applyFiltersAndFetch">
             <div class="filter-group login-attempts-filter-group login-attempts-filter-group--search">
               <label for="loginAttemptSearch"><i class="fas fa-search"></i> Search</label>
@@ -163,7 +163,7 @@
           </form>
         </section>
 
-        <section class="users-table-section section-card" style="border-color: rgb(105, 170, 71) !important;">
+        <section class="users-table-section section-card tw:inline:[border-color:rgb(105,_170,_71)]!" >
           <div class="table-header">
             <div class="table-info">
               <h3>Only Recent Log-In Activity</h3>
@@ -645,162 +645,167 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-@import url('/css/admin.css');
+@reference "../../styles/tailwind.css";
+
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
+@import '../../styles/roles/admin.tailwind.css';
+
+
 .login-live-status {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.2rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.75rem];
+  @apply tw:flex-wrap;
+  @apply tw:[margin-top:0.2rem];
 }
 
 .login-live-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.42rem 0.78rem;
-  border-radius: 999px;
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
-  color: #dc2626;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[padding:0.42rem_0.78rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#fef2f2];
+  @apply tw:[border:1px_solid_#fca5a5];
+  @apply tw:[color:#dc2626];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .login-live-pill i {
-  font-size: 0.55rem;
+  @apply tw:[font-size:0.55rem];
 }
 
 .login-live-pill--syncing {
-  background: #fee2e2;
-  border-color: #f87171;
-  color: #b91c1c;
+  @apply tw:[background:#fee2e2];
+  @apply tw:[border-color:#f87171];
+  @apply tw:[color:#b91c1c];
 }
 
 .login-live-pill--syncing i {
-  font-size: 0.8rem;
+  @apply tw:[font-size:0.8rem];
 }
 
 .login-live-caption {
-  color: #64748b;
-  font-size: 0.84rem;
-  line-height: 1.5;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[line-height:1.5];
 }
 
 .login-attempts-filter-row {
-  align-items: flex-end;
+  @apply tw:items-end;
 }
 
 .login-attempts-filter-group--search {
-  flex: 1 1 320px;
+  @apply tw:[flex:1_1_320px];
 }
 
 .login-attempts-search {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 .login-attempts-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
-  min-height: 220px;
-  color: #64748b;
-  font-weight: 600;
-  text-align: center;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[min-height:220px];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-weight:600];
+  @apply tw:text-center;
 }
 
 .login-attempts-empty i {
-  font-size: 1.1rem;
+  @apply tw:[font-size:1.1rem];
 }
 
 .login-attempts-empty--error {
-  color: #991b1b;
+  @apply tw:[color:#991b1b];
 }
 
 .login-attempts-table .time-col {
-  width: 180px;
+  @apply tw:[width:180px];
 }
 
 .login-attempts-table .user-col {
-  width: 240px;
+  @apply tw:[width:240px];
 }
 
 .login-attempts-table .role-col {
-  width: 130px;
+  @apply tw:[width:130px];
 }
 
 .login-attempts-table .result-col {
-  width: 130px;
+  @apply tw:[width:130px];
 }
 
 .login-attempts-table .details-col {
-  width: 320px;
+  @apply tw:[width:320px];
 }
 
 .login-attempts-table .ip-col {
-  width: 170px;
+  @apply tw:[width:170px];
 }
 
 .login-attempt-meta,
 .login-attempt-user,
 .login-attempt-detail {
-  display: grid;
-  gap: 0.25rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.25rem];
 }
 
 .login-attempt-meta strong,
 .login-attempt-user strong,
 .login-attempt-detail strong {
-  color: #111827;
-  font-size: 0.95rem;
+  @apply tw:[color:#111827];
+  @apply tw:[font-size:0.95rem];
 }
 
 .login-attempt-meta span,
 .login-attempt-user span,
 .login-attempt-user small,
 .login-attempt-detail small {
-  color: #64748b;
-  font-size: 0.82rem;
-  line-height: 1.45;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[line-height:1.45];
 }
 
 .login-attempt-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border-radius: 999px;
-  padding: 0.48rem 0.8rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  white-space: nowrap;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[padding:0.48rem_0.8rem];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:700];
+  @apply tw:whitespace-nowrap;
 }
 
 .login-attempt-badge--success {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  @apply tw:[background:#ecfdf5];
+  @apply tw:[color:#047857];
+  @apply tw:[border:1px_solid_#a7f3d0];
 }
 
 .login-attempt-badge--failed {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  @apply tw:[background:#fef2f2];
+  @apply tw:[color:#b91c1c];
+  @apply tw:[border:1px_solid_#fecaca];
 }
 
 .login-attempt-ip {
-  color: #334155;
-  font-family: 'Consolas', 'SFMono-Regular', monospace;
-  font-size: 0.82rem;
+  @apply tw:[color:#334155];
+  @apply tw:[font-family:'Consolas',_'SFMono-Regular',_monospace];
+  @apply tw:[font-size:0.82rem];
 }
 
 @media (max-width: 768px) {
   .login-attempts-filter-row {
-    align-items: stretch;
+    @apply tw:items-stretch;
   }
 }
+
 </style>

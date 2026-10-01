@@ -1482,845 +1482,843 @@ export default {
 </script>
 
 <style scoped>
+@reference "../../styles/tailwind.css";
+
 .notification-menu {
-  position: relative;
+  @apply tw:relative;
 }
 
 .notification-dropdown {
-  position: absolute;
-  top: calc(100% + 0.75rem);
-  right: 0;
-  width: min(92vw, 460px);
-  max-height: min(70vh, 560px);
-  overflow-y: auto;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
-  border: 1px solid #dbe4f1;
-  border-radius: 20px;
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.16);
-  padding: 0.95rem;
-  z-index: 1200;
-  opacity: 1 !important;
-  visibility: visible !important;
-  transform: translateY(0) !important;
+  @apply tw:absolute;
+  @apply tw:[top:calc(100%_+_0.75rem)];
+  @apply tw:[right:0];
+  @apply tw:[width:min(92vw,_460px)];
+  @apply tw:[max-height:min(70vh,_560px)];
+  @apply tw:overflow-y-auto;
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f9fbff_100%)];
+  @apply tw:[border:1px_solid_#dbe4f1];
+  @apply tw:[border-radius:20px];
+  @apply tw:[box-shadow:0_24px_48px_rgba(15,_23,_42,_0.16)];
+  @apply tw:[padding:0.95rem];
+  @apply tw:[z-index:1200];
+  @apply tw:opacity-100!;
+  @apply tw:visible!;
+  @apply tw:[transform:translateY(0)]!;
 }
 
 .notification-dropdown-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.9rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[margin-bottom:0.9rem];
 }
 
 .notification-dropdown-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 0 0 auto;
-  white-space: nowrap;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.5rem];
+  @apply tw:flex-none;
+  @apply tw:whitespace-nowrap;
 }
 
 .notification-dropdown-clear {
-  border: 1px solid #d7dfec;
-  background: #ffffff;
-  color: #334155;
-  min-height: 36px;
-  padding: 0.45rem 0.8rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  @apply tw:[border:1px_solid_#d7dfec];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
+  @apply tw:[min-height:36px];
+  @apply tw:[padding:0.45rem_0.8rem];
+  @apply tw:[border-radius:12px];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:700];
+  @apply tw:cursor-pointer;
+  @apply tw:[box-shadow:0_1px_2px_rgba(15,_23,_42,_0.04)];
 }
 
 .notification-dropdown-clear:hover:not(:disabled) {
-  background: #f8fafc;
+  @apply tw:[background:#f8fafc];
 }
 
 .notification-dropdown-clear:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  @apply tw:[opacity:0.55];
+  @apply tw:cursor-not-allowed;
 }
 
 .notification-dropdown-header h3 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 1.02rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  min-width: 0;
-  flex: 1 1 auto;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.02rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:-0.01em];
+  @apply tw:[min-width:0];
+  @apply tw:flex-auto;
 }
 
 .notification-dropdown-close {
-  border: 1px solid #d7dfec;
-  background: #ffffff;
-  color: #475569;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  flex: 0 0 36px;
+  @apply tw:[border:1px_solid_#d7dfec];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#475569];
+  @apply tw:[width:36px];
+  @apply tw:[height:36px];
+  @apply tw:[border-radius:12px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:cursor-pointer;
+  @apply tw:[box-shadow:0_1px_2px_rgba(15,_23,_42,_0.04)];
+  @apply tw:[flex:0_0_36px];
 }
 
 .notification-dropdown-clear,
 .notification-dropdown-close {
-  flex-shrink: 0;
+  @apply tw:shrink-0;
 }
 
 .notification-dropdown-clear {
-  min-width: max-content;
-  white-space: nowrap;
-  width: auto !important;
-  height: 36px !important;
+  @apply tw:[min-width:max-content];
+  @apply tw:whitespace-nowrap;
+  @apply tw:w-auto!;
+  @apply tw:[height:36px]!;
 }
 
 .notification-dropdown .notification-dropdown-clear,
 .notification-dropdown .notification-dropdown-close {
-  min-width: unset;
+  @apply tw:[min-width:unset];
 }
 
 .notification-dropdown .notification-dropdown-clear {
-  width: auto !important;
-  min-width: max-content !important;
-  padding-inline: 0.8rem !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
+  @apply tw:w-auto!;
+  @apply tw:[min-width:max-content]!;
+  @apply tw:[padding-inline:0.8rem]!;
+  @apply tw:overflow-visible!;
+  @apply tw:text-clip!;
 }
 
 .notification-dropdown .notification-dropdown-close {
-  width: 36px !important;
-  min-width: 36px !important;
-  height: 36px !important;
+  @apply tw:[width:36px]!;
+  @apply tw:[min-width:36px]!;
+  @apply tw:[height:36px]!;
 }
 
 .notification-dropdown-close:hover {
-  background: #f8fafc;
+  @apply tw:[background:#f8fafc];
 }
 
 .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(4,_minmax(0,_1fr))];
+  @apply tw:[gap:1rem];
 }
 
 .dashboard-kpi-grid {
-  margin-bottom: 1.5rem;
+  @apply tw:[margin-bottom:1.5rem];
 }
 
 .kpi-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 1px solid rgba(169, 213, 95, 0.52);
-  border-radius: 16px;
-  background: #ffffff;
-  min-height: 124px;
-  box-shadow: 0 14px 28px rgba(30, 67, 7, 0.06);
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_solid_rgba(169,_213,_95,_0.52)];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[min-height:124px];
+  @apply tw:[box-shadow:0_14px_28px_rgba(30,_67,_7,_0.06)];
 }
 
 .kpi-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
+  @apply tw:[width:42px];
+  @apply tw:[height:42px];
+  @apply tw:[border-radius:12px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[font-size:1rem];
 }
 
 .kpi-icon.students,
 .kpi-icon.lessons,
 .kpi-icon.classes,
 .kpi-icon.assessments {
-  background: #edf7e7;
-  color: #2f6810;
+  @apply tw:[background:#edf7e7];
+  @apply tw:[color:#2f6810];
 }
 
 .kpi-content {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[min-width:0];
 }
 
 .kpi-label {
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 600;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:600];
 }
 
 .kpi-value {
-  color: #0f172a;
-  font-size: 1.12rem;
-  line-height: 1.2;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.12rem];
+  @apply tw:[line-height:1.2];
 }
 
 .kpi-note {
-  margin-top: 0.35rem;
-  color: #64748b;
-  font-size: 0.75rem;
-  line-height: 1.35;
+  @apply tw:[margin-top:0.35rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.75rem];
+  @apply tw:[line-height:1.35];
 }
 
 .dashboard-layout {
-  align-items: start;
-  grid-template-columns: minmax(0, 1fr) !important;
-  margin-top: 1.15rem;
+  @apply tw:[align-items:start];
+  @apply tw:[grid-template-columns:minmax(0,_1fr)]!;
+  @apply tw:[margin-top:1.15rem];
 }
 
 .dashboard-layout > .content-column {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 .panel-card {
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[box-shadow:0_4px_14px_rgba(15,_23,_42,_0.05)];
 }
 
 .calendar-card {
-  border: 1px solid transparent;
-  border-radius: 16px;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #ffffff 100%) padding-box,
-    linear-gradient(135deg, #8bc66a 0%, #d8edcc 48%, #a9d58f 100%) border-box;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
-  padding: 1rem 1.05rem;
-  margin-bottom: 1rem;
+  @apply tw:[border:1px_solid_transparent];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#ffffff_100%)_padding-box,______linear-gradient(135deg,_#8bc66a_0%,_#d8edcc_48%,_#a9d58f_100%)_border-box];
+  @apply tw:[box-shadow:0_8px_22px_rgba(15,_23,_42,_0.08)];
+  @apply tw:[padding:1rem_1.05rem];
+  @apply tw:[margin-bottom:1rem];
 }
 
 .calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[margin-bottom:0.85rem];
 }
 
 .calendar-kicker {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #5b9b3c;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:[margin:0];
+  @apply tw:[font-size:0.75rem];
+  @apply tw:[font-weight:600];
+  @apply tw:[color:#5b9b3c];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .calendar-title {
-  margin: 0.18rem 0 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #0f172a;
+  @apply tw:[margin:0.18rem_0_0];
+  @apply tw:[font-size:1.2rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[color:#0f172a];
 }
 
 .calendar-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.4rem];
 }
 
 .calendar-nav-btn,
 .calendar-today-btn {
-  border: 1px solid #dbe2ea;
-  background: #ffffff;
-  color: #334155;
-  border-radius: 10px;
-  height: 34px;
-  min-width: 34px;
-  padding: 0 0.65rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
+  @apply tw:[border-radius:10px];
+  @apply tw:[height:34px];
+  @apply tw:[min-width:34px];
+  @apply tw:[padding:0_0.65rem];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:600];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:all_0.2s_ease];
 }
 
 .calendar-nav-btn:hover,
 .calendar-today-btn:hover {
-  border-color: #a9d295;
-  background: #f2f9ee;
+  @apply tw:[border-color:#a9d295];
+  @apply tw:[background:#f2f9ee];
 }
 
 .calendar-today-btn {
-  border-color: #b9dca7;
-  background: #eef8e9;
-  color: #4f8f2f;
+  @apply tw:[border-color:#b9dca7];
+  @apply tw:[background:#eef8e9];
+  @apply tw:[color:#4f8f2f];
 }
 
 .calendar-filters {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.85rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.5rem];
+  @apply tw:flex-wrap;
+  @apply tw:[margin-bottom:0.85rem];
 }
 
 .calendar-filter-label {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #64748b;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[color:#64748b];
+  @apply tw:[letter-spacing:0.06em];
+  @apply tw:uppercase;
 }
 
 .calendar-filter-btn {
-  border: 1px solid #dbe2ea;
-  background: #ffffff;
-  color: #475569;
-  border-radius: 999px;
-  min-height: 34px;
-  padding: 0 0.8rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.42rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#475569];
+  @apply tw:[border-radius:999px];
+  @apply tw:[min-height:34px];
+  @apply tw:[padding:0_0.8rem];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.42rem];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:border-color_0.2s_ease,_background-color_0.2s_ease,_color_0.2s_ease,_box-shadow_0.2s_ease,_transform_0.2s_ease];
 }
 
 .calendar-filter-btn i {
-  color: currentColor !important;
+  @apply tw:text-current!;
 }
 
 .calendar-filter-btn.is-all {
-  background: #eef8e9;
-  border-color: #b9dca7;
-  color: #4f8f2f;
+  @apply tw:[background:#eef8e9];
+  @apply tw:[border-color:#b9dca7];
+  @apply tw:[color:#4f8f2f];
 }
 
 .calendar-filter-btn.is-lesson {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
+  @apply tw:[background:#eff6ff];
+  @apply tw:[border-color:#bfdbfe];
+  @apply tw:[color:#1d4ed8];
 }
 
 .calendar-filter-btn.is-deadline {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #b45309;
+  @apply tw:[background:#fffbeb];
+  @apply tw:[border-color:#fde68a];
+  @apply tw:[color:#b45309];
 }
 
 .calendar-filter-btn.is-completed {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #15803d;
+  @apply tw:[background:#f0fdf4];
+  @apply tw:[border-color:#bbf7d0];
+  @apply tw:[color:#15803d];
 }
 
 .calendar-filter-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(0.98);
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[filter:brightness(0.98)];
 }
 
 .calendar-filter-btn.active {
-  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
-  transform: translateY(-1px);
+  @apply tw:[box-shadow:0_10px_18px_rgba(15,_23,_42,_0.08)];
+  @apply tw:[transform:translateY(-1px)];
 }
 
 .calendar-filter-note {
-  margin: -0.1rem 0 0.8rem;
-  color: #64748b;
-  font-size: 0.78rem;
-  line-height: 1.45;
+  @apply tw:[margin:-0.1rem_0_0.8rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[line-height:1.45];
 }
 
 .calendar-scroll-hint {
-  display: none;
+  @apply tw:hidden;
 }
 
 .calendar-scroll-area {
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  border-radius: 12px;
-  overscroll-behavior-inline: contain;
-  scrollbar-width: thin;
-  scrollbar-color: #b9dca7 transparent;
-  -webkit-overflow-scrolling: touch;
+  @apply tw:max-w-full;
+  @apply tw:overflow-x-auto;
+  @apply tw:overflow-y-hidden;
+  @apply tw:[border-radius:12px];
+  @apply tw:[overscroll-behavior-inline:contain];
+  @apply tw:[scrollbar-width:thin];
+  @apply tw:[scrollbar-color:#b9dca7_transparent];
+  @apply tw:[-webkit-overflow-scrolling:touch];
 }
 
 .calendar-scroll-area:focus-visible {
-  outline: 3px solid rgba(105, 170, 71, 0.22);
-  outline-offset: 3px;
+  @apply tw:[outline:3px_solid_rgba(105,_170,_71,_0.22)];
+  @apply tw:[outline-offset:3px];
 }
 
 .calendar-scroll-content {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 .calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.45rem;
-  margin-bottom: 0.45rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(7,_minmax(0,_1fr))];
+  @apply tw:[gap:0.45rem];
+  @apply tw:[margin-bottom:0.45rem];
 }
 
 .calendar-weekdays span {
-  text-align: center;
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  @apply tw:text-center;
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:600];
+  @apply tw:[color:#64748b];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.04em];
 }
 
 .calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.45rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(7,_minmax(0,_1fr))];
+  @apply tw:[gap:0.45rem];
 }
 
 .calendar-day {
-  min-height: 92px;
-  border-radius: 12px;
-  border: 1px solid #edf2f7;
-  background: #ffffff;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 0.5rem;
-  position: relative;
+  @apply tw:[min-height:92px];
+  @apply tw:[border-radius:12px];
+  @apply tw:[border:1px_solid_#edf2f7];
+  @apply tw:[background:#ffffff];
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[padding:0.5rem];
+  @apply tw:relative;
 }
 
 .calendar-day.is-empty {
-  background: #f8fafc;
-  border-style: dashed;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-style:dashed];
 }
 
 .calendar-day.has-events {
-  border-color: #cbd5e1;
-  background: #f8fbff;
+  @apply tw:[border-color:#cbd5e1];
+  @apply tw:[background:#f8fbff];
 }
 
 .calendar-day.is-today {
-  border-color: #8fbd76;
-  background: #f7fbf4;
-  box-shadow: inset 0 0 0 1px #8fbd76;
+  @apply tw:[border-color:#8fbd76];
+  @apply tw:[background:#f7fbf4];
+  @apply tw:[box-shadow:inset_0_0_0_1px_#8fbd76];
 }
 
 .calendar-day.is-today .day-number {
-  color: #4f8f2f;
-  font-weight: 800;
+  @apply tw:[color:#4f8f2f];
+  @apply tw:[font-weight:800];
 }
 
 .day-number {
-  font-size: 0.84rem;
-  font-weight: 600;
-  color: #0f172a;
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[font-weight:600];
+  @apply tw:[color:#0f172a];
 }
 
 .day-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #334155;
-  margin-top: 0.2rem;
+  @apply tw:[width:7px];
+  @apply tw:[height:7px];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#334155];
+  @apply tw:[margin-top:0.2rem];
 }
 
 .day-dot.is-lesson {
-  background: #334155;
+  @apply tw:[background:#334155];
 }
 
 .day-dot.is-deadline {
-  background: #d97706;
+  @apply tw:[background:#d97706];
 }
 
 .day-dot.is-completed {
-  background: #16a34a;
+  @apply tw:[background:#16a34a];
 }
 
 .day-events {
-  position: absolute;
-  left: 0.45rem;
-  right: 0.45rem;
-  bottom: 0.35rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  @apply tw:absolute;
+  @apply tw:[left:0.45rem];
+  @apply tw:[right:0.45rem];
+  @apply tw:[bottom:0.35rem];
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[gap:0.2rem];
 }
 
 .day-event-pill {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.35rem;
-  width: 100%;
-  border: 1px solid #dbe2ea;
-  border-radius: 8px;
-  background: #f8fbff;
-  padding: 0.15rem 0.32rem;
-  font-size: 0.62rem;
-  line-height: 1.2;
-  color: #334155;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.35rem];
+  @apply tw:w-full;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[border-radius:8px];
+  @apply tw:[background:#f8fbff];
+  @apply tw:[padding:0.15rem_0.32rem];
+  @apply tw:[font-size:0.62rem];
+  @apply tw:[line-height:1.2];
+  @apply tw:[color:#334155];
 }
 
 .day-event-pill.is-lesson {
-  border-color: #dbe2ea;
-  background: #f8fbff;
-  color: #334155;
+  @apply tw:[border-color:#dbe2ea];
+  @apply tw:[background:#f8fbff];
+  @apply tw:[color:#334155];
 }
 
 .day-event-pill.is-deadline {
-  border-color: #fde68a;
-  background: #fffbeb;
-  color: #92400e;
+  @apply tw:[border-color:#fde68a];
+  @apply tw:[background:#fffbeb];
+  @apply tw:[color:#92400e];
 }
 
 .day-event-pill.is-completed {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-  color: #166534;
+  @apply tw:[border-color:#bbf7d0];
+  @apply tw:[background:#f0fdf4];
+  @apply tw:[color:#166534];
 }
 
 .event-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 70%;
-  font-weight: 600;
+  @apply tw:overflow-hidden;
+  @apply tw:text-ellipsis;
+  @apply tw:whitespace-nowrap;
+  @apply tw:[max-width:70%];
+  @apply tw:[font-weight:600];
 }
 
 .event-time {
-  font-size: 0.58rem;
-  color: #64748b;
-  white-space: nowrap;
+  @apply tw:[font-size:0.58rem];
+  @apply tw:[color:#64748b];
+  @apply tw:whitespace-nowrap;
 }
 
 .day-event-more {
-  font-size: 0.58rem;
-  color: #64748b;
-  padding-left: 0.1rem;
+  @apply tw:[font-size:0.58rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[padding-left:0.1rem];
 }
 
 .calendar-legend {
-  margin-top: 0.7rem;
-  font-size: 0.78rem;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  flex-wrap: wrap;
+  @apply tw:[margin-top:0.7rem];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[color:#64748b];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.9rem];
+  @apply tw:flex-wrap;
 }
 
 .calendar-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  padding: 0.38rem 0.72rem;
-  border-radius: 999px;
-  border: 1px solid #dbe2ea;
-  background: #ffffff;
-  font-weight: 700;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.28rem];
+  @apply tw:[padding:0.38rem_0.72rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[background:#ffffff];
+  @apply tw:[font-weight:700];
 }
 
 .calendar-legend i {
-  font-size: 0.5rem;
-  color: currentColor;
+  @apply tw:[font-size:0.5rem];
+  @apply tw:text-current;
 }
 
 .calendar-legend .is-lesson {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
+  @apply tw:[background:#eff6ff];
+  @apply tw:[border-color:#bfdbfe];
+  @apply tw:[color:#1d4ed8];
 }
 
 .calendar-legend .is-deadline {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #b45309;
+  @apply tw:[background:#fffbeb];
+  @apply tw:[border-color:#fde68a];
+  @apply tw:[color:#b45309];
 }
 
 .calendar-legend .is-completed {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #15803d;
+  @apply tw:[background:#f0fdf4];
+  @apply tw:[border-color:#bbf7d0];
+  @apply tw:[color:#15803d];
 }
 
 .teacher-notifications {
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-  padding: 1rem 1.05rem;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fbff_100%)];
+  @apply tw:[box-shadow:0_12px_28px_rgba(15,_23,_42,_0.08)];
+  @apply tw:[padding:1rem_1.05rem];
 }
 
 .teacher-activity-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:[margin-bottom:1rem];
 }
 
 .teacher-activity-copy {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 .teacher-activity-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #1d4ed8;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.42rem];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[letter-spacing:0.08em];
+  @apply tw:uppercase;
 }
 
 .teacher-activity-kicker::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #60a5fa, #2563eb);
-  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.14);
+  @apply tw:[content:''];
+  @apply tw:[width:8px];
+  @apply tw:[height:8px];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:linear-gradient(135deg,_#60a5fa,_#2563eb)];
+  @apply tw:[box-shadow:0_0_0_4px_rgba(96,_165,_250,_0.14)];
 }
 
 .teacher-activity-subtitle {
-  margin: 0.38rem 0 0;
-  color: #64748b;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  max-width: 38rem;
+  @apply tw:[margin:0.38rem_0_0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.9rem];
+  @apply tw:[line-height:1.45];
+  @apply tw:[max-width:38rem];
 }
 
 .teacher-activity-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.65rem;
-  flex-wrap: wrap;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-end;
+  @apply tw:[gap:0.65rem];
+  @apply tw:flex-wrap;
 }
 
 .teacher-activity-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.48rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid #dbeafe;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 0.78rem;
-  font-weight: 700;
-  white-space: nowrap;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[padding:0.48rem_0.8rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[border:1px_solid_#dbeafe];
+  @apply tw:[background:#eff6ff];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
+  @apply tw:whitespace-nowrap;
 }
 
 .teacher-activity-status.is-empty {
-  border-color: #e2e8f0;
-  background: #f8fafc;
-  color: #475569;
+  @apply tw:[border-color:#e2e8f0];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[color:#475569];
 }
 
 .teacher-activity-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.48rem;
-  min-height: 38px;
-  border-radius: 12px;
-  font-weight: 700;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.48rem];
+  @apply tw:[min-height:38px];
+  @apply tw:[border-radius:12px];
+  @apply tw:[font-weight:700];
+  @apply tw:[box-shadow:0_8px_18px_rgba(15,_23,_42,_0.05)];
 }
 
 .teacher-activity-refresh:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
+  @apply tw:[opacity:0.7];
+  @apply tw:cursor-not-allowed;
+  @apply tw:transform-none;
 }
 
 .teacher-activity-empty {
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  gap: 1rem;
-  padding: 1.2rem;
-  border: 1px dashed #dbe4f1;
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.1), transparent 44%),
-    linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  @apply tw:relative;
+  @apply tw:overflow-hidden;
+  @apply tw:grid;
+  @apply tw:[gap:1rem];
+  @apply tw:[padding:1.2rem];
+  @apply tw:[border:1px_dashed_#dbe4f1];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:radial-gradient(circle_at_top,_rgba(59,_130,_246,_0.1),_transparent_44%),______linear-gradient(180deg,_#f8fbff_0%,_#ffffff_100%)];
 }
 
 .teacher-activity-empty::after {
-  content: '';
-  position: absolute;
-  inset: auto -32px -44px auto;
-  width: 160px;
-  height: 160px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0));
-  pointer-events: none;
+  @apply tw:[content:''];
+  @apply tw:absolute;
+  @apply tw:[inset:auto_-32px_-44px_auto];
+  @apply tw:[width:160px];
+  @apply tw:[height:160px];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:radial-gradient(circle,_rgba(148,_163,_184,_0.18),_rgba(148,_163,_184,_0))];
+  @apply tw:pointer-events-none;
 }
 
 .teacher-activity-empty-visual {
-  position: relative;
-  width: 74px;
-  height: 74px;
+  @apply tw:relative;
+  @apply tw:[width:74px];
+  @apply tw:[height:74px];
 }
 
 .teacher-activity-empty-glow {
-  position: absolute;
-  inset: 10px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(148, 163, 184, 0.08));
-  filter: blur(4px);
+  @apply tw:absolute;
+  @apply tw:[inset:10px];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:linear-gradient(135deg,_rgba(59,_130,_246,_0.2),_rgba(148,_163,_184,_0.08))];
+  @apply tw:[filter:blur(4px)];
 }
 
 .teacher-activity-empty-icon {
-  position: relative;
-  z-index: 1;
-  width: 74px;
-  height: 74px;
-  border-radius: 22px;
-  border: 1px solid #dbeafe;
-  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
-  box-shadow: 0 16px 28px rgba(37, 99, 235, 0.14);
-  color: #2563eb;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
+  @apply tw:relative;
+  @apply tw:[z-index:1];
+  @apply tw:[width:74px];
+  @apply tw:[height:74px];
+  @apply tw:[border-radius:22px];
+  @apply tw:[border:1px_solid_#dbeafe];
+  @apply tw:[background:linear-gradient(135deg,_#ffffff_0%,_#eff6ff_100%)];
+  @apply tw:[box-shadow:0_16px_28px_rgba(37,_99,_235,_0.14)];
+  @apply tw:[color:#2563eb];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[font-size:1.4rem];
 }
 
 .teacher-activity-empty.is-loading .teacher-activity-empty-icon {
-  animation: activityPulse 1.5s ease-in-out infinite;
+  @apply tw:[animation:activityPulse_1.5s_ease-in-out_infinite];
 }
 
 .teacher-activity-empty-copy {
-  position: relative;
-  z-index: 1;
+  @apply tw:relative;
+  @apply tw:[z-index:1];
 }
 
 .teacher-activity-empty-title {
-  margin: 0;
-  color: #0f172a;
-  font-size: 1.02rem;
-  font-weight: 800;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.02rem];
+  @apply tw:[font-weight:800];
 }
 
 .teacher-activity-empty-copy .empty-subtext {
-  margin-top: 0.45rem;
-  max-width: 36rem;
-  line-height: 1.5;
+  @apply tw:[margin-top:0.45rem];
+  @apply tw:[max-width:36rem];
+  @apply tw:[line-height:1.5];
 }
 
 .teacher-activity-empty-tags {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  @apply tw:relative;
+  @apply tw:[z-index:1];
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.55rem];
 }
 
 .teacher-activity-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.38rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid #dbe4f1;
-  background: rgba(255, 255, 255, 0.92);
-  color: #334155;
-  font-size: 0.76rem;
-  font-weight: 700;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[padding:0.38rem_0.7rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[border:1px_solid_#dbe4f1];
+  @apply tw:[background:rgba(255,_255,_255,_0.92)];
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:700];
 }
 
 .teacher-activity-list {
-  display: grid;
-  gap: 0.78rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.78rem];
 }
 
 .teacher-activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.82rem;
-  padding: 0.95rem;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:[gap:0.82rem];
+  @apply tw:[padding:0.95rem];
+  @apply tw:[border-radius:16px];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[background:rgba(255,_255,_255,_0.94)];
+  @apply tw:[box-shadow:0_6px_18px_rgba(15,_23,_42,_0.04)];
+  @apply tw:[transition:transform_0.18s_ease,_box-shadow_0.18s_ease,_border-color_0.18s_ease];
 }
 
 .teacher-activity-item:hover {
-  transform: translateY(-1px);
-  border-color: #cbd5e1;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[border-color:#cbd5e1];
+  @apply tw:[box-shadow:0_12px_28px_rgba(15,_23,_42,_0.08)];
 }
 
 .teacher-activity-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 1rem;
+  @apply tw:[width:42px];
+  @apply tw:[height:42px];
+  @apply tw:[border-radius:14px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:shrink-0;
+  @apply tw:[font-size:1rem];
 }
 
 .teacher-activity-icon.is-lesson {
-  background: #ecfeff;
-  color: #0f766e;
+  @apply tw:[background:#ecfeff];
+  @apply tw:[color:#0f766e];
 }
 
 .teacher-activity-icon.is-assessment {
-  background: #eef2ff;
-  color: #4338ca;
+  @apply tw:[background:#eef2ff];
+  @apply tw:[color:#4338ca];
 }
 
 .teacher-activity-content {
-  min-width: 0;
-  flex: 1;
+  @apply tw:[min-width:0];
+  @apply tw:[flex:1];
 }
 
 .teacher-activity-item-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
 }
 
 .teacher-activity-item-title {
-  color: #0f172a;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.95rem];
+  @apply tw:[line-height:1.4];
 }
 
 .teacher-activity-item-meta {
-  margin: 0.34rem 0 0;
-  color: #64748b;
-  font-size: 0.8rem;
-  line-height: 1.45;
+  @apply tw:[margin:0.34rem_0_0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[line-height:1.45];
 }
 
 .teacher-activity-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.3rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  white-space: nowrap;
-  border: 1px solid transparent;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[padding:0.3rem_0.6rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:700];
+  @apply tw:whitespace-nowrap;
+  @apply tw:[border:1px_solid_transparent];
 }
 
 .teacher-activity-pill.is-lesson {
-  border-color: #bae6fd;
-  background: #f0fdfa;
-  color: #0f766e;
+  @apply tw:[border-color:#bae6fd];
+  @apply tw:[background:#f0fdfa];
+  @apply tw:[color:#0f766e];
 }
 
 .teacher-activity-pill.is-assessment {
-  border-color: #c7d2fe;
-  background: #eef2ff;
-  color: #4338ca;
+  @apply tw:[border-color:#c7d2fe];
+  @apply tw:[background:#eef2ff];
+  @apply tw:[color:#4338ca];
 }
 
 @keyframes activityPulse {
@@ -2335,578 +2333,579 @@ export default {
 }
 
 .performance-table {
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #fff;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:14px];
+  @apply tw:overflow-hidden;
+  @apply tw:[background:#fff];
 }
 
 .table-header {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-bottom:1px_solid_#e2e8f0];
 }
 
 .table-row {
-  border-bottom: 1px solid #eef2f7;
+  @apply tw:[border-bottom:1px_solid_#eef2f7];
 }
 
 .table-row:last-child {
-  border-bottom: none;
+  @apply tw:[border-bottom:none];
 }
 
 .table-row:hover {
-  background: #f8fafc;
+  @apply tw:[background:#f8fafc];
 }
 
 @media (max-width: 1100px) {
   .kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 }
 
 @media (max-width: 768px) {
   .notification-dropdown {
-    right: -0.35rem;
-    width: min(340px, calc(100vw - 1rem));
+    @apply tw:[right:-0.35rem];
+    @apply tw:[width:min(340px,_calc(100vw_-_1rem))];
   }
 
   .kpi-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .dashboard-layout {
-    margin-top: 0.9rem;
+    @apply tw:[margin-top:0.9rem];
   }
 
   .teacher-activity-header {
-    flex-direction: column;
-    align-items: stretch;
+    @apply tw:flex-col;
+    @apply tw:items-stretch;
   }
 
   .teacher-activity-actions {
-    justify-content: space-between;
+    @apply tw:justify-between;
   }
 
   .teacher-activity-refresh {
-    justify-content: center;
+    @apply tw:justify-center;
   }
 
   .calendar-header {
-    align-items: center;
-    margin-bottom: 0.7rem;
+    @apply tw:items-center;
+    @apply tw:[margin-bottom:0.7rem];
   }
 
   .calendar-filters {
-    width: 100%;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding: 0.1rem 0 0.45rem;
-    margin-bottom: 0.5rem;
-    overscroll-behavior-inline: contain;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    @apply tw:w-full;
+    @apply tw:flex-nowrap;
+    @apply tw:overflow-x-auto;
+    @apply tw:[padding:0.1rem_0_0.45rem];
+    @apply tw:[margin-bottom:0.5rem];
+    @apply tw:[overscroll-behavior-inline:contain];
+    @apply tw:[scrollbar-width:none];
+    @apply tw:[-webkit-overflow-scrolling:touch];
   }
 
   .calendar-filters::-webkit-scrollbar,
   .calendar-legend::-webkit-scrollbar {
-    display: none;
+    @apply tw:hidden;
   }
 
   .calendar-filter-btn {
-    flex: 0 0 auto;
-    min-height: 40px;
-    padding-inline: 0.85rem;
+    @apply tw:flex-none;
+    @apply tw:[min-height:40px];
+    @apply tw:[padding-inline:0.85rem];
   }
 
   .calendar-controls {
-    flex: 0 0 auto;
+    @apply tw:flex-none;
   }
 
   .calendar-nav-btn,
   .calendar-today-btn {
-    min-width: 42px;
-    height: 42px;
+    @apply tw:[min-width:42px];
+    @apply tw:[height:42px];
   }
 
   .calendar-today-btn {
-    min-width: 68px;
+    @apply tw:[min-width:68px];
   }
 
   .calendar-scroll-hint {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.35rem;
-    margin: 0 0 0.45rem;
-    color: #6b7f61;
-    font-size: 0.7rem;
-    font-weight: 700;
+    @apply tw:flex;
+    @apply tw:items-center;
+    @apply tw:justify-end;
+    @apply tw:[gap:0.35rem];
+    @apply tw:[margin:0_0_0.45rem];
+    @apply tw:[color:#6b7f61];
+    @apply tw:[font-size:0.7rem];
+    @apply tw:[font-weight:700];
   }
 
   .calendar-scroll-area {
-    margin-inline: -0.15rem;
-    padding: 0.15rem 0.15rem 0.45rem;
+    @apply tw:[margin-inline:-0.15rem];
+    @apply tw:[padding:0.15rem_0.15rem_0.45rem];
   }
 
   .calendar-scroll-content {
-    min-width: 620px;
+    @apply tw:[min-width:620px];
   }
 
   .calendar-day {
-    min-height: 86px;
-    padding: 0.42rem;
+    @apply tw:[min-height:86px];
+    @apply tw:[padding:0.42rem];
   }
 
   .calendar-weekdays,
   .calendar-grid {
-    gap: 0.35rem;
+    @apply tw:[gap:0.35rem];
   }
 
   .calendar-legend {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 0.2rem;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    @apply tw:flex-nowrap;
+    @apply tw:overflow-x-auto;
+    @apply tw:[padding-bottom:0.2rem];
+    @apply tw:[scrollbar-width:none];
+    @apply tw:[-webkit-overflow-scrolling:touch];
   }
 
   .calendar-legend span {
-    flex: 0 0 auto;
+    @apply tw:flex-none;
   }
 
   .teacher-activity-item {
-    padding: 0.85rem;
+    @apply tw:[padding:0.85rem];
   }
 
   .teacher-activity-item-top {
-    flex-direction: column;
-    gap: 0.45rem;
+    @apply tw:flex-col;
+    @apply tw:[gap:0.45rem];
   }
 
 }
 
 @media (max-width: 560px) {
   .kpi-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .teacher-activity-actions {
-    flex-direction: column;
-    align-items: stretch;
+    @apply tw:flex-col;
+    @apply tw:items-stretch;
   }
 
   .calendar-title {
-    font-size: 1.05rem;
+    @apply tw:[font-size:1.05rem];
   }
 
   .calendar-kicker {
-    font-size: 0.66rem;
+    @apply tw:[font-size:0.66rem];
   }
 
   .calendar-controls {
-    gap: 0.25rem;
+    @apply tw:[gap:0.25rem];
   }
 
   .calendar-nav-btn,
   .calendar-today-btn {
-    min-width: 40px;
-    height: 40px;
-    padding-inline: 0.5rem;
+    @apply tw:[min-width:40px];
+    @apply tw:[height:40px];
+    @apply tw:[padding-inline:0.5rem];
   }
 
   .calendar-today-btn {
-    min-width: 60px;
+    @apply tw:[min-width:60px];
   }
 
   .calendar-filter-label {
-    display: none;
+    @apply tw:hidden;
   }
 
   .calendar-filter-btn {
-    min-height: 38px;
-    padding-inline: 0.7rem;
-    font-size: 0.73rem;
+    @apply tw:[min-height:38px];
+    @apply tw:[padding-inline:0.7rem];
+    @apply tw:[font-size:0.73rem];
   }
 
   .calendar-scroll-content {
-    min-width: 560px;
+    @apply tw:[min-width:560px];
   }
 
   .calendar-day {
-    min-height: 78px;
+    @apply tw:[min-height:78px];
   }
 
   .day-event-pill {
-    font-size: 0.58rem;
+    @apply tw:[font-size:0.58rem];
   }
 
   .day-event-pill .event-time {
-    display: none;
+    @apply tw:hidden;
   }
 
   .day-event-pill .event-title {
-    max-width: 100%;
+    @apply tw:max-w-full;
   }
 
   .teacher-activity-status,
   .teacher-activity-refresh {
-    width: 100%;
-    justify-content: center;
+    @apply tw:w-full;
+    @apply tw:justify-center;
   }
 
   .teacher-activity-empty {
-    padding: 1rem;
+    @apply tw:[padding:1rem];
   }
 }
 
 .teacher-tour-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 12000;
-  pointer-events: none;
+  @apply tw:fixed;
+  @apply tw:[inset:0];
+  @apply tw:[z-index:12000];
+  @apply tw:pointer-events-none;
 }
 
 .teacher-tour-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.58);
+  @apply tw:absolute;
+  @apply tw:[inset:0];
+  @apply tw:[background:rgba(15,_23,_42,_0.58)];
 }
 
 .teacher-tour-spotlight {
-  position: fixed;
-  z-index: 12001;
-  border-radius: 16px;
-  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.58);
-  border: 2px solid rgba(255, 255, 255, 0.95);
-  transition: top 0.24s ease, left 0.24s ease, width 0.24s ease, height 0.24s ease;
-  pointer-events: none;
+  @apply tw:fixed;
+  @apply tw:[z-index:12001];
+  @apply tw:[border-radius:16px];
+  @apply tw:[box-shadow:0_0_0_9999px_rgba(15,_23,_42,_0.58)];
+  @apply tw:[border:2px_solid_rgba(255,_255,_255,_0.95)];
+  @apply tw:[transition:top_0.24s_ease,_left_0.24s_ease,_width_0.24s_ease,_height_0.24s_ease];
+  @apply tw:pointer-events-none;
 }
 
 .teacher-tour-tooltip {
-  position: fixed;
-  z-index: 12002;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22);
-  padding: 1rem 1.1rem;
-  pointer-events: auto;
-  transition: left 0.24s ease, top 0.24s ease, width 0.24s ease;
-  max-height: min(70vh, calc(100vh - 24px));
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  @apply tw:fixed;
+  @apply tw:[z-index:12002];
+  @apply tw:[border-radius:16px];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#0f172a];
+  @apply tw:[box-shadow:0_14px_32px_rgba(15,_23,_42,_0.22)];
+  @apply tw:[padding:1rem_1.1rem];
+  @apply tw:pointer-events-auto;
+  @apply tw:[transition:left_0.24s_ease,_top_0.24s_ease,_width_0.24s_ease];
+  @apply tw:[max-height:min(70vh,_calc(100vh_-_24px))];
+  @apply tw:overflow-y-auto;
+  @apply tw:[-webkit-overflow-scrolling:touch];
 }
 
 .teacher-tour-step {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  color: #64748b;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:[margin:0_0_0.35rem];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-weight:600];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .teacher-tour-tooltip h3 {
-  margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.25;
-  font-weight: 700;
+  @apply tw:[margin:0];
+  @apply tw:[font-size:1.05rem];
+  @apply tw:[line-height:1.25];
+  @apply tw:[font-weight:700];
 }
 
 .teacher-tour-tooltip p {
-  margin: 0.5rem 0 0;
-  font-size: 0.9rem;
-  color: #475569;
-  line-height: 1.45;
+  @apply tw:[margin:0.5rem_0_0];
+  @apply tw:[font-size:0.9rem];
+  @apply tw:[color:#475569];
+  @apply tw:[line-height:1.45];
 }
 
 .teacher-tour-actions {
-  margin-top: 1rem;
-  display: flex;
-  gap: 0.55rem;
-  justify-content: flex-end;
-  flex-wrap: wrap;
+  @apply tw:[margin-top:1rem];
+  @apply tw:flex;
+  @apply tw:[gap:0.55rem];
+  @apply tw:justify-end;
+  @apply tw:flex-wrap;
 }
 
 .teacher-tour-btn {
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  min-height: 40px;
-  min-width: 88px;
-  padding: 0.45rem 0.92rem;
-  cursor: pointer;
-  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[min-height:40px];
+  @apply tw:[min-width:88px];
+  @apply tw:[padding:0.45rem_0.92rem];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:background-color_0.18s_ease,_border-color_0.18s_ease,_color_0.18s_ease,_transform_0.18s_ease];
 }
 
 .teacher-tour-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  @apply tw:[opacity:0.5];
+  @apply tw:cursor-not-allowed;
 }
 
 .teacher-tour-btn-ghost {
-  background: #ffffff;
-  color: #334155;
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
 }
 
 .teacher-tour-btn-ghost:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-color:#94a3b8];
 }
 
 .teacher-tour-btn-primary {
-  border-color: #0f172a;
-  background: #0f172a;
-  color: #ffffff;
+  @apply tw:[border-color:#0f172a];
+  @apply tw:[background:#0f172a];
+  @apply tw:[color:#ffffff];
 }
 
 .teacher-tour-btn-primary:hover {
-  background: #1e293b;
-  border-color: #1e293b;
-  transform: translateY(-1px);
+  @apply tw:[background:#1e293b];
+  @apply tw:[border-color:#1e293b];
+  @apply tw:[transform:translateY(-1px)];
 }
 
 .header-tour-btn {
-  cursor: pointer;
-  background: #ffffff;
-  color: #334155;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #dbe2ea;
-  transition: all 0.2s ease;
+  @apply tw:cursor-pointer;
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
+  @apply tw:[width:40px];
+  @apply tw:[height:40px];
+  @apply tw:[border-radius:12px];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[transition:all_0.2s_ease];
 }
 
 .header-tour-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-color:#cbd5e1];
+  @apply tw:[transform:translateY(-1px)];
 }
 
 @media (max-width: 768px) {
   .notification-dropdown {
-    position: fixed;
-    top: 78px;
-    right: 12px;
-    left: 12px;
-    width: auto;
-    max-height: calc(100vh - 96px);
+    @apply tw:fixed;
+    @apply tw:[top:78px];
+    @apply tw:[right:12px];
+    @apply tw:[left:12px];
+    @apply tw:w-auto;
+    @apply tw:[max-height:calc(100vh_-_96px)];
   }
 
   .teacher-tour-tooltip {
-    max-width: calc(100vw - 16px);
-    border-radius: 14px;
-    padding: 0.8rem 0.82rem;
+    @apply tw:[max-width:calc(100vw_-_16px)];
+    @apply tw:[border-radius:14px];
+    @apply tw:[padding:0.8rem_0.82rem];
   }
 
   .teacher-tour-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+    @apply tw:[gap:0.5rem];
   }
 
   .teacher-tour-btn {
-    width: 100%;
-    min-height: 42px;
-    font-size: 0.84rem;
-    padding: 0.5rem 0.65rem;
+    @apply tw:w-full;
+    @apply tw:[min-height:42px];
+    @apply tw:[font-size:0.84rem];
+    @apply tw:[padding:0.5rem_0.65rem];
   }
 
   .teacher-tour-btn-primary {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   .teacher-tour-tooltip h3 {
-    font-size: 0.98rem;
-    line-height: 1.24;
+    @apply tw:[font-size:0.98rem];
+    @apply tw:[line-height:1.24];
   }
 
   .teacher-tour-tooltip p {
-    font-size: 0.84rem;
-    line-height: 1.38;
+    @apply tw:[font-size:0.84rem];
+    @apply tw:[line-height:1.38];
   }
 }
 
 @media (max-width: 480px) {
   .teacher-tour-spotlight {
-    border-radius: 12px;
-    border-width: 1.5px;
+    @apply tw:[border-radius:12px];
+    @apply tw:[border-width:1.5px];
   }
 
   .teacher-tour-tooltip {
-    border-radius: 12px;
-    padding: 0.72rem 0.72rem;
+    @apply tw:[border-radius:12px];
+    @apply tw:[padding:0.72rem_0.72rem];
   }
 
   .teacher-tour-step {
-    font-size: 0.66rem;
+    @apply tw:[font-size:0.66rem];
   }
 
   .teacher-tour-tooltip h3 {
-    font-size: 0.92rem;
+    @apply tw:[font-size:0.92rem];
   }
 
   .teacher-tour-tooltip p {
-    font-size: 0.8rem;
+    @apply tw:[font-size:0.8rem];
   }
 }
 
 /* Compact desktop overview designed to fit without page-level scrolling. */
 @media (min-width: 900px) {
   .teacher-main > .top-header {
-    margin-bottom: 1.15rem !important;
-    padding: 0.75rem 0.9rem !important;
+    @apply tw:[margin-bottom:1.15rem]!;
+    @apply tw:[padding:0.75rem_0.9rem]!;
   }
 
   .teacher-main > .top-header .header-left h1 {
-    font-size: 1.4rem;
+    @apply tw:[font-size:1.4rem];
   }
 
   .teacher-main > .top-header .header-subtitle {
-    display: none;
+    @apply tw:hidden;
   }
 
   .kpi-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.5rem;
+    @apply tw:[grid-template-columns:repeat(4,_minmax(0,_1fr))];
+    @apply tw:[gap:0.5rem];
   }
 
   .dashboard-kpi-grid {
-    margin-bottom: 0.6rem;
+    @apply tw:[margin-bottom:0.6rem];
   }
 
   .kpi-card {
-    min-height: 64px;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 0.65rem;
-    border-radius: 12px;
+    @apply tw:[min-height:64px];
+    @apply tw:items-center;
+    @apply tw:[gap:0.5rem];
+    @apply tw:[padding:0.55rem_0.65rem];
+    @apply tw:[border-radius:12px];
   }
 
   .kpi-icon {
-    width: 36px;
-    height: 36px;
-    flex: 0 0 36px;
-    border-radius: 10px;
-    font-size: 0.88rem;
+    @apply tw:[width:36px];
+    @apply tw:[height:36px];
+    @apply tw:[flex:0_0_36px];
+    @apply tw:[border-radius:10px];
+    @apply tw:[font-size:0.88rem];
   }
 
   .kpi-content {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.35rem;
-    width: 100%;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:minmax(0,_1fr)_auto];
+    @apply tw:items-center;
+    @apply tw:[gap:0.35rem];
+    @apply tw:w-full;
   }
 
   .kpi-label {
-    overflow: hidden;
-    font-size: 0.74rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @apply tw:overflow-hidden;
+    @apply tw:[font-size:0.74rem];
+    @apply tw:text-ellipsis;
+    @apply tw:whitespace-nowrap;
   }
 
   .kpi-value {
-    font-size: 1.12rem;
+    @apply tw:[font-size:1.12rem];
   }
 
   .kpi-note {
-    display: none;
+    @apply tw:hidden;
   }
 
   .dashboard-layout {
-    margin-top: 0;
+    @apply tw:[margin-top:0];
   }
 
   .calendar-card {
-    margin-bottom: 0;
-    padding: 0.7rem 0.8rem;
-    border-radius: 14px;
+    @apply tw:[margin-bottom:0];
+    @apply tw:[padding:0.7rem_0.8rem];
+    @apply tw:[border-radius:14px];
   }
 
   .calendar-header {
-    margin-bottom: 0.4rem;
+    @apply tw:[margin-bottom:0.4rem];
   }
 
   .calendar-kicker {
-    font-size: 0.66rem;
+    @apply tw:[font-size:0.66rem];
   }
 
   .calendar-title {
-    margin-top: 0.05rem;
-    font-size: 1.12rem;
+    @apply tw:[margin-top:0.05rem];
+    @apply tw:[font-size:1.12rem];
   }
 
   .calendar-nav-btn,
   .calendar-today-btn {
-    height: 30px;
-    min-width: 30px;
-    padding-inline: 0.5rem;
-    border-radius: 8px;
-    font-size: 0.75rem;
+    @apply tw:[height:30px];
+    @apply tw:[min-width:30px];
+    @apply tw:[padding-inline:0.5rem];
+    @apply tw:[border-radius:8px];
+    @apply tw:[font-size:0.75rem];
   }
 
   .calendar-filters {
-    flex-wrap: nowrap;
-    gap: 0.35rem;
-    margin-bottom: 0.4rem;
+    @apply tw:flex-nowrap;
+    @apply tw:[gap:0.35rem];
+    @apply tw:[margin-bottom:0.4rem];
   }
 
   .calendar-filter-btn {
-    min-height: 30px;
-    padding-inline: 0.6rem;
-    font-size: 0.72rem;
+    @apply tw:[min-height:30px];
+    @apply tw:[padding-inline:0.6rem];
+    @apply tw:[font-size:0.72rem];
   }
 
   .calendar-weekdays {
-    gap: 0.3rem;
-    margin-bottom: 0.25rem;
+    @apply tw:[gap:0.3rem];
+    @apply tw:[margin-bottom:0.25rem];
   }
 
   .calendar-weekdays span {
-    font-size: 0.66rem;
+    @apply tw:[font-size:0.66rem];
   }
 
   .calendar-grid {
-    gap: 0.3rem;
+    @apply tw:[gap:0.3rem];
   }
 
   .calendar-day {
-    min-height: 70px;
-    padding: 0.4rem;
-    border-radius: 10px;
+    @apply tw:[min-height:70px];
+    @apply tw:[padding:0.4rem];
+    @apply tw:[border-radius:10px];
   }
 
   .day-number {
-    font-size: 0.78rem;
+    @apply tw:[font-size:0.78rem];
   }
 
   .day-events {
-    left: 0.3rem;
-    right: 0.3rem;
-    bottom: 0.25rem;
-    gap: 0.12rem;
+    @apply tw:[left:0.3rem];
+    @apply tw:[right:0.3rem];
+    @apply tw:[bottom:0.25rem];
+    @apply tw:[gap:0.12rem];
   }
 
   .day-event-pill {
-    padding: 0.1rem 0.25rem;
-    border-radius: 6px;
-    font-size: 0.56rem;
+    @apply tw:[padding:0.1rem_0.25rem];
+    @apply tw:[border-radius:6px];
+    @apply tw:[font-size:0.56rem];
   }
 
   .calendar-legend {
-    display: none;
+    @apply tw:hidden;
   }
 }
 
 :global(body.teacher-tour-open) {
-  overflow: hidden;
+  @apply tw:overflow-hidden;
 }
+
 
 </style>
 

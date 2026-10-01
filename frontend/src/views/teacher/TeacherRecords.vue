@@ -4114,180 +4114,179 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.assessment-weights-button { margin-top: 0.7rem; }
-.weights-dialog { max-width: 620px; }
-.weights-form { display: grid; gap: 0.9rem; }
-.weights-form label { display: grid; gap: 0.3rem; color: #334155; font-size: 0.76rem; font-weight: 700; }
+@reference "../../styles/tailwind.css";
+.assessment-weights-button { @apply tw:[margin-top:0.7rem]; }
+.weights-dialog { @apply tw:[max-width:620px]; }
+.weights-form { @apply tw:grid; @apply tw:[gap:0.9rem]; }
+.weights-form label { @apply tw:grid; @apply tw:[gap:0.3rem]; @apply tw:[color:#334155]; @apply tw:[font-size:0.76rem]; @apply tw:[font-weight:700]; }
 .weights-form input,
-.weights-form select { width: 100%; padding: 0.65rem 0.7rem; border: 1px solid #cbd5e1; border-radius: 9px; background: #fff; font: inherit; }
-.weights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; }
-.weights-total { margin: 0; padding: 0.6rem; border-radius: 9px; background: #f0fdf4; color: #166534; font-size: 0.78rem; font-weight: 800; }
-.weights-total.invalid { background: #fff7ed; color: #9a3412; }
-@media (max-width: 600px) { .weights-grid { grid-template-columns: 1fr; } }
+.weights-form select { @apply tw:w-full; @apply tw:[padding:0.65rem_0.7rem]; @apply tw:[border:1px_solid_#cbd5e1]; @apply tw:[border-radius:9px]; @apply tw:[background:#fff]; @apply tw:[font:inherit]; }
+.weights-grid { @apply tw:grid; @apply tw:[grid-template-columns:repeat(3,_1fr)]; @apply tw:[gap:0.7rem]; }
+.weights-total { @apply tw:[margin:0]; @apply tw:[padding:0.6rem]; @apply tw:[border-radius:9px]; @apply tw:[background:#f0fdf4]; @apply tw:[color:#166534]; @apply tw:[font-size:0.78rem]; @apply tw:[font-weight:800]; }
+.weights-total.invalid { @apply tw:[background:#fff7ed]; @apply tw:[color:#9a3412]; }
+@media (max-width: 600px) { .weights-grid { @apply tw:[grid-template-columns:1fr]; } }
 
-.essay-review-details { min-width: 230px; }
-.essay-review-details summary { cursor: pointer; color: #2563eb; font-size: 0.76rem; font-weight: 800; }
-.essay-review-body { display: grid; gap: 0.65rem; margin-top: 0.6rem; padding: 0.75rem; border: 1px solid #dbe4ef; border-radius: 12px; background: #f8fafc; }
-.essay-review-body article { padding-bottom: 0.55rem; border-bottom: 1px solid #e2e8f0; }
-.essay-review-body article p { margin: 0.25rem 0; color: #475569; font-size: 0.73rem; line-height: 1.4; }
-.essay-review-body article small { color: #64748b; font-size: 0.68rem; }
-.essay-review-body label { display: grid; gap: 0.25rem; color: #334155; font-size: 0.7rem; font-weight: 700; }
+.essay-review-details { @apply tw:[min-width:230px]; }
+.essay-review-details summary { @apply tw:cursor-pointer; @apply tw:[color:#2563eb]; @apply tw:[font-size:0.76rem]; @apply tw:[font-weight:800]; }
+.essay-review-body { @apply tw:grid; @apply tw:[gap:0.65rem]; @apply tw:[margin-top:0.6rem]; @apply tw:[padding:0.75rem]; @apply tw:[border:1px_solid_#dbe4ef]; @apply tw:[border-radius:12px]; @apply tw:[background:#f8fafc]; }
+.essay-review-body article { @apply tw:[padding-bottom:0.55rem]; @apply tw:[border-bottom:1px_solid_#e2e8f0]; }
+.essay-review-body article p { @apply tw:[margin:0.25rem_0]; @apply tw:[color:#475569]; @apply tw:[font-size:0.73rem]; @apply tw:[line-height:1.4]; }
+.essay-review-body article small { @apply tw:[color:#64748b]; @apply tw:[font-size:0.68rem]; }
+.essay-review-body label { @apply tw:grid; @apply tw:[gap:0.25rem]; @apply tw:[color:#334155]; @apply tw:[font-size:0.7rem]; @apply tw:[font-weight:700]; }
 .essay-review-body input,
-.essay-review-body textarea { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; font: inherit; }
+.essay-review-body textarea { @apply tw:w-full; @apply tw:[padding:0.5rem]; @apply tw:[border:1px_solid_#cbd5e1]; @apply tw:[border-radius:8px]; @apply tw:[background:#fff]; @apply tw:[font:inherit]; }
 
 .activity-grading-panel {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 14px;
-  background: #f8fafc;
+  @apply tw:[margin-top:1rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#f8fafc];
 }
-.activity-grading-fields { display: grid; grid-template-columns: minmax(140px, .35fr) 1fr; gap: 1rem; }
-.activity-grading-fields label { display: grid; gap: .4rem; color: #334155; font-weight: 700; }
-.activity-grading-fields input, .activity-grading-fields textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: .75rem; background: #fff; color: #0f172a; }
-.activity-grading-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
-@media (max-width: 680px) { .activity-grading-fields { grid-template-columns: 1fr; } .activity-grading-actions .btn { width: 100%; } }
+.activity-grading-fields { @apply tw:grid; @apply tw:[grid-template-columns:minmax(140px,_.35fr)_1fr]; @apply tw:[gap:1rem]; }
+.activity-grading-fields label { @apply tw:grid; @apply tw:[gap:.4rem]; @apply tw:[color:#334155]; @apply tw:[font-weight:700]; }
+.activity-grading-fields input, .activity-grading-fields textarea { @apply tw:w-full; @apply tw:[border:1px_solid_#cbd5e1]; @apply tw:[border-radius:10px]; @apply tw:[padding:.75rem]; @apply tw:[background:#fff]; @apply tw:[color:#0f172a]; }
+.activity-grading-actions { @apply tw:flex; @apply tw:justify-end; @apply tw:flex-wrap; @apply tw:[gap:.75rem]; @apply tw:[margin-top:1rem]; }
+@media (max-width: 680px) { .activity-grading-fields { @apply tw:[grid-template-columns:1fr]; } .activity-grading-actions .btn { @apply tw:w-full; } }
 .teacher-page-tour-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 12000;
-  pointer-events: none;
+  @apply tw:fixed;
+  @apply tw:[inset:0];
+  @apply tw:[z-index:12000];
+  @apply tw:pointer-events-none;
 }
 
 .teacher-page-tour-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.58);
+  @apply tw:absolute;
+  @apply tw:[inset:0];
+  @apply tw:[background:rgba(15,_23,_42,_0.58)];
 }
 
 .teacher-page-tour-spotlight {
-  position: fixed;
-  z-index: 12001;
-  border-radius: 16px;
-  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.58);
-  border: 2px solid rgba(255, 255, 255, 0.95);
-  transition: top 0.24s ease, left 0.24s ease, width 0.24s ease, height 0.24s ease;
-  pointer-events: none;
+  @apply tw:fixed;
+  @apply tw:[z-index:12001];
+  @apply tw:[border-radius:16px];
+  @apply tw:[box-shadow:0_0_0_9999px_rgba(15,_23,_42,_0.58)];
+  @apply tw:[border:2px_solid_rgba(255,_255,_255,_0.95)];
+  @apply tw:[transition:top_0.24s_ease,_left_0.24s_ease,_width_0.24s_ease,_height_0.24s_ease];
+  @apply tw:pointer-events-none;
 }
 
 .teacher-page-tour-tooltip {
-  position: fixed;
-  z-index: 12002;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22);
-  padding: 1rem 1.1rem;
-  pointer-events: auto;
-  transition: left 0.24s ease, top 0.24s ease, width 0.24s ease;
+  @apply tw:fixed;
+  @apply tw:[z-index:12002];
+  @apply tw:[border-radius:16px];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#0f172a];
+  @apply tw:[box-shadow:0_14px_32px_rgba(15,_23,_42,_0.22)];
+  @apply tw:[padding:1rem_1.1rem];
+  @apply tw:pointer-events-auto;
+  @apply tw:[transition:left_0.24s_ease,_top_0.24s_ease,_width_0.24s_ease];
 }
 
 .teacher-page-tour-step {
-  margin: 0 0 0.35rem;
-  font-size: 0.72rem;
-  color: #64748b;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:[margin:0_0_0.35rem];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-weight:600];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .teacher-page-tour-tooltip h3 {
-  margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.25;
-  font-weight: 700;
+  @apply tw:[margin:0];
+  @apply tw:[font-size:1.05rem];
+  @apply tw:[line-height:1.25];
+  @apply tw:[font-weight:700];
 }
 
 .teacher-page-tour-tooltip p {
-  margin: 0.5rem 0 0;
-  font-size: 0.9rem;
-  color: #475569;
-  line-height: 1.45;
+  @apply tw:[margin:0.5rem_0_0];
+  @apply tw:[font-size:0.9rem];
+  @apply tw:[color:#475569];
+  @apply tw:[line-height:1.45];
 }
 
 .teacher-page-tour-actions {
-  margin-top: 1rem;
-  display: flex;
-  gap: 0.55rem;
-  justify-content: flex-end;
+  @apply tw:[margin-top:1rem];
+  @apply tw:flex;
+  @apply tw:[gap:0.55rem];
+  @apply tw:justify-end;
 }
 
 .teacher-page-tour-btn {
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  min-height: 36px;
-  padding: 0.45rem 0.92rem;
-  cursor: pointer;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[min-height:36px];
+  @apply tw:[padding:0.45rem_0.92rem];
+  @apply tw:cursor-pointer;
 }
 
 .teacher-page-tour-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  @apply tw:[opacity:0.5];
+  @apply tw:cursor-not-allowed;
 }
 
 .teacher-page-tour-btn-ghost {
-  background: #ffffff;
-  color: #334155;
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
 }
 
 .teacher-page-tour-btn-ghost:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-color:#94a3b8];
 }
 
 .teacher-page-tour-btn-primary {
-  border-color: #0f172a;
-  background: #0f172a;
-  color: #ffffff;
+  @apply tw:[border-color:#0f172a];
+  @apply tw:[background:#0f172a];
+  @apply tw:[color:#ffffff];
 }
 
 .teacher-page-tour-btn-primary:hover {
-  background: #1e293b;
-  border-color: #1e293b;
+  @apply tw:[background:#1e293b];
+  @apply tw:[border-color:#1e293b];
 }
 
 .header-tour-btn {
-  cursor: pointer;
-  background: #ffffff;
-  color: #334155;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #dbe2ea;
-  transition: all 0.2s ease;
+  @apply tw:cursor-pointer;
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
+  @apply tw:[width:40px];
+  @apply tw:[height:40px];
+  @apply tw:[border-radius:12px];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[transition:all_0.2s_ease];
 }
 
 .header-tour-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-color:#cbd5e1];
 }
 
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  @apply tw:absolute;
+  @apply tw:[width:1px];
+  @apply tw:[height:1px];
+  @apply tw:[padding:0];
+  @apply tw:[margin:-1px];
+  @apply tw:overflow-hidden;
+  @apply tw:[clip:rect(0,_0,_0,_0)];
+  @apply tw:whitespace-nowrap;
+  @apply tw:[border:0];
 }
 
 .records-section {
-  padding: 1.25rem;
-  border: 1px solid #dbe4ee;
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 28%),
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.05);
+  @apply tw:[padding:1.25rem];
+  @apply tw:[border:1px_solid_#dbe4ee];
+  @apply tw:[border-radius:22px];
+  @apply tw:[background:radial-gradient(circle_at_top_right,_rgba(59,_130,_246,_0.05),_transparent_28%),______linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
+  @apply tw:[box-shadow:0_18px_44px_rgba(15,_23,_42,_0.05)];
 }
 
 #teacherRecordsLessonsPanel {
@@ -4296,656 +4295,654 @@ onBeforeUnmount(() => {
   --lesson-green-soft: #6f9d58;
   --lesson-mint: #dcead3;
   --lesson-surface: #f7fbf4;
-  padding: 0;
-  overflow: hidden;
-  border-color: #d4e4ca;
-  background: #ffffff;
-  box-shadow: 0 20px 50px rgba(30, 67, 7, 0.08);
+  @apply tw:[padding:0];
+  @apply tw:overflow-hidden;
+  @apply tw:[border-color:#d4e4ca];
+  @apply tw:[background:#ffffff];
+  @apply tw:[box-shadow:0_20px_50px_rgba(30,_67,_7,_0.08)];
 }
 
 #teacherRecordsLessonsPanel .lessons-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1.55rem 1.65rem;
-  background:
-    radial-gradient(circle at 88% 15%, rgba(111, 157, 88, 0.2), transparent 30%),
-    linear-gradient(135deg, #f7fbf4 0%, #edf6e8 100%);
-  border-bottom: 1px solid #dcead3;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:1.5rem];
+  @apply tw:[padding:1.55rem_1.65rem];
+  @apply tw:[background:radial-gradient(circle_at_88%_15%,_rgba(111,_157,_88,_0.2),_transparent_30%),______linear-gradient(135deg,_#f7fbf4_0%,_#edf6e8_100%)];
+  @apply tw:[border-bottom:1px_solid_#dcead3];
 }
 
 #teacherRecordsLessonsPanel .lessons-hero-copy {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 #teacherRecordsLessonsPanel .lessons-kicker {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: #4f7d3a;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  @apply tw:block;
+  @apply tw:[margin-bottom:0.35rem];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.1em];
+  @apply tw:uppercase;
 }
 
 #teacherRecordsLessonsPanel .section-title {
-  margin: 0;
-  color: #173706;
-  font-size: clamp(1.35rem, 2vw, 1.75rem);
-  letter-spacing: -0.025em;
+  @apply tw:[margin:0];
+  @apply tw:[color:#173706];
+  @apply tw:[font-size:clamp(1.35rem,_2vw,_1.75rem)];
+  @apply tw:[letter-spacing:-0.025em];
 }
 
 #teacherRecordsLessonsPanel .section-subtitle {
-  max-width: 590px;
-  margin-top: 0.38rem;
-  color: #52634a;
-  font-size: 0.88rem;
+  @apply tw:[max-width:590px];
+  @apply tw:[margin-top:0.38rem];
+  @apply tw:[color:#52634a];
+  @apply tw:[font-size:0.88rem];
 }
 
 #teacherRecordsLessonsPanel .lessons-upload-summary {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  flex: 0 0 auto;
-  padding: 0.8rem 1rem;
-  border: 1px solid rgba(79, 125, 58, 0.2);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 24px rgba(30, 67, 7, 0.07);
-  backdrop-filter: blur(8px);
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.8rem];
+  @apply tw:flex-none;
+  @apply tw:[padding:0.8rem_1rem];
+  @apply tw:[border:1px_solid_rgba(79,_125,_58,_0.2)];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:rgba(255,_255,_255,_0.8)];
+  @apply tw:[box-shadow:0_8px_24px_rgba(30,_67,_7,_0.07)];
+  @apply tw:[backdrop-filter:blur(8px)];
 }
 
 #teacherRecordsLessonsPanel .lessons-summary-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  background: #dcead3;
-  color: #1e4307;
-  font-size: 1rem;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:42px];
+  @apply tw:[height:42px];
+  @apply tw:[border-radius:13px];
+  @apply tw:[background:#dcead3];
+  @apply tw:[color:#1e4307];
+  @apply tw:[font-size:1rem];
 }
 
 #teacherRecordsLessonsPanel .lessons-summary-copy {
-  display: grid;
-  gap: 0.05rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.05rem];
 }
 
 #teacherRecordsLessonsPanel .lessons-summary-copy strong {
-  color: #1e4307;
-  font-size: 1.02rem;
-  line-height: 1.1;
+  @apply tw:[color:#1e4307];
+  @apply tw:[font-size:1.02rem];
+  @apply tw:[line-height:1.1];
 }
 
 #teacherRecordsLessonsPanel .lessons-summary-copy span {
-  color: #66745f;
-  font-size: 0.7rem;
-  font-weight: 650;
-  white-space: nowrap;
+  @apply tw:[color:#66745f];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[font-weight:650];
+  @apply tw:whitespace-nowrap;
 }
 
 #teacherRecordsLessonsPanel .lessons-summary-divider {
-  width: 1px;
-  height: 32px;
-  background: #d4e4ca;
+  @apply tw:[width:1px];
+  @apply tw:[height:32px];
+  @apply tw:[background:#d4e4ca];
 }
 
 #teacherRecordsLessonsPanel .lessons-toolbar {
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(170px, 0.42fr) minmax(150px, 0.34fr);
-  gap: 0.7rem;
-  margin: 1.15rem 1.25rem 0;
-  padding: 0.72rem;
-  border: 1px solid #dce7d6;
-  border-radius: 18px;
-  background: #f7fbf4;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(240px,_1fr)_minmax(170px,_0.42fr)_minmax(150px,_0.34fr)];
+  @apply tw:[gap:0.7rem];
+  @apply tw:[margin:1.15rem_1.25rem_0];
+  @apply tw:[padding:0.72rem];
+  @apply tw:[border:1px_solid_#dce7d6];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsLessonsPanel .lessons-search,
 #teacherRecordsLessonsPanel .lessons-select-field {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  min-height: 42px;
-  border: 1px solid #cfddc7;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #6b7b63;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  @apply tw:relative;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:42px];
+  @apply tw:[border:1px_solid_#cfddc7];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#6b7b63];
+  @apply tw:[transition:border-color_0.2s_ease,_box-shadow_0.2s_ease,_transform_0.2s_ease];
 }
 
 #teacherRecordsLessonsPanel .lessons-search:focus-within,
 #teacherRecordsLessonsPanel .lessons-select-field:focus-within {
-  border-color: #6f9d58;
-  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.16);
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(111,_157,_88,_0.16)];
 }
 
 #teacherRecordsLessonsPanel .lessons-search > i,
 #teacherRecordsLessonsPanel .lessons-select-field > i:first-of-type {
-  margin-left: 0.85rem;
-  color: #6f9d58;
-  font-size: 0.8rem;
-  pointer-events: none;
+  @apply tw:[margin-left:0.85rem];
+  @apply tw:[color:#6f9d58];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:pointer-events-none;
 }
 
 #teacherRecordsLessonsPanel .lessons-search input,
 #teacherRecordsLessonsPanel .lessons-select-field select {
-  width: 100%;
-  min-width: 0;
-  min-height: 40px;
-  padding: 0.6rem 2.25rem 0.6rem 0.65rem;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #24331e;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:40px];
+  @apply tw:[padding:0.6rem_2.25rem_0.6rem_0.65rem];
+  @apply tw:[border:0];
+  @apply tw:[outline:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#24331e];
+  @apply tw:[font:inherit];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:600];
 }
 
 #teacherRecordsLessonsPanel .lessons-search input::placeholder {
-  color: #8a9783;
-  font-weight: 500;
+  @apply tw:[color:#8a9783];
+  @apply tw:[font-weight:500];
 }
 
 #teacherRecordsLessonsPanel .lessons-select-field select {
-  cursor: pointer;
-  appearance: none;
+  @apply tw:cursor-pointer;
+  @apply tw:appearance-none;
 }
 
 #teacherRecordsLessonsPanel .lessons-select-chevron {
-  position: absolute;
-  right: 0.85rem;
-  color: #71816a;
-  font-size: 0.68rem;
-  pointer-events: none;
+  @apply tw:absolute;
+  @apply tw:[right:0.85rem];
+  @apply tw:[color:#71816a];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:pointer-events-none;
 }
 
 #teacherRecordsLessonsPanel .lessons-search-clear {
-  position: absolute;
-  right: 0.4rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: #6b7b63;
-  cursor: pointer;
+  @apply tw:absolute;
+  @apply tw:[right:0.4rem];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:30px];
+  @apply tw:[height:30px];
+  @apply tw:[border:0];
+  @apply tw:[border-radius:9px];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#6b7b63];
+  @apply tw:cursor-pointer;
 }
 
 #teacherRecordsLessonsPanel .lessons-search-clear:hover {
-  background: #edf5e8;
-  color: #1e4307;
+  @apply tw:[background:#edf5e8];
+  @apply tw:[color:#1e4307];
 }
 
 #teacherRecordsLessonsPanel button:focus-visible,
 #teacherRecordsLessonsPanel a:focus-visible,
 #teacherRecordsLessonsPanel input:focus-visible,
 #teacherRecordsLessonsPanel select:focus-visible {
-  outline: 3px solid rgba(79, 125, 58, 0.35);
-  outline-offset: 2px;
+  @apply tw:[outline:3px_solid_rgba(79,_125,_58,_0.35)];
+  @apply tw:[outline-offset:2px];
 }
 
 #teacherRecordsLessonsPanel .lessons-results-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin: 0.65rem 1.4rem 0;
-  color: #687761;
-  font-size: 0.76rem;
-  font-weight: 600;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[margin:0.65rem_1.4rem_0];
+  @apply tw:[color:#687761];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:600];
 }
 
 #teacherRecordsLessonsPanel .lessons-results-bar button,
 #teacherRecordsLessonsPanel .lessons-empty-action {
-  border: 0;
-  background: transparent;
-  color: #3f6f2a;
-  font: inherit;
-  font-weight: 750;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#3f6f2a];
+  @apply tw:[font:inherit];
+  @apply tw:[font-weight:750];
+  @apply tw:cursor-pointer;
+  @apply tw:[text-decoration:underline];
+  @apply tw:[text-underline-offset:3px];
 }
 
 #teacherRecordsLessonsPanel .records-feed-wrap {
-  margin: 0;
-  padding: 1rem 1.25rem 1.25rem;
+  @apply tw:[margin:0];
+  @apply tw:[padding:1rem_1.25rem_1.25rem];
 }
 
 #teacherRecordsLessonsPanel .records-feed {
-  gap: 0.9rem;
+  @apply tw:[gap:0.9rem];
 }
 
 #teacherRecordsLessonsPanel .lesson-document-card {
-  position: relative;
-  gap: 0.78rem;
-  overflow: hidden;
-  padding: 1.15rem 1.2rem;
-  border-color: #dce7d6;
-  border-radius: 18px;
-  box-shadow: 0 8px 22px rgba(30, 67, 7, 0.055);
-  animation: lesson-card-in 0.42s both;
-  animation-delay: calc(var(--lesson-index) * 55ms);
+  @apply tw:relative;
+  @apply tw:[gap:0.78rem];
+  @apply tw:overflow-hidden;
+  @apply tw:[padding:1.15rem_1.2rem];
+  @apply tw:[border-color:#dce7d6];
+  @apply tw:[border-radius:18px];
+  @apply tw:[box-shadow:0_8px_22px_rgba(30,_67,_7,_0.055)];
+  @apply tw:[animation:lesson-card-in_0.42s_both];
+  @apply tw:[animation-delay:calc(var(--lesson-index)_*_55ms)];
 }
 
 #teacherRecordsLessonsPanel .lesson-document-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: linear-gradient(180deg, #4f7d3a, #8cb879);
-  opacity: 0;
-  transition: opacity 0.22s ease;
+  @apply tw:[content:""];
+  @apply tw:absolute;
+  @apply tw:[inset:0_auto_0_0];
+  @apply tw:[width:4px];
+  @apply tw:[background:linear-gradient(180deg,_#4f7d3a,_#8cb879)];
+  @apply tw:opacity-0;
+  @apply tw:[transition:opacity_0.22s_ease];
 }
 
 #teacherRecordsLessonsPanel .lesson-document-card:hover {
-  transform: translateY(-3px);
-  border-color: #bfd5b2;
-  box-shadow: 0 16px 34px rgba(30, 67, 7, 0.11);
+  @apply tw:[transform:translateY(-3px)];
+  @apply tw:[border-color:#bfd5b2];
+  @apply tw:[box-shadow:0_16px_34px_rgba(30,_67,_7,_0.11)];
 }
 
 #teacherRecordsLessonsPanel .lesson-document-card:hover::before {
-  opacity: 1;
+  @apply tw:opacity-100;
 }
 
 #teacherRecordsLessonsPanel .record-card-header {
-  align-items: center;
-  padding-bottom: 0;
-  border-bottom: 0;
+  @apply tw:items-center;
+  @apply tw:[padding-bottom:0];
+  @apply tw:[border-bottom:0];
 }
 
 #teacherRecordsLessonsPanel .record-card-title {
-  gap: 0.35rem;
+  @apply tw:[gap:0.35rem];
 }
 
 #teacherRecordsLessonsPanel .record-type-label {
-  gap: 0.35rem;
-  padding: 0;
-  background: transparent;
-  color: #6f9d58;
-  font-size: 0.65rem;
+  @apply tw:[gap:0.35rem];
+  @apply tw:[padding:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#6f9d58];
+  @apply tw:[font-size:0.65rem];
 }
 
 #teacherRecordsLessonsPanel .record-card-title h4 {
-  color: #1d2b17;
-  font-size: 1.17rem;
-  line-height: 1.35;
-  letter-spacing: -0.012em;
+  @apply tw:[color:#1d2b17];
+  @apply tw:[font-size:1.17rem];
+  @apply tw:[line-height:1.35];
+  @apply tw:[letter-spacing:-0.012em];
 }
 
 #teacherRecordsLessonsPanel .record-card-date-group {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.48rem 0.68rem;
-  border-radius: 11px;
-  background: #f7fbf4;
-  text-align: left;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[padding:0.48rem_0.68rem];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#f7fbf4];
+  @apply tw:text-left;
 }
 
 #teacherRecordsLessonsPanel .lesson-card-header-actions {
-  display: grid;
-  justify-items: end;
-  gap: 0.45rem;
+  @apply tw:grid;
+  @apply tw:justify-items-end;
+  @apply tw:[gap:0.45rem];
 }
 
 #teacherRecordsLessonsPanel .lesson-manage-actions {
-  display: flex;
-  gap: 0.4rem;
+  @apply tw:flex;
+  @apply tw:[gap:0.4rem];
 }
 
 #teacherRecordsLessonsPanel .lesson-manage-actions button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 30px;
-  border: 1px solid #cfddc7;
-  border-radius: 9px;
-  padding: 0.35rem 0.58rem;
-  background: #ffffff;
-  color: #406331;
-  font: inherit;
-  font-size: 0.7rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.35rem];
+  @apply tw:[min-height:30px];
+  @apply tw:[border:1px_solid_#cfddc7];
+  @apply tw:[border-radius:9px];
+  @apply tw:[padding:0.35rem_0.58rem];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#406331];
+  @apply tw:[font:inherit];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[font-weight:800];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:background_0.2s_ease,_border-color_0.2s_ease,_transform_0.2s_ease];
 }
 
 #teacherRecordsLessonsPanel .lesson-manage-actions button:hover {
-  border-color: #9fbd90;
-  background: #f2f8ee;
-  transform: translateY(-1px);
+  @apply tw:[border-color:#9fbd90];
+  @apply tw:[background:#f2f8ee];
+  @apply tw:[transform:translateY(-1px)];
 }
 
 #teacherRecordsLessonsPanel .record-card-date-group > i {
-  color: #6f9d58;
-  font-size: 0.85rem;
+  @apply tw:[color:#6f9d58];
+  @apply tw:[font-size:0.85rem];
 }
 
 #teacherRecordsLessonsPanel .record-card-date-group > span {
-  display: grid;
-  gap: 0.05rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.05rem];
 }
 
 #teacherRecordsLessonsPanel .record-date-label {
-  color: #82907b;
-  font-size: 0.58rem;
+  @apply tw:[color:#82907b];
+  @apply tw:[font-size:0.58rem];
 }
 
 #teacherRecordsLessonsPanel .record-card-date {
-  color: #43513d;
-  font-size: 0.72rem;
+  @apply tw:[color:#43513d];
+  @apply tw:[font-size:0.72rem];
 }
 
 #teacherRecordsLessonsPanel .record-chip {
-  gap: 0.35rem;
-  padding: 0.3rem 0.68rem;
+  @apply tw:[gap:0.35rem];
+  @apply tw:[padding:0.3rem_0.68rem];
 }
 
 #teacherRecordsLessonsPanel .chip-subject {
-  border-color: #c6dcb9;
-  background: #edf6e8;
-  color: #315f1e;
+  @apply tw:[border-color:#c6dcb9];
+  @apply tw:[background:#edf6e8];
+  @apply tw:[color:#315f1e];
 }
 
 #teacherRecordsLessonsPanel .chip-class {
-  border-color: #cdd8eb;
-  background: #f1f5fb;
-  color: #35547f;
+  @apply tw:[border-color:#cdd8eb];
+  @apply tw:[background:#f1f5fb];
+  @apply tw:[color:#35547f];
 }
 
 #teacherRecordsLessonsPanel .record-chip-label {
-  font-weight: 700;
+  @apply tw:[font-weight:700];
 }
 
 #teacherRecordsLessonsPanel .chip-neutral {
-  border-color: #dfe6dc;
-  background: #fafcf9;
-  color: #687761;
+  @apply tw:[border-color:#dfe6dc];
+  @apply tw:[background:#fafcf9];
+  @apply tw:[color:#687761];
 }
 
 #teacherRecordsLessonsPanel .lesson-action-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.85rem;
-  border: 1px solid #bbd9ad;
-  border-radius: 12px;
-  padding: 0.72rem 0.85rem;
-  background: #f1f8ed;
-  color: #315f1e;
-  font-size: 0.82rem;
-  font-weight: 700;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.6rem];
+  @apply tw:[margin-top:0.85rem];
+  @apply tw:[border:1px_solid_#bbd9ad];
+  @apply tw:[border-radius:12px];
+  @apply tw:[padding:0.72rem_0.85rem];
+  @apply tw:[background:#f1f8ed];
+  @apply tw:[color:#315f1e];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:700];
 }
 
 #teacherRecordsLessonsPanel .lesson-action-banner.error {
-  border-color: #fecaca;
-  background: #fef2f2;
-  color: #991b1b;
+  @apply tw:[border-color:#fecaca];
+  @apply tw:[background:#fef2f2];
+  @apply tw:[color:#991b1b];
 }
 
 #teacherRecordsLessonsPanel .lesson-action-banner button {
-  margin-left: auto;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
+  @apply tw:ml-auto;
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:inherit];
+  @apply tw:cursor-pointer;
 }
 
 #teacherRecordsLessonsPanel .record-card-body {
-  gap: 0.55rem;
-  padding-top: 0.12rem;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[padding-top:0.12rem];
 }
 
 #teacherRecordsLessonsPanel .attachment-row {
-  gap: 0.85rem;
-  padding: 0.75rem 0.8rem;
-  border-color: #e0e9db;
-  border-radius: 14px;
-  background: #f9fcf7;
-  box-shadow: none;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[padding:0.75rem_0.8rem];
+  @apply tw:[border-color:#e0e9db];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#f9fcf7];
+  @apply tw:[box-shadow:none];
+  @apply tw:[transition:background_0.2s_ease,_border-color_0.2s_ease];
 }
 
 #teacherRecordsLessonsPanel .attachment-row:hover {
-  border-color: #c9dcc0;
-  background: #f4f9f1;
+  @apply tw:[border-color:#c9dcc0];
+  @apply tw:[background:#f4f9f1];
 }
 
 #teacherRecordsLessonsPanel .attachment-row:last-child {
-  border-bottom-color: #e0e9db;
+  @apply tw:[border-bottom-color:#e0e9db];
 }
 
 #teacherRecordsLessonsPanel .attachment-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #eef3eb;
-  color: #4f7d3a;
+  @apply tw:[width:44px];
+  @apply tw:[height:44px];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#eef3eb];
+  @apply tw:[color:#4f7d3a];
 }
 
 #teacherRecordsLessonsPanel .attachment-icon.file-pdf {
-  background: #fff0ee;
-  color: #c24132;
+  @apply tw:[background:#fff0ee];
+  @apply tw:[color:#c24132];
 }
 
 #teacherRecordsLessonsPanel .attachment-icon.file-word {
-  background: #eaf2ff;
-  color: #2f68b2;
+  @apply tw:[background:#eaf2ff];
+  @apply tw:[color:#2f68b2];
 }
 
 #teacherRecordsLessonsPanel .attachment-icon.file-slides {
-  background: #fff3e5;
-  color: #bb6020;
+  @apply tw:[background:#fff3e5];
+  @apply tw:[color:#bb6020];
 }
 
 #teacherRecordsLessonsPanel .attachment-icon.file-sheet {
-  background: #e9f6ed;
-  color: #2f7b46;
+  @apply tw:[background:#e9f6ed];
+  @apply tw:[color:#2f7b46];
 }
 
 #teacherRecordsLessonsPanel .attachment-icon.file-image,
 #teacherRecordsLessonsPanel .attachment-icon.file-video {
-  background: #f2edff;
-  color: #7250a8;
+  @apply tw:[background:#f2edff];
+  @apply tw:[color:#7250a8];
 }
 
 #teacherRecordsLessonsPanel .file-name {
-  color: #263321;
-  font-size: 0.85rem;
-  font-weight: 700;
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.85rem];
+  @apply tw:[font-weight:700];
 }
 
 #teacherRecordsLessonsPanel .file-type {
-  width: fit-content;
-  padding: 0.12rem 0.38rem;
-  border-radius: 6px;
-  background: #e8efe4;
-  color: #55704a;
-  font-size: 0.58rem;
-  letter-spacing: 0.055em;
+  @apply tw:w-fit;
+  @apply tw:[padding:0.12rem_0.38rem];
+  @apply tw:[border-radius:6px];
+  @apply tw:[background:#e8efe4];
+  @apply tw:[color:#55704a];
+  @apply tw:[font-size:0.58rem];
+  @apply tw:[letter-spacing:0.055em];
 }
 
 #teacherRecordsLessonsPanel .file-type.file-pdf {
-  background: #ffebe8;
-  color: #a83c30;
+  @apply tw:[background:#ffebe8];
+  @apply tw:[color:#a83c30];
 }
 
 #teacherRecordsLessonsPanel .file-type.file-word {
-  background: #e4efff;
-  color: #285c9e;
+  @apply tw:[background:#e4efff];
+  @apply tw:[color:#285c9e];
 }
 
 #teacherRecordsLessonsPanel .file-type.file-slides {
-  background: #ffecd9;
-  color: #a85118;
+  @apply tw:[background:#ffecd9];
+  @apply tw:[color:#a85118];
 }
 
 #teacherRecordsLessonsPanel .file-type.file-sheet {
-  background: #e2f3e7;
-  color: #286c3c;
+  @apply tw:[background:#e2f3e7];
+  @apply tw:[color:#286c3c];
 }
 
 #teacherRecordsLessonsPanel .file-type.file-image,
 #teacherRecordsLessonsPanel .file-type.file-video {
-  background: #eee7ff;
-  color: #654594;
+  @apply tw:[background:#eee7ff];
+  @apply tw:[color:#654594];
 }
 
 #teacherRecordsLessonsPanel .attachment-actions {
-  gap: 0.45rem;
+  @apply tw:[gap:0.45rem];
 }
 
 #teacherRecordsLessonsPanel .record-link {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid #cdddc5;
-  border-radius: 11px;
-  background: #ffffff;
-  color: #4f7d3a;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: none;
-  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  @apply tw:relative;
+  @apply tw:[width:38px];
+  @apply tw:[height:38px];
+  @apply tw:[padding:0];
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#cdddc5];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[box-shadow:none];
+  @apply tw:[transition:transform_0.18s_ease,_background_0.18s_ease,_color_0.18s_ease,_box-shadow_0.18s_ease];
 }
 
 #teacherRecordsLessonsPanel .record-link:hover {
-  transform: translateY(-2px);
-  border-color: #6f9d58;
-  background: #edf6e8;
-  color: #1e4307;
-  text-decoration: none;
-  box-shadow: 0 6px 14px rgba(30, 67, 7, 0.12);
+  @apply tw:[transform:translateY(-2px)];
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[background:#edf6e8];
+  @apply tw:[color:#1e4307];
+  @apply tw:[text-decoration:none];
+  @apply tw:[box-shadow:0_6px_14px_rgba(30,_67,_7,_0.12)];
 }
 
 #teacherRecordsLessonsPanel .record-link-button {
-  border-color: #1e4307;
-  background: #1e4307;
-  color: #ffffff;
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[background:#1e4307];
+  @apply tw:[color:#ffffff];
 }
 
 #teacherRecordsLessonsPanel .record-link-button:hover {
-  border-color: #315f1e;
-  background: #315f1e;
-  color: #ffffff;
+  @apply tw:[border-color:#315f1e];
+  @apply tw:[background:#315f1e];
+  @apply tw:[color:#ffffff];
 }
 
 #teacherRecordsLessonsPanel .record-link::after,
 #teacherRecordsLessonsPanel .pagination-btn::after,
 #teacherRecordsLessonsPanel .lessons-page-btn::after {
-  content: "";
-  position: absolute;
-  inset: 50%;
-  border-radius: 50%;
-  background: rgba(111, 157, 88, 0.22);
-  transform: translate(-50%, -50%) scale(0);
-  opacity: 0;
+  @apply tw:[content:""];
+  @apply tw:absolute;
+  @apply tw:[inset:50%];
+  @apply tw:[border-radius:50%];
+  @apply tw:[background:rgba(111,_157,_88,_0.22)];
+  @apply tw:[transform:translate(-50%,_-50%)_scale(0)];
+  @apply tw:opacity-0;
 }
 
 #teacherRecordsLessonsPanel .record-link:active::after,
 #teacherRecordsLessonsPanel .pagination-btn:active::after,
 #teacherRecordsLessonsPanel .lessons-page-btn:active::after {
-  animation: lesson-ripple 0.42s ease-out;
+  @apply tw:[animation:lesson-ripple_0.42s_ease-out];
 }
 
 #teacherRecordsLessonsPanel .table-state {
-  flex-direction: column;
-  min-height: 230px;
-  border-color: #cbdcc2;
-  border-radius: 18px;
-  background: #f7fbf4;
-  color: #66745f;
-  text-align: center;
+  @apply tw:flex-col;
+  @apply tw:[min-height:230px];
+  @apply tw:[border-color:#cbdcc2];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#f7fbf4];
+  @apply tw:[color:#66745f];
+  @apply tw:text-center;
 }
 
 #teacherRecordsLessonsPanel .lessons-empty-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 17px;
-  background: #dcead3;
-  color: #4f7d3a;
-  font-size: 1.15rem;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:54px];
+  @apply tw:[height:54px];
+  @apply tw:[border-radius:17px];
+  @apply tw:[background:#dcead3];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:1.15rem];
 }
 
 #teacherRecordsLessonsPanel .records-pagination {
-  margin-top: 1.1rem;
-  padding: 0.9rem;
-  border: 1px solid #dce7d6;
-  border-radius: 16px;
-  background: #f7fbf4;
+  @apply tw:[margin-top:1.1rem];
+  @apply tw:[padding:0.9rem];
+  @apply tw:[border:1px_solid_#dce7d6];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsLessonsPanel .records-pagination-copy {
-  color: #66745f;
+  @apply tw:[color:#66745f];
 }
 
 #teacherRecordsLessonsPanel .records-pagination-actions {
-  gap: 0.38rem;
+  @apply tw:[gap:0.38rem];
 }
 
 #teacherRecordsLessonsPanel .pagination-btn,
 #teacherRecordsLessonsPanel .lessons-page-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.42rem;
-  min-height: 38px;
-  overflow: hidden;
-  border: 1px solid #cbdcc2;
-  border-radius: 11px;
-  background: #ffffff;
-  color: #35552a;
-  font-size: 0.74rem;
-  font-weight: 750;
-  cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  @apply tw:relative;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.42rem];
+  @apply tw:[min-height:38px];
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#cbdcc2];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#35552a];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:750];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:transform_0.18s_ease,_border-color_0.18s_ease,_background_0.18s_ease,_color_0.18s_ease];
 }
 
 #teacherRecordsLessonsPanel .pagination-btn:hover:not(:disabled),
 #teacherRecordsLessonsPanel .lessons-page-btn:hover {
-  transform: translateY(-1px);
-  border-color: #6f9d58;
-  background: #edf6e8;
-  color: #1e4307;
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[background:#edf6e8];
+  @apply tw:[color:#1e4307];
 }
 
 #teacherRecordsLessonsPanel .pagination-btn:disabled {
-  background: #f2f5f0;
-  color: #9aa596;
-  opacity: 1;
+  @apply tw:[background:#f2f5f0];
+  @apply tw:[color:#9aa596];
+  @apply tw:opacity-100;
 }
 
 #teacherRecordsLessonsPanel .lessons-page-numbers {
-  display: inline-flex;
-  gap: 0.3rem;
+  @apply tw:inline-flex;
+  @apply tw:[gap:0.3rem];
 }
 
 #teacherRecordsLessonsPanel .lessons-page-btn {
-  width: 38px;
-  padding: 0;
+  @apply tw:[width:38px];
+  @apply tw:[padding:0];
 }
 
 #teacherRecordsLessonsPanel .lessons-page-btn.active {
-  border-color: #1e4307;
-  background: #1e4307;
-  color: #ffffff;
-  box-shadow: 0 6px 14px rgba(30, 67, 7, 0.18);
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[background:#1e4307];
+  @apply tw:[color:#ffffff];
+  @apply tw:[box-shadow:0_6px_14px_rgba(30,_67,_7,_0.18)];
 }
 
 @keyframes lesson-card-in {
@@ -4978,710 +4975,708 @@ onBeforeUnmount(() => {
   --assessment-green-soft: #6f9d58;
   --assessment-mint: #dcead3;
   --assessment-surface: #f7fbf4;
-  padding: 0;
-  overflow: hidden;
-  border-color: #d4e4ca;
-  background: #ffffff;
-  box-shadow: 0 20px 50px rgba(30, 67, 7, 0.08);
+  @apply tw:[padding:0];
+  @apply tw:overflow-hidden;
+  @apply tw:[border-color:#d4e4ca];
+  @apply tw:[background:#ffffff];
+  @apply tw:[box-shadow:0_20px_50px_rgba(30,_67,_7,_0.08)];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1.55rem 1.65rem;
-  border-bottom: 1px solid #dcead3;
-  background:
-    radial-gradient(circle at 88% 12%, rgba(111, 157, 88, 0.18), transparent 31%),
-    linear-gradient(135deg, #f7fbf4 0%, #eef6e9 100%);
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:1.5rem];
+  @apply tw:[padding:1.55rem_1.65rem];
+  @apply tw:[border-bottom:1px_solid_#dcead3];
+  @apply tw:[background:radial-gradient(circle_at_88%_12%,_rgba(111,_157,_88,_0.18),_transparent_31%),______linear-gradient(135deg,_#f7fbf4_0%,_#eef6e9_100%)];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-hero-copy {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-kicker {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: #4f7d3a;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  @apply tw:block;
+  @apply tw:[margin-bottom:0.35rem];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.1em];
+  @apply tw:uppercase;
 }
 
 #teacherRecordsAssessmentsPanel .section-title {
-  margin: 0;
-  color: #173706;
-  font-size: clamp(1.35rem, 2vw, 1.75rem);
-  letter-spacing: -0.025em;
+  @apply tw:[margin:0];
+  @apply tw:[color:#173706];
+  @apply tw:[font-size:clamp(1.35rem,_2vw,_1.75rem)];
+  @apply tw:[letter-spacing:-0.025em];
 }
 
 #teacherRecordsAssessmentsPanel .section-subtitle {
-  max-width: 610px;
-  margin-top: 0.38rem;
-  color: #52634a;
-  font-size: 0.88rem;
+  @apply tw:[max-width:610px];
+  @apply tw:[margin-top:0.38rem];
+  @apply tw:[color:#52634a];
+  @apply tw:[font-size:0.88rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-summary {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  flex: 0 0 auto;
-  padding: 0.78rem 0.95rem;
-  border: 1px solid rgba(79, 125, 58, 0.2);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 8px 24px rgba(30, 67, 7, 0.07);
-  backdrop-filter: blur(8px);
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.85rem];
+  @apply tw:flex-none;
+  @apply tw:[padding:0.78rem_0.95rem];
+  @apply tw:[border:1px_solid_rgba(79,_125,_58,_0.2)];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:rgba(255,_255,_255,_0.82)];
+  @apply tw:[box-shadow:0_8px_24px_rgba(30,_67,_7,_0.07)];
+  @apply tw:[backdrop-filter:blur(8px)];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-summary-item {
-  display: flex;
-  align-items: center;
-  gap: 0.58rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.58rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-summary-item > span:last-child {
-  display: grid;
-  gap: 0.04rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.04rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-summary-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #dcead3;
-  color: #1e4307;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:40px];
+  @apply tw:[height:40px];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#dcead3];
+  @apply tw:[color:#1e4307];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-summary-icon.submissions {
-  background: #e7f1e1;
-  color: #4f7d3a;
+  @apply tw:[background:#e7f1e1];
+  @apply tw:[color:#4f7d3a];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-summary-item strong {
-  color: #1e4307;
-  font-size: 1rem;
-  line-height: 1.1;
+  @apply tw:[color:#1e4307];
+  @apply tw:[font-size:1rem];
+  @apply tw:[line-height:1.1];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-summary-item small {
-  color: #687761;
-  font-size: 0.68rem;
-  font-weight: 650;
-  white-space: nowrap;
+  @apply tw:[color:#687761];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:650];
+  @apply tw:whitespace-nowrap;
 }
 
 #teacherRecordsAssessmentsPanel .assessments-summary-divider {
-  width: 1px;
-  height: 34px;
-  background: #d4e4ca;
+  @apply tw:[width:1px];
+  @apply tw:[height:34px];
+  @apply tw:[background:#d4e4ca];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-toolbar {
-  display: grid;
-  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(135px, 0.42fr));
-  gap: 0.65rem;
-  margin: 1.15rem 1.25rem 0;
-  padding: 0.72rem;
-  border: 1px solid #dce7d6;
-  border-radius: 18px;
-  background: #f7fbf4;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(220px,_1fr)_repeat(3,_minmax(135px,_0.42fr))];
+  @apply tw:[gap:0.65rem];
+  @apply tw:[margin:1.15rem_1.25rem_0];
+  @apply tw:[padding:0.72rem];
+  @apply tw:[border:1px_solid_#dce7d6];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-search,
 #teacherRecordsAssessmentsPanel .assessments-select-field {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  min-height: 42px;
-  border: 1px solid #cfddc7;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #6b7b63;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  @apply tw:relative;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:42px];
+  @apply tw:[border:1px_solid_#cfddc7];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#6b7b63];
+  @apply tw:[transition:border-color_0.2s_ease,_box-shadow_0.2s_ease];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-search:focus-within,
 #teacherRecordsAssessmentsPanel .assessments-select-field:focus-within {
-  border-color: #6f9d58;
-  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.16);
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(111,_157,_88,_0.16)];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-search > i,
 #teacherRecordsAssessmentsPanel .assessments-select-field > i:first-of-type {
-  margin-left: 0.8rem;
-  color: #6f9d58;
-  font-size: 0.78rem;
-  pointer-events: none;
+  @apply tw:[margin-left:0.8rem];
+  @apply tw:[color:#6f9d58];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:pointer-events-none;
 }
 
 #teacherRecordsAssessmentsPanel .assessments-search input,
 #teacherRecordsAssessmentsPanel .assessments-select-field select {
-  width: 100%;
-  min-width: 0;
-  min-height: 40px;
-  padding: 0.58rem 2rem 0.58rem 0.6rem;
-  border: 0;
-  outline: 0;
-  appearance: none;
-  background: transparent;
-  color: #24331e;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:40px];
+  @apply tw:[padding:0.58rem_2rem_0.58rem_0.6rem];
+  @apply tw:[border:0];
+  @apply tw:[outline:0];
+  @apply tw:appearance-none;
+  @apply tw:[background:transparent];
+  @apply tw:[color:#24331e];
+  @apply tw:[font:inherit];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:600];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-search input::placeholder {
-  color: #8a9783;
-  font-weight: 500;
+  @apply tw:[color:#8a9783];
+  @apply tw:[font-weight:500];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-select-field select {
-  cursor: pointer;
+  @apply tw:cursor-pointer;
 }
 
 #teacherRecordsAssessmentsPanel .assessments-select-chevron {
-  position: absolute;
-  right: 0.75rem;
-  color: #71816a;
-  font-size: 0.65rem;
-  pointer-events: none;
+  @apply tw:absolute;
+  @apply tw:[right:0.75rem];
+  @apply tw:[color:#71816a];
+  @apply tw:[font-size:0.65rem];
+  @apply tw:pointer-events-none;
 }
 
 #teacherRecordsAssessmentsPanel .assessments-search-clear {
-  position: absolute;
-  right: 0.35rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: #687761;
-  cursor: pointer;
+  @apply tw:absolute;
+  @apply tw:[right:0.35rem];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:30px];
+  @apply tw:[height:30px];
+  @apply tw:[border:0];
+  @apply tw:[border-radius:9px];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#687761];
+  @apply tw:cursor-pointer;
 }
 
 #teacherRecordsAssessmentsPanel .assessments-search-clear:hover {
-  background: #edf5e8;
-  color: #1e4307;
+  @apply tw:[background:#edf5e8];
+  @apply tw:[color:#1e4307];
 }
 
 #teacherRecordsAssessmentsPanel button:focus-visible,
 #teacherRecordsAssessmentsPanel input:focus-visible,
 #teacherRecordsAssessmentsPanel select:focus-visible {
-  outline: 3px solid rgba(79, 125, 58, 0.35);
-  outline-offset: 2px;
+  @apply tw:[outline:3px_solid_rgba(79,_125,_58,_0.35)];
+  @apply tw:[outline-offset:2px];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-results-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin: 0.65rem 1.4rem 0;
-  color: #687761;
-  font-size: 0.76rem;
-  font-weight: 600;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[margin:0.65rem_1.4rem_0];
+  @apply tw:[color:#687761];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:600];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-results-bar button,
 #teacherRecordsAssessmentsPanel .assessments-empty-action {
-  border: 0;
-  background: transparent;
-  color: #3f6f2a;
-  font: inherit;
-  font-weight: 750;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#3f6f2a];
+  @apply tw:[font:inherit];
+  @apply tw:[font-weight:750];
+  @apply tw:cursor-pointer;
+  @apply tw:[text-decoration:underline];
+  @apply tw:[text-underline-offset:3px];
 }
 
 #teacherRecordsAssessmentsPanel .records-feed-wrap {
-  margin: 0;
-  padding: 1rem 1.25rem 1.25rem;
+  @apply tw:[margin:0];
+  @apply tw:[padding:1rem_1.25rem_1.25rem];
 }
 
 #teacherRecordsAssessmentsPanel .records-feed {
-  gap: 1rem;
+  @apply tw:[gap:1rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-record-card {
-  position: relative;
-  gap: 0.9rem;
-  overflow: hidden;
-  padding: 1.2rem;
-  border-color: #dce7d6;
-  border-radius: 18px;
-  box-shadow: 0 8px 22px rgba(30, 67, 7, 0.055);
-  animation: assessment-card-in 0.42s both;
-  animation-delay: calc(var(--assessment-index) * 55ms);
+  @apply tw:relative;
+  @apply tw:[gap:0.9rem];
+  @apply tw:overflow-hidden;
+  @apply tw:[padding:1.2rem];
+  @apply tw:[border-color:#dce7d6];
+  @apply tw:[border-radius:18px];
+  @apply tw:[box-shadow:0_8px_22px_rgba(30,_67,_7,_0.055)];
+  @apply tw:[animation:assessment-card-in_0.42s_both];
+  @apply tw:[animation-delay:calc(var(--assessment-index)_*_55ms)];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-record-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: #4f7d3a;
-  opacity: 0;
-  transition: opacity 0.22s ease;
+  @apply tw:[content:""];
+  @apply tw:absolute;
+  @apply tw:[inset:0_auto_0_0];
+  @apply tw:[width:4px];
+  @apply tw:[background:#4f7d3a];
+  @apply tw:opacity-0;
+  @apply tw:[transition:opacity_0.22s_ease];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-exam::before {
-  background: #4f7d3a;
+  @apply tw:[background:#4f7d3a];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-quiz::before {
-  background: #4f7d3a;
+  @apply tw:[background:#4f7d3a];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-activity::before {
-  background: #4f7d3a;
+  @apply tw:[background:#4f7d3a];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-record-card:hover {
-  transform: translateY(-3px);
-  border-color: #bfd5b2;
-  box-shadow: 0 16px 34px rgba(30, 67, 7, 0.11);
+  @apply tw:[transform:translateY(-3px)];
+  @apply tw:[border-color:#bfd5b2];
+  @apply tw:[box-shadow:0_16px_34px_rgba(30,_67,_7,_0.11)];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-record-card:hover::before {
-  opacity: 1;
+  @apply tw:opacity-100;
 }
 
 #teacherRecordsAssessmentsPanel .record-card-header {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.8rem;
-  padding-bottom: 0.85rem;
-  border-color: #e4ece0;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:auto_minmax(0,_1fr)_auto];
+  @apply tw:items-center;
+  @apply tw:[gap:0.8rem];
+  @apply tw:[padding-bottom:0.85rem];
+  @apply tw:[border-color:#e4ece0];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-kind-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: #e8f2e2;
-  color: #4f7d3a;
-  font-size: 1rem;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:48px];
+  @apply tw:[height:48px];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#e8f2e2];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:1rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-kind-quiz .assessment-kind-icon {
-  background: #eaf0f9;
-  color: #4e6c9b;
+  @apply tw:[background:#eaf0f9];
+  @apply tw:[color:#4e6c9b];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-kind-activity .assessment-kind-icon {
-  background: #fff4e4;
-  color: #9a6a2f;
+  @apply tw:[background:#fff4e4];
+  @apply tw:[color:#9a6a2f];
 }
 
 #teacherRecordsAssessmentsPanel .record-card-title {
-  min-width: 0;
-  gap: 0.24rem;
+  @apply tw:[min-width:0];
+  @apply tw:[gap:0.24rem];
 }
 
 #teacherRecordsAssessmentsPanel .record-type-label {
-  padding: 0;
-  background: transparent;
-  color: #6f9d58;
-  font-size: 0.64rem;
+  @apply tw:[padding:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#6f9d58];
+  @apply tw:[font-size:0.64rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-kind-quiz .record-type-label {
-  color: #5b79a8;
+  @apply tw:[color:#5b79a8];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-kind-activity .record-type-label {
-  color: #9a6a2f;
+  @apply tw:[color:#9a6a2f];
 }
 
 #teacherRecordsAssessmentsPanel .record-card-title h4 {
-  color: #1d2b17;
-  font-size: 1.15rem;
-  line-height: 1.32;
-  letter-spacing: -0.012em;
+  @apply tw:[color:#1d2b17];
+  @apply tw:[font-size:1.15rem];
+  @apply tw:[line-height:1.32];
+  @apply tw:[letter-spacing:-0.012em];
 }
 
 #teacherRecordsAssessmentsPanel .record-card-title p {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: #74806f;
-  font-size: 0.72rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.35rem];
+  @apply tw:[color:#74806f];
+  @apply tw:[font-size:0.72rem];
 }
 
 #teacherRecordsAssessmentsPanel .record-card-title p i {
-  color: #8da483;
-  font-size: 0.62rem;
+  @apply tw:[color:#8da483];
+  @apply tw:[font-size:0.62rem];
 }
 
 #teacherRecordsAssessmentsPanel .record-card-date-group {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.5rem 0.68rem;
-  border-radius: 11px;
-  background: #f7fbf4;
-  text-align: left;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[padding:0.5rem_0.68rem];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#f7fbf4];
+  @apply tw:text-left;
 }
 
 #teacherRecordsAssessmentsPanel .record-card-date-group > i {
-  color: #6f9d58;
-  font-size: 0.84rem;
+  @apply tw:[color:#6f9d58];
+  @apply tw:[font-size:0.84rem];
 }
 
 #teacherRecordsAssessmentsPanel .record-card-date-group > span {
-  display: grid;
-  gap: 0.04rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.04rem];
 }
 
 #teacherRecordsAssessmentsPanel .record-date-label {
-  color: #82907b;
-  font-size: 0.58rem;
+  @apply tw:[color:#82907b];
+  @apply tw:[font-size:0.58rem];
 }
 
 #teacherRecordsAssessmentsPanel .record-card-date {
-  color: #43513d;
-  font-size: 0.72rem;
+  @apply tw:[color:#43513d];
+  @apply tw:[font-size:0.72rem];
 }
 
 #teacherRecordsAssessmentsPanel .record-chip {
-  gap: 0.34rem;
-  padding: 0.3rem 0.66rem;
+  @apply tw:[gap:0.34rem];
+  @apply tw:[padding:0.3rem_0.66rem];
 }
 
 #teacherRecordsAssessmentsPanel .chip-subject {
-  border-color: #c6dcb9;
-  background: #edf6e8;
-  color: #315f1e;
+  @apply tw:[border-color:#c6dcb9];
+  @apply tw:[background:#edf6e8];
+  @apply tw:[color:#315f1e];
 }
 
 #teacherRecordsAssessmentsPanel .chip-class {
-  border-color: #cdd8eb;
-  background: #f1f5fb;
-  color: #35547f;
+  @apply tw:[border-color:#cdd8eb];
+  @apply tw:[background:#f1f5fb];
+  @apply tw:[color:#35547f];
 }
 
 #teacherRecordsAssessmentsPanel .record-chip-label {
-  font-weight: 800;
+  @apply tw:[font-weight:800];
 }
 
 #teacherRecordsAssessmentsPanel .chip-neutral {
-  border-color: #dfe6dc;
-  background: #fafcf9;
-  color: #687761;
+  @apply tw:[border-color:#dfe6dc];
+  @apply tw:[background:#fafcf9];
+  @apply tw:[color:#687761];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-action-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.85rem;
-  border: 1px solid #bbd9ad;
-  border-radius: 12px;
-  padding: 0.72rem 0.85rem;
-  background: #f1f8ed;
-  color: #315f1e;
-  font-size: 0.82rem;
-  font-weight: 700;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.6rem];
+  @apply tw:[margin-top:0.85rem];
+  @apply tw:[border:1px_solid_#bbd9ad];
+  @apply tw:[border-radius:12px];
+  @apply tw:[padding:0.72rem_0.85rem];
+  @apply tw:[background:#f1f8ed];
+  @apply tw:[color:#315f1e];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:700];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-action-banner button {
-  margin-left: auto;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
+  @apply tw:ml-auto;
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:inherit];
+  @apply tw:cursor-pointer;
 }
 
 #teacherRecordsAssessmentsPanel .chip-type {
-  border-color: #d8ddeb;
-  background: #f3f5fa;
-  color: #52627e;
+  @apply tw:[border-color:#d8ddeb];
+  @apply tw:[background:#f3f5fa];
+  @apply tw:[color:#52627e];
 }
 
 #teacherRecordsAssessmentsPanel .chip-success {
-  border-color: #bde0c6;
-  background: #edf8f0;
-  color: #28673b;
+  @apply tw:[border-color:#bde0c6];
+  @apply tw:[background:#edf8f0];
+  @apply tw:[color:#28673b];
 }
 
 #teacherRecordsAssessmentsPanel .difficulty-pill {
-  padding: 0.3rem 0.66rem;
-  font-size: 0.68rem;
+  @apply tw:[padding:0.3rem_0.66rem];
+  @apply tw:[font-size:0.68rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-meta-grid {
-  gap: 0.65rem;
+  @apply tw:[gap:0.65rem];
 }
 
 #teacherRecordsAssessmentsPanel .meta-item {
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.78rem;
-  border-color: #e0e9db;
-  border-radius: 14px;
-  background: #f9fcf7;
+  @apply tw:[grid-template-columns:auto_minmax(0,_1fr)];
+  @apply tw:items-center;
+  @apply tw:[gap:0.7rem];
+  @apply tw:[padding:0.78rem];
+  @apply tw:[border-color:#e0e9db];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#f9fcf7];
 }
 
 #teacherRecordsAssessmentsPanel .meta-item-icon {
-  width: 38px;
-  height: 38px;
-  margin: 0;
-  border-radius: 11px;
-  background: #e4efe0;
-  color: #4f7d3a;
+  @apply tw:[width:38px];
+  @apply tw:[height:38px];
+  @apply tw:[margin:0];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#e4efe0];
+  @apply tw:[color:#4f7d3a];
 }
 
 #teacherRecordsAssessmentsPanel .meta-item-copy {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 #teacherRecordsAssessmentsPanel .meta-item-copy span {
-  display: block;
-  color: #7b8875;
-  font-size: 0.62rem;
-  font-weight: 750;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  @apply tw:block;
+  @apply tw:[color:#7b8875];
+  @apply tw:[font-size:0.62rem];
+  @apply tw:[font-weight:750];
+  @apply tw:[letter-spacing:0.06em];
+  @apply tw:uppercase;
 }
 
 #teacherRecordsAssessmentsPanel .meta-item-copy strong {
-  display: block;
-  margin-top: 0.15rem;
-  overflow-wrap: anywhere;
-  color: #263321;
-  font-size: 0.82rem;
-  line-height: 1.35;
+  @apply tw:block;
+  @apply tw:[margin-top:0.15rem];
+  @apply tw:[overflow-wrap:anywhere];
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[line-height:1.35];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-block {
-  margin-top: 0.1rem;
-  padding: 0.9rem;
-  border-color: #dce7d6;
-  border-radius: 16px;
-  background: #fbfdf9;
+  @apply tw:[margin-top:0.1rem];
+  @apply tw:[padding:0.9rem];
+  @apply tw:[border-color:#dce7d6];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#fbfdf9];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-header {
-  margin-bottom: 0.75rem;
+  @apply tw:[margin-bottom:0.75rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-title {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.65rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-heading-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 auto;
-  border-radius: 11px;
-  background: #e8f2e2;
-  color: #4f7d3a;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:36px];
+  @apply tw:[height:36px];
+  @apply tw:flex-none;
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#e8f2e2];
+  @apply tw:[color:#4f7d3a];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-title > div {
-  display: grid;
-  gap: 0.12rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.12rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-title > div > span {
-  color: #263321;
-  font-size: 0.84rem;
-  font-weight: 750;
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[font-weight:750];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-title p {
-  color: #788473;
-  font-size: 0.72rem;
+  @apply tw:[color:#788473];
+  @apply tw:[font-size:0.72rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-count {
-  background: #e8f2e2;
-  color: #315f1e;
+  @apply tw:[background:#e8f2e2];
+  @apply tw:[color:#315f1e];
 }
 
 #teacherRecordsAssessmentsPanel .inline-empty-state {
-  border-color: #ceddc7;
-  background: #f7fbf4;
+  @apply tw:[border-color:#ceddc7];
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsAssessmentsPanel .inline-empty-icon {
-  background: #e1edda;
-  color: #4f7d3a;
+  @apply tw:[background:#e1edda];
+  @apply tw:[color:#4f7d3a];
 }
 
 #teacherRecordsAssessmentsPanel .results-summary-item {
-  border-color: #dde8d8;
-  background: #ffffff;
+  @apply tw:[border-color:#dde8d8];
+  @apply tw:[background:#ffffff];
 }
 
 #teacherRecordsAssessmentsPanel .results-summary-item span {
-  color: #74806f;
+  @apply tw:[color:#74806f];
 }
 
 #teacherRecordsAssessmentsPanel .results-summary-item strong {
-  color: #263321;
+  @apply tw:[color:#263321];
 }
 
 #teacherRecordsAssessmentsPanel .record-card-actions {
-  gap: 0.55rem;
-  padding-top: 0.1rem;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[padding-top:0.1rem];
 }
 
 #teacherRecordsAssessmentsPanel .record-link-button {
-  position: relative;
-  min-height: 40px;
-  padding: 0.52rem 0.82rem;
-  overflow: hidden;
-  border-color: #1e4307;
-  border-radius: 11px;
-  background: #1e4307;
-  color: #ffffff;
-  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.14);
-  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  @apply tw:relative;
+  @apply tw:[min-height:40px];
+  @apply tw:[padding:0.52rem_0.82rem];
+  @apply tw:overflow-hidden;
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#1e4307];
+  @apply tw:[color:#ffffff];
+  @apply tw:[box-shadow:0_7px_16px_rgba(30,_67,_7,_0.14)];
+  @apply tw:[transition:transform_0.18s_ease,_background_0.18s_ease,_border-color_0.18s_ease,_box-shadow_0.18s_ease];
 }
 
 #teacherRecordsAssessmentsPanel .record-link-button:hover {
-  transform: translateY(-2px);
-  border-color: #315f1e;
-  background: #315f1e;
-  color: #ffffff;
-  text-decoration: none;
-  box-shadow: 0 10px 20px rgba(30, 67, 7, 0.18);
+  @apply tw:[transform:translateY(-2px)];
+  @apply tw:[border-color:#315f1e];
+  @apply tw:[background:#315f1e];
+  @apply tw:[color:#ffffff];
+  @apply tw:[text-decoration:none];
+  @apply tw:[box-shadow:0_10px_20px_rgba(30,_67,_7,_0.18)];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-action-secondary {
-  border-color: #c7d8be;
-  background: #ffffff;
-  color: #3f6f2a;
-  box-shadow: none;
+  @apply tw:[border-color:#c7d8be];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#3f6f2a];
+  @apply tw:[box-shadow:none];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-action-secondary i {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[-webkit-text-fill-color:#ffffff]!;
 }
 
 #teacherRecordsAssessmentsPanel .assessment-action-primary i {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[-webkit-text-fill-color:#ffffff]!;
 }
 
 #teacherRecordsAssessmentsPanel .assessment-action-secondary:hover {
-  border-color: #6f9d58;
-  background: #edf6e8;
-  color: #1e4307;
-  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.09);
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[background:#edf6e8];
+  @apply tw:[color:#1e4307];
+  @apply tw:[box-shadow:0_7px_16px_rgba(30,_67,_7,_0.09)];
 }
 
 #teacherRecordsAssessmentsPanel .table-state {
-  flex-direction: column;
-  min-height: 230px;
-  border-color: #cbdcc2;
-  border-radius: 18px;
-  background: #f7fbf4;
-  color: #66745f;
-  text-align: center;
+  @apply tw:flex-col;
+  @apply tw:[min-height:230px];
+  @apply tw:[border-color:#cbdcc2];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#f7fbf4];
+  @apply tw:[color:#66745f];
+  @apply tw:text-center;
 }
 
 #teacherRecordsAssessmentsPanel .assessments-empty-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 17px;
-  background: #dcead3;
-  color: #4f7d3a;
-  font-size: 1.15rem;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:54px];
+  @apply tw:[height:54px];
+  @apply tw:[border-radius:17px];
+  @apply tw:[background:#dcead3];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:1.15rem];
 }
 
 #teacherRecordsAssessmentsPanel .records-pagination {
-  margin-top: 1.1rem;
-  padding: 0.9rem;
-  border: 1px solid #dce7d6;
-  border-radius: 16px;
-  background: #f7fbf4;
+  @apply tw:[margin-top:1.1rem];
+  @apply tw:[padding:0.9rem];
+  @apply tw:[border:1px_solid_#dce7d6];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsAssessmentsPanel .records-pagination-copy {
-  color: #66745f;
+  @apply tw:[color:#66745f];
 }
 
 #teacherRecordsAssessmentsPanel .records-pagination-actions {
-  gap: 0.38rem;
+  @apply tw:[gap:0.38rem];
 }
 
 #teacherRecordsAssessmentsPanel .pagination-btn,
 #teacherRecordsAssessmentsPanel .assessments-page-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.42rem;
-  min-height: 38px;
-  overflow: hidden;
-  border: 1px solid #cbdcc2;
-  border-radius: 11px;
-  background: #ffffff;
-  color: #35552a;
-  font-size: 0.74rem;
-  font-weight: 750;
-  cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  @apply tw:relative;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.42rem];
+  @apply tw:[min-height:38px];
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#cbdcc2];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#35552a];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:750];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:transform_0.18s_ease,_border-color_0.18s_ease,_background_0.18s_ease,_color_0.18s_ease];
 }
 
 #teacherRecordsAssessmentsPanel .pagination-btn:hover:not(:disabled),
 #teacherRecordsAssessmentsPanel .assessments-page-btn:hover {
-  transform: translateY(-1px);
-  border-color: #6f9d58;
-  background: #edf6e8;
-  color: #1e4307;
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[background:#edf6e8];
+  @apply tw:[color:#1e4307];
 }
 
 #teacherRecordsAssessmentsPanel .pagination-btn:disabled {
-  background: #f2f5f0;
-  color: #9aa596;
-  opacity: 1;
+  @apply tw:[background:#f2f5f0];
+  @apply tw:[color:#9aa596];
+  @apply tw:opacity-100;
 }
 
 #teacherRecordsAssessmentsPanel .assessments-page-numbers {
-  display: inline-flex;
-  gap: 0.3rem;
+  @apply tw:inline-flex;
+  @apply tw:[gap:0.3rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-page-btn {
-  width: 38px;
-  padding: 0;
+  @apply tw:[width:38px];
+  @apply tw:[padding:0];
 }
 
 #teacherRecordsAssessmentsPanel .assessments-page-btn.active {
-  border-color: #1e4307;
-  background: #1e4307;
-  color: #ffffff;
-  box-shadow: 0 6px 14px rgba(30, 67, 7, 0.18);
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[background:#1e4307];
+  @apply tw:[color:#ffffff];
+  @apply tw:[box-shadow:0_6px_14px_rgba(30,_67,_7,_0.18)];
 }
 
 @keyframes assessment-card-in {
@@ -5696,2972 +5691,2964 @@ onBeforeUnmount(() => {
 }
 
 #teacherRecordsAttendancePanel {
-  border-color: transparent !important;
-  background: linear-gradient(rgb(255, 255, 255) 0%, rgb(255, 255, 255) 100%) padding-box,
-    linear-gradient(135deg, rgb(139, 198, 106) 0%, rgb(216, 237, 204) 48%, rgb(169, 213, 143) 100%) border-box !important;
+  @apply tw:[border-color:transparent]!;
+  @apply tw:[background:linear-gradient(rgb(255,_255,_255)_0%,_rgb(255,_255,_255)_100%)_padding-box,______linear-gradient(135deg,_rgb(139,_198,_106)_0%,_rgb(216,_237,_204)_48%,_rgb(169,_213,_143)_100%)_border-box]!;
 }
 
 .records-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  max-width: 1080px;
-  margin: 0 auto;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:1fr];
+  @apply tw:[gap:1rem];
+  @apply tw:[max-width:1080px];
+  @apply tw:[margin:0_auto];
 }
 
 .section-subtitle {
-  margin: 0.25rem 0 0;
-  color: #64748b;
-  font-size: 0.85rem;
-  line-height: 1.55;
+  @apply tw:[margin:0.25rem_0_0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.85rem];
+  @apply tw:[line-height:1.55];
 }
 
 .records-section-heading {
-  display: grid;
-  gap: 0.2rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.2rem];
 }
 
 .section-kicker {
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #2563eb;
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.08em];
+  @apply tw:uppercase;
+  @apply tw:[color:#2563eb];
 }
 
 .records-filters {
-  margin-top: 0.85rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.65rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: #ffffff;
-  padding: 0.7rem;
+  @apply tw:[margin-top:0.85rem];
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(auto-fit,_minmax(180px,_1fr))];
+  @apply tw:[gap:0.65rem];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:0.7rem];
 }
 
 .filter-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.28rem;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[gap:0.28rem];
 }
 
 .filter-field span {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #475569;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[color:#475569];
+  @apply tw:[letter-spacing:0.02em];
+  @apply tw:uppercase;
 }
 
 .filter-field select {
-  min-height: 38px;
-  border: 1px solid #dbe2ea;
-  border-radius: 10px;
-  padding: 0.45rem 0.65rem;
-  font-size: 0.85rem;
-  color: #0f172a;
-  background: #ffffff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  @apply tw:[min-height:38px];
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[border-radius:10px];
+  @apply tw:[padding:0.45rem_0.65rem];
+  @apply tw:[font-size:0.85rem];
+  @apply tw:[color:#0f172a];
+  @apply tw:[background:#ffffff];
+  @apply tw:[transition:border-color_0.2s_ease,_box-shadow_0.2s_ease];
 }
 
 .filter-field select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  @apply tw:[outline:none];
+  @apply tw:[border-color:#3b82f6];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(59,_130,_246,_0.15)];
 }
 
 .records-feed-wrap {
-  margin-top: 0.85rem;
+  @apply tw:[margin-top:0.85rem];
 }
 
 .records-feed {
-  display: grid;
-  gap: 0.75rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.75rem];
 }
 
 .record-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  padding: 1rem;
-  display: grid;
-  gap: 0.85rem;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  @apply tw:[background:#ffffff];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:18px];
+  @apply tw:[padding:1rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[box-shadow:0_14px_30px_rgba(15,_23,_42,_0.05)];
+  @apply tw:[transition:transform_0.2s_ease,_box-shadow_0.2s_ease];
 }
 
 .record-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[box-shadow:0_14px_30px_rgba(15,_23,_42,_0.08)];
 }
 
 .record-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.8rem;
-  border-bottom: 1px solid #edf2f7;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:[padding-bottom:0.8rem];
+  @apply tw:[border-bottom:1px_solid_#edf2f7];
 }
 
 .record-card-title {
-  display: grid;
-  gap: 0.22rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.22rem];
 }
 
 .record-type-label {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:w-fit;
+  @apply tw:[padding:0.2rem_0.55rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#f1f5f9];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .record-card-title h4 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 1.02rem;
-  line-height: 1.35;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.02rem];
+  @apply tw:[line-height:1.35];
 }
 
 .record-card-title p {
-  margin: 0.1rem 0 0;
-  color: #94a3b8;
-  font-size: 0.74rem;
-  line-height: 1.5;
+  @apply tw:[margin:0.1rem_0_0];
+  @apply tw:[color:#94a3b8];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[line-height:1.5];
 }
 
 .record-card-date-group {
-  display: grid;
-  justify-items: end;
-  gap: 0.18rem;
-  text-align: right;
+  @apply tw:grid;
+  @apply tw:justify-items-end;
+  @apply tw:[gap:0.18rem];
+  @apply tw:text-right;
 }
 
 .record-date-label {
-  color: #94a3b8;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  @apply tw:[color:#94a3b8];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.08em];
+  @apply tw:uppercase;
 }
 
 .record-card-date {
-  color: #334155;
-  font-size: 0.78rem;
-  font-weight: 700;
-  white-space: nowrap;
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
+  @apply tw:whitespace-nowrap;
 }
 
 .record-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.42rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.42rem];
 }
 
 .record-chip {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid #dbe2ea;
-  border-radius: 999px;
-  padding: 0.28rem 0.64rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #334155;
-  background: #f8fafc;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[border-radius:999px];
+  @apply tw:[padding:0.28rem_0.64rem];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[color:#334155];
+  @apply tw:[background:#f8fafc];
 }
 
 .chip-subject {
-  background: #ecfeff;
-  border-color: #a5f3fc;
-  color: #155e75;
+  @apply tw:[background:#ecfeff];
+  @apply tw:[border-color:#a5f3fc];
+  @apply tw:[color:#155e75];
 }
 
 .chip-type {
-  background: #fff7ed;
-  border-color: #fed7aa;
-  color: #9a3412;
+  @apply tw:[background:#fff7ed];
+  @apply tw:[border-color:#fed7aa];
+  @apply tw:[color:#9a3412];
 }
 
 .chip-neutral {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #475569;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-color:#cbd5e1];
+  @apply tw:[color:#475569];
 }
 
 .chip-success {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-  color: #166534;
+  @apply tw:[background:#ecfdf5];
+  @apply tw:[border-color:#a7f3d0];
+  @apply tw:[color:#166534];
 }
 
 .record-card-body {
-  display: grid;
-  gap: 0.65rem;
-  padding: 0.2rem 0 0;
+  @apply tw:grid;
+  @apply tw:[gap:0.65rem];
+  @apply tw:[padding:0.2rem_0_0];
 }
 
 .assessment-meta-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
+  @apply tw:[gap:0.7rem];
 }
 
 .meta-item {
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 0.85rem 0.9rem;
-  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-  display: grid;
-  gap: 0.28rem;
-  position: relative;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:16px];
+  @apply tw:[padding:0.85rem_0.9rem];
+  @apply tw:[background:linear-gradient(180deg,_#f8fafc_0%,_#ffffff_100%)];
+  @apply tw:grid;
+  @apply tw:[gap:0.28rem];
+  @apply tw:relative;
 }
 
 .meta-item-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #eff6ff;
-  color: #2563eb;
-  font-size: 0.82rem;
-  margin-bottom: 0.12rem;
+  @apply tw:[width:34px];
+  @apply tw:[height:34px];
+  @apply tw:[border-radius:12px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[background:#eff6ff];
+  @apply tw:[color:#2563eb];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[margin-bottom:0.12rem];
 }
 
 .meta-item span {
-  display: block;
-  color: #64748b;
-  font-size: 0.71rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 700;
+  @apply tw:block;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.71rem];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.05em];
+  @apply tw:[font-weight:700];
 }
 
 .meta-item strong {
-  display: block;
-  margin-top: 0.28rem;
-  color: #0f172a;
-  font-size: 0.88rem;
-  line-height: 1.4;
+  @apply tw:block;
+  @apply tw:[margin-top:0.28rem];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.88rem];
+  @apply tw:[line-height:1.4];
 }
 
 .record-card-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 0.35rem;
+  @apply tw:flex;
+  @apply tw:justify-end;
+  @apply tw:[padding-top:0.35rem];
 }
 
 .assessment-results-block {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border-top: 1px solid #edf2f7;
+  @apply tw:[margin-top:1rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
+  @apply tw:[border-top:1px_solid_#edf2f7];
 }
 
 .assessment-results-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.65rem;
-  color: #0f172a;
-  font-size: 0.86rem;
-  font-weight: 700;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[margin-bottom:0.65rem];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.86rem];
+  @apply tw:[font-weight:700];
 }
 
 .assessment-results-title {
-  display: grid;
-  gap: 0.18rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.18rem];
 }
 
 .assessment-results-title p {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.76rem;
-  font-weight: 500;
+  @apply tw:[margin:0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:500];
 }
 
 .assessment-results-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.38rem 0.72rem;
-  border-radius: 999px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 0.78rem;
-  font-weight: 800;
-  white-space: nowrap;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[padding:0.38rem_0.72rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#eff6ff];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:800];
+  @apply tw:whitespace-nowrap;
 }
 
 .inline-empty-state {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 1rem;
-  border: 1px dashed #cbd5e1;
-  border-radius: 16px;
-  color: #64748b;
-  background: #f8fafc;
-  font-size: 0.84rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.8rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_dashed_#cbd5e1];
+  @apply tw:[border-radius:16px];
+  @apply tw:[color:#64748b];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[font-size:0.84rem];
 }
 
 .inline-empty-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #eef2ff;
-  color: #4338ca;
-  font-size: 0.92rem;
-  flex-shrink: 0;
+  @apply tw:[width:42px];
+  @apply tw:[height:42px];
+  @apply tw:[border-radius:14px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[background:#eef2ff];
+  @apply tw:[color:#4338ca];
+  @apply tw:[font-size:0.92rem];
+  @apply tw:shrink-0;
 }
 
 .inline-empty-copy {
-  display: grid;
-  gap: 0.2rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.2rem];
 }
 
 .inline-empty-copy strong {
-  color: #0f172a;
-  font-size: 0.88rem;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.88rem];
 }
 
 .inline-empty-copy span {
-  color: #64748b;
-  font-size: 0.8rem;
-  line-height: 1.45;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[line-height:1.45];
 }
 
 .assessment-results-table-wrap {
-  margin-top: 0;
+  @apply tw:[margin-top:0];
 }
 
 .assessment-results-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.65rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(4,_minmax(0,_1fr))];
+  @apply tw:[gap:0.65rem];
 }
 
 .results-summary-item {
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 0.8rem 0.9rem;
-  display: grid;
-  gap: 0.22rem;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:0.8rem_0.9rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.22rem];
 }
 
 .results-summary-item span {
-  color: #64748b;
-  font-size: 0.71rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.71rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .results-summary-item strong {
-  color: #0f172a;
-  font-size: 0.88rem;
-  line-height: 1.4;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.88rem];
+  @apply tw:[line-height:1.4];
 }
 
 .assessment-results-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.85rem;
+  @apply tw:flex;
+  @apply tw:justify-end;
+  @apply tw:[margin-top:0.85rem];
 }
 
 .records-table-wrap {
-  margin-top: 0.85rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  overflow-x: auto;
-  background: #fff;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f8fafc;
+  @apply tw:[margin-top:0.85rem];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:14px];
+  @apply tw:overflow-x-auto;
+  @apply tw:[background:#fff];
+  @apply tw:[scrollbar-width:thin];
+  @apply tw:[scrollbar-color:#cbd5e1_#f8fafc];
 }
 
 .records-table-wrap::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+  @apply tw:[height:8px];
+  @apply tw:[width:8px];
 }
 
 .records-table-wrap::-webkit-scrollbar-track {
-  background: #f8fafc;
-  border-radius: 999px;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-radius:999px];
 }
 
 .records-table-wrap::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 999px;
+  @apply tw:[background:#cbd5e1];
+  @apply tw:[border-radius:999px];
 }
 
 .records-table-wrap::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  @apply tw:[background:#94a3b8];
 }
 
 .records-table {
-  width: 100%;
-  min-width: 1040px;
-  border-collapse: separate;
-  border-spacing: 0;
+  @apply tw:w-full;
+  @apply tw:[min-width:1040px];
+  @apply tw:border-separate;
+  @apply tw:[border-spacing:0];
 }
 
 .records-table thead th {
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-align: left;
-  padding: 0.85rem 0.95rem;
-  white-space: nowrap;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-bottom:1px_solid_#e2e8f0];
+  @apply tw:[color:#475569];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.03em];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:700];
+  @apply tw:text-left;
+  @apply tw:[padding:0.85rem_0.95rem];
+  @apply tw:whitespace-nowrap;
 }
 
 .records-table tbody td {
-  padding: 0.85rem 0.95rem;
-  border-bottom: 1px solid #eef2f7;
-  vertical-align: middle;
-  color: #334155;
-  font-size: 0.88rem;
+  @apply tw:[padding:0.85rem_0.95rem];
+  @apply tw:[border-bottom:1px_solid_#eef2f7];
+  @apply tw:align-middle;
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.88rem];
 }
 
 .records-table tbody tr:last-child td {
-  border-bottom: none;
+  @apply tw:[border-bottom:none];
 }
 
 .records-table tbody tr:hover td {
-  background: #f8fafc;
+  @apply tw:[background:#f8fafc];
 }
 
 .records-pagination {
-  margin-top: 1rem;
-  border-top: 1px solid #e2e8f0;
-  padding-top: 0.85rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
-  flex-wrap: wrap;
+  @apply tw:[margin-top:1rem];
+  @apply tw:[border-top:1px_solid_#e2e8f0];
+  @apply tw:[padding-top:0.85rem];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.85rem];
+  @apply tw:flex-wrap;
 }
 
 .records-pagination-copy {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.8rem;
-  font-weight: 600;
+  @apply tw:[margin:0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:600];
 }
 
 .records-pagination-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.6rem];
+  @apply tw:flex-wrap;
 }
 
 .records-page-indicator {
-  color: #334155;
-  font-size: 0.78rem;
-  font-weight: 700;
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
 }
 
 .pagination-btn {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
-  border-radius: 10px;
-  padding: 0.5rem 0.85rem;
-  min-height: 38px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#0f172a];
+  @apply tw:[border-radius:10px];
+  @apply tw:[padding:0.5rem_0.85rem];
+  @apply tw:[min-height:38px];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:background_0.2s_ease,_border-color_0.2s_ease,_color_0.2s_ease];
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-color:#94a3b8];
 }
 
 .pagination-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+  @apply tw:cursor-not-allowed;
+  @apply tw:[opacity:0.5];
 }
 
 .records-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.62);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1290;
-  padding: 1rem;
+  @apply tw:fixed;
+  @apply tw:[inset:0];
+  @apply tw:[background:rgba(15,_23,_42,_0.62)];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[z-index:1290];
+  @apply tw:[padding:1rem];
 }
 
 .records-modal-dialog {
-  width: min(980px, 100%);
-  max-height: 90vh;
-  background: #ffffff;
-  border-radius: 20px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.26);
+  @apply tw:[width:min(980px,_100%)];
+  @apply tw:[max-height:90vh];
+  @apply tw:[background:#ffffff];
+  @apply tw:[border-radius:20px];
+  @apply tw:overflow-hidden;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[box-shadow:0_28px_60px_rgba(15,_23,_42,_0.26)];
 }
 
 .records-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  padding: 0.95rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.8rem];
+  @apply tw:[padding:0.95rem_1rem];
+  @apply tw:[border-bottom:1px_solid_#e2e8f0];
 }
 
 .records-modal-header h3 {
-  margin: 0;
-  color: #0f172a;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
 }
 
 .records-modal-header p {
-  margin: 0.2rem 0 0;
-  font-size: 0.8rem;
-  color: #64748b;
+  @apply tw:[margin:0.2rem_0_0];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[color:#64748b];
 }
 
 .records-modal-body {
-  padding: 1rem;
-  overflow: auto;
+  @apply tw:[padding:1rem];
+  @apply tw:overflow-auto;
 }
 
 .results-modal-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.7rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(4,_minmax(0,_1fr))];
+  @apply tw:[gap:0.7rem];
 }
 
 .activity-results-list {
-  display: grid;
-  gap: 0.85rem;
-  margin-top: 0.85rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[margin-top:0.85rem];
 }
 
 .activity-result-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  padding: 0.95rem 1rem;
-  display: grid;
-  gap: 0.85rem;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
+  @apply tw:[padding:0.95rem_1rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.85rem];
 }
 
 .activity-result-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.85rem;
-  flex-wrap: wrap;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.85rem];
+  @apply tw:flex-wrap;
 }
 
 .activity-result-head-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.55rem];
+  @apply tw:flex-wrap;
+  @apply tw:justify-end;
 }
 
 .activity-result-date {
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 600;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:600];
 }
 
 .activity-result-summary-row {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:flex-wrap;
 }
 
 .activity-result-body {
-  display: grid;
-  gap: 0.75rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.75rem];
 }
 
 .activity-result-section {
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 0.8rem 0.9rem;
-  display: grid;
-  gap: 0.45rem;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:0.8rem_0.9rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.45rem];
 }
 
 .activity-result-section p {
-  margin: 0;
-  color: #334155;
-  font-size: 0.84rem;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
+  @apply tw:[margin:0];
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[line-height:1.6];
+  @apply tw:whitespace-pre-wrap;
+  @apply tw:[word-break:break-word];
 }
 
 .activity-result-section-label {
-  color: #475569;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.04em];
+  @apply tw:uppercase;
 }
 
 .activity-result-link-list,
 .activity-result-file-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.55rem];
 }
 
 .activity-result-link-list .record-link {
-  max-width: 100%;
-  overflow-wrap: anywhere;
+  @apply tw:max-w-full;
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 .activity-result-file {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: #1d4ed8;
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 0.48rem 0.7rem;
-  text-decoration: none;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[padding:0.48rem_0.7rem];
+  @apply tw:[text-decoration:none];
 }
 
 .activity-result-file:hover {
-  background: #eff6ff;
+  @apply tw:[background:#eff6ff];
 }
 
 .activity-result-feedback {
-  border-color: #bfdbfe;
-  background: #f8fbff;
+  @apply tw:[border-color:#bfdbfe];
+  @apply tw:[background:#f8fbff];
 }
 
 .activity-ai-review {
-  border-color: #c4b5fd;
-  background: #faf8ff;
+  @apply tw:[border-color:#c4b5fd];
+  @apply tw:[background:#faf8ff];
 }
 
 .activity-ai-review__status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
-  align-items: baseline;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.35rem_0.75rem];
+  @apply tw:items-baseline;
 }
 
 .activity-ai-review__status span,
 .activity-ai-review__item small {
-  color: #64748b;
+  @apply tw:[color:#64748b];
 }
 
 .activity-ai-review__item {
-  display: grid;
-  gap: 0.3rem;
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  border: 1px solid #ddd6fe;
-  border-radius: 10px;
-  background: #fff;
+  @apply tw:grid;
+  @apply tw:[gap:0.3rem];
+  @apply tw:[margin-top:0.75rem];
+  @apply tw:[padding:0.75rem];
+  @apply tw:[border:1px_solid_#ddd6fe];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#fff];
 }
 
 .activity-ai-review__item p {
-  margin: 0;
+  @apply tw:[margin:0];
 }
 
 .records-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.7rem;
-  padding: 0.8rem 1rem 0.95rem;
-  border-top: 1px solid #e2e8f0;
-  background: #ffffff;
+  @apply tw:flex;
+  @apply tw:justify-end;
+  @apply tw:[gap:0.7rem];
+  @apply tw:[padding:0.8rem_1rem_0.95rem];
+  @apply tw:[border-top:1px_solid_#e2e8f0];
+  @apply tw:[background:#ffffff];
 }
 
 .deadline-modal-dialog {
-  width: min(540px, 100%);
+  @apply tw:[width:min(540px,_100%)];
 }
 
 .lesson-manage-dialog {
-  width: min(590px, 100%);
+  @apply tw:[width:min(590px,_100%)];
 }
 
 .lesson-modal-close {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 auto;
-  border: 1px solid #dbe2ea;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #64748b;
-  cursor: pointer;
+  @apply tw:grid;
+  @apply tw:place-items-center;
+  @apply tw:[width:36px];
+  @apply tw:[height:36px];
+  @apply tw:flex-none;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#64748b];
+  @apply tw:cursor-pointer;
 }
 
 .lesson-manage-form {
-  display: grid;
-  gap: 0.95rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.95rem];
 }
 
 .lesson-manage-form > label {
-  display: grid;
-  gap: 0.42rem;
-  color: #475569;
-  font-size: 0.8rem;
-  font-weight: 800;
+  @apply tw:grid;
+  @apply tw:[gap:0.42rem];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:800];
 }
 
 .lesson-manage-form input[type='text'],
 .lesson-manage-form input[type='number'],
 .lesson-manage-form select,
 .lesson-manage-form textarea {
-  width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 11px;
-  padding: 0.68rem 0.75rem;
-  background: #ffffff;
-  color: #0f172a;
-  font: inherit;
+  @apply tw:w-full;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:11px];
+  @apply tw:[padding:0.68rem_0.75rem];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font:inherit];
 }
 
 .lesson-manage-form textarea {
-  resize: vertical;
-  min-height: 110px;
+  @apply tw:resize-y;
+  @apply tw:[min-height:110px];
 }
 
 .lesson-manage-form input:focus,
 .lesson-manage-form select:focus,
 .lesson-manage-form textarea:focus {
-  outline: none;
-  border-color: #7fa66c;
-  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.15);
+  @apply tw:[outline:none];
+  @apply tw:[border-color:#7fa66c];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(111,_157,_88,_0.15)];
 }
 
 .lesson-current-class {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.7rem;
-  border: 1px solid #dce9d5;
-  border-radius: 12px;
-  padding: 0.7rem 0.8rem;
-  background: #f5faf2;
-  color: #64748b;
-  font-size: 0.78rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.7rem];
+  @apply tw:[border:1px_solid_#dce9d5];
+  @apply tw:[border-radius:12px];
+  @apply tw:[padding:0.7rem_0.8rem];
+  @apply tw:[background:#f5faf2];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.78rem];
 }
 
 .lesson-current-class strong {
-  color: #315f1e;
+  @apply tw:[color:#315f1e];
 }
 
 .lesson-class-picker {
-  display: grid;
-  gap: 0.55rem;
-  max-height: 290px;
-  overflow: auto;
-  margin: 0;
-  border: 0;
-  padding: 0;
+  @apply tw:grid;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[max-height:290px];
+  @apply tw:overflow-auto;
+  @apply tw:[margin:0];
+  @apply tw:[border:0];
+  @apply tw:[padding:0];
 }
 
 .lesson-class-picker legend {
-  margin-bottom: 0.6rem;
-  color: #475569;
-  font-size: 0.8rem;
-  font-weight: 800;
+  @apply tw:[margin-bottom:0.6rem];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:800];
 }
 
 .lesson-class-picker label {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 0.68rem 0.75rem;
-  cursor: pointer;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.7rem];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:12px];
+  @apply tw:[padding:0.68rem_0.75rem];
+  @apply tw:cursor-pointer;
 }
 
 .lesson-class-picker label:has(input:checked) {
-  border-color: #91b57f;
-  background: #f2f8ee;
+  @apply tw:[border-color:#91b57f];
+  @apply tw:[background:#f2f8ee];
 }
 
 .lesson-class-picker input {
-  width: 17px;
-  height: 17px;
-  accent-color: #5d8c46;
+  @apply tw:[width:17px];
+  @apply tw:[height:17px];
+  @apply tw:[accent-color:#5d8c46];
 }
 
 .lesson-class-picker label > span {
-  display: grid;
-  gap: 0.12rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.12rem];
 }
 
 .lesson-class-picker strong {
-  color: #1f2937;
-  font-size: 0.84rem;
+  @apply tw:[color:#1f2937];
+  @apply tw:[font-size:0.84rem];
 }
 
 .lesson-class-picker small {
-  color: #64748b;
-  font-size: 0.72rem;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.72rem];
 }
 
 .lesson-manage-error,
 .lesson-manage-empty {
-  margin: 0;
-  color: #b91c1c;
-  font-size: 0.78rem;
-  font-weight: 700;
+  @apply tw:[margin:0];
+  @apply tw:[color:#b91c1c];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
 }
 
 .lesson-manage-empty {
-  color: #64748b;
+  @apply tw:[color:#64748b];
 }
 
 .lesson-secondary-btn,
 .lesson-primary-btn {
-  border-radius: 10px;
-  padding: 0.62rem 0.85rem;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
-  cursor: pointer;
+  @apply tw:[border-radius:10px];
+  @apply tw:[padding:0.62rem_0.85rem];
+  @apply tw:[font:inherit];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:800];
+  @apply tw:cursor-pointer;
 }
 
 .lesson-secondary-btn {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #475569;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#475569];
 }
 
 .lesson-primary-btn {
-  border: 1px solid #5d8c46;
-  background: #5d8c46;
-  color: #ffffff;
+  @apply tw:[border:1px_solid_#5d8c46];
+  @apply tw:[background:#5d8c46];
+  @apply tw:[color:#ffffff];
 }
 
 .lesson-secondary-btn:disabled,
 .lesson-primary-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
+  @apply tw:cursor-not-allowed;
+  @apply tw:[opacity:0.58];
 }
 
 .deadline-modal-body {
-  display: grid;
-  gap: 0.95rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.95rem];
 }
 
 .deadline-editor-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:[gap:0.85rem];
 }
 
 .deadline-editor-field {
-  display: grid;
-  gap: 0.45rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.45rem];
 }
 
 .deadline-editor-field span {
-  color: #475569;
-  font-size: 0.8rem;
-  font-weight: 700;
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:700];
 }
 
 .deadline-editor-field input {
-  width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #0f172a;
-  padding: 0.78rem 0.9rem;
-  font: inherit;
+  @apply tw:w-full;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#0f172a];
+  @apply tw:[padding:0.78rem_0.9rem];
+  @apply tw:[font:inherit];
 }
 
 .deadline-editor-help {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.83rem;
-  line-height: 1.5;
+  @apply tw:[margin:0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.83rem];
+  @apply tw:[line-height:1.5];
 }
 
 .deadline-editor-error {
-  margin: 0;
-  color: #b91c1c;
-  font-size: 0.82rem;
-  font-weight: 700;
+  @apply tw:[margin:0];
+  @apply tw:[color:#b91c1c];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:700];
 }
 
 .deadline-modal-footer {
-  justify-content: space-between;
+  @apply tw:justify-between;
 }
 
 .deadline-clear-btn {
-  border-color: #fecaca;
-  color: #b91c1c;
+  @apply tw:[border-color:#fecaca];
+  @apply tw:[color:#b91c1c];
 }
 
 .deadline-clear-btn:hover {
-  background: #fff5f5;
+  @apply tw:[background:#fff5f5];
 }
 
 .deadline-save-btn {
-  min-width: 136px;
-  justify-content: center;
+  @apply tw:[min-width:136px];
+  @apply tw:justify-center;
 }
 
 .answer-key-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.62);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1300;
-  padding: 1rem;
+  @apply tw:fixed;
+  @apply tw:[inset:0];
+  @apply tw:[background:rgba(15,_23,_42,_0.62)];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[z-index:1300];
+  @apply tw:[padding:1rem];
 }
 
 .answer-key-dialog {
-  width: min(900px, 100%);
-  max-height: 90vh;
-  background: #ffffff;
-  border-radius: 20px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.26);
+  @apply tw:[width:min(900px,_100%)];
+  @apply tw:[max-height:90vh];
+  @apply tw:[background:#ffffff];
+  @apply tw:[border-radius:20px];
+  @apply tw:overflow-hidden;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[box-shadow:0_28px_60px_rgba(15,_23,_42,_0.26)];
 }
 
 .answer-key-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  padding: 0.9rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.8rem];
+  @apply tw:[padding:0.9rem_1rem];
+  @apply tw:[border-bottom:1px_solid_#e2e8f0];
 }
 
 .answer-key-header h3 {
-  margin: 0;
+  @apply tw:[margin:0];
 }
 
 .answer-key-header p {
-  margin: 0.2rem 0 0;
-  font-size: 0.8rem;
-  color: #64748b;
+  @apply tw:[margin:0.2rem_0_0];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[color:#64748b];
 }
 
 .answer-key-body {
-  overflow: auto;
-  padding: 1rem 1.1rem 1.1rem;
-  display: grid;
-  gap: 0.9rem;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f8fafc;
+  @apply tw:overflow-auto;
+  @apply tw:[padding:1rem_1.1rem_1.1rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.9rem];
+  @apply tw:[scrollbar-width:thin];
+  @apply tw:[scrollbar-color:#cbd5e1_#f8fafc];
 }
 
 .answer-key-body::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  @apply tw:[width:8px];
+  @apply tw:[height:8px];
 }
 
 .answer-key-body::-webkit-scrollbar-track {
-  background: #f8fafc;
-  border-radius: 999px;
+  @apply tw:[background:#f8fafc];
+  @apply tw:[border-radius:999px];
 }
 
 .answer-key-body::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 999px;
+  @apply tw:[background:#cbd5e1];
+  @apply tw:[border-radius:999px];
 }
 
 .answer-key-body::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  @apply tw:[background:#94a3b8];
 }
 
 .answer-key-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.75rem 1rem 0.95rem;
-  border-top: 1px solid #e2e8f0;
-  background: #ffffff;
+  @apply tw:flex;
+  @apply tw:justify-end;
+  @apply tw:[padding:0.75rem_1rem_0.95rem];
+  @apply tw:[border-top:1px_solid_#e2e8f0];
+  @apply tw:[background:#ffffff];
 }
 
 .answer-key-close-btn {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
-  border-radius: 10px;
-  font-size: 0.84rem;
-  font-weight: 700;
-  padding: 0.48rem 0.85rem;
-  cursor: pointer;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#0f172a];
+  @apply tw:[border-radius:10px];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[padding:0.48rem_0.85rem];
+  @apply tw:cursor-pointer;
 }
 
 .answer-key-close-btn:hover {
-  background: #f8fafc;
+  @apply tw:[background:#f8fafc];
 }
 
 .answer-key-item {
-  border: 1px solid #dbe2ea;
-  border-radius: 16px;
-  padding: 0.95rem 1rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-  display: grid;
-  gap: 0.6rem;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[border-radius:16px];
+  @apply tw:[padding:0.95rem_1rem];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
+  @apply tw:[box-shadow:0_10px_24px_rgba(15,_23,_42,_0.05)];
+  @apply tw:grid;
+  @apply tw:[gap:0.6rem];
 }
 
 .answer-key-item-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
 }
 
 .answer-key-item h4 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 0.96rem;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.96rem];
 }
 
 .answer-option-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.28rem 0.62rem;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #4338ca;
-  font-size: 0.72rem;
-  font-weight: 800;
-  white-space: nowrap;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[padding:0.28rem_0.62rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#eef2ff];
+  @apply tw:[color:#4338ca];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:whitespace-nowrap;
 }
 
 .answer-question {
-  margin: 0;
-  color: #334155;
-  font-size: 0.86rem;
-  line-height: 1.55;
+  @apply tw:[margin:0];
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.86rem];
+  @apply tw:[line-height:1.55];
 }
 
 .answer-options-shell {
-  margin-top: 0.45rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  background: #ffffff;
-  padding: 0.7rem;
+  @apply tw:[margin-top:0.45rem];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:0.7rem];
 }
 
 .answer-options {
-  display: grid;
-  gap: 0.45rem;
-  max-height: 220px;
-  overflow-y: auto;
-  padding-right: 0.2rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[max-height:220px];
+  @apply tw:overflow-y-auto;
+  @apply tw:[padding-right:0.2rem];
 }
 
 .answer-options span {
-  border: 1px solid #dbe2ea;
-  border-radius: 12px;
-  padding: 0.6rem 0.75rem;
-  font-size: 0.8rem;
-  color: #334155;
-  background: #ffffff;
-  line-height: 1.45;
-  word-break: break-word;
+  @apply tw:[border:1px_solid_#dbe2ea];
+  @apply tw:[border-radius:12px];
+  @apply tw:[padding:0.6rem_0.75rem];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[color:#334155];
+  @apply tw:[background:#ffffff];
+  @apply tw:[line-height:1.45];
+  @apply tw:[word-break:break-word];
 }
 
 .answer-options span.correct {
-  border-color: #22c55e;
-  background: #f0fdf4;
-  color: #166534;
-  font-weight: 700;
+  @apply tw:[border-color:#22c55e];
+  @apply tw:[background:#f0fdf4];
+  @apply tw:[color:#166534];
+  @apply tw:[font-weight:700];
 }
 
 .answer-correct {
-  margin: 0.1rem 0 0;
-  font-size: 0.84rem;
-  color: #0f172a;
+  @apply tw:[margin:0.1rem_0_0];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[color:#0f172a];
 }
 
 .answer-options::-webkit-scrollbar {
-  width: 8px;
+  @apply tw:[width:8px];
 }
 
 .answer-options::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 999px;
+  @apply tw:[background:#cbd5e1];
+  @apply tw:[border-radius:999px];
 }
 
 .answer-options::-webkit-scrollbar-track {
-  background: #f8fafc;
+  @apply tw:[background:#f8fafc];
 }
 
 .primary-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[gap:0.1rem];
 }
 
 .primary-cell strong {
-  color: #0f172a;
-  font-size: 0.9rem;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.9rem];
 }
 
 .primary-cell small {
-  color: #64748b;
-  font-size: 0.72rem;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.72rem];
 }
 
 .secondary-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[gap:0.1rem];
 }
 
 .secondary-cell span {
-  color: #0f172a;
+  @apply tw:[color:#0f172a];
 }
 
 .secondary-cell small {
-  color: #64748b;
-  font-size: 0.75rem;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.75rem];
 }
 
 .student-identity {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  min-width: 0;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.7rem];
+  @apply tw:[min-width:0];
 }
 
 .student-identity.compact {
-  gap: 0.6rem;
+  @apply tw:[gap:0.6rem];
 }
 
 .student-avatar {
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 999px;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 2px solid rgba(148, 163, 184, 0.22);
+  @apply tw:[width:2.35rem];
+  @apply tw:[height:2.35rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:object-cover;
+  @apply tw:shrink-0;
+  @apply tw:[border:2px_solid_rgba(148,_163,_184,_0.22)];
 }
 
 .student-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.12rem;
-  min-width: 0;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[gap:0.12rem];
+  @apply tw:[min-width:0];
 }
 
 .student-details strong {
-  color: #0f172a;
-  font-size: 0.88rem;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.88rem];
 }
 
 .student-details small {
-  color: #64748b;
-  font-size: 0.74rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:whitespace-nowrap;
+  @apply tw:overflow-hidden;
+  @apply tw:text-ellipsis;
 }
 
 .file-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[gap:0.45rem];
 }
 
 .file-name {
-  color: #0f172a;
-  font-size: 0.92rem;
-  font-weight: 700;
-  line-height: 1.45;
-  word-break: break-word;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.92rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[line-height:1.45];
+  @apply tw:[word-break:break-word];
 }
 
 .file-type {
-  color: #64748b;
-  font-size: 0.73rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.73rem];
+  @apply tw:[font-weight:600];
+  @apply tw:[letter-spacing:0.02em];
+  @apply tw:uppercase;
 }
 
 .attachment-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
-  padding: 0.9rem 1rem;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid #e2e8f0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:auto_minmax(0,_1fr)_auto];
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[padding:0.9rem_1rem];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[box-shadow:inset_0_1px_0_rgba(255,_255,_255,_0.85)];
 }
 
 .attachment-row:last-child {
-  border-bottom: 1px solid #e2e8f0;
+  @apply tw:[border-bottom:1px_solid_#e2e8f0];
 }
 
 .attachment-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #eff6ff;
-  color: #2563eb;
-  font-size: 1rem;
-  flex-shrink: 0;
+  @apply tw:[width:46px];
+  @apply tw:[height:46px];
+  @apply tw:[border-radius:14px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[background:#eff6ff];
+  @apply tw:[color:#2563eb];
+  @apply tw:[font-size:1rem];
+  @apply tw:shrink-0;
 }
 
 .attachment-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.22rem;
-  min-width: 0;
+  @apply tw:flex;
+  @apply tw:flex-col;
+  @apply tw:[gap:0.22rem];
+  @apply tw:[min-width:0];
 }
 
 .attachment-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-shrink: 0;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.65rem];
+  @apply tw:shrink-0;
 }
 
 .record-link {
-  color: #111111;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: none;
-  border: none;
-  background: transparent;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
+  @apply tw:[color:#111111];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[text-decoration:none];
+  @apply tw:[border:none];
+  @apply tw:[background:transparent];
+  @apply tw:[padding:0];
+  @apply tw:text-left;
+  @apply tw:cursor-pointer;
 }
 
 .record-link:hover {
-  text-decoration: underline;
+  @apply tw:[text-decoration:underline];
 }
 
 .record-link-button {
-  width: fit-content;
-  border: 1px solid #111111;
-  background: #111111;
-  color: #ffffff;
-  border-radius: 10px;
-  padding: 0.5rem 0.8rem;
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.42rem;
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.16);
+  @apply tw:w-fit;
+  @apply tw:[border:1px_solid_#111111];
+  @apply tw:[background:#111111];
+  @apply tw:[color:#ffffff];
+  @apply tw:[border-radius:10px];
+  @apply tw:[padding:0.5rem_0.8rem];
+  @apply tw:[min-height:38px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.42rem];
+  @apply tw:[box-shadow:0_10px_20px_rgba(37,_99,_235,_0.16)];
 }
 
 .record-link-button:hover {
-  background: #1f2937;
-  color: #ffffff;
-  text-decoration: none;
+  @apply tw:[background:#1f2937];
+  @apply tw:[color:#ffffff];
+  @apply tw:[text-decoration:none];
 }
 
 .record-link-button i,
 .record-link-button .fas,
 .record-link-button .fa-key {
-  color: #ffffff !important;
+  @apply tw:[color:#ffffff]!;
 }
 
 .difficulty-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  border: 1px solid transparent;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[padding:0.25rem_0.55rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:700];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.03em];
+  @apply tw:[border:1px_solid_transparent];
 }
 
 .difficulty-easy {
-  background: #ecfdf3;
-  border-color: #a7f3d0;
-  color: #166534;
+  @apply tw:[background:#ecfdf3];
+  @apply tw:[border-color:#a7f3d0];
+  @apply tw:[color:#166534];
 }
 
 .difficulty-medium {
-  background: #fff7ed;
-  border-color: #fed7aa;
-  color: #9a3412;
+  @apply tw:[background:#fff7ed];
+  @apply tw:[border-color:#fed7aa];
+  @apply tw:[color:#9a3412];
 }
 
 .status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 72px;
-  padding: 0.36rem 0.72rem;
-  border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[min-width:72px];
+  @apply tw:[padding:0.36rem_0.72rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:700];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.04em];
 }
 
 .status-active {
-  background: rgba(34, 197, 94, 0.16);
-  color: #166534;
+  @apply tw:[background:rgba(34,_197,_94,_0.16)];
+  @apply tw:[color:#166534];
 }
 
 .status-suspended {
-  background: rgba(239, 68, 68, 0.14);
-  color: #991b1b;
+  @apply tw:[background:rgba(239,_68,_68,_0.14)];
+  @apply tw:[color:#991b1b];
 }
 
 .difficulty-hard {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #991b1b;
+  @apply tw:[background:#fef2f2];
+  @apply tw:[border-color:#fecaca];
+  @apply tw:[color:#991b1b];
 }
 
 .table-state {
-  min-height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  color: #64748b;
-  font-weight: 600;
-  border: 1px dashed #cbd5e1;
-  border-radius: 12px;
-  background: #ffffff;
+  @apply tw:[min-height:150px];
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.6rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-weight:600];
+  @apply tw:[border:1px_dashed_#cbd5e1];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#ffffff];
 }
 
 @media (max-width: 768px) {
   #teacherRecordsAssessmentsPanel .assessments-hero {
-    align-items: flex-start;
-    padding: 1.2rem;
+    @apply tw:items-start;
+    @apply tw:[padding:1.2rem];
   }
 
   #teacherRecordsAssessmentsPanel .assessments-summary {
-    padding: 0.65rem 0.75rem;
+    @apply tw:[padding:0.65rem_0.75rem];
   }
 
   #teacherRecordsAssessmentsPanel .assessments-summary-icon,
   #teacherRecordsAssessmentsPanel .assessments-summary-divider {
-    display: none;
+    @apply tw:hidden;
   }
 
   #teacherRecordsAssessmentsPanel .assessments-toolbar {
-    grid-template-columns: 1fr 1fr;
-    margin: 0.9rem 0.9rem 0;
+    @apply tw:[grid-template-columns:1fr_1fr];
+    @apply tw:[margin:0.9rem_0.9rem_0];
   }
 
   #teacherRecordsAssessmentsPanel .assessments-search {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   #teacherRecordsAssessmentsPanel .records-feed-wrap {
-    padding: 0.85rem 0.9rem 1rem;
+    @apply tw:[padding:0.85rem_0.9rem_1rem];
   }
 
   #teacherRecordsAssessmentsPanel .assessment-record-card {
-    padding: 0.9rem;
-    border-radius: 16px;
+    @apply tw:[padding:0.9rem];
+    @apply tw:[border-radius:16px];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-header {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.65rem;
+    @apply tw:[grid-template-columns:auto_minmax(0,_1fr)];
+    @apply tw:[gap:0.65rem];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-date-group {
-    grid-column: 2;
-    width: fit-content;
+    @apply tw:[grid-column:2];
+    @apply tw:w-fit;
   }
 
   #teacherRecordsAssessmentsPanel .assessment-meta-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   #teacherRecordsAssessmentsPanel .meta-item {
-    padding: 0.68rem;
+    @apply tw:[padding:0.68rem];
   }
 
   #teacherRecordsAssessmentsPanel .assessment-results-header {
-    flex-direction: row;
-    align-items: center;
+    @apply tw:flex-row;
+    @apply tw:items-center;
   }
 
   #teacherRecordsAssessmentsPanel .record-card-actions {
-    justify-content: flex-end;
+    @apply tw:justify-end;
   }
 
   #teacherRecordsAssessmentsPanel .records-pagination {
-    align-items: center;
+    @apply tw:items-center;
   }
 
   #teacherRecordsAssessmentsPanel .records-pagination-actions {
-    width: auto;
+    @apply tw:w-auto;
   }
 
   #teacherRecordsLessonsPanel .lessons-hero {
-    align-items: flex-start;
-    padding: 1.2rem;
+    @apply tw:items-start;
+    @apply tw:[padding:1.2rem];
   }
 
   #teacherRecordsLessonsPanel .lessons-upload-summary {
-    padding: 0.65rem 0.75rem;
+    @apply tw:[padding:0.65rem_0.75rem];
   }
 
   #teacherRecordsLessonsPanel .lessons-summary-icon,
   #teacherRecordsLessonsPanel .lessons-summary-divider {
-    display: none;
+    @apply tw:hidden;
   }
 
   #teacherRecordsLessonsPanel .lessons-toolbar {
-    grid-template-columns: 1fr 1fr;
-    margin: 0.9rem 0.9rem 0;
+    @apply tw:[grid-template-columns:1fr_1fr];
+    @apply tw:[margin:0.9rem_0.9rem_0];
   }
 
   #teacherRecordsLessonsPanel .lessons-search {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   #teacherRecordsLessonsPanel .records-feed-wrap {
-    padding: 0.85rem 0.9rem 1rem;
+    @apply tw:[padding:0.85rem_0.9rem_1rem];
   }
 
   #teacherRecordsLessonsPanel .lesson-document-card {
-    padding: 0.9rem;
-    border-radius: 16px;
+    @apply tw:[padding:0.9rem];
+    @apply tw:[border-radius:16px];
   }
 
   #teacherRecordsLessonsPanel .record-card-header {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding-bottom: 0;
+    @apply tw:flex-row;
+    @apply tw:items-start;
+    @apply tw:[gap:0.75rem];
+    @apply tw:[padding-bottom:0];
   }
 
   #teacherRecordsLessonsPanel .record-card-title h4 {
-    font-size: 1rem;
+    @apply tw:[font-size:1rem];
   }
 
   #teacherRecordsLessonsPanel .record-card-date-group {
-    justify-items: initial;
-    flex: 0 0 auto;
+    @apply tw:[justify-items:initial];
+    @apply tw:flex-none;
   }
 
   #teacherRecordsLessonsPanel .attachment-row {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.68rem;
+    @apply tw:[grid-template-columns:auto_minmax(0,_1fr)_auto];
+    @apply tw:items-center;
+    @apply tw:[gap:0.65rem];
+    @apply tw:[padding:0.68rem];
   }
 
   #teacherRecordsLessonsPanel .attachment-actions {
-    width: auto;
-    flex-wrap: nowrap;
+    @apply tw:w-auto;
+    @apply tw:flex-nowrap;
   }
 
   #teacherRecordsLessonsPanel .records-pagination {
-    align-items: center;
+    @apply tw:items-center;
   }
 
   #teacherRecordsLessonsPanel .records-pagination-actions {
-    width: auto;
+    @apply tw:w-auto;
   }
 
   .records-section {
-    padding: 0.85rem;
-    border-radius: 16px;
+    @apply tw:[padding:0.85rem];
+    @apply tw:[border-radius:16px];
   }
 
   .records-filters {
-    grid-template-columns: 1fr;
-    gap: 0.55rem;
-    padding: 0.55rem;
+    @apply tw:[grid-template-columns:1fr];
+    @apply tw:[gap:0.55rem];
+    @apply tw:[padding:0.55rem];
   }
 
   .record-card {
-    padding: 0.78rem;
-    border-radius: 14px;
-    gap: 0.56rem;
-    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
+    @apply tw:[padding:0.78rem];
+    @apply tw:[border-radius:14px];
+    @apply tw:[gap:0.56rem];
+    @apply tw:[box-shadow:0_6px_14px_rgba(15,_23,_42,_0.05)];
   }
 
   .record-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.45rem;
-    padding-bottom: 0.5rem;
+    @apply tw:flex-col;
+    @apply tw:items-start;
+    @apply tw:[gap:0.45rem];
+    @apply tw:[padding-bottom:0.5rem];
   }
 
   .record-card-title h4 {
-    font-size: 0.88rem;
-    line-height: 1.25;
+    @apply tw:[font-size:0.88rem];
+    @apply tw:[line-height:1.25];
   }
 
   .record-card-title p {
-    margin-top: 0.15rem;
-    font-size: 0.72rem;
+    @apply tw:[margin-top:0.15rem];
+    @apply tw:[font-size:0.72rem];
   }
 
   .record-card-date-group {
-    justify-items: start;
-    text-align: left;
+    @apply tw:justify-items-start;
+    @apply tw:text-left;
   }
 
   .record-card-date {
-    white-space: normal;
-    font-size: 0.71rem;
+    @apply tw:whitespace-normal;
+    @apply tw:[font-size:0.71rem];
   }
 
   .assessment-meta-grid {
-    grid-template-columns: 1fr;
-    gap: 0.45rem;
+    @apply tw:[grid-template-columns:1fr];
+    @apply tw:[gap:0.45rem];
   }
 
   .assessment-results-block {
-    padding: 0.8rem;
-    border-radius: 14px;
+    @apply tw:[padding:0.8rem];
+    @apply tw:[border-radius:14px];
   }
 
   .assessment-results-header {
-    flex-direction: column;
-    align-items: flex-start;
+    @apply tw:flex-col;
+    @apply tw:items-start;
   }
 
   .assessment-results-summary,
   .results-modal-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   .activity-result-head {
-    flex-direction: column;
-    align-items: flex-start;
+    @apply tw:flex-col;
+    @apply tw:items-start;
   }
 
   .activity-result-head-meta {
-    justify-content: flex-start;
+    @apply tw:justify-start;
   }
 
   .deadline-editor-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .records-pagination {
-    align-items: flex-start;
+    @apply tw:items-start;
   }
 
   .records-pagination-actions {
-    width: 100%;
-    justify-content: space-between;
+    @apply tw:w-full;
+    @apply tw:justify-between;
   }
 
   .records-page-indicator {
-    width: 100%;
-    order: -1;
+    @apply tw:w-full;
+    @apply tw:[order:-1];
   }
 
   .records-modal-dialog {
-    border-radius: 16px;
+    @apply tw:[border-radius:16px];
   }
 
   .records-modal-header {
-    align-items: flex-start;
+    @apply tw:items-start;
   }
 
   .attachment-row {
-    grid-template-columns: 1fr;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.75rem 0.8rem;
-    border-radius: 12px;
+    @apply tw:[grid-template-columns:1fr];
+    @apply tw:items-start;
+    @apply tw:[gap:0.5rem];
+    @apply tw:[padding:0.75rem_0.8rem];
+    @apply tw:[border-radius:12px];
   }
 
   .attachment-actions {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 0.4rem;
+    @apply tw:w-full;
+    @apply tw:justify-start;
+    @apply tw:flex-wrap;
+    @apply tw:[gap:0.4rem];
   }
 
   .attachment-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    @apply tw:[width:40px];
+    @apply tw:[height:40px];
+    @apply tw:[border-radius:12px];
   }
 
   .record-card-actions {
-    justify-content: stretch;
+    @apply tw:justify-stretch;
   }
 
   .record-card-actions .record-link-button {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   .record-chip {
-    font-size: 0.64rem;
-    padding: 0.16rem 0.42rem;
+    @apply tw:[font-size:0.64rem];
+    @apply tw:[padding:0.16rem_0.42rem];
   }
 
   .file-name {
-    font-size: 0.84rem;
-    line-height: 1.2;
+    @apply tw:[font-size:0.84rem];
+    @apply tw:[line-height:1.2];
   }
 
   .file-type {
-    font-size: 0.66rem;
+    @apply tw:[font-size:0.66rem];
   }
 
   .record-link {
-    font-size: 0.74rem;
+    @apply tw:[font-size:0.74rem];
   }
 
   .record-link-button {
-    min-height: 30px;
-    padding: 0.26rem 0.52rem;
-    border-radius: 8px;
+    @apply tw:[min-height:30px];
+    @apply tw:[padding:0.26rem_0.52rem];
+    @apply tw:[border-radius:8px];
   }
 
   .meta-item {
-    padding: 0.48rem 0.52rem;
+    @apply tw:[padding:0.48rem_0.52rem];
   }
 
   .meta-item-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 10px;
+    @apply tw:[width:30px];
+    @apply tw:[height:30px];
+    @apply tw:[border-radius:10px];
   }
 
   .meta-item span {
-    font-size: 0.66rem;
+    @apply tw:[font-size:0.66rem];
   }
 
   .meta-item strong {
-    font-size: 0.78rem;
+    @apply tw:[font-size:0.78rem];
   }
 }
 
 @media (max-width: 420px) {
   #teacherRecordsAssessmentsPanel .assessments-hero {
-    display: grid;
-    gap: 0.85rem;
-    padding: 1rem;
+    @apply tw:grid;
+    @apply tw:[gap:0.85rem];
+    @apply tw:[padding:1rem];
   }
 
   #teacherRecordsAssessmentsPanel .assessments-summary {
-    width: 100%;
-    justify-content: space-between;
-    box-sizing: border-box;
+    @apply tw:w-full;
+    @apply tw:justify-between;
+    @apply tw:box-border;
   }
 
   #teacherRecordsAssessmentsPanel .assessments-summary-divider {
-    display: block;
-    height: 28px;
+    @apply tw:block;
+    @apply tw:[height:28px];
   }
 
   #teacherRecordsAssessmentsPanel .assessments-toolbar {
-    grid-template-columns: 1fr;
-    gap: 0.55rem;
-    margin: 0.75rem 0.65rem 0;
-    padding: 0.55rem;
-    border-radius: 15px;
+    @apply tw:[grid-template-columns:1fr];
+    @apply tw:[gap:0.55rem];
+    @apply tw:[margin:0.75rem_0.65rem_0];
+    @apply tw:[padding:0.55rem];
+    @apply tw:[border-radius:15px];
   }
 
   #teacherRecordsAssessmentsPanel .assessments-search {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 
   #teacherRecordsAssessmentsPanel .assessments-results-bar {
-    align-items: flex-start;
-    margin-inline: 0.85rem;
+    @apply tw:items-start;
+    @apply tw:[margin-inline:0.85rem];
   }
 
   #teacherRecordsAssessmentsPanel .records-feed-wrap {
-    padding: 0.72rem 0.65rem 0.8rem;
+    @apply tw:[padding:0.72rem_0.65rem_0.8rem];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-header {
-    grid-template-columns: auto minmax(0, 1fr);
+    @apply tw:[grid-template-columns:auto_minmax(0,_1fr)];
   }
 
   #teacherRecordsAssessmentsPanel .assessment-kind-icon {
-    width: 42px;
-    height: 42px;
+    @apply tw:[width:42px];
+    @apply tw:[height:42px];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-title h4 {
-    font-size: 0.98rem;
+    @apply tw:[font-size:0.98rem];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-date-group {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   #teacherRecordsAssessmentsPanel .assessment-results-header {
-    align-items: flex-start;
+    @apply tw:items-start;
   }
 
   #teacherRecordsAssessmentsPanel .assessment-results-heading-icon {
-    display: none;
+    @apply tw:hidden;
   }
 
   #teacherRecordsAssessmentsPanel .record-card-actions {
-    display: grid;
-    grid-template-columns: 1fr;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-actions .record-link-button {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   #teacherRecordsAssessmentsPanel .records-pagination {
-    padding: 0.75rem;
+    @apply tw:[padding:0.75rem];
   }
 
   #teacherRecordsAssessmentsPanel .records-pagination-actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    @apply tw:w-full;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:1fr_auto_1fr];
   }
 
   #teacherRecordsAssessmentsPanel .pagination-btn {
-    min-width: 0;
-    padding-inline: 0.55rem;
+    @apply tw:[min-width:0];
+    @apply tw:[padding-inline:0.55rem];
   }
 
   #teacherRecordsAssessmentsPanel .assessments-page-numbers {
-    display: none;
+    @apply tw:hidden;
   }
 
   #teacherRecordsLessonsPanel .lessons-hero {
-    display: grid;
-    gap: 0.85rem;
-    padding: 1rem;
+    @apply tw:grid;
+    @apply tw:[gap:0.85rem];
+    @apply tw:[padding:1rem];
   }
 
   #teacherRecordsLessonsPanel .lessons-upload-summary {
-    width: 100%;
-    justify-content: space-between;
-    box-sizing: border-box;
+    @apply tw:w-full;
+    @apply tw:justify-between;
+    @apply tw:box-border;
   }
 
   #teacherRecordsLessonsPanel .lessons-summary-divider {
-    display: block;
-    height: 28px;
+    @apply tw:block;
+    @apply tw:[height:28px];
   }
 
   #teacherRecordsLessonsPanel .lessons-toolbar {
-    grid-template-columns: 1fr;
-    gap: 0.55rem;
-    margin: 0.75rem 0.65rem 0;
-    padding: 0.55rem;
-    border-radius: 15px;
+    @apply tw:[grid-template-columns:1fr];
+    @apply tw:[gap:0.55rem];
+    @apply tw:[margin:0.75rem_0.65rem_0];
+    @apply tw:[padding:0.55rem];
+    @apply tw:[border-radius:15px];
   }
 
   #teacherRecordsLessonsPanel .lessons-search {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 
   #teacherRecordsLessonsPanel .lessons-results-bar {
-    align-items: flex-start;
-    margin-inline: 0.85rem;
+    @apply tw:items-start;
+    @apply tw:[margin-inline:0.85rem];
   }
 
   #teacherRecordsLessonsPanel .records-feed-wrap {
-    padding: 0.72rem 0.65rem 0.8rem;
+    @apply tw:[padding:0.72rem_0.65rem_0.8rem];
   }
 
   #teacherRecordsLessonsPanel .record-card-header {
-    flex-direction: column;
+    @apply tw:flex-col;
   }
 
   #teacherRecordsLessonsPanel .record-card-date-group {
-    width: fit-content;
+    @apply tw:w-fit;
   }
 
   #teacherRecordsLessonsPanel .attachment-row {
-    grid-template-columns: auto minmax(0, 1fr);
+    @apply tw:[grid-template-columns:auto_minmax(0,_1fr)];
   }
 
   #teacherRecordsLessonsPanel .attachment-actions {
-    grid-column: 2;
+    @apply tw:[grid-column:2];
   }
 
   #teacherRecordsLessonsPanel .record-link {
-    width: 36px;
-    min-height: 36px;
+    @apply tw:[width:36px];
+    @apply tw:[min-height:36px];
   }
 
   #teacherRecordsLessonsPanel .records-pagination {
-    padding: 0.75rem;
+    @apply tw:[padding:0.75rem];
   }
 
   #teacherRecordsLessonsPanel .records-pagination-actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    @apply tw:w-full;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:1fr_auto_1fr];
   }
 
   #teacherRecordsLessonsPanel .pagination-btn {
-    min-width: 0;
-    padding-inline: 0.55rem;
+    @apply tw:[min-width:0];
+    @apply tw:[padding-inline:0.55rem];
   }
 
   #teacherRecordsLessonsPanel .lessons-page-numbers {
-    display: none;
+    @apply tw:hidden;
   }
 
   .records-section {
-    padding: 0.62rem;
+    @apply tw:[padding:0.62rem];
   }
 
   .section-subtitle {
-    font-size: 0.76rem;
+    @apply tw:[font-size:0.76rem];
   }
 
   .record-card-title h4 {
-    font-size: 0.84rem;
+    @apply tw:[font-size:0.84rem];
   }
 
   .record-card-title p {
-    font-size: 0.69rem;
+    @apply tw:[font-size:0.69rem];
   }
 
   .meta-item {
-    padding: 0.36rem 0.42rem;
+    @apply tw:[padding:0.36rem_0.42rem];
   }
 
   .record-chip-row {
-    gap: 0.3rem;
+    @apply tw:[gap:0.3rem];
   }
 
   .record-card {
-    padding: 0.6rem;
-    gap: 0.46rem;
+    @apply tw:[padding:0.6rem];
+    @apply tw:[gap:0.46rem];
   }
 
   .assessment-results-summary,
   .results-modal-metrics {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .pagination-btn {
-    flex: 1 1 calc(50% - 0.3rem);
+    @apply tw:[flex:1_1_calc(50%_-_0.3rem)];
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   #teacherRecordsAssessmentsPanel .assessment-record-card {
-    animation: none;
-    transition: none;
+    @apply tw:animate-none;
+    @apply tw:[transition:none];
   }
 
   #teacherRecordsAssessmentsPanel .record-link-button,
   #teacherRecordsAssessmentsPanel .pagination-btn,
   #teacherRecordsAssessmentsPanel .assessments-page-btn {
-    transition: none;
+    @apply tw:[transition:none];
   }
 
   #teacherRecordsLessonsPanel .lesson-document-card {
-    animation: none;
-    transition: none;
+    @apply tw:animate-none;
+    @apply tw:[transition:none];
   }
 
   #teacherRecordsLessonsPanel .record-link,
   #teacherRecordsLessonsPanel .pagination-btn,
   #teacherRecordsLessonsPanel .lessons-page-btn {
-    transition: none;
+    @apply tw:[transition:none];
   }
 }
 
 @media (min-width: 1280px) {
   .records-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 }
 
 .attendance-section {
-  gap: 1.55rem;
+  @apply tw:[gap:1.55rem];
 }
 
 .attendance-shell {
-  display: grid;
-  gap: 1.25rem;
+  @apply tw:grid;
+  @apply tw:[gap:1.25rem];
 }
 
 .attendance-hero-card {
-  border: 1px solid #dbe4ef;
-  border-radius: 24px;
-  padding: 1.35rem;
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 32%),
-    radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.09), transparent 28%),
-    linear-gradient(135deg, #ffffff 0%, #eff6ff 54%, #f8fafc 100%);
-  display: grid;
-  gap: 1.15rem;
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:24px];
+  @apply tw:[padding:1.35rem];
+  @apply tw:[background:radial-gradient(circle_at_top_right,_rgba(37,_99,_235,_0.12),_transparent_32%),______radial-gradient(circle_at_bottom_left,_rgba(14,_165,_233,_0.09),_transparent_28%),______linear-gradient(135deg,_#ffffff_0%,_#eff6ff_54%,_#f8fafc_100%)];
+  @apply tw:grid;
+  @apply tw:[gap:1.15rem];
 }
 
 .attendance-hero-copy {
-  display: grid;
-  gap: 0.55rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.55rem];
 }
 
 .attendance-kicker,
 .attendance-panel-kicker {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, 0.1);
-  color: #1d4ed8;
-  font-size: 0.73rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:w-fit;
+  @apply tw:[padding:0.35rem_0.7rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:rgba(37,_99,_235,_0.1)];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[font-size:0.73rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.08em];
+  @apply tw:uppercase;
 }
 
 .attendance-hero-copy h4 {
-  margin: 0;
-  font-size: 1.35rem;
-  line-height: 1.15;
-  color: #0f172a;
+  @apply tw:[margin:0];
+  @apply tw:[font-size:1.35rem];
+  @apply tw:[line-height:1.15];
+  @apply tw:[color:#0f172a];
 }
 
 .attendance-hero-copy p {
-  margin: 0;
-  max-width: 56rem;
-  color: #475569;
-  line-height: 1.55;
+  @apply tw:[margin:0];
+  @apply tw:[max-width:56rem];
+  @apply tw:[color:#475569];
+  @apply tw:[line-height:1.55];
 }
 
 .attendance-hero-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.6rem];
 }
 
 .attendance-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.95rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(5,_minmax(0,_1fr))];
+  @apply tw:[gap:0.95rem];
 }
 
 .attendance-summary-card {
-  border: 1px solid rgba(203, 213, 225, 0.8);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  padding: 1rem;
-  display: grid;
-  gap: 0.38rem;
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
+  @apply tw:[border:1px_solid_rgba(203,_213,_225,_0.8)];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:rgba(255,_255,_255,_0.85)];
+  @apply tw:[backdrop-filter:blur(10px)];
+  @apply tw:[padding:1rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.38rem];
+  @apply tw:[box-shadow:0_14px_28px_rgba(15,_23,_42,_0.05)];
 }
 
 .attendance-summary-card span {
-  color: #64748b;
-  font-size: 0.77rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.77rem];
+  @apply tw:[font-weight:700];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.04em];
 }
 
 .attendance-summary-card strong {
-  color: #0f172a;
-  font-size: 1.45rem;
-  line-height: 1;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.45rem];
+  @apply tw:[line-height:1];
 }
 
 .attendance-toolbar-card {
-  border: 1px solid #dbe4ef;
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  padding: 1.2rem;
-  display: grid;
-  gap: 1.05rem;
-  margin-bottom: 0.35rem;
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:22px];
+  @apply tw:[background:radial-gradient(circle_at_top_right,_rgba(37,_99,_235,_0.08),_transparent_30%),______linear-gradient(180deg,_#ffffff_0%,_#f8fbff_100%)];
+  @apply tw:[padding:1.2rem];
+  @apply tw:grid;
+  @apply tw:[gap:1.05rem];
+  @apply tw:[margin-bottom:0.35rem];
 }
 
 .attendance-toolbar-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.9rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:justify-between;
+  @apply tw:items-start;
+  @apply tw:[gap:0.9rem];
 }
 
 .attendance-toolbar-header-copy {
-  display: grid;
-  gap: 0.32rem;
-  max-width: 620px;
+  @apply tw:grid;
+  @apply tw:[gap:0.32rem];
+  @apply tw:[max-width:620px];
 }
 
 .attendance-toolbar-kicker {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 0.24rem 0.58rem;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, 0.08);
-  color: #1d4ed8;
-  font-size: 0.71rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:w-fit;
+  @apply tw:[padding:0.24rem_0.58rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:rgba(37,_99,_235,_0.08)];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[font-size:0.71rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.06em];
+  @apply tw:uppercase;
 }
 
 .attendance-toolbar-header-copy h5 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 1rem;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1rem];
 }
 
 .attendance-toolbar-header-copy p {
-  margin: 0;
-  color: #475569;
-  font-size: 0.84rem;
-  line-height: 1.5;
+  @apply tw:[margin:0];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[line-height:1.5];
 }
 
 .attendance-toolbar-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  width: fit-content;
-  border-radius: 999px;
-  border: 1px solid #dbeafe;
-  background: #eff6ff;
-  color: #1d4ed8;
-  padding: 0.5rem 0.8rem;
-  font-size: 0.8rem;
-  font-weight: 700;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.55rem];
+  @apply tw:w-fit;
+  @apply tw:[border-radius:999px];
+  @apply tw:[border:1px_solid_#dbeafe];
+  @apply tw:[background:#eff6ff];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[padding:0.5rem_0.8rem];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:700];
 }
 
 .attendance-scope-panel {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.95rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid #dbe4ef;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.8);
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.95rem];
+  @apply tw:[padding:0.9rem_1rem];
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:rgba(255,_255,_255,_0.8)];
 }
 
 .attendance-scope-panel-copy {
-  display: grid;
-  gap: 0.24rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.24rem];
 }
 
 .attendance-scope-panel-copy strong {
-  color: #0f172a;
-  font-size: 0.92rem;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.92rem];
 }
 
 .attendance-scope-panel-copy small {
-  color: #64748b;
-  font-size: 0.8rem;
-  line-height: 1.4;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[line-height:1.4];
 }
 
 .attendance-step-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-height: 1.4rem;
-  padding: 0.18rem 0.52rem;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:w-fit;
+  @apply tw:[min-height:1.4rem];
+  @apply tw:[padding:0.18rem_0.52rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#f1f5f9];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.66rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.06em];
+  @apply tw:uppercase;
 }
 
 .attendance-scope-switch {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  @apply tw:inline-flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.55rem];
 }
 
 .attendance-scope-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #334155;
-  padding: 0.62rem 1rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.18s ease;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.5rem];
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
+  @apply tw:[padding:0.62rem_1rem];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:700];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:all_0.18s_ease];
 }
 
 .attendance-scope-btn.active {
-  background: #dbeafe;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  @apply tw:[background:#dbeafe];
+  @apply tw:[border-color:#93c5fd];
+  @apply tw:[color:#1d4ed8];
 }
 
 .attendance-scope-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+  @apply tw:cursor-not-allowed;
+  @apply tw:[opacity:0.6];
 }
 
 .attendance-toolbar-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.9rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
+  @apply tw:[gap:0.9rem];
 }
 
 .attendance-toolbar-field-card {
-  display: grid;
-  align-content: start;
-  gap: 0.7rem;
-  min-width: 0;
-  padding: 0.95rem 1rem;
-  border: 1px solid #dbe4ef;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.88);
+  @apply tw:grid;
+  @apply tw:[align-content:start];
+  @apply tw:[gap:0.7rem];
+  @apply tw:[min-width:0];
+  @apply tw:[padding:0.95rem_1rem];
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:rgba(255,_255,_255,_0.88)];
 }
 
 .attendance-toolbar-field-card .filter-field {
-  margin: 0;
+  @apply tw:[margin:0];
 }
 
 .attendance-date-card {
-  align-content: start;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(239, 246, 255, 0.9) 100%);
+  @apply tw:[align-content:start];
+  @apply tw:[background:linear-gradient(180deg,_rgba(255,_255,_255,_0.96)_0%,_rgba(239,_246,_255,_0.9)_100%)];
 }
 
 .attendance-date-card-copy {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:[gap:0.75rem];
 }
 
 .attendance-date-card-icon {
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-  color: #1d4ed8;
-  box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.85);
-  flex-shrink: 0;
+  @apply tw:[width:2.2rem];
+  @apply tw:[height:2.2rem];
+  @apply tw:[border-radius:14px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[background:linear-gradient(135deg,_#dbeafe,_#bfdbfe)];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[box-shadow:inset_0_0_0_1px_rgba(147,_197,_253,_0.85)];
+  @apply tw:shrink-0;
 }
 
 .attendance-date-card-copy strong {
-  display: block;
-  color: #0f172a;
-  font-size: 0.94rem;
+  @apply tw:block;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.94rem];
 }
 
 .attendance-date-card-copy small {
-  display: block;
-  margin-top: 0.16rem;
-  color: #64748b;
-  font-size: 0.78rem;
-  line-height: 1.45;
+  @apply tw:block;
+  @apply tw:[margin-top:0.16rem];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[line-height:1.45];
 }
 
 .attendance-date-field {
-  gap: 0.42rem;
+  @apply tw:[gap:0.42rem];
 }
 
 .attendance-date-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-height: 42px;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
-  padding: 0.2rem 0.75rem;
-  background: #ffffff;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[min-height:42px];
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:12px];
+  @apply tw:[padding:0.2rem_0.75rem];
+  @apply tw:[background:#ffffff];
+  @apply tw:[transition:border-color_0.18s_ease,_box-shadow_0.18s_ease];
 }
 
 .attendance-date-input-wrap:focus-within {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+  @apply tw:[border-color:#60a5fa];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(59,_130,_246,_0.14)];
 }
 
 .attendance-date-input-wrap > i {
-  color: #64748b;
-  font-size: 0.9rem;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.9rem];
 }
 
 .attendance-date-input-wrap input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  color: #0f172a;
-  font: inherit;
-  font-weight: 700;
-  outline: none;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font:inherit];
+  @apply tw:[font-weight:700];
+  @apply tw:[outline:none];
 }
 
 .attendance-date-quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.5rem];
 }
 
 .attendance-date-chip {
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #334155;
-  padding: 0.38rem 0.72rem;
-  font-size: 0.76rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.18s ease;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
+  @apply tw:[padding:0.38rem_0.72rem];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:700];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:all_0.18s_ease];
 }
 
 .attendance-date-chip:hover {
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  @apply tw:[border-color:#93c5fd];
+  @apply tw:[color:#1d4ed8];
 }
 
 .attendance-date-chip.active {
-  background: #dbeafe;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  @apply tw:[background:#dbeafe];
+  @apply tw:[border-color:#93c5fd];
+  @apply tw:[color:#1d4ed8];
 }
 
 .attendance-date-helper {
-  color: #475569;
-  font-size: 0.77rem;
-  line-height: 1.4;
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.77rem];
+  @apply tw:[line-height:1.4];
 }
 
 .attendance-context-card {
-  border: 1px solid #dbe4ef;
-  border-radius: 16px;
-  background: #ffffff;
-  padding: 0.85rem 0.95rem;
-  display: grid;
-  gap: 0.18rem;
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:0.85rem_0.95rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.18rem];
 }
 
 .attendance-context-card span,
 .attendance-context-card small {
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 700;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
 }
 
 .attendance-context-card strong {
-  color: #0f172a;
-  font-size: 0.96rem;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.96rem];
 }
 
 .attendance-toolbar-actions-card {
-  align-content: start;
+  @apply tw:[align-content:start];
 }
 
 .attendance-toolbar-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
+  @apply tw:[gap:0.75rem];
 }
 
 .attendance-actions-hint {
-  color: #64748b;
-  font-size: 0.77rem;
-  line-height: 1.45;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.77rem];
+  @apply tw:[line-height:1.45];
 }
 
 .attendance-legend-block {
-  display: grid;
-  gap: 0.55rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.55rem];
 }
 
 .attendance-legend-title {
-  color: #64748b;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.05em];
+  @apply tw:uppercase;
 }
 
 .attendance-load-btn {
-  background: #ffffff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
+  @apply tw:[background:#ffffff];
+  @apply tw:[border-color:#bfdbfe];
+  @apply tw:[color:#1d4ed8];
 }
 
 .attendance-save-btn {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #ffffff;
-  border-color: #1d4ed8;
-  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.2);
+  @apply tw:[background:linear-gradient(135deg,_#2563eb,_#1d4ed8)];
+  @apply tw:[color:#ffffff];
+  @apply tw:[border-color:#1d4ed8];
+  @apply tw:[box-shadow:0_14px_28px_rgba(37,_99,_235,_0.2)];
 }
 
 .attendance-lock-btn {
-  background: linear-gradient(135deg, #0f766e, #115e59);
-  color: #ffffff;
-  border-color: #115e59;
-  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.18);
+  @apply tw:[background:linear-gradient(135deg,_#0f766e,_#115e59)];
+  @apply tw:[color:#ffffff];
+  @apply tw:[border-color:#115e59];
+  @apply tw:[box-shadow:0_14px_28px_rgba(15,_118,_110,_0.18)];
 }
 
 .attendance-legend-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.7rem];
 }
 
 .attendance-legend-pill,
 .attendance-breakdown-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.4rem 0.72rem;
-  border-radius: 999px;
-  font-size: 0.76rem;
-  font-weight: 800;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[padding:0.4rem_0.72rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:800];
 }
 
 .attendance-feedback {
-  position: fixed;
-  top: 1.25rem;
-  left: 50%;
-  z-index: 1400;
-  width: max-content;
-  max-width: calc(100vw - 2rem);
-  margin: 0;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  line-height: 1.4;
-  text-align: center;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.2);
-  transform: translateX(-50%);
+  @apply tw:fixed;
+  @apply tw:[top:1.25rem];
+  @apply tw:[left:50%];
+  @apply tw:[z-index:1400];
+  @apply tw:w-max;
+  @apply tw:[max-width:calc(100vw_-_2rem)];
+  @apply tw:[margin:0];
+  @apply tw:[padding:0.85rem_1rem];
+  @apply tw:[border-radius:14px];
+  @apply tw:[font-size:0.88rem];
+  @apply tw:[font-weight:600];
+  @apply tw:[line-height:1.4];
+  @apply tw:text-center;
+  @apply tw:[box-shadow:0_14px_32px_rgba(15,_23,_42,_0.2)];
+  @apply tw:[transform:translateX(-50%)];
 }
 
 .attendance-feedback-success {
-  background: #ecfdf5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  @apply tw:[background:#ecfdf5];
+  @apply tw:[color:#065f46];
+  @apply tw:[border:1px_solid_#a7f3d0];
 }
 
 .attendance-feedback-error {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  @apply tw:[background:#fef2f2];
+  @apply tw:[color:#991b1b];
+  @apply tw:[border:1px_solid_#fecaca];
 }
 
 .attendance-layout {
-  display: grid;
-  gap: 1.25rem;
-  grid-template-columns: minmax(0, 1fr);
+  @apply tw:grid;
+  @apply tw:[gap:1.25rem];
+  @apply tw:[grid-template-columns:minmax(0,_1fr)];
 }
 
 .attendance-panel {
-  border: 1px solid #dbe4ef;
-  border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 251, 255, 0.98) 100%);
-  padding: 1rem;
-  display: grid;
-  gap: 0.95rem;
-  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.05);
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:24px];
+  @apply tw:[background:linear-gradient(180deg,_rgba(255,_255,_255,_0.98)_0%,_rgba(248,_251,_255,_0.98)_100%)];
+  @apply tw:[padding:1rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.95rem];
+  @apply tw:[box-shadow:0_18px_32px_rgba(15,_23,_42,_0.05)];
 }
 
 .attendance-panel-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.95rem;
-  align-items: start;
-  flex-wrap: wrap;
+  @apply tw:flex;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.95rem];
+  @apply tw:[align-items:start];
+  @apply tw:flex-wrap;
 }
 
 .attendance-panel-head h4 {
-  margin: 0;
-  color: #0f172a;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
 }
 
 .attendance-panel-head p {
-  margin: 0.2rem 0 0;
-  color: #64748b;
-  font-size: 0.84rem;
-  line-height: 1.5;
+  @apply tw:[margin:0.2rem_0_0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[line-height:1.5];
 }
 
 .attendance-record-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  justify-content: flex-end;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.6rem];
+  @apply tw:justify-end;
 }
 
 .attendance-roster-body {
-  display: grid;
-  gap: 1rem;
+  @apply tw:grid;
+  @apply tw:[gap:1rem];
 }
 
 .attendance-roster-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid #dbe4ef;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.88);
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:rgba(255,_255,_255,_0.88)];
 }
 
 .attendance-roster-toolbar-fields {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.5fr) minmax(180px, 0.9fr);
-  gap: 0.85rem;
-  flex: 1 1 520px;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(260px,_1.5fr)_minmax(180px,_0.9fr)];
+  @apply tw:[gap:0.85rem];
+  @apply tw:[flex:1_1_520px];
 }
 
 .attendance-roster-toolbar-actions {
-  display: grid;
-  gap: 0.75rem;
-  align-content: start;
-  justify-items: end;
-  flex: 1 1 320px;
+  @apply tw:grid;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[align-content:start];
+  @apply tw:justify-items-end;
+  @apply tw:[flex:1_1_320px];
 }
 
 .attendance-search-field,
 .attendance-filter-field {
-  display: grid;
-  gap: 0.42rem;
-  margin: 0;
+  @apply tw:grid;
+  @apply tw:[gap:0.42rem];
+  @apply tw:[margin:0];
 }
 
 .attendance-search-field > span,
 .attendance-filter-field > span,
 .attendance-bulk-actions > span {
-  color: #64748b;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.05em];
+  @apply tw:uppercase;
 }
 
 .attendance-search-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-height: 44px;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
-  padding: 0 0.85rem;
-  background: #ffffff;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[min-height:44px];
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:12px];
+  @apply tw:[padding:0_0.85rem];
+  @apply tw:[background:#ffffff];
+  @apply tw:[transition:border-color_0.18s_ease,_box-shadow_0.18s_ease];
 }
 
 .attendance-search-input-wrap:focus-within {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+  @apply tw:[border-color:#60a5fa];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(59,_130,_246,_0.14)];
 }
 
 .attendance-search-input-wrap i {
-  color: #94a3b8;
-  font-size: 0.88rem;
+  @apply tw:[color:#94a3b8];
+  @apply tw:[font-size:0.88rem];
 }
 
 .attendance-search-input-wrap input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  color: #0f172a;
-  font: inherit;
-  outline: none;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font:inherit];
+  @apply tw:[outline:none];
 }
 
 .attendance-filter-field select {
-  width: 100%;
-  min-height: 44px;
-  border-radius: 12px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
-  font: inherit;
-  font-weight: 700;
-  padding: 0.56rem 0.76rem;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  @apply tw:w-full;
+  @apply tw:[min-height:44px];
+  @apply tw:[border-radius:12px];
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font:inherit];
+  @apply tw:[font-weight:700];
+  @apply tw:[padding:0.56rem_0.76rem];
+  @apply tw:[box-shadow:inset_0_1px_2px_rgba(15,_23,_42,_0.04)];
 }
 
 .attendance-bulk-actions {
-  display: grid;
-  gap: 0.55rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.55rem];
 }
 
 .attendance-bulk-action-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: flex-end;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.5rem];
+  @apply tw:justify-end;
 }
 
 .attendance-bulk-btn,
 .attendance-clear-filters-btn {
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #334155;
-  padding: 0.45rem 0.78rem;
-  font-size: 0.76rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#334155];
+  @apply tw:[padding:0.45rem_0.78rem];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:800];
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:transform_0.16s_ease,_box-shadow_0.16s_ease,_border-color_0.16s_ease];
 }
 
 .attendance-bulk-btn:hover:not(:disabled),
 .attendance-clear-filters-btn:hover {
-  transform: translateY(-1px);
-  border-color: #93c5fd;
-  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.1);
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[border-color:#93c5fd];
+  @apply tw:[box-shadow:0_10px_18px_rgba(37,_99,_235,_0.1)];
 }
 
 .attendance-bulk-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  @apply tw:[opacity:0.55];
+  @apply tw:cursor-not-allowed;
+  @apply tw:transform-none;
+  @apply tw:[box-shadow:none];
 }
 
 .attendance-roster-results {
-  margin: 0;
-  color: #475569;
-  font-size: 0.84rem;
-  line-height: 1.55;
+  @apply tw:[margin:0];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[line-height:1.55];
 }
 
 .attendance-filter-empty {
-  border: 1px dashed #cbd5e1;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-  padding: 1.25rem;
+  @apply tw:[border:1px_dashed_#cbd5e1];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:linear-gradient(180deg,_#f8fbff_0%,_#ffffff_100%)];
+  @apply tw:[padding:1.25rem];
 }
 
 .attendance-roster-table-wrap {
-  overflow-x: auto;
-  border: 1px solid #dbe4ef;
-  border-radius: 18px;
-  background: #ffffff;
+  @apply tw:overflow-x-auto;
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#ffffff];
 }
 
 .attendance-roster-table {
-  width: 100%;
-  min-width: 620px;
-  border-collapse: separate;
-  border-spacing: 0;
+  @apply tw:w-full;
+  @apply tw:[min-width:620px];
+  @apply tw:border-separate;
+  @apply tw:[border-spacing:0];
 }
 
 .attendance-roster-table thead th {
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid #dbe4ef;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  text-align: left;
-  white-space: nowrap;
+  @apply tw:[padding:0.8rem_1rem];
+  @apply tw:[border-bottom:1px_solid_#dbe4ef];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.05em];
+  @apply tw:uppercase;
+  @apply tw:text-left;
+  @apply tw:whitespace-nowrap;
 }
 
 .attendance-roster-table thead th:first-child {
-  border-top-left-radius: 18px;
+  @apply tw:[border-top-left-radius:18px];
 }
 
 .attendance-roster-table thead th:last-child {
-  border-top-right-radius: 18px;
+  @apply tw:[border-top-right-radius:18px];
 }
 
 .attendance-roster-row {
-  transition: background-color 0.18s ease;
+  @apply tw:[transition:background-color_0.18s_ease];
 }
 
 .attendance-roster-row:hover {
-  background: #f8fbff;
+  @apply tw:[background:#f8fbff];
 }
 
 .attendance-roster-cell {
-  padding: 0.85rem 1rem;
-  border-top: 1px solid #eef2f7;
-  vertical-align: middle;
+  @apply tw:[padding:0.85rem_1rem];
+  @apply tw:[border-top:1px_solid_#eef2f7];
+  @apply tw:align-middle;
 }
 
 .attendance-roster-cell-center {
-  white-space: nowrap;
+  @apply tw:whitespace-nowrap;
 }
 
 .attendance-roster-cell-action {
-  width: 210px;
+  @apply tw:[width:210px];
 }
 
 .attendance-roster-section {
-  color: #334155;
-  font-size: 0.83rem;
-  font-weight: 600;
+  @apply tw:[color:#334155];
+  @apply tw:[font-size:0.83rem];
+  @apply tw:[font-weight:600];
 }
 
 .attendance-student-main {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  min-width: 0;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.8rem];
+  @apply tw:[min-width:0];
 }
 
 .attendance-student-avatar {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
-  border: 2px solid #e2e8f0;
-  border-radius: 50%;
-  background: #f8fafc;
-  color: #1e4307;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: none;
+  @apply tw:[width:40px];
+  @apply tw:[height:40px];
+  @apply tw:[flex:0_0_40px];
+  @apply tw:[border:2px_solid_#e2e8f0];
+  @apply tw:[border-radius:50%];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[color:#1e4307];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[box-shadow:none];
 }
 
 .attendance-student-avatar > .fa-user {
-  color: #111111 !important;
-  font-size: 1rem;
-  line-height: 1;
+  @apply tw:[color:#111111]!;
+  @apply tw:[font-size:1rem];
+  @apply tw:[line-height:1];
 }
 
 .attendance-student-copy {
-  display: grid;
-  gap: 0.18rem;
-  min-width: 0;
+  @apply tw:grid;
+  @apply tw:[gap:0.18rem];
+  @apply tw:[min-width:0];
 }
 
 .attendance-student-copy strong {
-  color: #0f172a;
-  font-size: 0.95rem;
-  line-height: 1.3;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.95rem];
+  @apply tw:[line-height:1.3];
 }
 
 .attendance-student-grade {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.22rem 0.52rem;
-  border-radius: 999px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[padding:0.22rem_0.52rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#eff6ff];
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[line-height:1];
 }
 
 .attendance-student-grade-table {
-  background: #eff6ff;
-  white-space: nowrap;
+  @apply tw:[background:#eff6ff];
+  @apply tw:whitespace-nowrap;
 }
 
 .attendance-student-copy small {
-  color: #64748b;
-  font-size: 0.76rem;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[line-height:1.35];
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 .attendance-student-email {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  max-width: 100%;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.42rem];
+  @apply tw:max-w-full;
 }
 
 .attendance-student-email i {
-  color: #94a3b8;
-  font-size: 0.76rem;
-  flex-shrink: 0;
+  @apply tw:[color:#94a3b8];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:shrink-0;
 }
 
 .attendance-student-email span {
-  min-width: 0;
-  overflow-wrap: anywhere;
+  @apply tw:[min-width:0];
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 .attendance-student-status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 108px;
-  padding: 0.42rem 0.82rem;
-  border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 800;
-  background: #e2e8f0;
-  color: #334155;
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.14);
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[min-width:108px];
+  @apply tw:[padding:0.42rem_0.82rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[background:#e2e8f0];
+  @apply tw:[color:#334155];
+  @apply tw:[box-shadow:inset_0_0_0_1px_rgba(148,_163,_184,_0.14)];
 }
 
 .attendance-excuse-block,
 .attendance-excuse-missing {
-  grid-column: 1 / -1;
+  @apply tw:[grid-column:1_/_-1];
 }
 
 .attendance-excuse-block {
-  border: 1px solid #dbe4f1;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-  padding: 0.9rem 1rem;
-  display: grid;
-  gap: 0.35rem;
+  @apply tw:[border:1px_solid_#dbe4f1];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:linear-gradient(180deg,_#f8fbff_0%,_#ffffff_100%)];
+  @apply tw:[padding:0.9rem_1rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.35rem];
 }
 
 .attendance-excuse-label {
-  color: #1d4ed8;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  @apply tw:[color:#1d4ed8];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.05em];
+  @apply tw:uppercase;
 }
 
 .attendance-excuse-block p {
-  margin: 0;
-  color: #0f172a;
-  line-height: 1.55;
+  @apply tw:[margin:0];
+  @apply tw:[color:#0f172a];
+  @apply tw:[line-height:1.55];
 }
 
 .attendance-excuse-block small {
-  color: #64748b;
+  @apply tw:[color:#64748b];
 }
 
 .attendance-excuse-missing {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  color: #92400e;
-  background: #fffbeb;
-  border: 1px dashed #fcd34d;
-  border-radius: 14px;
-  padding: 0.72rem 0.85rem;
-  font-size: 0.82rem;
-  font-weight: 700;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[color:#92400e];
+  @apply tw:[background:#fffbeb];
+  @apply tw:[border:1px_dashed_#fcd34d];
+  @apply tw:[border-radius:14px];
+  @apply tw:[padding:0.72rem_0.85rem];
+  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-weight:700];
 }
 
 .attendance-student-control {
-  display: grid;
-  gap: 0.35rem;
-  justify-items: start;
-  width: 100%;
+  @apply tw:grid;
+  @apply tw:[gap:0.35rem];
+  @apply tw:justify-items-start;
+  @apply tw:w-full;
 }
 
 .attendance-student-control > span {
-  color: #64748b;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:700];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.05em];
 }
 
 .attendance-student-control-inline > span {
-  display: none;
+  @apply tw:hidden;
 }
 
 .attendance-status-select {
-  width: 100%;
-  min-width: 170px;
-  border-radius: 12px;
-  border: 1px solid #cbd5e1;
-  padding: 0.56rem 0.76rem;
-  background: #ffffff;
-  color: #0f172a;
-  font: inherit;
-  font-weight: 700;
-  font-size: 0.84rem;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  @apply tw:w-full;
+  @apply tw:[min-width:170px];
+  @apply tw:[border-radius:12px];
+  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[padding:0.56rem_0.76rem];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#0f172a];
+  @apply tw:[font:inherit];
+  @apply tw:[font-weight:700];
+  @apply tw:[font-size:0.84rem];
+  @apply tw:[box-shadow:inset_0_1px_2px_rgba(15,_23,_42,_0.04)];
 }
 
 .attendance-history-panel {
-  align-content: start;
+  @apply tw:[align-content:start];
 }
 
 .attendance-history-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
+  @apply tw:[gap:0.85rem];
 }
 
 .attendance-history-stat {
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  background: #ffffff;
-  padding: 0.95rem;
-  display: grid;
-  gap: 0.32rem;
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[padding:0.95rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.32rem];
 }
 
 .attendance-history-stat span {
-  color: #64748b;
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-weight:700];
+  @apply tw:uppercase;
+  @apply tw:[letter-spacing:0.05em];
 }
 
 .attendance-history-stat strong {
-  color: #0f172a;
-  font-size: 1.15rem;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:1.15rem];
 }
 
 .attendance-history-list {
-  display: grid;
-  gap: 0.95rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.95rem];
 }
 
 .attendance-history-item {
-  width: 100%;
-  border: 1px solid #dbe4ef;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 1.1rem;
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 1rem;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  @apply tw:w-full;
+  @apply tw:[border:1px_solid_#dbe4ef];
+  @apply tw:[background:#ffffff];
+  @apply tw:[border-radius:16px];
+  @apply tw:[padding:1.1rem];
+  @apply tw:flex;
+  @apply tw:items-stretch;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:text-left;
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:transform_0.16s_ease,_box-shadow_0.16s_ease,_border-color_0.16s_ease];
 }
 
 .attendance-history-item:hover {
-  transform: translateY(-1px);
-  border-color: #93c5fd;
-  box-shadow: 0 14px 26px rgba(37, 99, 235, 0.08);
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[border-color:#93c5fd];
+  @apply tw:[box-shadow:0_14px_26px_rgba(37,_99,_235,_0.08)];
 }
 
 .attendance-history-item.active {
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), 0 16px 30px rgba(37, 99, 235, 0.08);
+  @apply tw:[border-color:#60a5fa];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(59,_130,_246,_0.12),_0_16px_30px_rgba(37,_99,_235,_0.08)];
 }
 
 .attendance-history-item.active .attendance-history-date-badge {
-  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+  @apply tw:[background:linear-gradient(135deg,_#1d4ed8,_#0ea5e9)];
 }
 
 .attendance-history-date-badge {
-  min-width: 114px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  color: #f8fafc;
-  padding: 0.95rem 1rem;
-  display: grid;
-  gap: 0.24rem;
-  align-content: center;
+  @apply tw:[min-width:114px];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:linear-gradient(135deg,_#1e293b,_#0f172a)];
+  @apply tw:[color:#f8fafc];
+  @apply tw:[padding:0.95rem_1rem];
+  @apply tw:grid;
+  @apply tw:[gap:0.24rem];
+  @apply tw:content-center;
 }
 
 .attendance-history-date-badge span {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(241, 245, 249, 0.72);
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:700];
+  @apply tw:[letter-spacing:0.08em];
+  @apply tw:uppercase;
+  @apply tw:[color:rgba(241,_245,_249,_0.72)];
 }
 
 .attendance-history-date-badge strong {
-  line-height: 1.25;
+  @apply tw:[line-height:1.25];
 }
 
 .attendance-history-copy {
-  display: grid;
-  gap: 0.38rem;
-  flex: 1 1 auto;
-  align-content: center;
+  @apply tw:grid;
+  @apply tw:[gap:0.38rem];
+  @apply tw:flex-auto;
+  @apply tw:content-center;
 }
 
 .attendance-history-copy strong {
-  color: #0f172a;
+  @apply tw:[color:#0f172a];
 }
 
 .attendance-history-copy small {
-  color: #64748b;
+  @apply tw:[color:#64748b];
 }
 
 .attendance-history-breakdown {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:[gap:0.55rem];
 }
 
 .attendance-history-meta {
-  display: grid;
-  gap: 0.45rem;
-  justify-items: end;
-  align-content: center;
+  @apply tw:grid;
+  @apply tw:[gap:0.45rem];
+  @apply tw:justify-items-end;
+  @apply tw:content-center;
 }
 
 .attendance-history-count {
-  font-size: 0.76rem;
-  color: #475569;
-  font-weight: 600;
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[color:#475569];
+  @apply tw:[font-weight:600];
 }
 
 .attendance-summary-card.status-neutral,
 .attendance-legend-pill.status-neutral,
 .attendance-student-status-pill.status-neutral {
-  background: #e2e8f0;
-  color: #334155;
+  @apply tw:[background:#e2e8f0];
+  @apply tw:[color:#334155];
 }
 
 .attendance-summary-card.status-present,
@@ -8670,8 +8657,8 @@ onBeforeUnmount(() => {
 .attendance-bulk-btn.status-present,
 .attendance-student-control.status-present .attendance-status-select,
 .attendance-student-status-pill.status-present {
-  background: #dcfce7;
-  color: #166534;
+  @apply tw:[background:#dcfce7];
+  @apply tw:[color:#166534];
 }
 
 .attendance-summary-card.status-late,
@@ -8680,8 +8667,8 @@ onBeforeUnmount(() => {
 .attendance-bulk-btn.status-late,
 .attendance-student-control.status-late .attendance-status-select,
 .attendance-student-status-pill.status-late {
-  background: #fef3c7;
-  color: #92400e;
+  @apply tw:[background:#fef3c7];
+  @apply tw:[color:#92400e];
 }
 
 .attendance-summary-card.status-absent,
@@ -8690,8 +8677,8 @@ onBeforeUnmount(() => {
 .attendance-bulk-btn.status-absent,
 .attendance-student-control.status-absent .attendance-status-select,
 .attendance-student-status-pill.status-absent {
-  background: #fee2e2;
-  color: #991b1b;
+  @apply tw:[background:#fee2e2];
+  @apply tw:[color:#991b1b];
 }
 
 .attendance-summary-card.status-excused,
@@ -8700,45 +8687,45 @@ onBeforeUnmount(() => {
 .attendance-bulk-btn.status-excused,
 .attendance-student-control.status-excused .attendance-status-select,
 .attendance-student-status-pill.status-excused {
-  background: #dbeafe;
-  color: #1d4ed8;
+  @apply tw:[background:#dbeafe];
+  @apply tw:[color:#1d4ed8];
 }
 
 .attendance-summary-card.status-present strong,
 .attendance-summary-card.status-late strong,
 .attendance-summary-card.status-absent strong,
 .attendance-summary-card.status-excused strong {
-  color: inherit;
+  @apply tw:[color:inherit];
 }
 
 @media (max-width: 980px) {
   .attendance-summary-grid,
   .attendance-history-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   .attendance-roster-toolbar-fields {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-roster-toolbar-actions {
-    justify-items: start;
+    @apply tw:justify-items-start;
   }
 
   .attendance-bulk-action-row {
-    justify-content: flex-start;
+    @apply tw:justify-start;
   }
 
   .attendance-student-control {
-    justify-items: start;
+    @apply tw:justify-items-start;
   }
 
   .attendance-status-select {
-    min-width: 0;
+    @apply tw:[min-width:0];
   }
 
   .attendance-roster-table {
-    min-width: 560px;
+    @apply tw:[min-width:560px];
   }
 }
 
@@ -8746,147 +8733,147 @@ onBeforeUnmount(() => {
   .attendance-hero-card,
   .attendance-toolbar-card,
   .attendance-panel {
-    padding: 1rem;
+    @apply tw:[padding:1rem];
   }
 
   .attendance-summary-grid,
   .attendance-history-summary-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-toolbar-header,
   .attendance-scope-panel {
-    flex-direction: column;
-    align-items: stretch;
+    @apply tw:flex-col;
+    @apply tw:items-stretch;
   }
 
   .attendance-scope-switch {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   .attendance-scope-btn {
-    flex: 1 1 0;
-    justify-content: center;
+    @apply tw:[flex:1_1_0];
+    @apply tw:justify-center;
   }
 
   .attendance-toolbar-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-context-card {
-    min-width: 0;
+    @apply tw:[min-width:0];
   }
 
   .attendance-roster-toolbar,
   .attendance-roster-toolbar-actions {
-    justify-items: stretch;
+    @apply tw:justify-items-stretch;
   }
 
   .attendance-roster-toolbar-fields {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-bulk-action-row {
-    justify-content: flex-start;
+    @apply tw:justify-start;
   }
 
   .attendance-clear-filters-btn {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   .attendance-toolbar-actions {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-toolbar-note {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   .attendance-history-item {
-    flex-direction: column;
-    align-items: stretch;
+    @apply tw:flex-col;
+    @apply tw:items-stretch;
   }
 
   .attendance-history-date-badge {
-    min-width: 0;
+    @apply tw:[min-width:0];
   }
 
   .attendance-history-meta {
-    justify-items: start;
+    @apply tw:justify-items-start;
   }
 }
 
 /* Streamlined classroom attendance workflow */
 .attendance-section {
-  gap: 0.9rem;
+  @apply tw:[gap:0.9rem];
 }
 
 .attendance-section > .section-header {
-  margin-bottom: 0;
+  @apply tw:[margin-bottom:0];
 }
 
 .attendance-shell {
-  gap: 0.75rem;
+  @apply tw:[gap:0.75rem];
 }
 
 .attendance-hero-card {
-  grid-template-columns: minmax(0, 1fr);
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 18px;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)];
+  @apply tw:items-center;
+  @apply tw:[gap:1rem];
+  @apply tw:[padding:1rem];
+  @apply tw:[border-radius:18px];
 }
 
 .attendance-hero-copy {
-  gap: 0.35rem;
+  @apply tw:[gap:0.35rem];
 }
 
 .attendance-hero-copy h4 {
-  font-size: 1.05rem;
+  @apply tw:[font-size:1.05rem];
 }
 
 .attendance-hero-copy > p {
-  display: none;
+  @apply tw:hidden;
 }
 
 .attendance-hero-chips {
-  gap: 0.35rem;
+  @apply tw:[gap:0.35rem];
 }
 
 .attendance-summary-grid {
-  gap: 0.6rem;
+  @apply tw:[gap:0.6rem];
 }
 
 .attendance-summary-card {
-  min-height: 76px;
-  padding: 0.75rem 0.85rem;
-  border-radius: 14px;
-  box-shadow: none;
+  @apply tw:[min-height:76px];
+  @apply tw:[padding:0.75rem_0.85rem];
+  @apply tw:[border-radius:14px];
+  @apply tw:[box-shadow:none];
 }
 
 .attendance-summary-card strong {
-  font-size: 1.35rem;
+  @apply tw:[font-size:1.35rem];
 }
 
 .attendance-toolbar-card {
-  grid-template-columns: minmax(240px, auto) minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 0.75rem;
-  padding: 0.85rem;
-  border-radius: 18px;
-  margin-bottom: 0;
+  @apply tw:[grid-template-columns:minmax(240px,_auto)_minmax(0,_1fr)_auto];
+  @apply tw:[align-items:end];
+  @apply tw:[gap:0.75rem];
+  @apply tw:[padding:0.85rem];
+  @apply tw:[border-radius:18px];
+  @apply tw:[margin-bottom:0];
 }
 
 .attendance-toolbar-header {
-  display: none;
+  @apply tw:hidden;
 }
 
 .attendance-scope-panel {
-  display: grid;
-  gap: 0.45rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  @apply tw:grid;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[padding:0];
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
 }
 
 .attendance-scope-panel-copy small,
@@ -8896,352 +8883,350 @@ onBeforeUnmount(() => {
 .attendance-date-quick-actions,
 .attendance-date-helper,
 .attendance-actions-hint {
-  display: none;
+  @apply tw:hidden;
 }
 
 .attendance-scope-switch {
-  flex-wrap: nowrap;
-  gap: 0.35rem;
+  @apply tw:flex-nowrap;
+  @apply tw:[gap:0.35rem];
 }
 
 .attendance-scope-btn {
-  min-height: 42px;
-  padding: 0.55rem 0.75rem;
-  border-radius: 12px;
+  @apply tw:[min-height:42px];
+  @apply tw:[padding:0.55rem_0.75rem];
+  @apply tw:[border-radius:12px];
 }
 
 .attendance-toolbar-grid {
-  grid-template-columns: minmax(180px, 1fr) minmax(170px, 0.7fr) minmax(330px, 1.35fr);
-  align-items: end;
-  gap: 0.6rem;
+  @apply tw:[grid-template-columns:minmax(180px,_1fr)_minmax(170px,_0.7fr)_minmax(330px,_1.35fr)];
+  @apply tw:[align-items:end];
+  @apply tw:[gap:0.6rem];
 }
 
 .attendance-toolbar-field-card {
-  gap: 0.35rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  @apply tw:[gap:0.35rem];
+  @apply tw:[padding:0];
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
 }
 
 .attendance-context-card {
-  min-height: 42px;
-  padding: 0.55rem 0.7rem;
-  border-radius: 12px;
+  @apply tw:[min-height:42px];
+  @apply tw:[padding:0.55rem_0.7rem];
+  @apply tw:[border-radius:12px];
 }
 
 .attendance-toolbar-actions {
-  gap: 0.45rem;
+  @apply tw:[gap:0.45rem];
 }
 
 .attendance-toolbar-actions .pagination-btn {
-  min-height: 42px;
-  padding-inline: 0.65rem;
-  box-shadow: none;
-  white-space: nowrap;
+  @apply tw:[min-height:42px];
+  @apply tw:[padding-inline:0.65rem];
+  @apply tw:[box-shadow:none];
+  @apply tw:whitespace-nowrap;
 }
 
 .attendance-legend-block {
-  gap: 0.35rem;
-  align-self: center;
+  @apply tw:[gap:0.35rem];
+  @apply tw:self-center;
 }
 
 .attendance-legend-row {
-  flex-wrap: nowrap;
-  gap: 0.35rem;
+  @apply tw:flex-nowrap;
+  @apply tw:[gap:0.35rem];
 }
 
 .attendance-legend-pill {
-  padding: 0.35rem 0.55rem;
+  @apply tw:[padding:0.35rem_0.55rem];
 }
 
 .attendance-layout {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
-  align-items: start;
-  gap: 0.85rem;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)_minmax(280px,_320px)];
+  @apply tw:[align-items:start];
+  @apply tw:[gap:0.85rem];
 }
 
 .attendance-panel {
-  min-width: 0;
-  padding: 0.9rem;
-  border-radius: 18px;
-  box-shadow: none;
+  @apply tw:[min-width:0];
+  @apply tw:[padding:0.9rem];
+  @apply tw:[border-radius:18px];
+  @apply tw:[box-shadow:none];
 }
 
 .attendance-panel-head p {
-  line-height: 1.35;
+  @apply tw:[line-height:1.35];
 }
 
 .attendance-roster-toolbar {
-  padding: 0.75rem;
-  border-radius: 14px;
+  @apply tw:[padding:0.75rem];
+  @apply tw:[border-radius:14px];
 }
 
 .attendance-roster-table-wrap {
-  max-height: 65vh;
-  overflow: auto;
-  border-radius: 14px;
+  @apply tw:[max-height:65vh];
+  @apply tw:overflow-auto;
+  @apply tw:[border-radius:14px];
 }
 
 .attendance-roster-table {
-  min-width: 720px;
+  @apply tw:[min-width:720px];
 }
 
 .attendance-roster-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 3;
+  @apply tw:sticky;
+  @apply tw:[top:0];
+  @apply tw:[z-index:3];
 }
 
 .attendance-roster-table thead th:first-child {
-  left: 0;
-  z-index: 5;
+  @apply tw:[left:0];
+  @apply tw:[z-index:5];
 }
 
 .attendance-roster-cell-student {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  min-width: 260px;
-  background: #ffffff;
+  @apply tw:sticky;
+  @apply tw:[left:0];
+  @apply tw:[z-index:2];
+  @apply tw:[min-width:260px];
+  @apply tw:[background:#ffffff];
 }
 
 .attendance-roster-row:nth-child(even),
 .attendance-roster-row:nth-child(even) .attendance-roster-cell-student {
-  background: #f8fbff;
+  @apply tw:[background:#f8fbff];
 }
 
 .attendance-roster-row:hover,
 .attendance-roster-row:hover .attendance-roster-cell-student {
-  background: #f8fafc;
+  @apply tw:[background:#f8fafc];
 }
 
 .attendance-roster-cell {
-  padding-block: 0.95rem;
+  @apply tw:[padding-block:0.95rem];
 }
 
 .attendance-status-select {
-  min-height: 46px;
-  cursor: pointer;
+  @apply tw:[min-height:46px];
+  @apply tw:cursor-pointer;
 }
 
 .attendance-history-panel {
-  position: sticky;
-  top: 1rem;
-  display: block;
-  max-height: calc(100vh - 2rem);
-  overflow: auto;
+  @apply tw:sticky;
+  @apply tw:[top:1rem];
+  @apply tw:block;
+  @apply tw:[max-height:calc(100vh_-_2rem)];
+  @apply tw:overflow-auto;
 }
 
 .attendance-history-summary {
-  cursor: pointer;
-  list-style: none;
+  @apply tw:cursor-pointer;
+  @apply tw:[list-style:none];
 }
 
 .attendance-history-summary::-webkit-details-marker {
-  display: none;
+  @apply tw:hidden;
 }
 
 .attendance-history-summary .attendance-panel-head {
-  align-items: center;
-  flex-wrap: nowrap;
+  @apply tw:items-center;
+  @apply tw:flex-nowrap;
 }
 
 .attendance-history-chevron {
-  transition: transform 0.18s ease;
+  @apply tw:[transition:transform_0.18s_ease];
 }
 
 .attendance-history-panel[open] .attendance-history-chevron {
-  transform: rotate(180deg);
+  @apply tw:[transform:rotate(180deg)];
 }
 
 .attendance-history-content {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 0.85rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[margin-top:0.85rem];
 }
 
 .attendance-history-summary-grid {
-  gap: 0.4rem;
+  @apply tw:[gap:0.4rem];
 }
 
 .attendance-history-stat {
-  padding: 0.6rem;
-  border-radius: 12px;
+  @apply tw:[padding:0.6rem];
+  @apply tw:[border-radius:12px];
 }
 
 .attendance-history-stat span {
-  font-size: 0.62rem;
+  @apply tw:[font-size:0.62rem];
 }
 
 .attendance-history-list {
-  gap: 0.55rem;
+  @apply tw:[gap:0.55rem];
 }
 
 .attendance-history-item {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 0.65rem;
-  padding: 0.65rem;
-  border-radius: 12px;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:72px_minmax(0,_1fr)];
+  @apply tw:[gap:0.65rem];
+  @apply tw:[padding:0.65rem];
+  @apply tw:[border-radius:12px];
 }
 
 .attendance-history-date-badge {
-  min-width: 0;
-  padding: 0.6rem;
-  border-radius: 10px;
+  @apply tw:[min-width:0];
+  @apply tw:[padding:0.6rem];
+  @apply tw:[border-radius:10px];
 }
 
 .attendance-history-meta {
-  grid-column: 1 / -1;
-  grid-template-columns: 1fr auto;
-  justify-items: start;
+  @apply tw:[grid-column:1_/_-1];
+  @apply tw:[grid-template-columns:1fr_auto];
+  @apply tw:justify-items-start;
 }
 
 @media (max-width: 1180px) {
   .attendance-toolbar-card {
-    grid-template-columns: 1fr;
-    align-items: stretch;
+    @apply tw:[grid-template-columns:1fr];
+    @apply tw:items-stretch;
   }
 
   .attendance-scope-panel {
-    grid-template-columns: auto 1fr;
-    align-items: center;
+    @apply tw:[grid-template-columns:auto_1fr];
+    @apply tw:items-center;
   }
 
   .attendance-scope-switch {
-    justify-content: flex-end;
+    @apply tw:justify-end;
   }
 
   .attendance-legend-block {
-    grid-template-columns: auto 1fr;
-    align-items: center;
+    @apply tw:[grid-template-columns:auto_1fr];
+    @apply tw:items-center;
   }
 
   .attendance-layout {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-history-panel {
-    position: static;
-    max-height: none;
+    @apply tw:static;
+    @apply tw:max-h-none;
   }
 }
 
 @media (max-width: 820px) {
   .attendance-hero-card {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-summary-grid {
-    grid-template-columns: repeat(5, minmax(110px, 1fr));
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
+    @apply tw:[grid-template-columns:repeat(5,_minmax(110px,_1fr))];
+    @apply tw:overflow-x-auto;
+    @apply tw:[padding-bottom:0.25rem];
   }
 
   .attendance-toolbar-grid {
-    grid-template-columns: 1fr 1fr;
+    @apply tw:[grid-template-columns:1fr_1fr];
   }
 
   .attendance-toolbar-actions-card {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 }
 
 @media (max-width: 640px) {
   .attendance-section {
-    gap: 0.7rem;
+    @apply tw:[gap:0.7rem];
   }
 
   .attendance-scope-panel {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-scope-switch {
-    justify-content: stretch;
+    @apply tw:justify-stretch;
   }
 
   .attendance-toolbar-grid {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-toolbar-actions-card {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 
   .attendance-toolbar-actions {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-legend-block {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   .attendance-legend-row {
-    overflow-x: auto;
-    padding-bottom: 0.2rem;
+    @apply tw:overflow-x-auto;
+    @apply tw:[padding-bottom:0.2rem];
   }
 
   .attendance-panel-head {
-    gap: 0.55rem;
+    @apply tw:[gap:0.55rem];
   }
 
   .attendance-roster-table-wrap {
-    max-height: 70vh;
+    @apply tw:[max-height:70vh];
   }
 }
 
 /* Education-first brand polish and interaction states */
 .attendance-hero-card {
-  background:
-    radial-gradient(circle at top right, rgba(187, 255, 89, 0.16), transparent 34%),
-    linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  @apply tw:[background:radial-gradient(circle_at_top_right,_rgba(187,_255,_89,_0.16),_transparent_34%),______linear-gradient(135deg,_#ffffff_0%,_#f9fafb_100%)];
 }
 
 .attendance-toolbar-card,
 .attendance-panel {
-  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f9fafb_100%)];
 }
 
 .attendance-kicker,
 .attendance-panel-kicker,
 .attendance-toolbar-kicker {
-  background: rgba(30, 67, 7, 0.09);
-  color: #1e4307;
+  @apply tw:[background:rgba(30,_67,_7,_0.09)];
+  @apply tw:[color:#1e4307];
 }
 
 .attendance-summary-card {
-  grid-template-columns: 30px minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-items: center;
-  column-gap: 0.55rem;
+  @apply tw:[grid-template-columns:30px_minmax(0,_1fr)];
+  @apply tw:[grid-template-rows:auto_auto];
+  @apply tw:items-center;
+  @apply tw:[column-gap:0.55rem];
 }
 
 .attendance-summary-icon {
-  grid-row: 1;
-  align-self: start;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(30, 67, 7, 0.09);
-  color: #1e4307;
-  font-size: 0.8rem;
+  @apply tw:[grid-row:1];
+  @apply tw:[align-self:start];
+  @apply tw:[width:30px];
+  @apply tw:[height:30px];
+  @apply tw:[border-radius:10px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[background:rgba(30,_67,_7,_0.09)];
+  @apply tw:[color:#1e4307];
+  @apply tw:[font-size:0.8rem];
 }
 
 .attendance-summary-card span,
 .attendance-summary-card strong {
-  grid-column: 2;
+  @apply tw:[grid-column:2];
 }
 
 .attendance-summary-card span {
-  grid-row: 1;
-  align-self: center;
+  @apply tw:[grid-row:1];
+  @apply tw:self-center;
 }
 
 .attendance-summary-card strong {
-  grid-row: 2;
+  @apply tw:[grid-row:2];
 }
 
 .attendance-scope-btn,
@@ -9250,140 +9235,140 @@ onBeforeUnmount(() => {
 .attendance-clear-filters-btn,
 .attendance-history-item,
 .attendance-toolbar-actions .pagination-btn {
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  @apply tw:[transition:transform_0.18s_ease,_box-shadow_0.18s_ease,_border-color_0.18s_ease,_background-color_0.18s_ease];
 }
 
 .attendance-scope-btn.active {
-  background: #1e4307;
-  border-color: #1e4307;
-  color: #ffffff;
+  @apply tw:[background:#1e4307];
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[color:#ffffff];
 }
 
 .attendance-scope-btn.active i {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[-webkit-text-fill-color:#ffffff]!;
 }
 
 .attendance-date-chip.active {
-  background: rgba(187, 255, 89, 0.22);
-  border-color: #bbff59;
-  color: #1e4307;
+  @apply tw:[background:rgba(187,_255,_89,_0.22)];
+  @apply tw:[border-color:#bbff59];
+  @apply tw:[color:#1e4307];
 }
 
 .attendance-scope-btn:hover:not(:disabled):not(.active),
 .attendance-date-chip:hover,
 .attendance-bulk-btn:hover:not(:disabled),
 .attendance-clear-filters-btn:hover {
-  border-color: #1e4307;
-  color: #1e4307;
-  box-shadow: 0 6px 14px rgba(30, 67, 7, 0.1);
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[color:#1e4307];
+  @apply tw:[box-shadow:0_6px_14px_rgba(30,_67,_7,_0.1)];
 }
 
 .attendance-load-btn {
-  background: #ffffff;
-  border-color: #111111;
-  color: #111111;
+  @apply tw:[background:#ffffff];
+  @apply tw:[border-color:#111111];
+  @apply tw:[color:#111111];
 }
 
 .attendance-save-btn {
-  background: #1e4307;
-  border-color: #1e4307;
-  color: #ffffff;
-  box-shadow: 0 10px 22px rgba(30, 67, 7, 0.22);
+  @apply tw:[background:#1e4307];
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[color:#ffffff];
+  @apply tw:[box-shadow:0_10px_22px_rgba(30,_67,_7,_0.22)];
 }
 
 .attendance-lock-btn {
-  background: #ffffff;
-  border-color: #111111;
-  color: #111111;
+  @apply tw:[background:#ffffff];
+  @apply tw:[border-color:#111111];
+  @apply tw:[color:#111111];
 }
 
 .attendance-toolbar-actions .pagination-btn:not(:disabled):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(17, 17, 17, 0.16);
+  @apply tw:[transform:translateY(-1px)];
+  @apply tw:[box-shadow:0_8px_16px_rgba(17,_17,_17,_0.16)];
 }
 
 .attendance-toolbar-actions .attendance-load-btn:not(:disabled):hover,
 .attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover {
-  background: #111111;
-  color: #ffffff;
+  @apply tw:[background:#111111];
+  @apply tw:[color:#ffffff];
 }
 
 .attendance-toolbar-actions .attendance-save-btn:not(:disabled):hover {
-  background: #173405;
-  border-color: #173405;
-  color: #ffffff;
+  @apply tw:[background:#173405];
+  @apply tw:[border-color:#173405];
+  @apply tw:[color:#ffffff];
 }
 
 .attendance-toolbar-actions .pagination-btn:focus-visible {
-  outline-color: #111111;
+  @apply tw:[outline-color:#111111];
 }
 
 .attendance-toolbar-actions .pagination-btn i {
-  margin-right: 0.35rem;
-  color: currentColor !important;
+  @apply tw:[margin-right:0.35rem];
+  @apply tw:text-current!;
 }
 
 .attendance-toolbar-actions .attendance-save-btn i,
 .attendance-toolbar-actions .attendance-load-btn:not(:disabled):hover i,
 .attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover i {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[-webkit-text-fill-color:#ffffff]!;
 }
 
 .attendance-toolbar-actions .attendance-load-btn i,
 .attendance-toolbar-actions .attendance-lock-btn i {
-  color: #111111 !important;
+  @apply tw:[color:#111111]!;
 }
 
 .attendance-history-item.active .attendance-history-date-badge {
-  background: linear-gradient(135deg, #1e4307 0%, #ffd542 100%);
-  box-shadow: 0 8px 16px rgba(30, 67, 7, 0.16);
+  @apply tw:[background:linear-gradient(135deg,_#1e4307_0%,_#ffd542_100%)];
+  @apply tw:[box-shadow:0_8px_16px_rgba(30,_67,_7,_0.16)];
 }
 
 .attendance-history-item:hover,
 .attendance-history-item.active {
-  border-color: #1e4307;
-  box-shadow: 0 0 0 3px rgba(187, 255, 89, 0.18);
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(187,_255,_89,_0.18)];
 }
 
 .attendance-search-input-wrap:focus-within,
 .attendance-date-input-wrap:focus-within {
-  border-color: #1e4307;
-  box-shadow: 0 0 0 3px rgba(187, 255, 89, 0.24);
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(187,_255,_89,_0.24)];
 }
 
 .attendance-section button:focus-visible,
 .attendance-section select:focus-visible,
 .attendance-section input:focus-visible,
 .attendance-history-summary:focus-visible {
-  outline: 3px solid #bbff59;
-  outline-offset: 2px;
+  @apply tw:[outline:3px_solid_#bbff59];
+  @apply tw:[outline-offset:2px];
 }
 
 .attendance-section button:disabled {
-  transform: none;
-  box-shadow: none;
+  @apply tw:transform-none;
+  @apply tw:[box-shadow:none];
 }
 
 .attendance-section .fa-spinner {
-  color: #1e4307;
+  @apply tw:[color:#1e4307];
 }
 
 .attendance-section .fa-spinner + span {
-  position: relative;
+  @apply tw:relative;
 }
 
 .attendance-section .fa-spinner + span::after {
-  content: '';
-  display: block;
-  width: min(220px, 60vw);
-  height: 6px;
-  margin-top: 0.55rem;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #e5e7eb 25%, #f9fafb 50%, #e5e7eb 75%);
-  background-size: 200% 100%;
-  animation: attendance-skeleton 1.2s ease-in-out infinite;
+  @apply tw:[content:''];
+  @apply tw:block;
+  @apply tw:[width:min(220px,_60vw)];
+  @apply tw:[height:6px];
+  @apply tw:[margin-top:0.55rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:linear-gradient(90deg,_#e5e7eb_25%,_#f9fafb_50%,_#e5e7eb_75%)];
+  @apply tw:[background-size:200%_100%];
+  @apply tw:[animation:attendance-skeleton_1.2s_ease-in-out_infinite];
 }
 
 @keyframes attendance-skeleton {
@@ -9395,10 +9380,10 @@ onBeforeUnmount(() => {
   .attendance-section *,
   .attendance-section *::before,
   .attendance-section *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    @apply tw:scroll-auto!;
+    @apply tw:[transition-duration:0.01ms]!;
+    @apply tw:[animation-duration:0.01ms]!;
+    @apply tw:[animation-iteration-count:1]!;
   }
 }
 
@@ -9406,14 +9391,14 @@ onBeforeUnmount(() => {
   .attendance-hero-card,
   .attendance-toolbar-card,
   .attendance-panel {
-    border-radius: 16px;
-    padding: 0.75rem;
+    @apply tw:[border-radius:16px];
+    @apply tw:[padding:0.75rem];
   }
 
   .attendance-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    overflow: visible;
-    padding-bottom: 0;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+    @apply tw:overflow-visible;
+    @apply tw:[padding-bottom:0];
   }
 
   .attendance-scope-btn,
@@ -9422,132 +9407,132 @@ onBeforeUnmount(() => {
   .attendance-search-input-wrap,
   .attendance-filter-field select,
   .attendance-status-select {
-    min-height: 48px;
+    @apply tw:[min-height:48px];
   }
 
   .attendance-roster-toolbar {
-    padding: 0.65rem;
+    @apply tw:[padding:0.65rem];
   }
 
   .attendance-roster-table-wrap {
-    max-height: none;
-    overflow: visible;
-    border: 0;
-    background: transparent;
+    @apply tw:max-h-none;
+    @apply tw:overflow-visible;
+    @apply tw:[border:0];
+    @apply tw:[background:transparent];
   }
 
   .attendance-roster-table,
   .attendance-roster-table tbody,
   .attendance-roster-row,
   .attendance-roster-cell {
-    display: block;
-    width: 100%;
-    min-width: 0;
+    @apply tw:block;
+    @apply tw:w-full;
+    @apply tw:[min-width:0];
   }
 
   .attendance-roster-table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    @apply tw:absolute;
+    @apply tw:[width:1px];
+    @apply tw:[height:1px];
+    @apply tw:[padding:0];
+    @apply tw:[margin:-1px];
+    @apply tw:overflow-hidden;
+    @apply tw:[clip:rect(0,_0,_0,_0)];
+    @apply tw:whitespace-nowrap;
+    @apply tw:[border:0];
   }
 
   .attendance-roster-table tbody {
-    display: grid;
-    gap: 0.75rem;
+    @apply tw:grid;
+    @apply tw:[gap:0.75rem];
   }
 
   .attendance-roster-row,
   .attendance-roster-row:nth-child(even) {
-    border: 1px solid #dbe4ef;
-    border-radius: 14px;
-    background: #ffffff;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    @apply tw:[border:1px_solid_#dbe4ef];
+    @apply tw:[border-radius:14px];
+    @apply tw:[background:#ffffff];
+    @apply tw:overflow-hidden;
+    @apply tw:[box-shadow:0_4px_12px_rgba(15,_23,_42,_0.05)];
   }
 
   .attendance-roster-cell {
-    display: grid;
-    grid-template-columns: 92px minmax(0, 1fr);
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.65rem 0.75rem;
-    border-top: 1px solid #eef2f7;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:92px_minmax(0,_1fr)];
+    @apply tw:items-center;
+    @apply tw:[gap:0.65rem];
+    @apply tw:[padding:0.65rem_0.75rem];
+    @apply tw:[border-top:1px_solid_#eef2f7];
   }
 
   .attendance-roster-cell::before {
-    color: #64748b;
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    @apply tw:[color:#64748b];
+    @apply tw:[font-size:0.68rem];
+    @apply tw:[font-weight:800];
+    @apply tw:[letter-spacing:0.05em];
+    @apply tw:uppercase;
   }
 
   .attendance-roster-cell-student,
   .attendance-roster-row:nth-child(even) .attendance-roster-cell-student,
   .attendance-roster-row:hover .attendance-roster-cell-student {
-    position: static;
-    display: block;
-    min-width: 0;
-    padding: 0.85rem 0.75rem;
-    border-top: 0;
-    background: #f8fafc;
+    @apply tw:static;
+    @apply tw:block;
+    @apply tw:[min-width:0];
+    @apply tw:[padding:0.85rem_0.75rem];
+    @apply tw:[border-top:0];
+    @apply tw:[background:#f8fafc];
   }
 
   .attendance-roster-cell-student::before {
-    display: none;
+    @apply tw:hidden;
   }
 
   .attendance-roster-cell:nth-child(2)::before {
-    content: 'Grade';
+    @apply tw:[content:'Grade'];
   }
 
   .attendance-roster-cell:nth-child(3)::before {
-    content: 'Section';
+    @apply tw:[content:'Section'];
   }
 
   .attendance-roster-cell-action::before {
-    content: 'Status';
+    @apply tw:[content:'Status'];
   }
 
   .attendance-roster-cell-action {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   .attendance-status-select {
-    min-width: 0;
+    @apply tw:[min-width:0];
   }
 
   .attendance-history-item {
-    grid-template-columns: 68px minmax(0, 1fr);
+    @apply tw:[grid-template-columns:68px_minmax(0,_1fr)];
   }
 }
 
 /* Responsive hardening for the complete attendance workspace */
 .attendance-section {
-  container-type: inline-size;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: clip;
-  gap: clamp(0.75rem, 1.2vw, 1.25rem);
+  @apply tw:[container-type:inline-size];
+  @apply tw:w-full;
+  @apply tw:max-w-full;
+  @apply tw:[min-width:0];
+  @apply tw:overflow-x-clip;
+  @apply tw:[gap:clamp(0.75rem,_1.2vw,_1.25rem)];
 }
 
 :global(body.teacher-dashboard) .teacher-sidebar .sidebar-footer .teacher-avatar > i.fa-user {
-  color: #111111 !important;
-  font-size: 1rem;
-  line-height: 1;
+  @apply tw:[color:#111111]!;
+  @apply tw:[font-size:1rem];
+  @apply tw:[line-height:1];
 }
 
 .attendance-section *,
 .attendance-section *::before,
 .attendance-section *::after {
-  box-sizing: border-box;
+  @apply tw:box-border;
 }
 
 .attendance-section > *,
@@ -9559,86 +9544,86 @@ onBeforeUnmount(() => {
 .attendance-toolbar-grid,
 .attendance-toolbar-field-card,
 .attendance-history-content {
-  min-width: 0;
-  max-width: 100%;
+  @apply tw:[min-width:0];
+  @apply tw:max-w-full;
 }
 
 .attendance-section .section-title {
-  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.65rem);
-  line-height: 1.2;
+  @apply tw:[font-size:clamp(1.15rem,_1rem_+_0.6vw,_1.65rem)];
+  @apply tw:[line-height:1.2];
 }
 
 .attendance-section .section-subtitle,
 .attendance-panel-head p,
 .attendance-roster-results {
-  font-size: clamp(0.78rem, 0.74rem + 0.16vw, 0.9rem);
-  overflow-wrap: anywhere;
+  @apply tw:[font-size:clamp(0.78rem,_0.74rem_+_0.16vw,_0.9rem)];
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 .attendance-hero-copy h4,
 .attendance-panel-head h4 {
-  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.3rem);
-  line-height: 1.25;
+  @apply tw:[font-size:clamp(1rem,_0.92rem_+_0.35vw,_1.3rem)];
+  @apply tw:[line-height:1.25];
 }
 
 .attendance-summary-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 138px), 1fr));
-  gap: clamp(0.5rem, 0.8vw, 0.75rem);
-  width: 100%;
-  overflow: visible;
+  @apply tw:[grid-template-columns:repeat(auto-fit,_minmax(min(100%,_138px),_1fr))];
+  @apply tw:[gap:clamp(0.5rem,_0.8vw,_0.75rem)];
+  @apply tw:w-full;
+  @apply tw:overflow-visible;
 }
 
 .attendance-summary-card {
-  width: 100%;
-  min-width: 0;
-  min-height: clamp(72px, 7vw, 84px);
-  padding: clamp(0.625rem, 0.8vw, 0.875rem);
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:clamp(72px,_7vw,_84px)];
+  @apply tw:[padding:clamp(0.625rem,_0.8vw,_0.875rem)];
 }
 
 .attendance-summary-card span {
-  min-width: 0;
-  font-size: clamp(0.64rem, 0.6rem + 0.14vw, 0.76rem);
-  overflow-wrap: anywhere;
+  @apply tw:[min-width:0];
+  @apply tw:[font-size:clamp(0.64rem,_0.6rem_+_0.14vw,_0.76rem)];
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 .attendance-summary-card strong {
-  font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.55rem);
+  @apply tw:[font-size:clamp(1.2rem,_1.05rem_+_0.5vw,_1.55rem)];
 }
 
 .attendance-toolbar-card {
-  width: 100%;
-  padding: clamp(0.75rem, 1vw, 1rem);
-  gap: clamp(0.625rem, 1vw, 1rem);
+  @apply tw:w-full;
+  @apply tw:[padding:clamp(0.75rem,_1vw,_1rem)];
+  @apply tw:[gap:clamp(0.625rem,_1vw,_1rem)];
 }
 
 .attendance-scope-switch,
 .attendance-legend-row,
 .attendance-toolbar-actions,
 .attendance-bulk-action-row {
-  min-width: 0;
-  flex-wrap: wrap;
+  @apply tw:[min-width:0];
+  @apply tw:flex-wrap;
 }
 
 .attendance-scope-btn {
-  flex: 1 1 150px;
-  justify-content: center;
-  min-width: 0;
-  min-height: 44px;
-  white-space: normal;
-  text-align: center;
+  @apply tw:[flex:1_1_150px];
+  @apply tw:justify-center;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:44px];
+  @apply tw:whitespace-normal;
+  @apply tw:text-center;
 }
 
 .attendance-toolbar-grid {
-  width: 100%;
-  grid-template-columns: minmax(180px, 1fr) minmax(170px, 0.8fr) minmax(280px, 1.35fr);
-  gap: clamp(0.5rem, 0.8vw, 0.75rem);
+  @apply tw:w-full;
+  @apply tw:[grid-template-columns:minmax(180px,_1fr)_minmax(170px,_0.8fr)_minmax(280px,_1.35fr)];
+  @apply tw:[gap:clamp(0.5rem,_0.8vw,_0.75rem)];
 }
 
 .attendance-section input,
 .attendance-section select,
 .attendance-section button {
-  max-width: 100%;
-  min-width: 0;
+  @apply tw:max-w-full;
+  @apply tw:[min-width:0];
 }
 
 .attendance-toolbar-field-card .filter-field select,
@@ -9648,71 +9633,71 @@ onBeforeUnmount(() => {
 .attendance-search-input-wrap input,
 .attendance-filter-field select,
 .attendance-status-select {
-  width: 100%;
-  min-height: 44px;
+  @apply tw:w-full;
+  @apply tw:[min-height:44px];
 }
 
 .attendance-toolbar-actions {
-  width: 100%;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  @apply tw:w-full;
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
 }
 
 .attendance-toolbar-actions .pagination-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  text-align: center;
-  overflow-wrap: anywhere;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:44px];
+  @apply tw:text-center;
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 .attendance-legend-pill {
-  flex: 0 1 auto;
-  min-height: 32px;
-  white-space: normal;
-  text-align: center;
+  @apply tw:flex-initial;
+  @apply tw:[min-height:32px];
+  @apply tw:whitespace-normal;
+  @apply tw:text-center;
 }
 
 .attendance-layout {
-  width: 100%;
-  grid-template-columns: minmax(0, 1fr) clamp(280px, 24vw, 340px);
-  gap: clamp(0.75rem, 1.2vw, 1.25rem);
-  margin-top: clamp(1rem, 1.4vw, 1.5rem);
+  @apply tw:w-full;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)_clamp(280px,_24vw,_340px)];
+  @apply tw:[gap:clamp(0.75rem,_1.2vw,_1.25rem)];
+  @apply tw:[margin-top:clamp(1rem,_1.4vw,_1.5rem)];
 }
 
 .attendance-roster-toolbar-fields {
-  grid-template-columns: minmax(180px, 1.5fr) minmax(150px, 0.75fr);
-  min-width: min(100%, 400px);
+  @apply tw:[grid-template-columns:minmax(180px,_1.5fr)_minmax(150px,_0.75fr)];
+  @apply tw:[min-width:min(100%,_400px)];
 }
 
 .attendance-roster-table-wrap {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
+  @apply tw:w-full;
+  @apply tw:max-w-full;
+  @apply tw:overflow-x-hidden;
 }
 
 .attendance-roster-table {
-  width: 100%;
-  min-width: 0;
-  table-layout: fixed;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:table-fixed;
 }
 
 .attendance-roster-table th:first-child {
-  width: 38%;
+  @apply tw:[width:38%];
 }
 
 .attendance-roster-table th:nth-child(2) {
-  width: 15%;
+  @apply tw:[width:15%];
 }
 
 .attendance-roster-table th:nth-child(3) {
-  width: 20%;
+  @apply tw:[width:20%];
 }
 
 .attendance-roster-table th:last-child {
-  width: 27%;
+  @apply tw:[width:27%];
 }
 
 .attendance-roster-cell,
@@ -9721,172 +9706,172 @@ onBeforeUnmount(() => {
 .attendance-student-copy strong,
 .attendance-student-email,
 .attendance-student-email span {
-  min-width: 0;
-  max-width: 100%;
-  overflow-wrap: anywhere;
+  @apply tw:[min-width:0];
+  @apply tw:max-w-full;
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 .attendance-roster-cell-action {
-  width: auto;
+  @apply tw:w-auto;
 }
 
 .attendance-status-select {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 .attendance-history-panel,
 .attendance-history-item,
 .attendance-history-copy,
 .attendance-history-meta {
-  min-width: 0;
-  max-width: 100%;
+  @apply tw:[min-width:0];
+  @apply tw:max-w-full;
 }
 
 .attendance-history-copy strong,
 .attendance-history-copy small,
 .attendance-history-count {
-  overflow-wrap: anywhere;
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 @media (max-width: 1180px) {
   .attendance-layout {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-history-panel {
-    position: static;
-    width: 100%;
+    @apply tw:static;
+    @apply tw:w-full;
   }
 }
 
 @media (max-width: 900px) {
   .attendance-toolbar-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   .attendance-toolbar-actions-card {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   .attendance-roster-toolbar,
   .attendance-roster-toolbar-actions {
-    width: 100%;
+    @apply tw:w-full;
   }
 }
 
 @media (max-width: 640px) {
   .attendance-section {
-    gap: 0.75rem;
+    @apply tw:[gap:0.75rem];
   }
 
   .attendance-section > .section-header {
-    padding-inline: 0.125rem;
+    @apply tw:[padding-inline:0.125rem];
   }
 
   .attendance-hero-card,
   .attendance-toolbar-card,
   .attendance-panel {
-    padding: 0.75rem;
+    @apply tw:[padding:0.75rem];
   }
 
   .attendance-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   .attendance-summary-card {
-    grid-template-columns: 28px minmax(0, 1fr);
-    column-gap: 0.45rem;
+    @apply tw:[grid-template-columns:28px_minmax(0,_1fr)];
+    @apply tw:[column-gap:0.45rem];
   }
 
   .attendance-summary-icon {
-    width: 28px;
-    height: 28px;
+    @apply tw:[width:28px];
+    @apply tw:[height:28px];
   }
 
   .attendance-toolbar-grid,
   .attendance-roster-toolbar-fields {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-toolbar-actions-card {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 
   .attendance-toolbar-actions {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-toolbar-actions .pagination-btn,
   .attendance-clear-filters-btn {
-    width: 100%;
-    min-height: 48px;
+    @apply tw:w-full;
+    @apply tw:[min-height:48px];
   }
 
   .attendance-legend-row {
-    width: 100%;
-    overflow: visible;
+    @apply tw:w-full;
+    @apply tw:overflow-visible;
   }
 
   .attendance-legend-pill {
-    flex: 1 1 calc(50% - 0.35rem);
+    @apply tw:[flex:1_1_calc(50%_-_0.35rem)];
   }
 
   .attendance-roster-toolbar-actions,
   .attendance-bulk-actions,
   .attendance-bulk-action-row {
-    width: 100%;
-    justify-items: stretch;
+    @apply tw:w-full;
+    @apply tw:justify-items-stretch;
   }
 
   .attendance-bulk-btn {
-    flex: 1 1 calc(50% - 0.5rem);
-    min-height: 44px;
+    @apply tw:[flex:1_1_calc(50%_-_0.5rem)];
+    @apply tw:[min-height:44px];
   }
 
   .attendance-roster-cell {
-    grid-template-columns: minmax(70px, 30%) minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(70px,_30%)_minmax(0,_1fr)];
   }
 
   .attendance-history-summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
   }
 
   .attendance-history-item {
-    grid-template-columns: minmax(62px, 76px) minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(62px,_76px)_minmax(0,_1fr)];
   }
 }
 
 @media (max-width: 360px) {
   .attendance-history-summary-grid {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-summary-card {
-    min-height: 64px;
+    @apply tw:[min-height:64px];
   }
 
   .attendance-scope-switch {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-history-item {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-history-date-badge,
   .attendance-history-meta {
-    grid-column: 1;
+    @apply tw:[grid-column:1];
   }
 }
 
 @media (min-width: 1600px) {
   .attendance-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)_minmax(320px,_380px)];
   }
 
   .attendance-panel {
-    padding: clamp(1rem, 1vw, 1.25rem);
+    @apply tw:[padding:clamp(1rem,_1vw,_1.25rem)];
   }
 }
 
@@ -9897,170 +9882,170 @@ onBeforeUnmount(() => {
 .attendance-toolbar-card,
 .attendance-layout,
 .attendance-panel {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:max-w-full;
+  @apply tw:box-border;
 }
 
 .attendance-toolbar-card {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: end;
-  column-gap: clamp(0.75rem, 1.2vw, 1.25rem);
-  row-gap: clamp(0.75rem, 1vw, 1rem);
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:[align-items:end];
+  @apply tw:[column-gap:clamp(0.75rem,_1.2vw,_1.25rem)];
+  @apply tw:[row-gap:clamp(0.75rem,_1vw,_1rem)];
 }
 
 .attendance-scope-panel,
 .attendance-toolbar-grid,
 .attendance-legend-block {
-  min-width: 0;
-  max-width: 100%;
+  @apply tw:[min-width:0];
+  @apply tw:max-w-full;
 }
 
 .attendance-toolbar-grid {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  grid-template-columns: minmax(170px, 1fr) minmax(190px, 0.9fr) minmax(280px, 1.3fr);
+  @apply tw:[grid-column:1_/_-1];
+  @apply tw:[grid-row:2];
+  @apply tw:[grid-template-columns:minmax(170px,_1fr)_minmax(190px,_0.9fr)_minmax(280px,_1.3fr)];
 }
 
 .attendance-scope-panel {
-  grid-column: 1;
-  grid-row: 1;
-  align-self: start;
+  @apply tw:[grid-column:1];
+  @apply tw:[grid-row:1];
+  @apply tw:[align-self:start];
 }
 
 .attendance-scope-switch {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  width: 100%;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:w-full;
 }
 
 .attendance-scope-btn {
-  width: 100%;
-  min-width: 0;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
 }
 
 .attendance-legend-block {
-  grid-column: 2;
-  grid-row: 1;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  align-self: start;
-  justify-self: end;
-  gap: 0.75rem;
+  @apply tw:[grid-column:2];
+  @apply tw:[grid-row:1];
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:auto_minmax(0,_1fr)];
+  @apply tw:items-center;
+  @apply tw:[align-self:start];
+  @apply tw:[justify-self:end];
+  @apply tw:[gap:0.75rem];
 }
 
 .attendance-legend-row {
-  flex-wrap: wrap;
-  overflow: visible;
+  @apply tw:flex-wrap;
+  @apply tw:overflow-visible;
 }
 
 .attendance-toolbar-actions {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
 }
 
 .attendance-toolbar-actions .pagination-btn {
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:44px];
 }
 
 @media (max-width: 1400px) {
   .attendance-hero-card {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-summary-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(5,_minmax(0,_1fr))];
   }
 
   .attendance-toolbar-card {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   .attendance-legend-block {
-    justify-self: end;
+    @apply tw:[justify-self:end];
   }
 }
 
 @media (max-width: 1200px) {
   .attendance-hero-card,
   .attendance-layout {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-history-panel {
-    position: static;
-    max-height: none;
+    @apply tw:static;
+    @apply tw:max-h-none;
   }
 }
 
 @media (max-width: 992px) {
   .attendance-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    overflow: visible;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+    @apply tw:overflow-visible;
   }
 
   .attendance-summary-card:last-child {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   .attendance-toolbar-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   .attendance-toolbar-actions-card {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   .attendance-scope-panel,
   .attendance-roster-toolbar {
-    align-items: stretch;
+    @apply tw:items-stretch;
   }
 }
 
 @media (max-width: 768px) {
   .attendance-section {
-    padding: clamp(0.65rem, 2.5vw, 1rem) !important;
-    overflow-x: clip;
+    @apply tw:[padding:clamp(0.65rem,_2.5vw,_1rem)]!;
+    @apply tw:overflow-x-clip;
   }
 
   .attendance-toolbar-card {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-toolbar-grid,
   .attendance-legend-block,
   .attendance-roster-toolbar-fields {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-toolbar-actions-card,
   .attendance-legend-block {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 
   .attendance-scope-panel,
   .attendance-toolbar-grid,
   .attendance-legend-block {
-    grid-column: 1;
-    grid-row: auto;
+    @apply tw:[grid-column:1];
+    @apply tw:[grid-row:auto];
   }
 
   .attendance-legend-block {
-    justify-self: stretch;
+    @apply tw:justify-self-stretch;
   }
 
   .attendance-scope-switch,
   .attendance-legend-row {
-    width: 100%;
-    flex-wrap: wrap;
+    @apply tw:w-full;
+    @apply tw:flex-wrap;
   }
 
   .attendance-scope-btn {
-    flex: 1 1 180px;
-    min-height: 44px;
+    @apply tw:[flex:1_1_180px];
+    @apply tw:[min-height:44px];
   }
 }
 
@@ -10068,88 +10053,88 @@ onBeforeUnmount(() => {
   .attendance-hero-card,
   .attendance-toolbar-card,
   .attendance-panel {
-    padding: 0.75rem;
-    border-radius: 16px;
+    @apply tw:[padding:0.75rem];
+    @apply tw:[border-radius:16px];
   }
 
   .attendance-toolbar-actions {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-toolbar-actions .pagination-btn {
-    min-height: 48px;
+    @apply tw:[min-height:48px];
   }
 
   .attendance-scope-switch {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-legend-pill {
-    flex: 1 1 calc(50% - 0.35rem);
-    text-align: center;
+    @apply tw:[flex:1_1_calc(50%_-_0.35rem)];
+    @apply tw:text-center;
   }
 }
 
 @media (max-width: 360px) {
   .attendance-summary-grid,
   .attendance-history-summary-grid {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   .attendance-summary-card:last-child {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 }
 
 /* Compact attendance workspace without nested scrolling. */
 .attendance-section {
-  gap: 0.55rem;
+  @apply tw:[gap:0.55rem];
 }
 
 .attendance-section > .section-header {
-  margin-bottom: 0;
+  @apply tw:[margin-bottom:0];
 }
 
 .attendance-shell {
-  gap: 0.45rem;
+  @apply tw:[gap:0.45rem];
 }
 
 .attendance-hero-card,
 .attendance-toolbar-card,
 .attendance-panel {
-  padding: 0.65rem;
-  border-radius: 14px;
+  @apply tw:[padding:0.65rem];
+  @apply tw:[border-radius:14px];
 }
 
 .attendance-summary-grid {
-  gap: 0.4rem;
+  @apply tw:[gap:0.4rem];
 }
 
 .attendance-summary-card {
-  min-height: 58px;
-  padding: 0.45rem 0.6rem;
-  column-gap: 0.4rem;
+  @apply tw:[min-height:58px];
+  @apply tw:[padding:0.45rem_0.6rem];
+  @apply tw:[column-gap:0.4rem];
 }
 
 .attendance-summary-icon {
-  width: 26px;
-  height: 26px;
-  font-size: 0.78rem;
+  @apply tw:[width:26px];
+  @apply tw:[height:26px];
+  @apply tw:[font-size:0.78rem];
 }
 
 .attendance-summary-card strong {
-  font-size: 1.15rem;
+  @apply tw:[font-size:1.15rem];
 }
 
 .attendance-toolbar-card {
-  column-gap: 0.55rem;
-  row-gap: 0.5rem;
+  @apply tw:[column-gap:0.55rem];
+  @apply tw:[row-gap:0.5rem];
 }
 
 .attendance-scope-panel,
 .attendance-toolbar-field-card {
-  gap: 0.3rem;
+  @apply tw:[gap:0.3rem];
 }
 
 .attendance-scope-btn,
@@ -10157,94 +10142,94 @@ onBeforeUnmount(() => {
 .attendance-date-input-wrap,
 .attendance-date-input-wrap input,
 .attendance-toolbar-actions .pagination-btn {
-  min-height: 38px;
+  @apply tw:[min-height:38px];
 }
 
 .attendance-scope-btn {
-  padding: 0.4rem 0.6rem;
+  @apply tw:[padding:0.4rem_0.6rem];
 }
 
 .attendance-toolbar-actions .pagination-btn {
-  padding-block: 0.4rem;
+  @apply tw:[padding-block:0.4rem];
 }
 
 .attendance-legend-pill {
-  min-height: 28px;
-  padding: 0.25rem 0.5rem;
+  @apply tw:[min-height:28px];
+  @apply tw:[padding:0.25rem_0.5rem];
 }
 
 .attendance-layout {
-  gap: 0.55rem;
-  margin-top: 0.55rem;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[margin-top:0.55rem];
 }
 
 .attendance-panel-head {
-  margin-bottom: 0.45rem;
+  @apply tw:[margin-bottom:0.45rem];
 }
 
 .attendance-roster-toolbar {
-  padding: 0.5rem;
-  border-radius: 12px;
+  @apply tw:[padding:0.5rem];
+  @apply tw:[border-radius:12px];
 }
 
 .attendance-search-input-wrap,
 .attendance-search-input-wrap input,
 .attendance-filter-field select,
 .attendance-status-select {
-  min-height: 38px;
+  @apply tw:[min-height:38px];
 }
 
 .attendance-roster-results {
-  margin-block: 0.45rem;
+  @apply tw:[margin-block:0.45rem];
 }
 
 .attendance-roster-table-wrap {
-  max-height: none;
-  overflow: visible;
+  @apply tw:max-h-none;
+  @apply tw:overflow-visible;
 }
 
 .attendance-roster-table thead th {
-  position: static;
+  @apply tw:static;
 }
 
 .attendance-roster-cell-student {
-  position: static;
+  @apply tw:static;
 }
 
 .attendance-roster-cell {
-  padding-block: 0.55rem;
+  @apply tw:[padding-block:0.55rem];
 }
 
 .attendance-status-select {
-  min-height: 38px;
+  @apply tw:[min-height:38px];
 }
 
 .attendance-history-panel {
-  position: static;
-  max-height: none;
-  overflow: visible;
+  @apply tw:static;
+  @apply tw:max-h-none;
+  @apply tw:overflow-visible;
 }
 
 .attendance-history-content {
-  gap: 0.5rem;
-  margin-top: 0.55rem;
+  @apply tw:[gap:0.5rem];
+  @apply tw:[margin-top:0.55rem];
 }
 
 @media (max-width: 576px) {
   .attendance-hero-card,
   .attendance-toolbar-card,
   .attendance-panel {
-    padding: 0.6rem;
-    border-radius: 13px;
+    @apply tw:[padding:0.6rem];
+    @apply tw:[border-radius:13px];
   }
 
   .attendance-toolbar-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
   }
 
   .attendance-toolbar-actions .pagination-btn {
-    min-height: 40px;
-    padding-inline: 0.35rem;
+    @apply tw:[min-height:40px];
+    @apply tw:[padding-inline:0.35rem];
   }
 }
 
@@ -10255,1254 +10240,1252 @@ onBeforeUnmount(() => {
   --attendance-green-soft: #6f9d58;
   --attendance-mint: #dcead3;
   --attendance-surface: #f7fbf4;
-  position: relative;
-  gap: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid #d4e4ca !important;
-  border-radius: 22px;
-  background: #ffffff !important;
-  box-shadow: 0 20px 50px rgba(30, 67, 7, 0.08);
+  @apply tw:relative;
+  @apply tw:[gap:0];
+  @apply tw:[padding:0];
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#d4e4ca]!;
+  @apply tw:[border-radius:22px];
+  @apply tw:[background:#ffffff]!;
+  @apply tw:[box-shadow:0_20px_50px_rgba(30,_67,_7,_0.08)];
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-hero {
-  display: grid;
-  gap: 1.2rem;
-  padding: 1.5rem 1.6rem;
-  border-bottom: 1px solid #dcead3;
-  background:
-    radial-gradient(circle at 90% 8%, rgba(111, 157, 88, 0.2), transparent 30%),
-    linear-gradient(135deg, #f7fbf4 0%, #edf6e8 100%);
+  @apply tw:grid;
+  @apply tw:[gap:1.2rem];
+  @apply tw:[padding:1.5rem_1.6rem];
+  @apply tw:[border-bottom:1px_solid_#dcead3];
+  @apply tw:[background:radial-gradient(circle_at_90%_8%,_rgba(111,_157,_88,_0.2),_transparent_30%),______linear-gradient(135deg,_#f7fbf4_0%,_#edf6e8_100%)];
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  min-width: 0;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.85rem];
+  @apply tw:[min-width:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  border-radius: 15px;
-  background: #4f8a35;
-  color: #ffffff;
-  box-shadow: 0 9px 20px rgba(30, 67, 7, 0.18);
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:48px];
+  @apply tw:[height:48px];
+  @apply tw:[flex:0_0_48px];
+  @apply tw:[border-radius:15px];
+  @apply tw:[background:#4f8a35];
+  @apply tw:[color:#ffffff];
+  @apply tw:[box-shadow:0_9px_20px_rgba(30,_67,_7,_0.18)];
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-icon i {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[-webkit-text-fill-color:#ffffff]!;
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-kicker {
-  display: block;
-  margin-bottom: 0.18rem;
-  color: #4f7d3a;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  @apply tw:block;
+  @apply tw:[margin-bottom:0.18rem];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.1em];
+  @apply tw:uppercase;
 }
 
 #teacherRecordsAttendancePanel .section-title {
-  margin: 0;
-  color: #173706;
-  font-size: clamp(1.35rem, 2vw, 1.75rem);
-  letter-spacing: -0.025em;
+  @apply tw:[margin:0];
+  @apply tw:[color:#173706];
+  @apply tw:[font-size:clamp(1.35rem,_2vw,_1.75rem)];
+  @apply tw:[letter-spacing:-0.025em];
 }
 
 #teacherRecordsAttendancePanel .section-subtitle {
-  margin-top: 0.28rem;
-  color: #52634a;
-  font-size: 0.86rem;
+  @apply tw:[margin-top:0.28rem];
+  @apply tw:[color:#52634a];
+  @apply tw:[font-size:0.86rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-context {
-  position: absolute;
-  top: 1.55rem;
-  right: 1.6rem;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.45rem;
-  max-width: 47%;
+  @apply tw:absolute;
+  @apply tw:[top:1.55rem];
+  @apply tw:[right:1.6rem];
+  @apply tw:flex;
+  @apply tw:flex-wrap;
+  @apply tw:justify-end;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[max-width:47%];
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-context span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 34px;
-  padding: 0.42rem 0.68rem;
-  border: 1px solid rgba(79, 125, 58, 0.18);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
-  color: #48633d;
-  font-size: 0.7rem;
-  font-weight: 700;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.4rem];
+  @apply tw:[min-height:34px];
+  @apply tw:[padding:0.42rem_0.68rem];
+  @apply tw:[border:1px_solid_rgba(79,_125,_58,_0.18)];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:rgba(255,_255,_255,_0.78)];
+  @apply tw:[color:#48633d];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[font-weight:700];
 }
 
 #teacherRecordsAttendancePanel .attendance-workspace-context i {
-  color: #6f9d58;
+  @apply tw:[color:#6f9d58];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.7rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(5,_minmax(0,_1fr))];
+  @apply tw:[gap:0.7rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto auto;
-  gap: 0.24rem;
-  min-width: 0;
-  min-height: 108px;
-  padding: 0.85rem;
-  overflow: hidden;
-  border: 1px solid #dce7d6;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.88);
-  color: #263321;
-  box-shadow: 0 7px 18px rgba(30, 67, 7, 0.045);
-  backdrop-filter: blur(8px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  @apply tw:relative;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:1fr];
+  @apply tw:[grid-template-rows:auto_auto_auto];
+  @apply tw:[gap:0.24rem];
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:108px];
+  @apply tw:[padding:0.85rem];
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#dce7d6];
+  @apply tw:[border-radius:16px];
+  @apply tw:[background:rgba(255,_255,_255,_0.88)];
+  @apply tw:[color:#263321];
+  @apply tw:[box-shadow:0_7px_18px_rgba(30,_67,_7,_0.045)];
+  @apply tw:[backdrop-filter:blur(8px)];
+  @apply tw:[transition:transform_0.2s_ease,_box-shadow_0.2s_ease,_border-color_0.2s_ease];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card::before {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 3px;
-  background: #6f9d58;
+  @apply tw:[content:""];
+  @apply tw:absolute;
+  @apply tw:[inset:auto_0_0];
+  @apply tw:[height:3px];
+  @apply tw:[background:#6f9d58];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card:hover {
-  transform: translateY(-2px);
-  border-color: #bfd5b2;
-  box-shadow: 0 11px 24px rgba(30, 67, 7, 0.09);
+  @apply tw:[transform:translateY(-2px)];
+  @apply tw:[border-color:#bfd5b2];
+  @apply tw:[box-shadow:0_11px_24px_rgba(30,_67,_7,_0.09)];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card-head {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-width: 0;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[min-width:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card .attendance-summary-icon {
-  display: inline-flex;
-  grid-row: auto;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  border-radius: 9px;
-  background: #e5efe0;
-  color: #4f7d3a;
-  font-size: 0.74rem;
+  @apply tw:inline-flex;
+  @apply tw:[grid-row:auto];
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:30px];
+  @apply tw:[height:30px];
+  @apply tw:[flex:0_0_30px];
+  @apply tw:[border-radius:9px];
+  @apply tw:[background:#e5efe0];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:0.74rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card span {
-  grid-column: auto;
-  grid-row: auto;
-  color: #687761;
-  font-size: 0.66rem;
-  line-height: 1.25;
-  letter-spacing: 0.045em;
+  @apply tw:[grid-column:auto];
+  @apply tw:[grid-row:auto];
+  @apply tw:[color:#687761];
+  @apply tw:[font-size:0.66rem];
+  @apply tw:[line-height:1.25];
+  @apply tw:[letter-spacing:0.045em];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card strong {
-  grid-column: auto;
-  grid-row: auto;
-  color: #203119;
-  font-size: 1.45rem;
-  line-height: 1.05;
+  @apply tw:[grid-column:auto];
+  @apply tw:[grid-row:auto];
+  @apply tw:[color:#203119];
+  @apply tw:[font-size:1.45rem];
+  @apply tw:[line-height:1.05];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card small {
-  color: #899583;
-  font-size: 0.65rem;
-  font-weight: 600;
+  @apply tw:[color:#899583];
+  @apply tw:[font-size:0.65rem];
+  @apply tw:[font-weight:600];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card.status-total::before {
-  background: #4f7d3a;
+  @apply tw:[background:#4f7d3a];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card.status-present::before {
-  background: #4d9b62;
+  @apply tw:[background:#4d9b62];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card.status-late::before {
-  background: #d4a62a;
+  @apply tw:[background:#d4a62a];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card.status-absent::before {
-  background: #cf5b58;
+  @apply tw:[background:#cf5b58];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card.status-excused::before {
-  background: #6787ad;
+  @apply tw:[background:#6787ad];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card.status-present,
 #teacherRecordsAttendancePanel .attendance-summary-card.status-late,
 #teacherRecordsAttendancePanel .attendance-summary-card.status-absent,
 #teacherRecordsAttendancePanel .attendance-summary-card.status-excused {
-  background: rgba(255, 255, 255, 0.88);
-  color: #263321;
+  @apply tw:[background:rgba(255,_255,_255,_0.88)];
+  @apply tw:[color:#263321];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card.status-present strong,
 #teacherRecordsAttendancePanel .attendance-summary-card.status-late strong,
 #teacherRecordsAttendancePanel .attendance-summary-card.status-absent strong,
 #teacherRecordsAttendancePanel .attendance-summary-card.status-excused strong {
-  color: #203119;
+  @apply tw:[color:#203119];
 }
 
 #teacherRecordsAttendancePanel .attendance-shell {
-  gap: 0;
+  @apply tw:[gap:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-card {
-  display: grid;
-  grid-template-columns: 1fr;
-  align-items: stretch;
-  gap: 0.9rem;
-  margin: 1rem 1.2rem 0;
-  padding: 1rem;
-  border: 1px solid #dce7d6;
-  border-radius: 18px;
-  background: #f7fbf4;
-  box-shadow: none;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:1fr];
+  @apply tw:items-stretch;
+  @apply tw:[gap:0.9rem];
+  @apply tw:[margin:1rem_1.2rem_0];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_solid_#dce7d6];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#f7fbf4];
+  @apply tw:[box-shadow:none];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-header-copy {
-  display: grid;
-  gap: 0.24rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.24rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-kicker {
-  gap: 0.35rem;
-  padding: 0;
-  background: transparent;
-  color: #4f7d3a;
-  font-size: 0.66rem;
+  @apply tw:[gap:0.35rem];
+  @apply tw:[padding:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:0.66rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-header-copy h5 {
-  color: #23331d;
-  font-size: 0.95rem;
+  @apply tw:[color:#23331d];
+  @apply tw:[font-size:0.95rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-header-copy p {
-  color: #71806a;
-  font-size: 0.76rem;
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.76rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-note {
-  border-color: #cfddc7;
-  background: #ffffff;
-  color: #4f6a43;
-  font-size: 0.72rem;
+  @apply tw:[border-color:#cfddc7];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#4f6a43];
+  @apply tw:[font-size:0.72rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-panel {
-  display: grid;
-  grid-template-columns: minmax(180px, 0.6fr) minmax(300px, 1fr);
-  align-items: center;
-  gap: 0.9rem;
-  padding: 0.75rem;
-  border: 1px solid #dfe9da;
-  border-radius: 15px;
-  background: #ffffff;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(180px,_0.6fr)_minmax(300px,_1fr)];
+  @apply tw:items-center;
+  @apply tw:[gap:0.9rem];
+  @apply tw:[padding:0.75rem];
+  @apply tw:[border:1px_solid_#dfe9da];
+  @apply tw:[border-radius:15px];
+  @apply tw:[background:#ffffff];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-panel-copy {
-  display: grid;
-  gap: 0.18rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.18rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-panel-copy .attendance-step-badge,
 #teacherRecordsAttendancePanel .attendance-toolbar-field-card > .attendance-step-badge {
-  display: inline-flex;
+  @apply tw:inline-flex;
 }
 
 #teacherRecordsAttendancePanel .attendance-step-badge {
-  padding: 0.16rem 0.45rem;
-  background: #e8f2e2;
-  color: #4f7d3a;
-  font-size: 0.6rem;
+  @apply tw:[padding:0.16rem_0.45rem];
+  @apply tw:[background:#e8f2e2];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[font-size:0.6rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-panel-copy strong {
-  color: #263321;
-  font-size: 0.84rem;
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.84rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-panel-copy small {
-  display: block;
-  color: #7a8874;
-  font-size: 0.7rem;
+  @apply tw:block;
+  @apply tw:[color:#7a8874];
+  @apply tw:[font-size:0.7rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-switch {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:[gap:0.45rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-btn {
-  min-height: 42px;
-  padding: 0.55rem 0.75rem;
-  border-color: #cfddc7;
-  border-radius: 11px;
-  background: #ffffff;
-  color: #52634a;
+  @apply tw:[min-height:42px];
+  @apply tw:[padding:0.55rem_0.75rem];
+  @apply tw:[border-color:#cfddc7];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#52634a];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-btn.active {
-  border-color: #1e4307;
-  background: #1e4307;
-  color: #ffffff;
-  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.16);
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[background:#1e4307];
+  @apply tw:[color:#ffffff];
+  @apply tw:[box-shadow:0_7px_16px_rgba(30,_67,_7,_0.16)];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-grid {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(190px, 1fr) minmax(300px, 1.25fr);
-  align-items: stretch;
-  gap: 0.65rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(180px,_1fr)_minmax(190px,_1fr)_minmax(300px,_1.25fr)];
+  @apply tw:items-stretch;
+  @apply tw:[gap:0.65rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-field-card {
-  display: grid;
-  align-content: start;
-  gap: 0.58rem;
-  padding: 0.75rem;
-  border: 1px solid #dfe9da;
-  border-radius: 15px;
-  background: #ffffff;
+  @apply tw:grid;
+  @apply tw:[align-content:start];
+  @apply tw:[gap:0.58rem];
+  @apply tw:[padding:0.75rem];
+  @apply tw:[border:1px_solid_#dfe9da];
+  @apply tw:[border-radius:15px];
+  @apply tw:[background:#ffffff];
 }
 
 #teacherRecordsAttendancePanel .attendance-date-card-copy,
 #teacherRecordsAttendancePanel .attendance-date-quick-actions,
 #teacherRecordsAttendancePanel .attendance-date-helper,
 #teacherRecordsAttendancePanel .attendance-actions-hint {
-  display: flex;
+  @apply tw:flex;
 }
 
 #teacherRecordsAttendancePanel .attendance-date-card-copy {
-  align-items: center;
-  gap: 0.55rem;
+  @apply tw:items-center;
+  @apply tw:[gap:0.55rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-date-card-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: #e5efe0;
-  color: #4f7d3a;
-  box-shadow: none;
+  @apply tw:[width:34px];
+  @apply tw:[height:34px];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#e5efe0];
+  @apply tw:[color:#4f7d3a];
+  @apply tw:[box-shadow:none];
 }
 
 #teacherRecordsAttendancePanel .attendance-date-card-copy strong {
-  color: #263321;
-  font-size: 0.82rem;
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.82rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-date-card-copy small {
-  color: #82907b;
-  font-size: 0.68rem;
+  @apply tw:[color:#82907b];
+  @apply tw:[font-size:0.68rem];
 }
 
 #teacherRecordsAttendancePanel .filter-field span {
-  color: #687761;
-  font-size: 0.65rem;
+  @apply tw:[color:#687761];
+  @apply tw:[font-size:0.65rem];
 }
 
 #teacherRecordsAttendancePanel .filter-field select,
 #teacherRecordsAttendancePanel .attendance-date-input-wrap {
-  min-height: 42px;
-  border-color: #cfddc7;
-  border-radius: 11px;
-  background: #ffffff;
-  color: #263321;
+  @apply tw:[min-height:42px];
+  @apply tw:[border-color:#cfddc7];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#263321];
 }
 
 #teacherRecordsAttendancePanel .attendance-date-input-wrap:focus-within,
 #teacherRecordsAttendancePanel .attendance-search-input-wrap:focus-within {
-  border-color: #6f9d58;
-  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.16);
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(111,_157,_88,_0.16)];
 }
 
 #teacherRecordsAttendancePanel .attendance-date-chip {
-  padding: 0.32rem 0.62rem;
-  border-color: #cfddc7;
-  background: #ffffff;
-  color: #687761;
-  font-size: 0.7rem;
+  @apply tw:[padding:0.32rem_0.62rem];
+  @apply tw:[border-color:#cfddc7];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#687761];
+  @apply tw:[font-size:0.7rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-date-chip.active {
-  border-color: #9fbe8f;
-  background: #e8f2e2;
-  color: #315f1e;
+  @apply tw:[border-color:#9fbe8f];
+  @apply tw:[background:#e8f2e2];
+  @apply tw:[color:#315f1e];
 }
 
 #teacherRecordsAttendancePanel .attendance-date-helper {
-  color: #71806a;
-  font-size: 0.68rem;
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.68rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
+  @apply tw:[gap:0.45rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-actions .pagination-btn {
-  min-height: 42px;
-  border-radius: 11px;
-  box-shadow: none;
+  @apply tw:[min-height:42px];
+  @apply tw:[border-radius:11px];
+  @apply tw:[box-shadow:none];
 }
 
 #teacherRecordsAttendancePanel .attendance-load-btn {
-  border-color: #9fbe8f;
-  background: #edf6e8;
-  color: #315f1e;
+  @apply tw:[border-color:#9fbe8f];
+  @apply tw:[background:#edf6e8];
+  @apply tw:[color:#315f1e];
 }
 
 #teacherRecordsAttendancePanel .attendance-save-btn {
-  border-color: #1e4307;
-  background: #1e4307;
-  color: #ffffff;
-  box-shadow: 0 7px 16px rgba(30, 67, 7, 0.16);
+  @apply tw:[border-color:#1e4307];
+  @apply tw:[background:#1e4307];
+  @apply tw:[color:#ffffff];
+  @apply tw:[box-shadow:0_7px_16px_rgba(30,_67,_7,_0.16)];
 }
 
 #teacherRecordsAttendancePanel .attendance-lock-btn {
-  border-color: #b8c9af;
-  background: #ffffff;
-  color: #52634a;
+  @apply tw:[border-color:#b8c9af];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#52634a];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-load-btn:not(:disabled):hover,
 #teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover {
-  border-color: #4f7d3a;
-  background: #e5efe0;
-  color: #1e4307;
+  @apply tw:[border-color:#4f7d3a];
+  @apply tw:[background:#e5efe0];
+  @apply tw:[color:#1e4307];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-save-btn:not(:disabled):hover {
-  border-color: #315f1e;
-  background: #315f1e;
+  @apply tw:[border-color:#315f1e];
+  @apply tw:[background:#315f1e];
 }
 
 #teacherRecordsAttendancePanel .attendance-actions-hint {
-  color: #7d8b77;
-  font-size: 0.68rem;
-  line-height: 1.4;
+  @apply tw:[color:#7d8b77];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[line-height:1.4];
 }
 
 #teacherRecordsAttendancePanel .attendance-legend-block {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.8rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-legend-title {
-  color: #71806a;
-  font-size: 0.64rem;
-  white-space: nowrap;
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.64rem];
+  @apply tw:whitespace-nowrap;
 }
 
 #teacherRecordsAttendancePanel .attendance-legend-row {
-  display: flex;
-  gap: 0.4rem;
+  @apply tw:flex;
+  @apply tw:[gap:0.4rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-legend-pill,
 #teacherRecordsAttendancePanel .attendance-breakdown-pill {
-  position: relative;
-  gap: 0.34rem;
-  min-height: 28px;
-  padding: 0.3rem 0.58rem;
-  font-size: 0.68rem;
+  @apply tw:relative;
+  @apply tw:[gap:0.34rem];
+  @apply tw:[min-height:28px];
+  @apply tw:[padding:0.3rem_0.58rem];
+  @apply tw:[font-size:0.68rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-legend-pill::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
+  @apply tw:[content:""];
+  @apply tw:[width:6px];
+  @apply tw:[height:6px];
+  @apply tw:[border-radius:50%];
+  @apply tw:[background:currentColor];
 }
 
 #teacherRecordsAttendancePanel .attendance-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(270px, 310px);
-  align-items: start;
-  gap: 0.9rem;
-  margin: 1rem 1.2rem 1.2rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)_minmax(270px,_310px)];
+  @apply tw:[align-items:start];
+  @apply tw:[gap:0.9rem];
+  @apply tw:[margin:1rem_1.2rem_1.2rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-panel {
-  min-width: 0;
-  padding: 1rem;
-  border: 1px solid #dce7d6;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 8px 22px rgba(30, 67, 7, 0.05);
+  @apply tw:[min-width:0];
+  @apply tw:[padding:1rem];
+  @apply tw:[border:1px_solid_#dce7d6];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[box-shadow:0_8px_22px_rgba(30,_67,_7,_0.05)];
 }
 
 #teacherRecordsAttendancePanel .attendance-panel-head {
-  align-items: center;
-  margin: 0;
+  @apply tw:items-center;
+  @apply tw:[margin:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-panel-title {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.65rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-panel-title-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-  border-radius: 11px;
-  background: #e5efe0;
-  color: #4f7d3a;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[width:38px];
+  @apply tw:[height:38px];
+  @apply tw:[flex:0_0_38px];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#e5efe0];
+  @apply tw:[color:#4f7d3a];
 }
 
 #teacherRecordsAttendancePanel .attendance-panel-title-icon.history {
-  background: #edf2e9;
-  color: #526f46;
+  @apply tw:[background:#edf2e9];
+  @apply tw:[color:#526f46];
 }
 
 #teacherRecordsAttendancePanel .attendance-panel-kicker {
-  display: block;
-  padding: 0;
-  background: transparent;
-  color: #263321;
-  font-size: 0.76rem;
-  letter-spacing: 0.04em;
+  @apply tw:block;
+  @apply tw:[padding:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[letter-spacing:0.04em];
 }
 
 #teacherRecordsAttendancePanel .attendance-panel-title p {
-  margin-top: 0.12rem;
-  color: #7b8875;
-  font-size: 0.7rem;
+  @apply tw:[margin-top:0.12rem];
+  @apply tw:[color:#7b8875];
+  @apply tw:[font-size:0.7rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-record-badges {
-  gap: 0.35rem;
+  @apply tw:[gap:0.35rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-record-badges .record-chip {
-  padding: 0.26rem 0.55rem;
-  font-size: 0.65rem;
+  @apply tw:[padding:0.26rem_0.55rem];
+  @apply tw:[font-size:0.65rem];
 }
 
 #teacherRecordsAttendancePanel .table-state {
-  min-height: 180px;
-  border-color: #cfddc7;
-  border-radius: 15px;
-  background: #f7fbf4;
-  color: #687761;
+  @apply tw:[min-height:180px];
+  @apply tw:[border-color:#cfddc7];
+  @apply tw:[border-radius:15px];
+  @apply tw:[background:#f7fbf4];
+  @apply tw:[color:#687761];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-toolbar {
-  padding: 0.75rem;
-  border-color: #dfe9da;
-  border-radius: 15px;
-  background: #f7fbf4;
+  @apply tw:[padding:0.75rem];
+  @apply tw:[border-color:#dfe9da];
+  @apply tw:[border-radius:15px];
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsAttendancePanel .attendance-search-field > span,
 #teacherRecordsAttendancePanel .attendance-filter-field > span,
 #teacherRecordsAttendancePanel .attendance-bulk-actions > span {
-  color: #71806a;
-  font-size: 0.64rem;
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.64rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-search-input-wrap,
 #teacherRecordsAttendancePanel .attendance-filter-field select {
-  min-height: 42px;
-  border-color: #cfddc7;
-  border-radius: 11px;
-  color: #263321;
+  @apply tw:[min-height:42px];
+  @apply tw:[border-color:#cfddc7];
+  @apply tw:[border-radius:11px];
+  @apply tw:[color:#263321];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-btn,
 #teacherRecordsAttendancePanel .attendance-clear-filters-btn {
-  min-height: 32px;
-  padding: 0.34rem 0.62rem;
-  font-size: 0.68rem;
+  @apply tw:[min-height:32px];
+  @apply tw:[padding:0.34rem_0.62rem];
+  @apply tw:[font-size:0.68rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-results {
-  color: #71806a;
-  font-size: 0.76rem;
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.76rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-table-wrap {
-  max-height: 62vh;
-  overflow: auto;
-  border-color: #dce7d6;
-  border-radius: 15px;
+  @apply tw:[max-height:62vh];
+  @apply tw:overflow-auto;
+  @apply tw:[border-color:#dce7d6];
+  @apply tw:[border-radius:15px];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  border-color: #dce7d6;
-  background: #edf5e9;
-  color: #52634a;
-  font-size: 0.66rem;
+  @apply tw:sticky;
+  @apply tw:[top:0];
+  @apply tw:[z-index:3];
+  @apply tw:[border-color:#dce7d6];
+  @apply tw:[background:#edf5e9];
+  @apply tw:[color:#52634a];
+  @apply tw:[font-size:0.66rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-row {
-  box-shadow: inset 3px 0 0 transparent;
+  @apply tw:[box-shadow:inset_3px_0_0_transparent];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-row.status-present {
-  box-shadow: inset 3px 0 0 #54a36a;
+  @apply tw:[box-shadow:inset_3px_0_0_#54a36a];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-row.status-late {
-  box-shadow: inset 3px 0 0 #d4a62a;
+  @apply tw:[box-shadow:inset_3px_0_0_#d4a62a];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-row.status-absent {
-  box-shadow: inset 3px 0 0 #cf5b58;
+  @apply tw:[box-shadow:inset_3px_0_0_#cf5b58];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-row.status-excused {
-  box-shadow: inset 3px 0 0 #6787ad;
+  @apply tw:[box-shadow:inset_3px_0_0_#6787ad];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-row:hover,
 #teacherRecordsAttendancePanel .attendance-roster-row:hover .attendance-roster-cell-student {
-  background: #f7fbf4;
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsAttendancePanel .attendance-student-avatar {
-  border-color: #d4e4ca;
-  background: #e8f2e2;
+  @apply tw:[border-color:#d4e4ca];
+  @apply tw:[background:#e8f2e2];
 }
 
 #teacherRecordsAttendancePanel .attendance-student-avatar > .fa-user {
-  color: #4f7d3a !important;
+  @apply tw:[color:#4f7d3a]!;
 }
 
 #teacherRecordsAttendancePanel .attendance-student-copy strong {
-  color: #263321;
+  @apply tw:[color:#263321];
 }
 
 #teacherRecordsAttendancePanel .attendance-student-email,
 #teacherRecordsAttendancePanel .attendance-roster-section {
-  color: #71806a;
+  @apply tw:[color:#71806a];
 }
 
 #teacherRecordsAttendancePanel .attendance-student-grade {
-  background: #e8f2e2;
-  color: #315f1e;
+  @apply tw:[background:#e8f2e2];
+  @apply tw:[color:#315f1e];
 }
 
 #teacherRecordsAttendancePanel .attendance-status-select {
-  min-height: 40px;
-  border-radius: 10px;
-  box-shadow: none;
+  @apply tw:[min-height:40px];
+  @apply tw:[border-radius:10px];
+  @apply tw:[box-shadow:none];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-panel {
-  position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 2rem);
-  overflow: auto;
+  @apply tw:sticky;
+  @apply tw:[top:1rem];
+  @apply tw:[max-height:calc(100vh_-_2rem)];
+  @apply tw:overflow-auto;
 }
 
 #teacherRecordsAttendancePanel .attendance-history-summary {
-  cursor: pointer;
-  list-style: none;
+  @apply tw:cursor-pointer;
+  @apply tw:[list-style:none];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-summary::-webkit-details-marker {
-  display: none;
+  @apply tw:hidden;
 }
 
 #teacherRecordsAttendancePanel .attendance-history-chevron {
-  color: #6f9d58;
-  transition: transform 0.2s ease;
+  @apply tw:[color:#6f9d58];
+  @apply tw:[transition:transform_0.2s_ease];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-panel[open] .attendance-history-chevron {
-  transform: rotate(180deg);
+  @apply tw:[transform:rotate(180deg)];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-content {
-  gap: 0.7rem;
-  margin-top: 0.85rem;
+  @apply tw:[gap:0.7rem];
+  @apply tw:[margin-top:0.85rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-summary-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.4rem;
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
+  @apply tw:[gap:0.4rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-stat {
-  padding: 0.65rem;
-  border-color: #dfe9da;
-  border-radius: 12px;
-  background: #f7fbf4;
+  @apply tw:[padding:0.65rem];
+  @apply tw:[border-color:#dfe9da];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-stat span {
-  color: #71806a;
-  font-size: 0.57rem;
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.57rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-stat strong {
-  color: #263321;
-  font-size: 1rem;
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:1rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-list {
-  gap: 0.55rem;
+  @apply tw:[gap:0.55rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-item {
-  grid-template-columns: 68px minmax(0, 1fr);
-  gap: 0.6rem;
-  padding: 0.65rem;
-  border-color: #dfe9da;
-  border-radius: 13px;
+  @apply tw:[grid-template-columns:68px_minmax(0,_1fr)];
+  @apply tw:[gap:0.6rem];
+  @apply tw:[padding:0.65rem];
+  @apply tw:[border-color:#dfe9da];
+  @apply tw:[border-radius:13px];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-item:hover,
 #teacherRecordsAttendancePanel .attendance-history-item.active {
-  border-color: #6f9d58;
-  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.12);
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(111,_157,_88,_0.12)];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-date-badge,
 #teacherRecordsAttendancePanel .attendance-history-item.active .attendance-history-date-badge {
-  min-width: 0;
-  padding: 0.58rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #1e4307, #4f7d3a);
-  box-shadow: none;
+  @apply tw:[min-width:0];
+  @apply tw:[padding:0.58rem];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:linear-gradient(135deg,_#1e4307,_#4f7d3a)];
+  @apply tw:[box-shadow:none];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-copy strong {
-  color: #263321;
-  font-size: 0.76rem;
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.76rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-copy small,
 #teacherRecordsAttendancePanel .attendance-history-count {
-  color: #71806a;
-  font-size: 0.65rem;
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.65rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-meta {
-  grid-column: 1 / -1;
-  grid-template-columns: 1fr auto;
-  justify-items: start;
+  @apply tw:[grid-column:1_/_-1];
+  @apply tw:[grid-template-columns:1fr_auto];
+  @apply tw:justify-items-start;
 }
 
 @media (max-width: 1180px) {
   #teacherRecordsAttendancePanel .attendance-workspace-context {
-    position: static;
-    max-width: none;
-    justify-content: flex-start;
+    @apply tw:static;
+    @apply tw:max-w-none;
+    @apply tw:justify-start;
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-actions-card {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   #teacherRecordsAttendancePanel .attendance-layout {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   #teacherRecordsAttendancePanel .attendance-history-panel {
-    position: static;
-    max-height: none;
+    @apply tw:static;
+    @apply tw:max-h-none;
   }
 }
 
 @media (max-width: 820px) {
   #teacherRecordsAttendancePanel .attendance-workspace-hero {
-    padding: 1.15rem;
+    @apply tw:[padding:1.15rem];
   }
 
   #teacherRecordsAttendancePanel .attendance-summary-grid {
-    grid-template-columns: repeat(5, minmax(130px, 1fr));
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
-    scroll-snap-type: x proximity;
+    @apply tw:[grid-template-columns:repeat(5,_minmax(130px,_1fr))];
+    @apply tw:overflow-x-auto;
+    @apply tw:[padding-bottom:0.25rem];
+    @apply tw:[scroll-snap-type:x_proximity];
   }
 
   #teacherRecordsAttendancePanel .attendance-summary-card {
-    scroll-snap-align: start;
+    @apply tw:[scroll-snap-align:start];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-card,
   #teacherRecordsAttendancePanel .attendance-layout {
-    margin-inline: 0.85rem;
+    @apply tw:[margin-inline:0.85rem];
   }
 
   #teacherRecordsAttendancePanel .attendance-scope-panel {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 }
 
 @media (max-width: 640px) {
   #teacherRecordsAttendancePanel {
-    border-radius: 16px;
+    @apply tw:[border-radius:16px];
   }
 
   #teacherRecordsAttendancePanel .attendance-workspace-hero {
-    gap: 0.9rem;
-    padding: 1rem;
+    @apply tw:[gap:0.9rem];
+    @apply tw:[padding:1rem];
   }
 
   #teacherRecordsAttendancePanel .attendance-workspace-icon {
-    width: 42px;
-    height: 42px;
-    flex-basis: 42px;
-    border-radius: 13px;
+    @apply tw:[width:42px];
+    @apply tw:[height:42px];
+    @apply tw:[flex-basis:42px];
+    @apply tw:[border-radius:13px];
   }
 
   #teacherRecordsAttendancePanel .attendance-workspace-context {
-    display: grid;
-    grid-template-columns: 1fr;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   #teacherRecordsAttendancePanel .attendance-workspace-context span {
-    border-radius: 11px;
+    @apply tw:[border-radius:11px];
   }
 
   #teacherRecordsAttendancePanel .attendance-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    overflow: visible;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+    @apply tw:overflow-visible;
   }
 
   #teacherRecordsAttendancePanel .attendance-summary-card {
-    min-height: 98px;
+    @apply tw:[min-height:98px];
   }
 
   #teacherRecordsAttendancePanel .attendance-summary-card.status-total {
-    grid-column: 1 / -1;
+    @apply tw:[grid-column:1_/_-1];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-card,
   #teacherRecordsAttendancePanel .attendance-layout {
-    margin: 0.75rem 0.65rem 0;
+    @apply tw:[margin:0.75rem_0.65rem_0];
   }
 
   #teacherRecordsAttendancePanel .attendance-layout {
-    margin-bottom: 0.75rem;
+    @apply tw:[margin-bottom:0.75rem];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-header {
-    display: grid;
+    @apply tw:grid;
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-note {
-    width: 100%;
+    @apply tw:w-full;
   }
 
   #teacherRecordsAttendancePanel .attendance-scope-switch,
   #teacherRecordsAttendancePanel .attendance-toolbar-grid,
   #teacherRecordsAttendancePanel .attendance-toolbar-actions {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-actions-card {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 
   #teacherRecordsAttendancePanel .attendance-legend-block {
-    display: grid;
+    @apply tw:grid;
   }
 
   #teacherRecordsAttendancePanel .attendance-legend-row {
-    overflow-x: auto;
-    padding-bottom: 0.2rem;
+    @apply tw:overflow-x-auto;
+    @apply tw:[padding-bottom:0.2rem];
   }
 
   #teacherRecordsAttendancePanel .attendance-panel {
-    padding: 0.75rem;
-    border-radius: 15px;
+    @apply tw:[padding:0.75rem];
+    @apply tw:[border-radius:15px];
   }
 
   #teacherRecordsAttendancePanel .attendance-panel-head {
-    align-items: flex-start;
+    @apply tw:items-start;
   }
 
   #teacherRecordsAttendancePanel .attendance-roster-table-wrap {
-    max-height: none;
-    overflow: visible;
-    border: 0;
+    @apply tw:max-h-none;
+    @apply tw:overflow-visible;
+    @apply tw:[border:0];
   }
 
   #teacherRecordsAttendancePanel .attendance-roster-row,
   #teacherRecordsAttendancePanel .attendance-roster-row:nth-child(even) {
-    border-color: #dce7d6;
-    box-shadow: inset 3px 0 0 #6f9d58, 0 5px 14px rgba(30, 67, 7, 0.06);
+    @apply tw:[border-color:#dce7d6];
+    @apply tw:[box-shadow:inset_3px_0_0_#6f9d58,_0_5px_14px_rgba(30,_67,_7,_0.06)];
   }
 
   #teacherRecordsAttendancePanel .attendance-roster-cell-student,
   #teacherRecordsAttendancePanel .attendance-roster-row:nth-child(even) .attendance-roster-cell-student {
-    background: #f7fbf4;
+    @apply tw:[background:#f7fbf4];
   }
 
   #teacherRecordsAttendancePanel .attendance-history-summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   #teacherRecordsAttendancePanel .attendance-summary-card {
-    transition: none;
+    @apply tw:[transition:none];
   }
 }
 
 /* Immediate-use attendance toolbar */
 #teacherRecordsAttendancePanel .attendance-toolbar-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-title-row > div {
-  display: grid;
-  gap: 0.22rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.22rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-title-row h5 {
-  margin: 0;
-  color: #263321;
-  font-size: 0.95rem;
+  @apply tw:[margin:0];
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.95rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-primary-toolbar {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 0.65rem;
-  align-items: end;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(12,_minmax(0,_1fr))];
+  @apply tw:[gap:0.65rem];
+  @apply tw:[align-items:end];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-control {
-  display: grid;
-  align-content: end;
-  gap: 0.38rem;
-  min-width: 0;
+  @apply tw:grid;
+  @apply tw:[align-content:end];
+  @apply tw:[gap:0.38rem];
+  @apply tw:[min-width:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-scope-control {
-  grid-column: span 3;
+  @apply tw:[grid-column:span_3];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-class-control {
-  grid-column: span 3;
+  @apply tw:[grid-column:span_3];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-date-control {
-  grid-column: span 3;
+  @apply tw:[grid-column:span_3];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-actions-control {
-  grid-column: span 3;
+  @apply tw:[grid-column:span_3];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-search-control {
-  grid-column: span 8;
+  @apply tw:[grid-column:span_8];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
-  grid-column: span 4;
+  @apply tw:[grid-column:span_4];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-field {
-  display: grid;
-  gap: 0.38rem;
-  min-width: 0;
+  @apply tw:grid;
+  @apply tw:[gap:0.38rem];
+  @apply tw:[min-width:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-label {
-  color: #687761;
-  font-size: 0.63rem;
-  font-weight: 800;
-  letter-spacing: 0.055em;
-  text-transform: uppercase;
+  @apply tw:[color:#687761];
+  @apply tw:[font-size:0.63rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.055em];
+  @apply tw:uppercase;
 }
 
 #teacherRecordsAttendancePanel .attendance-control-input {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.48rem;
-  min-width: 0;
-  min-height: 42px;
-  padding: 0 0.7rem;
-  border: 1px solid #cfddc7;
-  border-radius: 11px;
-  background: #ffffff;
-  color: #263321;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  @apply tw:relative;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.48rem];
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:42px];
+  @apply tw:[padding:0_0.7rem];
+  @apply tw:[border:1px_solid_#cfddc7];
+  @apply tw:[border-radius:11px];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#263321];
+  @apply tw:[transition:border-color_0.18s_ease,_box-shadow_0.18s_ease,_background_0.18s_ease];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-input:focus-within {
-  border-color: #6f9d58;
-  box-shadow: 0 0 0 3px rgba(111, 157, 88, 0.16);
+  @apply tw:[border-color:#6f9d58];
+  @apply tw:[box-shadow:0_0_0_3px_rgba(111,_157,_88,_0.16)];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-input > i:first-child {
-  flex: 0 0 auto;
-  color: #6f9d58;
-  font-size: 0.76rem;
+  @apply tw:flex-none;
+  @apply tw:[color:#6f9d58];
+  @apply tw:[font-size:0.76rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-input input,
 #teacherRecordsAttendancePanel .attendance-control-input select {
-  width: 100%;
-  min-width: 0;
-  min-height: 40px;
-  padding: 0.45rem 1.2rem 0.45rem 0;
-  border: 0;
-  outline: 0;
-  appearance: none;
-  background: transparent;
-  color: #263321;
-  font: inherit;
-  font-size: 0.76rem;
-  font-weight: 650;
+  @apply tw:w-full;
+  @apply tw:[min-width:0];
+  @apply tw:[min-height:40px];
+  @apply tw:[padding:0.45rem_1.2rem_0.45rem_0];
+  @apply tw:[border:0];
+  @apply tw:[outline:0];
+  @apply tw:appearance-none;
+  @apply tw:[background:transparent];
+  @apply tw:[color:#263321];
+  @apply tw:[font:inherit];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:[font-weight:650];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-input input::placeholder {
-  color: #939f8e;
-  font-weight: 500;
+  @apply tw:[color:#939f8e];
+  @apply tw:[font-weight:500];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-input input[type="date"] {
-  padding-right: 0;
+  @apply tw:[padding-right:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-chevron {
-  position: absolute;
-  right: 0.72rem;
-  color: #71806a;
-  font-size: 0.62rem;
-  pointer-events: none;
+  @apply tw:absolute;
+  @apply tw:[right:0.72rem];
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.62rem];
+  @apply tw:pointer-events-none;
 }
 
 #teacherRecordsAttendancePanel .attendance-control-readonly {
-  background: #f7fbf4;
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-readonly strong {
-  min-width: 0;
-  overflow: hidden;
-  color: #263321;
-  font-size: 0.76rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  @apply tw:[min-width:0];
+  @apply tw:overflow-hidden;
+  @apply tw:[color:#263321];
+  @apply tw:[font-size:0.76rem];
+  @apply tw:text-ellipsis;
+  @apply tw:whitespace-nowrap;
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-date-control {
-  grid-template-columns: minmax(0, 1fr) auto;
+  @apply tw:[grid-template-columns:minmax(0,_1fr)_auto];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-date-control .attendance-control-field {
-  min-width: 0;
+  @apply tw:[min-width:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-date-control .attendance-date-quick-actions {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.25rem;
-  padding-bottom: 0.1rem;
+  @apply tw:flex;
+  @apply tw:items-end;
+  @apply tw:[gap:0.25rem];
+  @apply tw:[padding-bottom:0.1rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-date-control .attendance-date-chip {
-  min-height: 26px;
-  padding: 0.22rem 0.42rem;
-  font-size: 0.6rem;
+  @apply tw:[min-height:26px];
+  @apply tw:[padding:0.22rem_0.42rem];
+  @apply tw:[font-size:0.6rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-actions-control .attendance-toolbar-actions {
-  height: 42px;
+  @apply tw:[height:42px];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #dfe9da;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:1rem];
+  @apply tw:[padding-top:0.75rem];
+  @apply tw:[border-top:1px_solid_#dfe9da];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-helper {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  color: #71806a;
-  font-size: 0.68rem;
-  line-height: 1.4;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.42rem];
+  @apply tw:[color:#71806a];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[line-height:1.4];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-helper i {
-  color: #6f9d58;
+  @apply tw:[color:#6f9d58];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-toolbar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.68rem 0.75rem;
-  border: 1px solid #dfe9da;
-  border-radius: 14px;
-  background: #f7fbf4;
+  @apply tw:flex;
+  @apply tw:items-end;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[padding:0.68rem_0.75rem];
+  @apply tw:[border:1px_solid_#dfe9da];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#f7fbf4];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-actions {
-  gap: 0.36rem;
+  @apply tw:[gap:0.36rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-action-row {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  gap: 0;
-  overflow: hidden;
-  border: 1px solid #cbd9c4;
-  border-radius: 10px;
-  background: #ffffff;
+  @apply tw:inline-flex;
+  @apply tw:flex-nowrap;
+  @apply tw:[gap:0];
+  @apply tw:overflow-hidden;
+  @apply tw:[border:1px_solid_#cbd9c4];
+  @apply tw:[border-radius:10px];
+  @apply tw:[background:#ffffff];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-btn {
-  min-height: 34px;
-  margin: 0;
-  padding: 0.35rem 0.68rem;
-  border: 0;
-  border-right: 1px solid #d8e3d3;
-  border-radius: 0;
-  background: #ffffff;
-  box-shadow: none;
-  color: #52634a;
+  @apply tw:[min-height:34px];
+  @apply tw:[margin:0];
+  @apply tw:[padding:0.35rem_0.68rem];
+  @apply tw:[border:0];
+  @apply tw:[border-right:1px_solid_#d8e3d3];
+  @apply tw:rounded-none;
+  @apply tw:[background:#ffffff];
+  @apply tw:[box-shadow:none];
+  @apply tw:[color:#52634a];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-btn:last-child {
-  border-right: 0;
+  @apply tw:[border-right:0];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-btn.status-present {
-  background: #edf8f0;
-  color: #26703c;
+  @apply tw:[background:#edf8f0];
+  @apply tw:[color:#26703c];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-btn.status-late {
-  background: #fff8e6;
-  color: #8a6518;
+  @apply tw:[background:#fff8e6];
+  @apply tw:[color:#8a6518];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-btn.status-absent {
-  background: #fff0ef;
-  color: #a54643;
+  @apply tw:[background:#fff0ef];
+  @apply tw:[color:#a54643];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-btn.status-excused {
-  background: #eef4fa;
-  color: #4e6f95;
+  @apply tw:[background:#eef4fa];
+  @apply tw:[color:#4e6f95];
 }
 
 #teacherRecordsAttendancePanel .attendance-bulk-btn:hover:not(:disabled) {
-  position: relative;
-  z-index: 1;
-  transform: none;
-  box-shadow: inset 0 0 0 2px currentColor;
+  @apply tw:relative;
+  @apply tw:[z-index:1];
+  @apply tw:transform-none;
+  @apply tw:[box-shadow:inset_0_0_0_2px_currentColor];
 }
 
 #teacherRecordsAttendancePanel .attendance-clear-filters-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex: 0 0 auto;
-  min-height: 34px;
-  border-color: #cbd9c4;
-  background: #ffffff;
-  color: #52634a;
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.35rem];
+  @apply tw:flex-none;
+  @apply tw:[min-height:34px];
+  @apply tw:[border-color:#cbd9c4];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#52634a];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-row:nth-child(even),
 #teacherRecordsAttendancePanel .attendance-roster-row:nth-child(even) .attendance-roster-cell-student {
-  background: #f9fcf7;
+  @apply tw:[background:#f9fcf7];
 }
 
 #teacherRecordsAttendancePanel .attendance-status-select {
-  appearance: none;
-  border-color: currentColor;
-  border-radius: 999px;
-  padding-inline: 0.8rem 1.7rem;
-  cursor: pointer;
+  @apply tw:appearance-none;
+  @apply tw:[border-color:currentColor];
+  @apply tw:[border-radius:999px];
+  @apply tw:[padding-inline:0.8rem_1.7rem];
+  @apply tw:cursor-pointer;
 }
 
 #teacherRecordsAttendancePanel .attendance-student-control-inline {
-  position: relative;
+  @apply tw:relative;
 }
 
 #teacherRecordsAttendancePanel .attendance-student-control-inline::after {
-  content: "\f078";
-  position: absolute;
-  top: 50%;
-  right: 0.72rem;
-  color: currentColor;
-  font-family: "Font Awesome 5 Free";
-  font-size: 0.6rem;
-  font-weight: 900;
-  pointer-events: none;
-  transform: translateY(-50%);
+  @apply tw:[content:"\f078"];
+  @apply tw:absolute;
+  @apply tw:[top:50%];
+  @apply tw:[right:0.72rem];
+  @apply tw:text-current;
+  @apply tw:[font-family:"Font_Awesome_5_Free"];
+  @apply tw:[font-size:0.6rem];
+  @apply tw:[font-weight:900];
+  @apply tw:pointer-events-none;
+  @apply tw:[transform:translateY(-50%)];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-summary {
-  padding: 0.1rem;
-  border-radius: 12px;
-  transition: background 0.18s ease;
+  @apply tw:[padding:0.1rem];
+  @apply tw:[border-radius:12px];
+  @apply tw:[transition:background_0.18s_ease];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-summary:hover {
-  background: #f7fbf4;
+  @apply tw:[background:#f7fbf4];
 }
 
 @media (max-width: 1180px) {
@@ -11510,23 +11493,23 @@ onBeforeUnmount(() => {
   #teacherRecordsAttendancePanel .attendance-toolbar-class-control,
   #teacherRecordsAttendancePanel .attendance-toolbar-date-control,
   #teacherRecordsAttendancePanel .attendance-toolbar-actions-control {
-    grid-column: span 6;
+    @apply tw:[grid-column:span_6];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-search-control {
-    grid-column: span 8;
+    @apply tw:[grid-column:span_8];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
-    grid-column: span 4;
+    @apply tw:[grid-column:span_4];
   }
 }
 
 @media (max-width: 820px) {
   #teacherRecordsAttendancePanel .attendance-toolbar-title-row,
   #teacherRecordsAttendancePanel .attendance-toolbar-footer {
-    align-items: flex-start;
-    flex-direction: column;
+    @apply tw:items-start;
+    @apply tw:flex-col;
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
@@ -11535,17 +11518,17 @@ onBeforeUnmount(() => {
   #teacherRecordsAttendancePanel .attendance-toolbar-actions-control,
   #teacherRecordsAttendancePanel .attendance-toolbar-search-control,
   #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
-    grid-column: span 6;
+    @apply tw:[grid-column:span_6];
   }
 
   #teacherRecordsAttendancePanel .attendance-legend-block {
-    width: 100%;
+    @apply tw:w-full;
   }
 }
 
 @media (max-width: 640px) {
   #teacherRecordsAttendancePanel .attendance-primary-toolbar {
-    grid-template-columns: 1fr;
+    @apply tw:[grid-template-columns:1fr];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
@@ -11554,53 +11537,53 @@ onBeforeUnmount(() => {
   #teacherRecordsAttendancePanel .attendance-toolbar-actions-control,
   #teacherRecordsAttendancePanel .attendance-toolbar-search-control,
   #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-date-control {
-    grid-template-columns: minmax(0, 1fr);
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-date-control .attendance-date-quick-actions {
-    align-items: center;
-    padding: 0;
+    @apply tw:items-center;
+    @apply tw:[padding:0];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-actions-control .attendance-toolbar-actions {
-    height: auto;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    @apply tw:h-auto;
+    @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
   }
 
   #teacherRecordsAttendancePanel .attendance-bulk-toolbar {
-    align-items: stretch;
-    flex-direction: column;
+    @apply tw:items-stretch;
+    @apply tw:flex-col;
   }
 
   #teacherRecordsAttendancePanel .attendance-bulk-action-row {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   #teacherRecordsAttendancePanel .attendance-bulk-btn {
-    border-right: 0;
-    border-bottom: 1px solid #d8e3d3;
+    @apply tw:[border-right:0];
+    @apply tw:[border-bottom:1px_solid_#d8e3d3];
   }
 
   #teacherRecordsAttendancePanel .attendance-bulk-btn:nth-last-child(-n + 2) {
-    border-bottom: 0;
+    @apply tw:[border-bottom:0];
   }
 
   #teacherRecordsAttendancePanel .attendance-clear-filters-btn {
-    justify-content: center;
-    width: 100%;
+    @apply tw:justify-center;
+    @apply tw:w-full;
   }
 }
 
 /* Attendance layout stabilization */
 #teacherRecordsAttendancePanel {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
+  @apply tw:box-border;
+  @apply tw:w-full;
+  @apply tw:max-w-full;
 }
 
 #teacherRecordsAttendancePanel > *,
@@ -11608,47 +11591,45 @@ onBeforeUnmount(() => {
 #teacherRecordsAttendancePanel .attendance-primary-toolbar,
 #teacherRecordsAttendancePanel .attendance-roster-body,
 #teacherRecordsAttendancePanel .attendance-history-content {
-  min-width: 0;
-  max-width: 100%;
+  @apply tw:[min-width:0];
+  @apply tw:max-w-full;
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-card,
 #teacherRecordsAttendancePanel .attendance-layout {
-  width: auto;
-  max-width: none;
+  @apply tw:w-auto;
+  @apply tw:max-w-none;
 }
 
 #teacherRecordsAttendancePanel .attendance-primary-toolbar {
-  width: 100%;
-  grid-template-columns: minmax(180px, 1.05fr) minmax(220px, 1.35fr) minmax(220px, 1.3fr) minmax(230px, 1.2fr);
-  grid-template-areas:
-    "scope class date actions"
-    "search search search status";
-  align-items: end;
+  @apply tw:w-full;
+  @apply tw:[grid-template-columns:minmax(180px,_1.05fr)_minmax(220px,_1.35fr)_minmax(220px,_1.3fr)_minmax(230px,_1.2fr)];
+  @apply tw:[grid-template-areas:"scope_class_date_actions"______"search_search_search_status"];
+  @apply tw:[align-items:end];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-scope-control {
-  grid-area: scope;
+  @apply tw:[grid-area:scope];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-class-control {
-  grid-area: class;
+  @apply tw:[grid-area:class];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-date-control {
-  grid-area: date;
+  @apply tw:[grid-area:date];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-actions-control {
-  grid-area: actions;
+  @apply tw:[grid-area:actions];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-search-control {
-  grid-area: search;
+  @apply tw:[grid-area:search];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
-  grid-area: status;
+  @apply tw:[grid-area:status];
 }
 
 #teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
@@ -11657,95 +11638,92 @@ onBeforeUnmount(() => {
 #teacherRecordsAttendancePanel .attendance-toolbar-actions-control,
 #teacherRecordsAttendancePanel .attendance-toolbar-search-control,
 #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
-  grid-column: auto;
+  @apply tw:[grid-column:auto];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-label {
-  font-size: 0.68rem;
+  @apply tw:[font-size:0.68rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-control-input input,
 #teacherRecordsAttendancePanel .attendance-control-input select,
 #teacherRecordsAttendancePanel .attendance-control-readonly strong {
-  font-size: 0.82rem;
+  @apply tw:[font-size:0.82rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-scope-btn {
-  font-size: 0.78rem;
+  @apply tw:[font-size:0.78rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-layout {
-  grid-template-columns: minmax(0, 1fr);
+  @apply tw:[grid-template-columns:minmax(0,_1fr)];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-panel {
-  position: static;
-  width: 100%;
-  max-height: none;
-  overflow: visible;
+  @apply tw:static;
+  @apply tw:w-full;
+  @apply tw:max-h-none;
+  @apply tw:overflow-visible;
 }
 
 #teacherRecordsAttendancePanel .attendance-history-summary .attendance-panel-head {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 #teacherRecordsAttendancePanel .attendance-panel-kicker {
-  font-size: 0.82rem;
+  @apply tw:[font-size:0.82rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-panel-title p,
 #teacherRecordsAttendancePanel .attendance-roster-results {
-  font-size: 0.76rem;
+  @apply tw:[font-size:0.76rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-table thead th {
-  padding: 0.78rem 0.9rem;
-  font-size: 0.7rem;
+  @apply tw:[padding:0.78rem_0.9rem];
+  @apply tw:[font-size:0.7rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-roster-cell {
-  padding: 0.82rem 0.9rem;
+  @apply tw:[padding:0.82rem_0.9rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-student-copy strong {
-  font-size: 0.9rem;
+  @apply tw:[font-size:0.9rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-student-copy small,
 #teacherRecordsAttendancePanel .attendance-roster-section {
-  font-size: 0.76rem;
+  @apply tw:[font-size:0.76rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-status-select {
-  min-height: 42px;
-  font-size: 0.78rem;
+  @apply tw:[min-height:42px];
+  @apply tw:[font-size:0.78rem];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-content {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 #teacherRecordsAttendancePanel .attendance-history-summary-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
 }
 
 #teacherRecordsAttendancePanel .attendance-history-item {
-  grid-template-columns: 100px minmax(0, 1fr) auto;
-  align-items: center;
+  @apply tw:[grid-template-columns:100px_minmax(0,_1fr)_auto];
+  @apply tw:items-center;
 }
 
 #teacherRecordsAttendancePanel .attendance-history-meta {
-  grid-column: auto;
-  justify-items: end;
+  @apply tw:[grid-column:auto];
+  @apply tw:justify-items-end;
 }
 
 @media (max-width: 1180px) {
   #teacherRecordsAttendancePanel .attendance-primary-toolbar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-      "scope class"
-      "date actions"
-      "search status";
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+    @apply tw:[grid-template-areas:"scope_class"________"date_actions"________"search_status"];
   }
 
   #teacherRecordsAttendancePanel .attendance-toolbar-scope-control,
@@ -11754,211 +11732,206 @@ onBeforeUnmount(() => {
   #teacherRecordsAttendancePanel .attendance-toolbar-actions-control,
   #teacherRecordsAttendancePanel .attendance-toolbar-search-control,
   #teacherRecordsAttendancePanel .attendance-toolbar-status-control {
-    grid-column: auto;
+    @apply tw:[grid-column:auto];
   }
 }
 
 @media (max-width: 760px) {
   #teacherRecordsAttendancePanel .attendance-primary-toolbar {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "scope"
-      "class"
-      "date"
-      "search"
-      "status"
-      "actions";
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
+    @apply tw:[grid-template-areas:"scope"________"class"________"date"________"search"________"status"________"actions"];
   }
 
   #teacherRecordsAttendancePanel .attendance-history-item {
-    grid-template-columns: 76px minmax(0, 1fr);
+    @apply tw:[grid-template-columns:76px_minmax(0,_1fr)];
   }
 
   #teacherRecordsAttendancePanel .attendance-history-meta {
-    grid-column: 1 / -1;
-    justify-items: start;
+    @apply tw:[grid-column:1_/_-1];
+    @apply tw:justify-items-start;
   }
 }
 
 @media (max-width: 640px) {
   #teacherRecordsAttendancePanel .attendance-toolbar-actions-control .attendance-toolbar-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
   }
 
   #teacherRecordsAttendancePanel .attendance-history-summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
   }
 }
 
 .integrity-count {
-  width: max-content;
-  padding: 0.34rem 0.58rem;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.7rem;
-  font-weight: 800;
-  white-space: nowrap;
+  @apply tw:w-max;
+  @apply tw:[padding:0.34rem_0.58rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.35rem];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[font-weight:800];
+  @apply tw:whitespace-nowrap;
 }
 
 .integrity-count.is-clear {
-  border: 1px solid #bbf7d0;
-  background: #f0fdf4;
-  color: #166534;
+  @apply tw:[border:1px_solid_#bbf7d0];
+  @apply tw:[background:#f0fdf4];
+  @apply tw:[color:#166534];
 }
 
 .integrity-count.has-violations {
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #b91c1c;
+  @apply tw:[border:1px_solid_#fecaca];
+  @apply tw:[background:#fef2f2];
+  @apply tw:[color:#b91c1c];
 }
 
 .integrity-log-details summary {
-  width: max-content;
-  list-style: none;
-  cursor: pointer;
+  @apply tw:w-max;
+  @apply tw:[list-style:none];
+  @apply tw:cursor-pointer;
 }
 
 .integrity-log-details summary::-webkit-details-marker {
-  display: none;
+  @apply tw:hidden;
 }
 
 .integrity-log-popover {
-  width: min(310px, 72vw);
-  margin-top: 0.55rem;
-  padding: 0.7rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  display: grid;
-  gap: 0.45rem;
-  background: #fff;
-  color: #334155;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  @apply tw:[width:min(310px,_72vw)];
+  @apply tw:[margin-top:0.55rem];
+  @apply tw:[padding:0.7rem];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:12px];
+  @apply tw:grid;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[background:#fff];
+  @apply tw:[color:#334155];
+  @apply tw:[box-shadow:0_10px_24px_rgba(15,_23,_42,_0.08)];
 }
 
 .integrity-log-popover > strong {
-  color: #0f172a;
-  font-size: 0.78rem;
+  @apply tw:[color:#0f172a];
+  @apply tw:[font-size:0.78rem];
 }
 
 .integrity-termination {
-  color: #b91c1c;
-  font-size: 0.68rem;
-  font-weight: 700;
+  @apply tw:[color:#b91c1c];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:700];
 }
 
 .integrity-log-popover ol {
-  max-height: 180px;
-  margin: 0;
-  padding-left: 1.1rem;
-  overflow-y: auto;
+  @apply tw:[max-height:180px];
+  @apply tw:[margin:0];
+  @apply tw:[padding-left:1.1rem];
+  @apply tw:overflow-y-auto;
 }
 
 .integrity-log-popover li {
-  padding: 0.3rem 0;
-  color: #475569;
-  font-size: 0.7rem;
-  line-height: 1.4;
+  @apply tw:[padding:0.3rem_0];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[line-height:1.4];
 }
 
 .integrity-log-popover li span,
 .integrity-log-popover li small {
-  display: block;
+  @apply tw:block;
 }
 
 .integrity-log-popover li small {
-  margin-top: 0.12rem;
-  color: #94a3b8;
-  font-size: 0.62rem;
+  @apply tw:[margin-top:0.12rem];
+  @apply tw:[color:#94a3b8];
+  @apply tw:[font-size:0.62rem];
 }
 .assessment-edit-attachments {
-  display: grid;
-  gap: 0.55rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.55rem];
 }
 
 .assessment-edit-attachments > span {
-  font-weight: 700;
-  color: #334155;
+  @apply tw:[font-weight:700];
+  @apply tw:[color:#334155];
 }
 
 .assessment-edit-attachments > p {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.78rem;
+  @apply tw:[margin:0];
+  @apply tw:[color:#64748b];
+  @apply tw:[font-size:0.78rem];
 }
 
 .assessment-edit-dropzone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  min-height: 88px;
-  padding: 0.9rem;
-  border: 1.5px dashed #94a3b8;
-  border-radius: 12px;
-  background: #f8fafc;
-  color: #475569;
-  cursor: pointer;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.55rem];
+  @apply tw:[min-height:88px];
+  @apply tw:[padding:0.9rem];
+  @apply tw:[border:1.5px_dashed_#94a3b8];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#f8fafc];
+  @apply tw:[color:#475569];
+  @apply tw:cursor-pointer;
 }
 
 .assessment-edit-dropzone.is-dragging {
-  border-color: #69aa47;
-  background: #f0f9eb;
+  @apply tw:[border-color:#69aa47];
+  @apply tw:[background:#f0f9eb];
 }
 
 .assessment-edit-dropzone input {
-  display: none;
+  @apply tw:hidden;
 }
 
 .assessment-edit-file-list {
-  display: grid;
-  gap: 0.4rem;
+  @apply tw:grid;
+  @apply tw:[gap:0.4rem];
 }
 
 .assessment-edit-file {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.55rem 0.65rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 9px;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-between;
+  @apply tw:[gap:0.75rem];
+  @apply tw:[padding:0.55rem_0.65rem];
+  @apply tw:[border:1px_solid_#e2e8f0];
+  @apply tw:[border-radius:9px];
 }
 
 .assessment-edit-file > span {
-  min-width: 0;
-  display: grid;
+  @apply tw:[min-width:0];
+  @apply tw:grid;
 }
 
 .assessment-edit-file strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  @apply tw:overflow-hidden;
+  @apply tw:text-ellipsis;
+  @apply tw:whitespace-nowrap;
 }
 
 .assessment-edit-file small {
-  color: #64748b;
+  @apply tw:[color:#64748b];
 }
 
 .assessment-edit-file button {
-  border: 0;
-  background: transparent;
-  color: #b91c1c;
-  cursor: pointer;
+  @apply tw:[border:0];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#b91c1c];
+  @apply tw:cursor-pointer;
 }
 
 .assessment-edit-progress {
-  height: 0.4rem;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #e2e8f0;
+  @apply tw:[height:0.4rem];
+  @apply tw:overflow-hidden;
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#e2e8f0];
 }
 
 .assessment-edit-progress span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #69aa47;
+  @apply tw:block;
+  @apply tw:h-full;
+  @apply tw:[border-radius:inherit];
+  @apply tw:[background:#69aa47];
 }
+
 </style>

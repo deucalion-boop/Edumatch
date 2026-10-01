@@ -302,299 +302,299 @@ export default {
 </script>
 
 <style scoped>
-@import url('/css/auth.css');
+@reference "../../styles/tailwind.css";
+
+@import '../../styles/auth.tailwind.css';
 
 .password-change-page {
-  min-height: 100vh;
-  background: linear-gradient(145deg, #f8fbf6 0%, #f2f7ee 52%, #edf5e8 100%);
+  @apply tw:min-h-screen;
+  @apply tw:[background:linear-gradient(145deg,_#f8fbf6_0%,_#f2f7ee_52%,_#edf5e8_100%)];
 }
 
 .password-change-page .auth-bg-pattern {
-  background:
-    radial-gradient(circle at 12% 18%, rgba(105, 170, 71, 0.13), transparent 28%),
-    radial-gradient(circle at 88% 82%, rgba(63, 127, 42, 0.1), transparent 32%),
-    linear-gradient(145deg, #f8fbf6 0%, #f2f7ee 100%);
+  @apply tw:[background:radial-gradient(circle_at_12%_18%,_rgba(105,_170,_71,_0.13),_transparent_28%),_____radial-gradient(circle_at_88%_82%,_rgba(63,_127,_42,_0.1),_transparent_32%),_____linear-gradient(145deg,_#f8fbf6_0%,_#f2f7ee_100%)];
 }
 
-.password-change-page .auth-container { padding-block: 1rem; }
-.password-change-page .auth-logo { margin-bottom: 0.65rem; color: #203018; }
-.password-change-page .auth-logo-img { height: 36px; }
-.password-change-page .auth-card-wrapper { width: min(100%, 700px); max-width: 700px; margin-bottom: 0.65rem; }
+.password-change-page .auth-container { @apply tw:[padding-block:1rem]; }
+.password-change-page .auth-logo { @apply tw:[margin-bottom:0.65rem]; @apply tw:[color:#203018]; }
+.password-change-page .auth-logo-img { @apply tw:[height:36px]; }
+.password-change-page .auth-card-wrapper { @apply tw:[width:min(100%,_700px)]; @apply tw:[max-width:700px]; @apply tw:[margin-bottom:0.65rem]; }
 
 .password-change-page .password-change-card {
-  overflow: hidden;
-  padding: 1.25rem 1.4rem !important;
-  border: 1px solid rgba(105, 170, 71, 0.25) !important;
-  border-radius: 22px !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  box-shadow: 0 20px 50px rgba(31, 70, 18, 0.13) !important;
-  backdrop-filter: blur(18px);
+  @apply tw:overflow-hidden;
+  @apply tw:[padding:1.25rem_1.4rem]!;
+  @apply tw:[border:1px_solid_rgba(105,_170,_71,_0.25)]!;
+  @apply tw:[border-radius:22px]!;
+  @apply tw:[background:rgba(255,_255,_255,_0.96)]!;
+  @apply tw:[box-shadow:0_20px_50px_rgba(31,_70,_18,_0.13)]!;
+  @apply tw:[backdrop-filter:blur(18px)];
 }
 
 .password-change-page .password-change-card::before {
-  content: none;
+  @apply tw:[content:none];
 }
 
 .password-change-page .password-change-card .auth-card-header {
-  display: grid;
-  justify-items: center;
-  margin-bottom: 0.85rem;
-  text-align: center;
+  @apply tw:grid;
+  @apply tw:justify-items-center;
+  @apply tw:[margin-bottom:0.85rem];
+  @apply tw:text-center;
 }
 
-.password-change-header-row { position: relative; margin-bottom: 0.45rem; }
+.password-change-header-row { @apply tw:relative; @apply tw:[margin-bottom:0.45rem]; }
 
 .password-change-page .password-change-icon {
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  margin: 0;
-  border: 3px solid #eef7e8;
-  border-radius: 15px;
-  background: linear-gradient(135deg, #69aa47, #3f7f2a);
-  color: #fff;
-  font-size: 1.05rem;
-  box-shadow: 0 8px 18px rgba(63, 127, 42, 0.22);
+  @apply tw:[width:46px];
+  @apply tw:[height:46px];
+  @apply tw:grid;
+  @apply tw:place-items-center;
+  @apply tw:[margin:0];
+  @apply tw:[border:3px_solid_#eef7e8];
+  @apply tw:[border-radius:15px];
+  @apply tw:[background:linear-gradient(135deg,_#69aa47,_#3f7f2a)];
+  @apply tw:[color:#fff];
+  @apply tw:[font-size:1.05rem];
+  @apply tw:[box-shadow:0_8px_18px_rgba(63,_127,_42,_0.22)];
 }
 
 .password-change-eyebrow {
-  margin-bottom: 0.2rem;
-  color: #3f7f2a;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+  @apply tw:[margin-bottom:0.2rem];
+  @apply tw:[color:#3f7f2a];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.13em];
+  @apply tw:uppercase;
 }
 
 .password-change-badge {
-  position: absolute;
-  top: -6px;
-  left: 36px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.45rem;
-  border: 2px solid #fff;
-  border-radius: 999px;
-  background: #fff7ed;
-  color: #9a3412;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
+  @apply tw:absolute;
+  @apply tw:[top:-6px];
+  @apply tw:[left:36px];
+  @apply tw:inline-flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.3rem];
+  @apply tw:[padding:0.2rem_0.45rem];
+  @apply tw:[border:2px_solid_#fff];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#fff7ed];
+  @apply tw:[color:#9a3412];
+  @apply tw:[font-size:0.6rem];
+  @apply tw:[font-weight:800];
+  @apply tw:[letter-spacing:0.03em];
 }
 
 .password-change-page .password-change-card .auth-card-title {
-  margin: 0;
-  color: #172111 !important;
-  font-size: clamp(1.4rem, 3vw, 1.7rem);
-  line-height: 1.15;
-  letter-spacing: -0.035em;
-  -webkit-text-fill-color: #172111;
+  @apply tw:[margin:0];
+  @apply tw:[color:#172111]!;
+  @apply tw:[font-size:clamp(1.4rem,_3vw,_1.7rem)];
+  @apply tw:[line-height:1.15];
+  @apply tw:[letter-spacing:-0.035em];
+  @apply tw:[-webkit-text-fill-color:#172111];
 }
 
 .password-change-page .password-change-card .auth-card-subtitle {
-  max-width: 520px;
-  margin: 0.35rem auto 0;
-  font-size: 0.8rem;
-  line-height: 1.45;
+  @apply tw:[max-width:520px];
+  @apply tw:[margin:0.35rem_auto_0];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[line-height:1.45];
 }
 
-.password-change-page .password-change-card .auth-form { gap: 0.7rem; }
+.password-change-page .password-change-card .auth-form { @apply tw:[gap:0.7rem]; }
 
 .new-password-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:[gap:0.75rem];
 }
 
 .password-form-section {
-  padding: 0.8rem 0.9rem;
-  border: 1px solid #e3eadf;
-  border-radius: 14px;
-  background: #fff;
+  @apply tw:[padding:0.8rem_0.9rem];
+  @apply tw:[border:1px_solid_#e3eadf];
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:#fff];
 }
 
 .password-section-heading {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  margin-bottom: 0.55rem;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:[gap:0.6rem];
+  @apply tw:[margin-bottom:0.55rem];
 }
 
 .password-step {
-  width: 24px;
-  height: 24px;
-  display: grid;
-  flex: 0 0 24px;
-  place-items: center;
-  border-radius: 9px;
-  background: #edf7e8;
-  color: #3f7f2a;
-  font-size: 0.7rem;
-  font-weight: 800;
+  @apply tw:[width:24px];
+  @apply tw:[height:24px];
+  @apply tw:grid;
+  @apply tw:[flex:0_0_24px];
+  @apply tw:place-items-center;
+  @apply tw:[border-radius:9px];
+  @apply tw:[background:#edf7e8];
+  @apply tw:[color:#3f7f2a];
+  @apply tw:[font-size:0.7rem];
+  @apply tw:[font-weight:800];
 }
 
-.password-section-heading h2 { margin: 0; color: #24321d; font-size: 0.9rem; line-height: 1.3; }
-.password-section-heading p { margin: 0.1rem 0 0; color: #73806d; font-size: 0.7rem; line-height: 1.35; }
+.password-section-heading h2 { @apply tw:[margin:0]; @apply tw:[color:#24321d]; @apply tw:[font-size:0.9rem]; @apply tw:[line-height:1.3]; }
+.password-section-heading p { @apply tw:[margin:0.1rem_0_0]; @apply tw:[color:#73806d]; @apply tw:[font-size:0.7rem]; @apply tw:[line-height:1.35]; }
 
 .password-change-page .password-change-card .auth-form-label {
-  margin-bottom: 0.25rem;
-  color: #3a4933;
-  font-size: 0.8rem;
+  @apply tw:[margin-bottom:0.25rem];
+  @apply tw:[color:#3a4933];
+  @apply tw:[font-size:0.8rem];
 }
 
 .password-change-page .password-change-card .auth-form-input {
-  min-height: 42px;
-  border: 1px solid #d8e2d2 !important;
-  border-radius: 12px;
-  background: #fbfdf9 !important;
-  color: #1f2a1b;
-  font-size: 0.82rem;
+  @apply tw:[min-height:42px];
+  @apply tw:[border:1px_solid_#d8e2d2]!;
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#fbfdf9]!;
+  @apply tw:[color:#1f2a1b];
+  @apply tw:[font-size:0.82rem];
 }
 
-.password-change-page .password-change-card .auth-form-input::placeholder { color: #9aa695; }
+.password-change-page .password-change-card .auth-form-input::placeholder { @apply tw:[color:#9aa695]; }
 .password-change-page .password-change-card .auth-form-input:focus {
-  border-color: #69aa47 !important;
-  background: #fff !important;
-  box-shadow: 0 0 0 4px rgba(105, 170, 71, 0.14) !important;
+  @apply tw:[border-color:#69aa47]!;
+  @apply tw:[background:#fff]!;
+  @apply tw:[box-shadow:0_0_0_4px_rgba(105,_170,_71,_0.14)]!;
 }
-.password-change-page .password-change-card .input-match .auth-form-input { border-color: #69aa47 !important; }
-.password-change-page .password-change-card .input-mismatch .auth-form-input { border-color: #ef9a91 !important; background: #fffafa !important; }
+.password-change-page .password-change-card .input-match .auth-form-input { @apply tw:[border-color:#69aa47]!; }
+.password-change-page .password-change-card .input-mismatch .auth-form-input { @apply tw:[border-color:#ef9a91]!; @apply tw:[background:#fffafa]!; }
 
-.password-change-page .password-toggle { right: 0.7rem; width: 34px; height: 34px; }
-.password-change-page .password-toggle:hover { color: #3f7f2a; background: rgba(105, 170, 71, 0.1); }
-.password-change-page .password-toggle:focus-visible { outline: 2px solid #69aa47; outline-offset: 2px; }
+.password-change-page .password-toggle { @apply tw:[right:0.7rem]; @apply tw:[width:34px]; @apply tw:[height:34px]; }
+.password-change-page .password-toggle:hover { @apply tw:[color:#3f7f2a]; @apply tw:[background:rgba(105,_170,_71,_0.1)]; }
+.password-change-page .password-toggle:focus-visible { @apply tw:[outline:2px_solid_#69aa47]; @apply tw:[outline-offset:2px]; }
 
 .password-match-message {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 1.1rem;
-  margin: 0.25rem 0 0;
-  font-size: 0.68rem;
-  font-weight: 700;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.35rem];
+  @apply tw:[min-height:1.1rem];
+  @apply tw:[margin:0.25rem_0_0];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:700];
 }
 
-.password-match-message.success { color: #3f7f2a; }
-.password-match-message.error { color: #b42318; }
+.password-match-message.success { @apply tw:[color:#3f7f2a]; }
+.password-match-message.error { @apply tw:[color:#b42318]; }
 
 .password-change-page .auth-password-rules {
-  margin-top: 0.6rem;
-  padding: 0.65rem 0.75rem;
-  border-color: #dfe9d9;
-  background: #f8fbf6;
+  @apply tw:[margin-top:0.6rem];
+  @apply tw:[padding:0.65rem_0.75rem];
+  @apply tw:[border-color:#dfe9d9];
+  @apply tw:[background:#f8fbf6];
 }
 
 .password-change-page .auth-password-rules ul {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.25rem 0.75rem;
-  margin: 0;
-  padding: 0;
-  color: #64748b;
-  list-style: none;
+  @apply tw:grid;
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+  @apply tw:[gap:0.25rem_0.75rem];
+  @apply tw:[margin:0];
+  @apply tw:[padding:0];
+  @apply tw:[color:#64748b];
+  @apply tw:[list-style:none];
 }
 
-.password-strength-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.password-strength-row { @apply tw:flex; @apply tw:items-center; @apply tw:justify-between; @apply tw:[gap:1rem]; }
 .password-strength-row p,
-.password-strength-row span { margin: 0; font-size: 0.76rem; font-weight: 800; }
-.password-strength-row p { color: #405039; }
-.password-strength-row .strength-empty { color: #899384; }
-.password-strength-row .strength-weak { color: #b42318; }
-.password-strength-row .strength-medium { color: #a15c07; }
-.password-strength-row .strength-strong { color: #3f7f2a; }
+.password-strength-row span { @apply tw:[margin:0]; @apply tw:[font-size:0.76rem]; @apply tw:[font-weight:800]; }
+.password-strength-row p { @apply tw:[color:#405039]; }
+.password-strength-row .strength-empty { @apply tw:[color:#899384]; }
+.password-strength-row .strength-weak { @apply tw:[color:#b42318]; }
+.password-strength-row .strength-medium { @apply tw:[color:#a15c07]; }
+.password-strength-row .strength-strong { @apply tw:[color:#3f7f2a]; }
 
 .password-strength-track {
-  height: 5px;
-  overflow: hidden;
-  margin: 0.35rem 0 0.5rem;
-  border-radius: 999px;
-  background: #e5ebe2;
+  @apply tw:[height:5px];
+  @apply tw:overflow-hidden;
+  @apply tw:[margin:0.35rem_0_0.5rem];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#e5ebe2];
 }
 
-.password-strength-track span { display: block; height: 100%; border-radius: inherit; transition: width 0.25s ease, background-color 0.25s ease; }
-.password-strength-track .strength-weak { background: #d85b51; }
-.password-strength-track .strength-medium { background: #d79638; }
-.password-strength-track .strength-strong { background: #69aa47; }
+.password-strength-track span { @apply tw:block; @apply tw:h-full; @apply tw:[border-radius:inherit]; @apply tw:[transition:width_0.25s_ease,_background-color_0.25s_ease]; }
+.password-strength-track .strength-weak { @apply tw:[background:#d85b51]; }
+.password-strength-track .strength-medium { @apply tw:[background:#d79638]; }
+.password-strength-track .strength-strong { @apply tw:[background:#69aa47]; }
 
 .password-change-page .auth-password-rules li {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding-left: 0;
-  font-size: 0.68rem;
-  transition: color 0.2s ease;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:[gap:0.45rem];
+  @apply tw:[padding-left:0];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[transition:color_0.2s_ease];
 }
 
-.password-change-page .auth-password-rules li::before { content: none; }
-.password-change-page .auth-password-rules li i { width: 0.9rem; font-size: 0.7rem; }
-.password-change-page .auth-password-rules li.met { color: #3f7f2a; font-weight: 600; }
+.password-change-page .auth-password-rules li::before { @apply tw:[content:none]; }
+.password-change-page .auth-password-rules li i { @apply tw:[width:0.9rem]; @apply tw:[font-size:0.7rem]; }
+.password-change-page .auth-password-rules li.met { @apply tw:[color:#3f7f2a]; @apply tw:[font-weight:600]; }
 
 .form-validation-message {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0.75rem 0.9rem;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  background: #fff7f7;
-  color: #b42318;
-  font-size: 0.8rem;
-  font-weight: 650;
+  @apply tw:flex;
+  @apply tw:items-start;
+  @apply tw:[gap:0.5rem];
+  @apply tw:[margin:0];
+  @apply tw:[padding:0.75rem_0.9rem];
+  @apply tw:[border:1px_solid_#fecaca];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#fff7f7];
+  @apply tw:[color:#b42318];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:650];
 }
 
 .password-change-page .password-change-card .auth-submit-btn {
-  min-height: 44px;
-  border: 1px solid #3f7f2a !important;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #69aa47, #3f7f2a) !important;
-  box-shadow: 0 10px 22px rgba(63, 127, 42, 0.22);
+  @apply tw:[min-height:44px];
+  @apply tw:[border:1px_solid_#3f7f2a]!;
+  @apply tw:[border-radius:14px];
+  @apply tw:[background:linear-gradient(135deg,_#69aa47,_#3f7f2a)]!;
+  @apply tw:[box-shadow:0_10px_22px_rgba(63,_127,_42,_0.22)];
 }
 .password-change-page .password-change-card .auth-submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5c9f3d, #356d24) !important;
-  box-shadow: 0 13px 28px rgba(63, 127, 42, 0.3);
+  @apply tw:[background:linear-gradient(135deg,_#5c9f3d,_#356d24)]!;
+  @apply tw:[box-shadow:0_13px_28px_rgba(63,_127,_42,_0.3)];
 }
-.password-change-page .password-change-card .auth-submit-btn:focus-visible { outline: 3px solid rgba(105, 170, 71, 0.35); outline-offset: 3px; }
-.password-change-page .password-change-card .auth-submit-btn:disabled { cursor: wait; opacity: 0.7; }
+.password-change-page .password-change-card .auth-submit-btn:focus-visible { @apply tw:[outline:3px_solid_rgba(105,_170,_71,_0.35)]; @apply tw:[outline-offset:3px]; }
+.password-change-page .password-change-card .auth-submit-btn:disabled { @apply tw:cursor-wait; @apply tw:[opacity:0.7]; }
 
 .auth-action-note {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin: 0.35rem 0 0;
-  color: #7b8775;
-  font-size: 0.72rem;
-  text-align: center;
+  @apply tw:flex;
+  @apply tw:items-center;
+  @apply tw:justify-center;
+  @apply tw:[gap:0.4rem];
+  @apply tw:[margin:0.35rem_0_0];
+  @apply tw:[color:#7b8775];
+  @apply tw:[font-size:0.72rem];
+  @apply tw:text-center;
 }
 
 @media (min-width: 641px) {
-  .password-change-page { height: 100dvh; overflow: hidden; }
-  .password-change-page .auth-container { height: 100%; min-height: 0; }
+  .password-change-page { @apply tw:[height:100dvh]; @apply tw:overflow-hidden; }
+  .password-change-page .auth-container { @apply tw:h-full; @apply tw:[min-height:0]; }
   .current-password-section {
-    display: grid;
-    grid-template-columns: minmax(190px, 0.75fr) minmax(280px, 1.25fr);
-    align-items: end;
-    gap: 1rem;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:minmax(190px,_0.75fr)_minmax(280px,_1.25fr)];
+    @apply tw:[align-items:end];
+    @apply tw:[gap:1rem];
   }
-  .current-password-section .password-section-heading { margin-bottom: 0.15rem; }
+  .current-password-section .password-section-heading { @apply tw:[margin-bottom:0.15rem]; }
 }
 
 @media (max-width: 640px) {
-  .password-change-page .auth-container { justify-content: flex-start; padding: 1.25rem 0.75rem; }
-  .password-change-page .auth-logo { margin-bottom: 1rem; }
-  .password-change-page .password-change-card { padding: 1.3rem 1rem !important; border-radius: 22px !important; }
-  .password-change-page .password-change-card .auth-card-header { margin-bottom: 1.25rem; }
-  .password-change-page .password-change-card .auth-card-subtitle { max-width: 330px; }
-  .password-form-section { padding: 1rem; }
+  .password-change-page .auth-container { @apply tw:justify-start; @apply tw:[padding:1.25rem_0.75rem]; }
+  .password-change-page .auth-logo { @apply tw:[margin-bottom:1rem]; }
+  .password-change-page .password-change-card { @apply tw:[padding:1.3rem_1rem]!; @apply tw:[border-radius:22px]!; }
+  .password-change-page .password-change-card .auth-card-header { @apply tw:[margin-bottom:1.25rem]; }
+  .password-change-page .password-change-card .auth-card-subtitle { @apply tw:[max-width:330px]; }
+  .password-form-section { @apply tw:[padding:1rem]; }
   .new-password-grid,
-  .password-change-page .auth-password-rules ul { grid-template-columns: 1fr; }
+  .password-change-page .auth-password-rules ul { @apply tw:[grid-template-columns:1fr]; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .password-strength-track span,
-  .password-change-page .password-change-card .auth-submit-btn { transition: none; }
+  .password-change-page .password-change-card .auth-submit-btn { @apply tw:[transition:none]; }
 }
+
 </style>

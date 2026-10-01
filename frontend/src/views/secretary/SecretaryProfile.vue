@@ -275,43 +275,46 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@reference "../../styles/tailwind.css";
+
 .secretary-profile-grid,
 .secretary-banner {
-  width: 100%;
+  @apply tw:w-full;
 }
 
 .secretary-form-actions {
-  gap: 0.6rem;
+  @apply tw:[gap:0.6rem];
 }
 
 .secretary-form-actions .btn {
-  height: 38px !important;
-  min-height: 38px !important;
-  padding: 0 14px !important;
-  border-radius: 9px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  line-height: 1;
+  @apply tw:[height:38px]!;
+  @apply tw:[min-height:38px]!;
+  @apply tw:[padding:0_14px]!;
+  @apply tw:[border-radius:9px];
+  @apply tw:[font-size:0.8rem];
+  @apply tw:[font-weight:500];
+  @apply tw:[line-height:1];
 }
 
 .secretary-save-profile-btn {
-  border-color: #4f8a35;
-  background: #4f8a35;
-  background-image: none;
-  color: #ffffff !important;
-  box-shadow: none;
+  @apply tw:[border-color:#4f8a35];
+  @apply tw:[background:#4f8a35];
+  @apply tw:bg-none;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[box-shadow:none];
 }
 
 .secretary-save-profile-btn:hover,
 .secretary-save-profile-btn:focus {
-  border-color: #416f2c;
-  background: #416f2c;
-  background-image: none;
+  @apply tw:[border-color:#416f2c];
+  @apply tw:[background:#416f2c];
+  @apply tw:bg-none;
 }
 
 .secretary-save-profile-btn:active {
-  border-color: #365d25;
-  background: #365d25;
-  background-image: none;
+  @apply tw:[border-color:#365d25];
+  @apply tw:[background:#365d25];
+  @apply tw:bg-none;
 }
+
 </style>
