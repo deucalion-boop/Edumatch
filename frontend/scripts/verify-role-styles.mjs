@@ -8,7 +8,7 @@ import { preview } from 'vite'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const output = path.join(root, '.tailwind-migration/role-styles')
-const report = { passed: false, startedAt: new Date().toISOString(), checks: [], requests: [], pageErrors: [], failedResources: [] }
+const report = { passed: false, startedAt: new Date().toISOString(), previewCors: false, checks: [], requests: [], pageErrors: [], failedResources: [] }
 const roles = ['teacher', 'secretary', 'headteacher']
 let currentRole = 'teacher'
 let browser
@@ -107,7 +107,10 @@ try {
   report.buildSnapshot = path.relative(root, buildSnapshot).replaceAll('\\', '/')
   report.builtAssets = [...(await readFile(path.join(buildSnapshot, 'index.html'), 'utf8')).matchAll(/(?:src|href)="(\/assets\/[^"?#]+)"/g)].map(match => match[1])
   server = await preview({ root, configFile: false, envFile: false, logLevel: 'error',
-    build: { outDir: buildSnapshot }, preview: { host: '127.0.0.1', port: 0, strictPort: false } })
+    // Simulate a same-origin static production host. Vite preview's default
+    // Vary: Origin makes its precache fetch differ from crossorigin module/CSS
+    // requests and would test preview CORS behavior instead of role caching.
+    build: { outDir: buildSnapshot }, preview: { host: '127.0.0.1', port: 0, strictPort: false, cors: false } })
   const origin = `http://127.0.0.1:${server.httpServer.address().port}`
   const failures = []
   for (const channel of ['msedge', 'chrome']) {
@@ -152,7 +155,16 @@ try {
       const css = await response.text()
       return { href: new URL(link.href).pathname, status: response.status, bytes: css.length, compiled: !/@apply\b/.test(css) }
     }))
-    return { names, entries }
+    const assetHeaders = []
+    for (const name of names) {
+      const cache = await caches.open(name)
+      for (const request of await cache.keys()) {
+        if (!new URL(request.url).pathname.startsWith('/assets/')) continue
+        const response = await cache.match(request)
+        assetHeaders.push({ href: new URL(request.url).pathname, origin: request.headers.get('origin'), vary: response.headers.get('vary') })
+      }
+    }
+    return { names, entries, assetHeaders }
   })
   assert.ok(cached.entries.every(entry => entry.status === 200 && entry.bytes > 1000 && entry.compiled))
   report.checks.push({ name: 'all role CSS precached before first role visit', passed: true, ...cached })
@@ -204,6 +216,9 @@ try {
   await writeFile(path.join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n')
   if (context) await context.close()
   if (browser) await browser.close()
-  if (server) await new Promise((resolve, reject) => server.httpServer.close(error => error ? reject(error) : resolve()))
+  if (server) {
+    server.httpServer.closeAllConnections()
+    await new Promise((resolve, reject) => server.httpServer.close(error => error ? reject(error) : resolve()))
+  }
   console.log(`Role stylesheet integration ${report.passed ? 'passed' : 'FAILED'}: ${report.checks.length} checks. Report: .tailwind-migration/role-styles/report.json`)
 }

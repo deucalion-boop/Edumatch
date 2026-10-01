@@ -3,8 +3,15 @@
  * All API requests are fulfilled in memory; no backend or external account is used.
  *
  * node scripts/verify-tailwind-ui.mjs
- * node scripts/verify-tailwind-ui.mjs --full --states=empty,error,loading
+ * node scripts/verify-tailwind-ui.mjs --production --full --wait-for-styles
+ * node scripts/verify-tailwind-ui.mjs --production --reuse-builds --states=error,loading --wait-for-styles --run-label=production-states
  * node scripts/verify-tailwind-ui.mjs --routes=/auth/login,/teacher/profile --viewports=mobile
+ *
+ * --reuse-builds deliberately tests the existing isolated production artifacts.
+ * --wait-for-styles releases API fixtures after linked stylesheets are ready;
+ * this avoids a pre-existing Chart.js intrinsic-width race in the CSS baseline.
+ * Pixel tolerance defaults to zero. Equivalent minified gradient strings and
+ * text-fill values on non-painting nodes are retained explicitly in the report.
  */
 import { mkdir, writeFile, access } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
@@ -25,7 +32,8 @@ const production = args.includes('--production')
 const repeatBaseline = args.includes('--repeat-baseline')
 const reuseBuilds = args.includes('--reuse-builds')
 const waitForStyles = args.includes('--wait-for-styles')
-const runName = [production ? 'production' : 'development', ...(repeatBaseline ? ['repeat-baseline'] : [])].join('-')
+const runName = option('run-label', [production ? 'production' : 'development', ...(repeatBaseline ? ['repeat-baseline'] : [])].join('-'))
+if (!/^[a-z0-9-]+$/i.test(runName)) throw new Error('Run labels must contain letters, numbers, or hyphens only.')
 const reportPath = path.join(outputRoot, `report-${runName}.json`)
 const allowedStates = new Set(['empty', 'error', 'loading'])
 const states = option('states', 'empty').split(',')
@@ -340,7 +348,9 @@ async function capture(browser, target, testCase, label, slug) {
       }
       await page.locator(`[data-visual-scroll-target="${target.index}"]`).evaluate((node) => { node.scrollTop = 0 })
     }
-    return { resolvedRoute, elements: snapshot, pageErrors, requests, screenshotPath, screenshot, scrollScreenshots }
+    // Closing held loading-state requests may emit errors during teardown;
+    // report only errors observed while the inspected page was still open.
+    return { resolvedRoute, elements: snapshot, pageErrors: [...pageErrors], requests: [...requests], screenshotPath, screenshot, scrollScreenshots }
   } finally {
     for (const route of heldRequests) await route.abort().catch(() => {})
     await context.close()

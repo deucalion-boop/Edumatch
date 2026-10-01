@@ -120,6 +120,27 @@ production build (requires an installed Chrome or Edge browser):
 node scripts/verify-role-styles.mjs
 ```
 
+The offline test uses a frozen copy of `dist` and a same-origin static-host
+simulation (`preview.cors: false`). Vite's default preview CORS headers vary
+cached responses by `Origin`, which can prevent its precached module assets
+from matching offline requests. No application cache policy was changed for
+this test; verify offline behavior separately on the actual deployment host.
+
+### Completed migration checks
+
+- Production build, compiler self-tests, source/output audit, and full declaration
+  comparison passed.
+- All 39 routes rendered in 106 desktop/mobile/theme comparisons, including 24
+  additional inner-scroll screenshot pairs. No layout differences or new browser
+  errors were found. The first run matched 105 screenshots; a two-pixel deviation
+  on Admin Profile disappeared on an exact-comparison rerun.
+- All 32 dashboard loading/error cases had matching layout and computed styles.
+  The first run matched 31 screenshots; a seven-pixel deviation on the student
+  mobile error state disappeared on an exact-comparison rerun.
+- All 14 role loading/cache checks passed, including a fresh offline app and
+  stylesheet responses served by the service worker. No pixel tolerance was
+  relaxed, and original reports were retained alongside rerun reports.
+
 The `migrate-styles.mjs` converter is a one-time migration tool, not a build step.
 Do not rerun its `convert` command after making new component changes: it starts
 from the preserved snapshot. Use the normal Vite build for day-to-day work.
