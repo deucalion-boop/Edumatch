@@ -424,8 +424,8 @@
               </article>
             </div>
 
-            <div v-if="filteredLessons.length > pageSize" class="records-pagination">
-              <p class="records-pagination-copy">{{ getPaginationSummary(lessonPage, pageSize, filteredLessons.length) }}</p>
+            <nav v-if="!isLoading && filteredLessons.length > 0" class="records-pagination" aria-label="Lesson pagination">
+              <p class="records-pagination-copy" aria-live="polite">{{ getPaginationSummary(lessonPage, pageSize, filteredLessons.length) }}</p>
               <div class="records-pagination-actions">
                 <button
                   type="button"
@@ -462,7 +462,7 @@
                   <i class="fas fa-chevron-right" aria-hidden="true"></i>
                 </button>
               </div>
-            </div>
+            </nav>
           </div>
         </section>
 
