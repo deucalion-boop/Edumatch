@@ -5468,6 +5468,11 @@ body.teacher-dashboard .dashboard-panel .subject-actions-menu .subject-students-
     @apply tw:[color:#166534]!;
 }
 
+body.teacher-dashboard .dashboard-panel .subject-actions-menu .subject-announcement-btn {
+    @apply tw:[border-color:#dbe4ef]!;
+    @apply tw:[color:#0f172a]!;
+}
+
 body.teacher-dashboard .dashboard-panel .subject-actions-menu .subject-copy-btn {
     @apply tw:[border-color:#94a3b8]!;
     @apply tw:[color:#334155]!;
