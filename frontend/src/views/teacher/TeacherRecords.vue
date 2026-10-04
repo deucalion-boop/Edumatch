@@ -10515,14 +10515,6 @@ onBeforeUnmount(() => {
   @apply tw:[transition:transform_0.2s_ease,_box-shadow_0.2s_ease,_border-color_0.2s_ease];
 }
 
-#teacherRecordsAttendancePanel .attendance-summary-card::before {
-  @apply tw:[content:""];
-  @apply tw:absolute;
-  @apply tw:[inset:auto_0_0];
-  @apply tw:[height:3px];
-  @apply tw:[background:#6f9d58];
-}
-
 #teacherRecordsAttendancePanel .attendance-summary-card:hover {
   @apply tw:[transform:translateY(-2px)];
   @apply tw:[border-color:#bfd5b2];
@@ -10571,26 +10563,6 @@ onBeforeUnmount(() => {
   @apply tw:[color:#899583];
   @apply tw:[font-size:0.65rem];
   @apply tw:[font-weight:600];
-}
-
-#teacherRecordsAttendancePanel .attendance-summary-card.status-total::before {
-  @apply tw:[background:#4f7d3a];
-}
-
-#teacherRecordsAttendancePanel .attendance-summary-card.status-present::before {
-  @apply tw:[background:#4d9b62];
-}
-
-#teacherRecordsAttendancePanel .attendance-summary-card.status-late::before {
-  @apply tw:[background:#d4a62a];
-}
-
-#teacherRecordsAttendancePanel .attendance-summary-card.status-absent::before {
-  @apply tw:[background:#cf5b58];
-}
-
-#teacherRecordsAttendancePanel .attendance-summary-card.status-excused::before {
-  @apply tw:[background:#6787ad];
 }
 
 #teacherRecordsAttendancePanel .attendance-summary-card.status-present,
