@@ -601,7 +601,7 @@
                   <div class="record-card-title">
                     <span class="record-type-label">{{ getAssessmentTypeLabel(assessment) }}</span>
                     <h4>{{ assessment.title }}</h4>
-                    <p><i class="fas fa-link" aria-hidden="true"></i>{{ assessment.lessonTitle || 'Unlinked lesson' }}</p>
+                    <p><i class="fas fa-link" aria-hidden="true"></i><span>{{ assessment.lessonTitle || 'Unlinked lesson' }}</span></p>
                   </div>
                   <div class="record-card-date-group">
                     <i class="far fa-calendar-alt" aria-hidden="true"></i>
@@ -616,12 +616,12 @@
                   <span class="record-chip chip-class">
                     <i class="fas fa-users" aria-hidden="true"></i>
                     <span class="record-chip-label">Class:</span>
-                    {{ assessment.className || 'Not assigned' }}
+                    <span class="record-chip-value">{{ assessment.className || 'Not assigned' }}</span>
                   </span>
-                  <span class="record-chip chip-subject"><i class="fas fa-book-open" aria-hidden="true"></i>{{ assessment.subject || 'N/A' }}</span>
-                  <span v-if="assessment.gradingPeriod" class="record-chip chip-neutral"><i class="far fa-calendar" aria-hidden="true"></i>{{ assessment.gradingPeriod }} Grading</span>
-                  <span v-if="assessment.countsTowardRecommendation" class="record-chip chip-success"><i class="fas fa-star" aria-hidden="true"></i>Recommendation Basis</span>
-                  <span class="record-chip chip-type">{{ formatLabel(assessment.examType || 'Assessment') }}</span>
+                  <span class="record-chip chip-subject"><i class="fas fa-book-open" aria-hidden="true"></i><span class="record-chip-value">{{ assessment.subject || 'N/A' }}</span></span>
+                  <span v-if="assessment.gradingPeriod" class="record-chip chip-neutral"><i class="far fa-calendar" aria-hidden="true"></i><span class="record-chip-value">{{ assessment.gradingPeriod }} Grading</span></span>
+                  <span v-if="assessment.countsTowardRecommendation" class="record-chip chip-success"><i class="fas fa-star" aria-hidden="true"></i><span class="record-chip-value">Recommendation Basis</span></span>
+                  <span class="record-chip chip-type"><span class="record-chip-value">{{ formatLabel(assessment.examType || 'Assessment') }}</span></span>
                   <span class="difficulty-pill" :class="`difficulty-${String(assessment.difficulty || '').toLowerCase()}`">
                     {{ formatLabel(assessment.difficulty || 'Medium') }}
                   </span>
@@ -637,7 +637,7 @@
                       <strong>{{ assessment.numberOfItems }}</strong>
                     </div>
                   </div>
-                  <div class="meta-item">
+                  <div class="meta-item meta-item-deadline">
                     <div class="meta-item-icon">
                       <i class="fas fa-calendar-alt"></i>
                     </div>
@@ -735,8 +735,8 @@
                     <i class="fas fa-plus"></i>
                     Add to Classes
                   </button>
-                  <button type="button" class="record-link record-link-button assessment-action-secondary" @click="openDeadlineEditor(assessment)">
-                    <i class="fas fa-calendar-pen"></i>
+                  <button type="button" class="record-link record-link-button assessment-action-secondary assessment-deadline-action" @click="openDeadlineEditor(assessment)">
+                    <i class="fas fa-calendar-days" aria-hidden="true"></i>
                     Edit Deadline
                   </button>
                   <button v-if="!isActivityAssessment(assessment)" type="button" class="record-link record-link-button assessment-action-primary" @click="openAnswerKey(assessment)">
@@ -5234,11 +5234,13 @@ onBeforeUnmount(() => {
 }
 
 #teacherRecordsAssessmentsPanel .records-feed {
+  @apply tw:min-w-0;
   @apply tw:[gap:1rem];
 }
 
 #teacherRecordsAssessmentsPanel .assessment-record-card {
   @apply tw:relative;
+  @apply tw:min-w-0;
   @apply tw:[gap:0.9rem];
   @apply tw:overflow-hidden;
   @apply tw:[padding:1.2rem];
@@ -5307,6 +5309,7 @@ onBeforeUnmount(() => {
 }
 
 #teacherRecordsAssessmentsPanel .record-card-title h4 {
+  @apply tw:[overflow-wrap:anywhere];
   @apply tw:[color:#1d2b17];
   @apply tw:[font-size:1.15rem];
   @apply tw:[line-height:1.32];
@@ -5321,7 +5324,13 @@ onBeforeUnmount(() => {
   @apply tw:[font-size:0.72rem];
 }
 
+#teacherRecordsAssessmentsPanel .record-card-title p > span {
+  @apply tw:min-w-0;
+  @apply tw:[overflow-wrap:anywhere];
+}
+
 #teacherRecordsAssessmentsPanel .record-card-title p i {
+  @apply tw:shrink-0;
   @apply tw:[color:#8da483];
   @apply tw:[font-size:0.62rem];
 }
@@ -5357,6 +5366,9 @@ onBeforeUnmount(() => {
 }
 
 #teacherRecordsAssessmentsPanel .record-chip {
+  @apply tw:min-w-0;
+  @apply tw:max-w-full;
+  @apply tw:box-border;
   @apply tw:[gap:0.34rem];
   @apply tw:[padding:0.3rem_0.66rem];
 }
@@ -5375,6 +5387,16 @@ onBeforeUnmount(() => {
 
 #teacherRecordsAssessmentsPanel .record-chip-label {
   @apply tw:[font-weight:800];
+}
+
+#teacherRecordsAssessmentsPanel .record-chip-value {
+  @apply tw:min-w-0;
+  @apply tw:[overflow-wrap:anywhere];
+}
+
+#teacherRecordsAssessmentsPanel .record-chip > i,
+#teacherRecordsAssessmentsPanel .record-chip-label {
+  @apply tw:shrink-0;
 }
 
 #teacherRecordsAssessmentsPanel .chip-neutral {
@@ -5481,6 +5503,8 @@ onBeforeUnmount(() => {
 
 #teacherRecordsAssessmentsPanel .assessment-results-title {
   @apply tw:flex;
+  @apply tw:flex-1;
+  @apply tw:min-w-0;
   @apply tw:items-center;
   @apply tw:[gap:0.65rem];
 }
@@ -5499,6 +5523,8 @@ onBeforeUnmount(() => {
 
 #teacherRecordsAssessmentsPanel .assessment-results-title > div {
   @apply tw:grid;
+  @apply tw:min-w-0;
+  @apply tw:[overflow-wrap:anywhere];
   @apply tw:[gap:0.12rem];
 }
 
@@ -5514,6 +5540,9 @@ onBeforeUnmount(() => {
 }
 
 #teacherRecordsAssessmentsPanel .assessment-results-count {
+  @apply tw:max-w-full;
+  @apply tw:box-border;
+  @apply tw:shrink-0;
   @apply tw:[background:#e8f2e2];
   @apply tw:[color:#315f1e];
 }
@@ -5526,6 +5555,12 @@ onBeforeUnmount(() => {
 #teacherRecordsAssessmentsPanel .inline-empty-icon {
   @apply tw:[background:#e1edda];
   @apply tw:[color:#4f7d3a];
+}
+
+#teacherRecordsAssessmentsPanel .inline-empty-copy,
+#teacherRecordsAssessmentsPanel .results-summary-item {
+  @apply tw:min-w-0;
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 #teacherRecordsAssessmentsPanel .results-summary-item {
@@ -5542,6 +5577,7 @@ onBeforeUnmount(() => {
 }
 
 #teacherRecordsAssessmentsPanel .record-card-actions {
+  @apply tw:flex-wrap;
   @apply tw:[gap:0.55rem];
   @apply tw:[padding-top:0.1rem];
 }
@@ -7110,25 +7146,107 @@ onBeforeUnmount(() => {
   }
 
   #teacherRecordsAssessmentsPanel .record-card-date-group {
-    @apply tw:[grid-column:2];
+    @apply tw:[grid-column:1_/_-1];
     @apply tw:w-fit;
   }
 
+  #teacherRecordsAssessmentsPanel .record-card-date-group > span {
+    @apply tw:flex;
+    @apply tw:flex-wrap;
+    @apply tw:items-baseline;
+    @apply tw:[gap:0.4rem];
+  }
+
   #teacherRecordsAssessmentsPanel .assessment-meta-grid {
-    @apply tw:[grid-template-columns:1fr];
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+    @apply tw:[gap:0.5rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .meta-item-deadline {
+    @apply tw:[grid-column:1_/_-1];
+    @apply tw:[order:1];
   }
 
   #teacherRecordsAssessmentsPanel .meta-item {
+    @apply tw:min-w-0;
+    @apply tw:[gap:0.5rem];
     @apply tw:[padding:0.68rem];
   }
 
+  #teacherRecordsAssessmentsPanel .meta-item-icon {
+    @apply tw:[width:32px];
+    @apply tw:[height:32px];
+  }
+
   #teacherRecordsAssessmentsPanel .assessment-results-header {
-    @apply tw:flex-row;
-    @apply tw:items-center;
+    @apply tw:flex-col;
+    @apply tw:items-stretch;
+    @apply tw:[gap:0.65rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-results-title {
+    @apply tw:items-start;
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-results-title p {
+    @apply tw:[font-size:0.78rem];
+    @apply tw:[line-height:1.5];
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-results-count {
+    @apply tw:self-start;
+    @apply tw:whitespace-normal;
+    @apply tw:text-left;
+    @apply tw:[font-size:0.73rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .inline-empty-state {
+    @apply tw:items-start;
+    @apply tw:[padding:0.75rem];
+    @apply tw:[gap:0.6rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .inline-empty-icon {
+    @apply tw:[width:34px];
+    @apply tw:[height:34px];
+    @apply tw:[border-radius:10px];
+  }
+
+  #teacherRecordsAssessmentsPanel .inline-empty-copy strong {
+    @apply tw:[font-size:0.8rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .inline-empty-copy span {
+    @apply tw:[font-size:0.76rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-results-summary {
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+    @apply tw:[gap:0.5rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .results-summary-item {
+    @apply tw:[padding:0.65rem];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-actions {
-    @apply tw:justify-end;
+    @apply tw:grid;
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
+    @apply tw:[gap:0.5rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .record-link-button {
+    @apply tw:min-w-0;
+    @apply tw:max-w-full;
+    @apply tw:[min-height:44px];
+    @apply tw:whitespace-normal;
+    @apply tw:[font-size:0.76rem];
+    @apply tw:[line-height:1.35];
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-actions .record-link-button,
+  #teacherRecordsAssessmentsPanel .assessment-results-actions .record-link-button {
+    @apply tw:w-full;
   }
 
   #teacherRecordsAssessmentsPanel .records-pagination {
@@ -7577,7 +7695,7 @@ onBeforeUnmount(() => {
   }
 
   #teacherRecordsAssessmentsPanel .record-card-title h4 {
-    @apply tw:[font-size:0.98rem];
+    @apply tw:[font-size:1.05rem];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-date-group {
@@ -7585,16 +7703,18 @@ onBeforeUnmount(() => {
   }
 
   #teacherRecordsAssessmentsPanel .assessment-results-header {
-    @apply tw:items-start;
+    @apply tw:items-stretch;
   }
 
   #teacherRecordsAssessmentsPanel .assessment-results-heading-icon {
-    @apply tw:hidden;
+    @apply tw:inline-flex;
+    @apply tw:[width:30px];
+    @apply tw:[height:30px];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-actions {
     @apply tw:grid;
-    @apply tw:[grid-template-columns:1fr];
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   #teacherRecordsAssessmentsPanel .record-card-actions .record-link-button {
@@ -7608,7 +7728,7 @@ onBeforeUnmount(() => {
   #teacherRecordsAssessmentsPanel .records-pagination-actions {
     @apply tw:w-full;
     @apply tw:grid;
-    @apply tw:[grid-template-columns:1fr_auto_1fr];
+    @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   }
 
   #teacherRecordsAssessmentsPanel .pagination-btn {
@@ -7728,8 +7848,22 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Keep filter labels readable on phones; wider tablets retain two columns. */
+/* Full-width assessment actions and readable lesson filters on phones. */
 @media (max-width: 560px) {
+  #teacherRecordsAssessmentsPanel .assessment-meta-grid .meta-item:not(.meta-item-deadline) {
+    @apply tw:[grid-template-columns:minmax(0,_1fr)];
+    @apply tw:[gap:0.35rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .assessment-meta-grid .meta-item:not(.meta-item-deadline) strong {
+    @apply tw:[font-size:1.05rem];
+  }
+
+  #teacherRecordsAssessmentsPanel .record-card-actions .assessment-deadline-action,
+  #teacherRecordsAssessmentsPanel .record-card-actions .assessment-action-primary {
+    @apply tw:[grid-column:1_/_-1];
+  }
+
   #teacherRecordsLessonsPanel .lessons-toolbar {
     @apply tw:[grid-template-columns:minmax(0,_1fr)];
   }
