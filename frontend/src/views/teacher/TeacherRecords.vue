@@ -747,8 +747,8 @@
               </article>
             </div>
 
-            <div v-if="filteredAssessments.length > pageSize" class="records-pagination">
-              <p class="records-pagination-copy">{{ getPaginationSummary(assessmentPage, pageSize, filteredAssessments.length) }}</p>
+            <nav v-if="!isLoading && filteredAssessments.length > 0" class="records-pagination" aria-label="Assessment pagination">
+              <p class="records-pagination-copy" aria-live="polite">{{ getPaginationSummary(assessmentPage, pageSize, filteredAssessments.length) }}</p>
               <div class="records-pagination-actions">
                 <button
                   type="button"
@@ -785,7 +785,7 @@
                   <i class="fas fa-chevron-right" aria-hidden="true"></i>
                 </button>
               </div>
-            </div>
+            </nav>
           </div>
         </section>
 
