@@ -5249,36 +5249,10 @@ onBeforeUnmount(() => {
   @apply tw:[animation-delay:calc(var(--assessment-index)_*_55ms)];
 }
 
-#teacherRecordsAssessmentsPanel .assessment-record-card::before {
-  @apply tw:[content:""];
-  @apply tw:absolute;
-  @apply tw:[inset:0_auto_0_0];
-  @apply tw:[width:4px];
-  @apply tw:[background:#4f7d3a];
-  @apply tw:opacity-0;
-  @apply tw:[transition:opacity_0.22s_ease];
-}
-
-#teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-exam::before {
-  @apply tw:[background:#4f7d3a];
-}
-
-#teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-quiz::before {
-  @apply tw:[background:#4f7d3a];
-}
-
-#teacherRecordsAssessmentsPanel .assessment-record-card.assessment-kind-activity::before {
-  @apply tw:[background:#4f7d3a];
-}
-
 #teacherRecordsAssessmentsPanel .assessment-record-card:hover {
   @apply tw:[transform:translateY(-3px)];
   @apply tw:[border-color:#bfd5b2];
   @apply tw:[box-shadow:0_16px_34px_rgba(30,_67,_7,_0.11)];
-}
-
-#teacherRecordsAssessmentsPanel .assessment-record-card:hover::before {
-  @apply tw:opacity-100;
 }
 
 #teacherRecordsAssessmentsPanel .record-card-header {
