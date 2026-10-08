@@ -735,6 +735,24 @@
                         </button>
                       </div>
 
+                      <section class="tos-preview" aria-labelledby="tos-preview-title">
+                        <div class="tos-preview-heading">
+                          <div><h4 id="tos-preview-title">Table of Specifications</h4><p>Tag each item by learning area and Bloom cognitive level. Totals update as you edit.</p></div>
+                          <span class="draft-count-pill">{{ tosTaggedCount }} of {{ generatedQuestions.length }} tagged</span>
+                        </div>
+                        <div class="tos-table-wrap">
+                          <table class="tos-table">
+                            <thead><tr><th>Learning area / competency</th><th v-for="level in TOS_COGNITIVE_LEVELS" :key="level">{{ level }}</th><th>Total</th><th>Weight</th></tr></thead>
+                            <tbody>
+                              <tr v-for="row in tosRows" :key="row.key"><th scope="row"><strong>{{ row.learningArea }}</strong><small>{{ row.competency }}</small></th><td v-for="level in TOS_COGNITIVE_LEVELS" :key="level">{{ row.counts[level] || 0 }}</td><td>{{ row.total }}</td><td>{{ tosPercent(row.total) }}</td></tr>
+                            </tbody>
+                            <tbody><tr class="tos-unclassified-row"><th scope="row">Unclassified / partial</th><td v-for="level in TOS_COGNITIVE_LEVELS" :key="level">—</td><td>{{ generatedQuestions.length - tosTaggedCount }}</td><td>{{ tosPercent(generatedQuestions.length - tosTaggedCount) }}</td></tr></tbody>
+                            <tfoot><tr><th scope="row">Total items</th><td v-for="level in TOS_COGNITIVE_LEVELS" :key="level">{{ tosLevelTotals[level] || 0 }}</td><td>{{ generatedQuestions.length }}</td><td>100%</td></tr></tfoot>
+                          </table>
+                        </div>
+                        <p v-if="generatedQuestions.length !== tosTaggedCount" class="tos-unclassified">{{ generatedQuestions.length - tosTaggedCount }} item(s) need both a learning area and cognitive level to be fully classified.</p>
+                      </section>
+
                       <article v-for="(q, idx) in generatedQuestions" :key="idx" class="draft-item">
                         <h4>Question {{ idx + 1 }}</h4>
 
@@ -757,6 +775,12 @@
                         <div class="form-group full">
                           <label>Prompt</label>
                           <textarea v-model.trim="q.prompt" rows="3" required />
+                        </div>
+
+                        <div class="tos-question-fields">
+                          <label><span>Learning area</span><select v-model="q.learningArea"><option value="">Select area</option><option v-for="area in TOS_LEARNING_AREAS" :key="area" :value="area">{{ area }}</option></select></label>
+                          <label><span>Bloom cognitive level</span><select v-model="q.cognitiveLevel"><option value="">Select level</option><option v-for="level in TOS_COGNITIVE_LEVELS" :key="level" :value="level">{{ level }}</option></select></label>
+                          <label class="tos-competency-field"><span>Competency measured</span><input v-model.trim="q.competency" maxlength="300" placeholder="e.g., Interprets data and justifies a conclusion" /></label>
                         </div>
 
                         <div v-if="q.type === 'multiple-choice'" class="form-group full">
@@ -1559,6 +1583,23 @@ function getAssessmentSaveMessage(response, fallback) {
 }
 
 const generatedQuestions = ref([]); // [{prompt, answer, options?:[]}]
+const TOS_LEARNING_AREAS = ["Language and Communication", "Mathematics and Quantitative Reasoning", "Science and Scientific Reasoning", "Social Science and Humanities", "Business and Entrepreneurship", "Technology and Practical/Vocational Reasoning"];
+const TOS_COGNITIVE_LEVELS = ["Remembering", "Understanding", "Applying", "Analyzing", "Evaluating", "Creating"];
+const tosRows = computed(() => {
+  const rows = new Map();
+  generatedQuestions.value.forEach((question) => {
+    if (!TOS_LEARNING_AREAS.includes(question.learningArea) || !question.competency || !TOS_COGNITIVE_LEVELS.includes(question.cognitiveLevel)) return;
+    const key = `${question.learningArea}::${question.competency.trim().toLowerCase()}`;
+    const row = rows.get(key) || { key, learningArea: question.learningArea, competency: question.competency.trim(), counts: Object.fromEntries(TOS_COGNITIVE_LEVELS.map((level) => [level, 0])), total: 0 };
+    row.counts[question.cognitiveLevel] += 1;
+    row.total += 1;
+    rows.set(key, row);
+  });
+  return [...rows.values()].sort((a, b) => TOS_LEARNING_AREAS.indexOf(a.learningArea) - TOS_LEARNING_AREAS.indexOf(b.learningArea) || a.competency.localeCompare(b.competency));
+});
+const tosLevelTotals = computed(() => Object.fromEntries(TOS_COGNITIVE_LEVELS.map((level) => [level, tosRows.value.reduce((sum, row) => sum + row.counts[level], 0)])));
+const tosTaggedCount = computed(() => tosRows.value.reduce((sum, row) => sum + row.total, 0));
+function tosPercent(count) { return generatedQuestions.value.length ? `${((Number(count || 0) / generatedQuestions.value.length) * 100).toFixed(1)}%` : "0%"; }
 const generatedDraftMeta = ref(null);
 const isGeneratedPreviewVisible = ref(false);
 const showCorrectAnswers = ref(false);
@@ -1863,6 +1904,9 @@ async function generateWithAi() {
       instructions: question.instructions || "",
       expectedAnswer: question.expectedAnswer || question.correctAnswer || "",
       rubric: question.rubric || "",
+      learningArea: question.learningArea || "",
+      competency: question.competency || "",
+      cognitiveLevel: question.cognitiveLevel || "",
       minWords: question.minWords ?? null,
       maxWords: question.maxWords ?? null,
     }));
@@ -1938,6 +1982,9 @@ async function finalizeGeneratedAssessment() {
         instructions: String(question.instructions || "").trim(),
         expectedAnswer: String(question.expectedAnswer || "").trim(),
         rubric: String(question.rubric || "").trim(),
+        learningArea: String(question.learningArea || "").trim(),
+        competency: String(question.competency || "").trim(),
+        cognitiveLevel: String(question.cognitiveLevel || "").trim(),
         minWords: question.minWords === '' ? null : (question.minWords ?? null),
         maxWords: question.maxWords === '' ? null : (question.maxWords ?? null),
       })),
@@ -2718,6 +2765,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 720px) {
   .draft-question-meta { @apply tw:[grid-template-columns:1fr]; }
+  .tos-question-fields { @apply tw:[grid-template-columns:1fr]; }
+  .tos-competency-field { @apply tw:[grid-column:auto]; }
   .activity-setting-grid,
   .activity-policy-grid { @apply tw:[grid-template-columns:1fr]; }
 
@@ -3352,6 +3401,25 @@ onBeforeUnmount(() => {
   @apply tw:flex-col;
   @apply tw:[gap:0.65rem];
 }
+
+.tos-preview { @apply tw:grid; @apply tw:[gap:.65rem]; @apply tw:[padding:1rem]; @apply tw:[border:1px_solid_#dbe7d4]; @apply tw:[border-radius:14px]; @apply tw:[background:#f8fbf6]; }
+.tos-preview-heading { @apply tw:flex; @apply tw:items-start; @apply tw:justify-between; @apply tw:flex-wrap; @apply tw:[gap:.75rem]; }
+.tos-preview-heading h4, .tos-preview-heading p { @apply tw:[margin:0]; }
+.tos-preview-heading h4 { @apply tw:[color:#1e4307]; }
+.tos-preview-heading p, .tos-unclassified { @apply tw:[color:#64748b]; @apply tw:[font-size:.82rem]; }
+.tos-table-wrap { @apply tw:w-full; @apply tw:overflow-x-auto; }
+.tos-table { @apply tw:w-full; @apply tw:[border-collapse:collapse]; @apply tw:[font-size:.75rem]; @apply tw:[background:#fff]; }
+.tos-table th, .tos-table td { @apply tw:[padding:.45rem]; @apply tw:[border:1px_solid_#e2e8f0]; @apply tw:text-center; }
+.tos-table th:first-child { @apply tw:text-left; @apply tw:[min-width:170px]; }
+.tos-table tbody th small { @apply tw:block; @apply tw:[margin-top:.2rem]; @apply tw:[color:#64748b]; @apply tw:[font-weight:500]; }
+.tos-table thead th { @apply tw:[background:#eef5e9]; @apply tw:[color:#334155]; }
+.tos-table tfoot { @apply tw:[font-weight:800]; @apply tw:[background:#f1f5f9]; }
+.tos-unclassified-row { @apply tw:[color:#64748b]; @apply tw:[font-style:italic]; }
+.tos-unclassified { @apply tw:[margin:0]; }
+.tos-question-fields { @apply tw:grid; @apply tw:[grid-template-columns:1fr_1fr]; @apply tw:[gap:.7rem]; @apply tw:[margin-bottom:.75rem]; }
+.tos-question-fields label { @apply tw:grid; @apply tw:[gap:.35rem]; @apply tw:[color:#334155]; @apply tw:[font-size:.82rem]; @apply tw:[font-weight:700]; }
+.tos-question-fields select, .tos-question-fields input { @apply tw:w-full; @apply tw:[min-height:42px]; @apply tw:[padding:.65rem_.75rem]; @apply tw:[border:1px_solid_#cbd5e1]; @apply tw:[border-radius:10px]; @apply tw:[background:#fff]; }
+.tos-competency-field { @apply tw:[grid-column:1_/_-1]; }
 
 .draft-empty-state {
   @apply tw:[border:1px_dashed_#cbd5e1];

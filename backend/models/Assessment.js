@@ -5,6 +5,8 @@ const {
   ASSIGNMENT_SCOPES,
 } = require('../constants/assessmentConfig');
 const SUBJECT_CATEGORIES = ['Math', 'Science', 'English', 'AP', 'Business', 'Technical'];
+const TOS_LEARNING_AREAS = ['Language and Communication', 'Mathematics and Quantitative Reasoning', 'Science and Scientific Reasoning', 'Social Science and Humanities', 'Business and Entrepreneurship', 'Technology and Practical/Vocational Reasoning'];
+const BLOOM_LEVELS = ['Remembering', 'Understanding', 'Applying', 'Analyzing', 'Evaluating', 'Creating'];
 
 const questionSchema = new mongoose.Schema(
   {
@@ -39,6 +41,9 @@ const questionSchema = new mongoose.Schema(
     instructions: { type: String, default: '', trim: true },
     expectedAnswer: { type: String, default: '', trim: true },
     rubric: { type: String, default: '', trim: true },
+    learningArea: { type: String, enum: ['', ...TOS_LEARNING_AREAS], default: '' },
+    competency: { type: String, default: '', trim: true, maxlength: 300 },
+    cognitiveLevel: { type: String, enum: ['', ...BLOOM_LEVELS], default: '' },
     minWords: { type: Number, default: null, min: 0, max: 10000 },
     maxWords: { type: Number, default: null, min: 1, max: 10000 },
   },

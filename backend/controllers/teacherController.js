@@ -133,6 +133,8 @@ function parseActivitySubmissionTypes(value) {
 }
 
 const ASSESSMENT_QUESTION_TYPES = new Set(['multiple-choice', 'true-false', 'short-answer', 'essay']);
+const TOS_LEARNING_AREAS = new Set(['Language and Communication', 'Mathematics and Quantitative Reasoning', 'Science and Scientific Reasoning', 'Social Science and Humanities', 'Business and Entrepreneurship', 'Technology and Practical/Vocational Reasoning']);
+const TOS_COGNITIVE_LEVELS = new Set(['Remembering', 'Understanding', 'Applying', 'Analyzing', 'Evaluating', 'Creating']);
 
 function parseAssessmentQuestions(value) {
   if (Array.isArray(value)) return value;
@@ -173,6 +175,9 @@ function normalizeAssessmentQuestions(value) {
       instructions: String(question?.instructions || '').trim(),
       expectedAnswer: String(question?.expectedAnswer || question?.correctAnswer || '').trim(),
       rubric: String(question?.rubric || '').trim(),
+      learningArea: TOS_LEARNING_AREAS.has(String(question?.learningArea || '').trim()) ? String(question.learningArea).trim() : '',
+      competency: String(question?.competency || '').trim().slice(0, 300),
+      cognitiveLevel: TOS_COGNITIVE_LEVELS.has(String(question?.cognitiveLevel || '').trim()) ? String(question.cognitiveLevel).trim() : '',
       minWords,
       maxWords,
     };
