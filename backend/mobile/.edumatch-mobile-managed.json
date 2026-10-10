@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "files": {
+    "mobile/index.js": "9ab3c5bb8c0aba6203e3a839e47c26b391877772cdcb7c89f7b09b7070d9a880",
+    "mobile/package.json": "275a56f6944bc8be5ca172b5f8c60030c1984b3432ae5b2f7e2e1a5f3974392b",
+    "mobile/README.md": "48c107a8312c72247c12f2d1326afdb4ffb4019f52b8b176cc43b9bd1904f85f",
+    "mobile/lib/attendance.js": "39140b4605ec78d4726e0da19cd73b109919453b3eaf70367a3778d0718cd093",
+    "mobile/lib/captcha.js": "3e2c48d130b1f3f1aad90fa7a70038fc8fe82e51d77a57b72dc7cf7b4f75296f",
+    "mobile/lib/dashboard.js": "05ff9f0444755c7b423a6415848448ae53c5d0dfb246e090a81152427e349eaa",
+    "mobile/lib/devices.js": "e7cbcf407527f9cf2920c77c34401b840b8522674554cf14a244a09748588d47",
+    "mobile/lib/errors.js": "1a37cd8a262c6eb1e4cc8d5e3aa5931a9427f7f7109f268adfdf9efa7bfbefd1",
+    "mobile/lib/profile.js": "9ce63a7fc75207192c1b082bb2b3d3b7f615c8e5fd1cb1c4130c88d57728f191",
+    "mobile/lib/push-worker.js": "70400461cd5af1e1038eaaae3997d885750b0da14549348c46983b68995f4df3",
+    "mobile/scripts/push-worker.js": "036acb83a76c5cb783f32287a3c1013b979a05500c65c2c941d52837f06dd908",
+    "supabase/migrations/013_mobile_attendance.sql": "ab2c59ec1d5d22a5be2d8ed0a070f732d6e3565a95fe2d04a339059d982b11db",
+    "supabase/migrations/014_mobile_push.sql": "fd1139675daef8654c2e580da0666d2c797b4cc90b542c4c10421dc8d2976d89"
+  }
+}

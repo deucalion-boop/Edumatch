@@ -1565,12 +1565,36 @@ const updateStudentLessonProgress = asyncHandler(async (req, res) => {
 });
 
 const getMySubjects = asyncHandler(async (req, res) => {
-  assertGradeTenStudentAccess(req);
 
   const [approvedEnrollments, pendingEnrollments] = await Promise.all([
     listHydratedStudentEnrollments(req.user._id, 'approved'),
     listHydratedStudentEnrollments(req.user._id, 'pending'),
   ]);
+
+  // Class membership is available to every student. Coursework and grade-based
+  // recommendations remain limited to Grade 10, including their database writes.
+  if (String(req.user?.gradeLevel || '').trim() !== GRADE_TEN_LEVEL) {
+    const mapClassEnrollment = (row) => {
+      const subject = row.subjectId || {};
+      const teacher = row.teacherId || {};
+      return {
+        ...subjectResponse(subject, row),
+        teacher: {
+          id: String(teacher._id || ''),
+          name: teacher.name || 'Teacher',
+          email: teacher.email || '',
+          profileImage: userProfileImageToUrl(teacher, req),
+        },
+      };
+    };
+    const studentContext = await resolveStudentSectionContext(req.user._id, req);
+    return sendSuccess(res, 200, 'Subjects fetched successfully', {
+      subjects: approvedEnrollments.map(mapClassEnrollment),
+      pendingSubjects: pendingEnrollments.map(mapClassEnrollment),
+      studentContext,
+      insights: {},
+    });
+  }
 
   const approvedSubjectIds = approvedEnrollments
     .map((row) => row?.subjectId?._id || null)
@@ -1651,7 +1675,6 @@ const getMySubjects = asyncHandler(async (req, res) => {
 });
 
 const joinSubjectByCode = asyncHandler(async (req, res) => {
-  assertGradeTenStudentAccess(req);
   const code = String(req.body?.code || req.body?.subjectCode || '').trim().toUpperCase();
   if (!code) {
     const error = new Error('Subject code is required');
