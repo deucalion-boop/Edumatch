@@ -124,11 +124,6 @@ app.use('/api/secretary', secretaryRoutes);
 app.use('/api/recommendation', recommendationRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// EduMatch mobile extension (managed by edumatch-mobile).
-const { createMobileRouter, loadExistingBackend } = require('./mobile');
-app.use('/api/mobile', createMobileRouter(loadExistingBackend(__dirname)));
-// End EduMatch mobile extension.
-
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
 

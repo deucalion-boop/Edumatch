@@ -44,7 +44,7 @@ async function studentSubmissions(studentId, finalized = false) {
 }
 async function studentAttendance(studentId) {
   const { data, error } = await getSupabaseStorageClient().from('attendance_records').select('*')
-    .contains('entries', JSON.stringify([{ studentId: String(studentId) }])).order('date_key', { ascending: false });
+    .contains('entries', [{ studentId: String(studentId) }]).order('date_key', { ascending: false });
   if (error) throw Object.assign(new Error(error.message), { statusCode: 500 });
   return (data || []).map(row => Object.fromEntries([['_id', row.id], ...Object.entries(row).map(([key, value]) => [key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()), value])]));
 }
