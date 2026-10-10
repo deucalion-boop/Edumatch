@@ -14294,3 +14294,150 @@ body.admin-dashboard .admin-main .analytics-section .analytics-card .analytics-f
         @apply tw:[min-height:150px]!;
     }
 }
+
+/* ===== Final dashboard fixes =====
+   1) The sticky header used a transparent bar, so page content scrolling
+      underneath showed through its padding. Give the bar an opaque backdrop
+      so nothing bleeds over/through the header. */
+body.admin-dashboard .admin-header {
+    background: #f8fafc !important;
+}
+
+/* 2) Scale the dashboard page heading ("Overview") down to match the
+      login-page type scale. */
+body.admin-dashboard .page-header h2,
+body.admin-dashboard .admin-profile-hero h2 {
+    font-size: clamp(1.5rem, 1.6vw, 1.85rem) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em !important;
+}
+
+body.admin-dashboard .page-header .header-left p,
+body.admin-dashboard .admin-profile-hero .header-left p {
+    font-size: 0.9rem !important;
+    line-height: 1.55 !important;
+}
+
+/* 3) Match the page header container to the section cards so their paddings,
+      corner radius and edges line up. The direct-child selector is required to
+      beat the higher-specificity rule at admin.tailwind.css:10818. */
+body.admin-dashboard .admin-main > .page-header,
+body.admin-dashboard .admin-main > .admin-profile-hero,
+body.admin-dashboard .page-header,
+body.admin-dashboard .admin-profile-hero {
+    padding: 26px !important;
+    border-radius: var(--admin-radius-lg) !important;
+}
+
+@media (max-width: 1024px) {
+    body.admin-dashboard .admin-main > .page-header,
+    body.admin-dashboard .admin-main > .admin-profile-hero,
+    body.admin-dashboard .page-header,
+    body.admin-dashboard .admin-profile-hero {
+        padding: 20px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    body.admin-dashboard .admin-main > .page-header,
+    body.admin-dashboard .admin-main > .admin-profile-hero,
+    body.admin-dashboard .page-header,
+    body.admin-dashboard .admin-profile-hero {
+        padding: 16px !important;
+        border-radius: 18px !important;
+    }
+}
+
+/* 4) The first-child rules (admin.tailwind.css:10688/10749/10812) zero the
+      page header's top padding, leaving the "Overview" heading flush against
+      the box edge. Restore symmetric top padding so it matches the sides and
+      the section cards. */
+body.admin-dashboard .admin-main > .page-header:first-child,
+body.admin-dashboard .admin-main > .admin-profile-hero:first-child,
+body.admin-dashboard .admin-main > .page-header.fade-in:first-child,
+body.admin-dashboard .admin-main > .admin-profile-hero.fade-in:first-child {
+    padding-top: 26px !important;
+}
+
+@media (max-width: 1024px) {
+    body.admin-dashboard .admin-main > .page-header:first-child,
+    body.admin-dashboard .admin-main > .admin-profile-hero:first-child,
+    body.admin-dashboard .admin-main > .page-header.fade-in:first-child,
+    body.admin-dashboard .admin-main > .admin-profile-hero.fade-in:first-child {
+        padding-top: 20px !important;
+    }
+}
+
+@media (max-width: 520px) {
+    body.admin-dashboard .admin-main > .page-header:first-child,
+    body.admin-dashboard .admin-main > .admin-profile-hero:first-child,
+    body.admin-dashboard .admin-main > .page-header.fade-in:first-child,
+    body.admin-dashboard .admin-main > .admin-profile-hero.fade-in:first-child {
+        padding-top: 16px !important;
+    }
+}
+
+/* 5) The header already carries the EduMatch logo, so the duplicate sidebar
+      brand was removed from the template. On desktop the sidebar header is now
+      empty (the close button is mobile-only), so hide it entirely and let the
+      navigation start at the sidebar's own padding. On the mobile drawer keep a
+      slim, right-aligned close row. */
+body.admin-dashboard .sidebar-header {
+    display: none !important;
+}
+
+@media (max-width: 1024px) {
+    body.admin-dashboard .sidebar-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        padding: 0 0 12px !important;
+        margin-bottom: 16px !important;
+    }
+}
+
+/* Rebalance the navigation spacing now that the brand block is gone. */
+body.admin-dashboard .nav-section {
+    padding-top: 6px !important;
+}
+
+body.admin-dashboard .nav-section + .nav-section {
+    padding-top: 0 !important;
+    margin-top: 18px !important;
+}
+
+body.admin-dashboard .nav-section-title {
+    margin: 0 0 10px !important;
+}
+
+/* 6) Active navigation item: highlight the entire row (not just a thin left
+      bar). The final rule at admin.tailwind.css:14184 forced the active state
+      to a transparent background, so this needs matching specificity and must
+      come last. The left indicator bar is removed so the whole item reads as
+      one "pill". */
+body.admin-dashboard .sidebar-menu .nav-link.active,
+body.admin-dashboard .sidebar-menu .nav-link.router-link-active,
+body.admin-dashboard .sidebar-menu .nav-link.router-link-exact-active,
+body.admin-dashboard .sidebar-item.active {
+    background: linear-gradient(135deg, rgba(187, 255, 89, 0.35) 0%, rgba(255, 213, 66, 0.24) 55%, rgba(30, 67, 7, 0.10) 100%) !important;
+    border-color: rgba(30, 67, 7, 0.18) !important;
+    box-shadow: 0 12px 24px rgba(30, 67, 7, 0.12) !important;
+    color: #1e4307 !important;
+    transform: none !important;
+}
+
+body.admin-dashboard .sidebar-menu .nav-link.active i,
+body.admin-dashboard .sidebar-menu .nav-link.router-link-active i,
+body.admin-dashboard .sidebar-menu .nav-link.router-link-exact-active i,
+body.admin-dashboard .sidebar-item.active i {
+    background: linear-gradient(135deg, rgba(187, 255, 89, 0.6) 0%, rgba(255, 213, 66, 0.5) 100%) !important;
+    border-color: rgba(30, 67, 7, 0.16) !important;
+    color: #1e4307 !important;
+}
+
+body.admin-dashboard .sidebar-menu .nav-link.active::before,
+body.admin-dashboard .sidebar-menu .nav-link.router-link-active::before,
+body.admin-dashboard .sidebar-menu .nav-link.router-link-exact-active::before,
+body.admin-dashboard .sidebar-item.active::before {
+    display: none !important;
+}
