@@ -18,6 +18,13 @@
             <span class="login-panel-accent login-panel-accent--top"></span>
             <span class="login-panel-accent login-panel-accent--bottom"></span>
           </div>
+          <div class="login-mobile-brand" aria-label="EduMatch">
+            <img src="/logo.png" alt="" class="login-mobile-brand-logo" />
+            <div>
+              <strong>EduMatch</strong>
+              <span>Learning, made personal</span>
+            </div>
+          </div>
           <div class="login-form-shell">
       <!-- Login Card -->
       <div class="auth-card-wrapper">
@@ -709,6 +716,12 @@ export default {
 .login-page {
   @apply tw:[min-height:100dvh];
   @apply tw:[background:#fff7f2];
+  @apply tw:[font-family:Inter,_ui-sans-serif,_system-ui,_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_sans-serif];
+  @apply tw:[--login-accent:#3f7f2a];
+}
+
+.login-mobile-brand {
+  @apply tw:hidden;
 }
 
 .login-page .auth-bg-pattern {
@@ -864,6 +877,89 @@ export default {
   @apply tw:[padding:clamp(1rem,_2.8vw,_2.25rem)_clamp(1.4rem,_3vw,_2.8rem)];
   @apply tw:overflow-hidden;
   @apply tw:[background:#f8fafc];
+}
+
+.login-form-shell {
+  @apply tw:[animation:login-card-enter_650ms_cubic-bezier(0.2,_0.75,_0.25,_1)_both];
+}
+
+.login-page .auth-card-container {
+  @apply tw:[transition:transform_220ms_ease,_box-shadow_220ms_ease];
+}
+
+.login-page .auth-card-container:hover {
+  @apply tw:[transform:translateY(-2px)];
+  @apply tw:[box-shadow:0_0_0_1px_rgba(187,_255,_89,_0.24),_0_20px_48px_rgba(30,_67,_7,_0.18),_0_0_34px_rgba(255,_213,_66,_0.25)];
+}
+
+.login-panel-shape--small {
+  @apply tw:[animation:login-orbit_18s_ease-in-out_infinite];
+}
+
+.login-panel-shape--polygon {
+  @apply tw:[animation:login-drift_14s_ease-in-out_infinite_alternate];
+}
+
+.login-design-logo {
+  @apply tw:[animation:login-logo-arrive_800ms_180ms_cubic-bezier(0.2,_0.75,_0.25,_1)_both];
+}
+
+.login-page .auth-submit-btn {
+  @apply tw:[min-height:46px];
+  @apply tw:[transition:transform_180ms_ease,_box-shadow_180ms_ease,_background_180ms_ease];
+}
+
+.login-page .auth-submit-btn:hover:not(:disabled) {
+  @apply tw:[transform:translateY(-2px)];
+}
+
+.login-page .auth-submit-btn:active:not(:disabled) {
+  @apply tw:[transform:translateY(0)_scale(0.99)];
+}
+
+.login-page :is(.auth-form-input, .auth-submit-btn, .password-toggle, .remember-me input, .forgot-password, .otp-resend-button):focus-visible {
+  @apply tw:[outline:3px_solid_rgba(63,_127,_42,_0.35)];
+  @apply tw:[outline-offset:3px];
+}
+
+@keyframes login-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes login-orbit {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(12px, -10px, 0);
+  }
+}
+
+@keyframes login-drift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(-8deg);
+  }
+  to {
+    transform: translate3d(-10px, 8px, 0) rotate(-4deg);
+  }
+}
+
+@keyframes login-logo-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .login-form-panel::before {
@@ -1401,6 +1497,43 @@ export default {
   .login-form-panel {
     @apply tw:[min-height:100dvh];
     @apply tw:[padding:max(1rem,_env(safe-area-inset-top))________max(0.75rem,_env(safe-area-inset-right))________max(1rem,_env(safe-area-inset-bottom))________max(0.75rem,_env(safe-area-inset-left))];
+    @apply tw:flex-col;
+    @apply tw:[gap:1.15rem];
+    @apply tw:[overflow-y:auto];
+    @apply tw:[overscroll-behavior-y:contain];
+  }
+
+  .login-mobile-brand {
+    @apply tw:flex;
+    @apply tw:items-center;
+    @apply tw:[gap:0.7rem];
+    @apply tw:[width:min(100%,_520px)];
+    @apply tw:[animation:login-card-enter_500ms_ease-out_both];
+  }
+
+  .login-mobile-brand-logo {
+    @apply tw:[width:42px];
+    @apply tw:[height:42px];
+    @apply tw:object-contain;
+    @apply tw:shrink-0;
+    @apply tw:[filter:drop-shadow(0_3px_6px_rgba(30,_67,_7,_0.12))];
+  }
+
+  .login-mobile-brand > div {
+    @apply tw:grid;
+    @apply tw:[gap:0.05rem];
+  }
+
+  .login-mobile-brand strong {
+    @apply tw:[color:#1e4307];
+    @apply tw:[font-size:1.05rem];
+    @apply tw:[font-weight:800];
+    @apply tw:[letter-spacing:-0.04em];
+  }
+
+  .login-mobile-brand span {
+    @apply tw:[color:#64748b];
+    @apply tw:[font-size:0.72rem];
   }
 
   .login-form-shell {
@@ -1410,6 +1543,16 @@ export default {
   .login-page .auth-card {
     @apply tw:[padding:0.85rem]!;
     @apply tw:[border-radius:21px];
+  }
+
+  .login-page .auth-form-input {
+    @apply tw:[min-height:46px];
+    @apply tw:[font-size:16px];
+  }
+
+  .login-page .auth-submit-btn {
+    @apply tw:[min-height:48px];
+    @apply tw:[font-size:0.9rem];
   }
 
   .login-page .auth-card-container {
@@ -1464,7 +1607,8 @@ export default {
 
 @media (max-width: 400px) {
   .login-form-panel {
-    @apply tw:[padding-inline:0.55rem];
+    @apply tw:[padding-left:max(0.55rem,_env(safe-area-inset-left))];
+    @apply tw:[padding-right:max(0.55rem,_env(safe-area-inset-right))];
   }
 
   .login-page .auth-card {
@@ -1503,6 +1647,17 @@ export default {
 
   .login-page .auth-copyright {
     @apply tw:[font-size:0.68rem];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page *,
+  .login-page *::before,
+  .login-page *::after {
+    @apply tw:[scroll-behavior:auto]!;
+    @apply tw:[animation-duration:0.01ms]!;
+    @apply tw:[animation-iteration-count:1]!;
+    @apply tw:[transition-duration:0.01ms]!;
   }
 }
 

@@ -5,6 +5,7 @@ import { initializeAuthInterceptor, initializeAuthPresence } from './stores/auth
 import { registerServiceWorker } from './pwa'
 import '@fortawesome/fontawesome-free/css/all.min.css'
 import './styles/tailwind.css'
+import './styles/roles/workspace-polish.css'
 
 const teacherColorScheme = window.matchMedia('(prefers-color-scheme: dark)')
 const applyStoredTeacherTheme = () => {
