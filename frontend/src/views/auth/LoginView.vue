@@ -112,7 +112,7 @@
                 <i class="auth-form-icon fas fa-shield-halved"></i>
                 <input
                   id="otpCode"
-                  v-model.trim="form.otpCode"
+                  :value="form.otpCode"
                   class="auth-form-input"
                   placeholder="6-digit OTP"
                   required
@@ -120,7 +120,7 @@
                   inputmode="numeric"
                   pattern="[0-9]{6}"
                   autocomplete="one-time-code"
-                  @input="clearValidation('otp')"
+                  @input="handleOtpInput"
                 />
               </div>
               <div class="otp-status-row" aria-live="polite">
@@ -370,6 +370,13 @@ export default {
     
     const clearValidation = (field) => {
       validation[field] = ''
+    }
+
+    const handleOtpInput = (event) => {
+      const otpCode = event.target.value.replace(/[^0-9]/g, '').slice(0, 6)
+      event.target.value = otpCode
+      form.otpCode = otpCode
+      clearValidation('otp')
     }
 
     const ensureRecaptchaScript = () => {
@@ -691,6 +698,7 @@ export default {
       validateUsername,
       validatePassword,
       clearValidation,
+      handleOtpInput,
       togglePasswordVisibility,
       handleSubmit,
       handleResendOtp,
