@@ -725,27 +725,19 @@
                 </div>
               </div>
               <div class="form-group form-group--avatar">
-                <label for="editProfileImage">Profile Picture</label>
+                <label>Profile Picture</label>
                 <div class="edit-avatar-field">
-                  <div class="edit-avatar-preview">
+                  <div class="edit-user-avatar">
                     <img
-                      v-if="editUserData.avatarPreview || editUserData.avatar"
-                      :src="editUserData.avatarPreview || editUserData.avatar"
+                      v-if="editUserData.avatar"
+                      :src="editUserData.avatar"
                       :alt="editUserData.fullName || editUserData.email || 'User avatar'"
                     >
                     <div v-else class="avatar-placeholder" :class="editUserData.role || 'student'">
                       {{ getInitials(editUserData.fullName || editUserData.email || 'User') }}
                     </div>
                   </div>
-                  <div class="edit-avatar-controls">
-                    <input
-                      id="editProfileImage"
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg,image/webp"
-                      @change="handleEditAvatarChange"
-                    >
-                    <small>Allowed: JPG, JPEG, PNG, WEBP. Max 5MB.</small>
-                  </div>
+                  <small class="edit-avatar-note">Only users can change their own profile picture.</small>
                 </div>
               </div>
               <div class="form-fields-grid">
@@ -1513,11 +1505,8 @@ export default {
       gradeLevel: 'Grade 10',
       strand: '',
       contactNumber: '',
-      avatar: '',
-      avatarPreview: ''
+      avatar: ''
     })
-    const selectedEditAvatarFile = ref(null)
-    const editAvatarPreviewUrl = ref('')
     
     const messageData = reactive({
       userId: '',
@@ -1771,50 +1760,10 @@ export default {
           return `${apiBaseUrl}${parsed.pathname.slice('/api'.length)}${parsed.search}${parsed.hash}`
         }
       } catch (_error) {
-        // Preserve a non-URL value below; it may be a local preview URL.
+        // Preserve a non-URL value returned by the backend.
       }
 
       return raw
-    }
-
-    const cleanupEditAvatarPreview = () => {
-      if (editAvatarPreviewUrl.value) {
-        URL.revokeObjectURL(editAvatarPreviewUrl.value)
-        editAvatarPreviewUrl.value = ''
-      }
-      selectedEditAvatarFile.value = null
-      if (editUserData.value) {
-        editUserData.value.avatarPreview = ''
-      }
-    }
-
-    const handleEditAvatarChange = (event) => {
-      const file = event?.target?.files?.[0] || null
-      if (!file) {
-        cleanupEditAvatarPreview()
-        return
-      }
-
-      const isImage = String(file.type || '').startsWith('image/')
-      if (!isImage) {
-        showToastMessage('Please select a valid image file', 'error')
-        event.target.value = ''
-        cleanupEditAvatarPreview()
-        return
-      }
-
-      const maxFileSize = 5 * 1024 * 1024
-      if (Number(file.size || 0) > maxFileSize) {
-        showToastMessage('Image must be 5MB or smaller', 'error')
-        event.target.value = ''
-        cleanupEditAvatarPreview()
-        return
-      }
-
-      cleanupEditAvatarPreview()
-      selectedEditAvatarFile.value = file
-      editAvatarPreviewUrl.value = URL.createObjectURL(file)
-      editUserData.value.avatarPreview = editAvatarPreviewUrl.value
     }
 
     const resolveEnrolledTrack = (user) => {
@@ -2444,7 +2393,6 @@ export default {
     }
     
     const openEditUserModal = (user) => {
-      cleanupEditAvatarPreview()
       editUserData.value = {
         id: user.id,
         fullName: user.name,
@@ -2457,15 +2405,13 @@ export default {
         gradeLevel: user.gradeLevel || 'Grade 10',
         strand: user.strand || '',
         contactNumber: normalizePhilippinePhone(user.contactNumber),
-        avatar: resolveUserAvatarUrl(user),
-        avatarPreview: ''
+        avatar: resolveUserAvatarUrl(user)
       }
       modals.editUser = true
       modals.userActions = false
     }
     
     const closeEditUserModal = () => {
-      cleanupEditAvatarPreview()
       modals.editUser = false
     }
 
@@ -2641,9 +2587,6 @@ export default {
       payload.append('gradeLevel', role === 'student' ? gradeLevel : '')
       payload.append('strand', role === 'student' ? strand : '')
       payload.append('contactNumber', contactNumber)
-      if (selectedEditAvatarFile.value) {
-        payload.append('profileImage', selectedEditAvatarFile.value)
-      }
 
       try {
         isSavingEdit.value = true
@@ -3105,7 +3048,6 @@ export default {
         userPresenceRefreshTimerId = null
       }
       document.body.style.overflow = previousBodyOverflow.value || ''
-      cleanupEditAvatarPreview()
     })
     
     return {
@@ -3198,7 +3140,6 @@ export default {
       closeUserActionsModal,
       openEditUserModal,
       closeEditUserModal,
-      handleEditAvatarChange,
       onEditRoleChange,
       addUserEmailError,
       goToAddUserTab,
@@ -5909,12 +5850,12 @@ body.admin-dashboard .modal.message-modal .send-message-btn i {
   @apply tw:[gap:1rem];
   @apply tw:[min-width:0];
   @apply tw:[padding:0.85rem];
-  @apply tw:[border:1px_dashed_#cbd8c5];
+  @apply tw:[border:1px_solid_#cbd8c5];
   @apply tw:[border-radius:14px];
   @apply tw:[background:#f7faf5];
 }
 
-.modal.edit-user-modal .edit-avatar-preview {
+.modal.edit-user-modal .edit-user-avatar {
   @apply tw:[width:68px];
   @apply tw:[height:68px];
   @apply tw:[border-radius:50%];
@@ -5925,8 +5866,8 @@ body.admin-dashboard .modal.message-modal .send-message-btn i {
   @apply tw:[flex:0_0_68px];
 }
 
-.modal.edit-user-modal .edit-avatar-preview img,
-.modal.edit-user-modal .edit-avatar-preview .avatar-placeholder {
+.modal.edit-user-modal .edit-user-avatar img,
+.modal.edit-user-modal .edit-user-avatar .avatar-placeholder {
   @apply tw:w-full!;
   @apply tw:h-full!;
   @apply tw:min-w-full!;
@@ -5936,44 +5877,13 @@ body.admin-dashboard .modal.message-modal .send-message-btn i {
   @apply tw:[border-radius:50%]!;
 }
 
-.modal.edit-user-modal .edit-avatar-preview img {
+.modal.edit-user-modal .edit-user-avatar img {
   @apply tw:object-cover;
   @apply tw:[object-position:center];
   @apply tw:block;
 }
 
-.modal.edit-user-modal .edit-avatar-controls {
-  @apply tw:flex;
-  @apply tw:flex-col;
-  @apply tw:[gap:0.45rem];
-  @apply tw:flex-auto;
-  @apply tw:[min-width:0];
-}
-
-.modal.edit-user-modal .edit-avatar-controls input[type="file"] {
-  @apply tw:w-full;
-  @apply tw:[min-height:auto];
-  @apply tw:[padding:0.3rem];
-  @apply tw:[border:1px_solid_#dce5d7];
-  @apply tw:[border-radius:10px];
-  @apply tw:[background:#ffffff];
-  @apply tw:[color:#64748b];
-  @apply tw:[font-size:0.76rem];
-}
-
-.modal.edit-user-modal .edit-avatar-controls input[type="file"]::file-selector-button {
-  @apply tw:[margin-right:0.65rem];
-  @apply tw:[padding:0.45rem_0.65rem];
-  @apply tw:[border:0];
-  @apply tw:[border-radius:8px];
-  @apply tw:[background:#4f8a35];
-  @apply tw:[color:#ffffff];
-  @apply tw:[font:inherit];
-  @apply tw:[font-weight:700];
-  @apply tw:cursor-pointer;
-}
-
-.modal.edit-user-modal .edit-avatar-controls small {
+.modal.edit-user-modal .edit-avatar-note {
   @apply tw:[font-size:0.68rem];
   @apply tw:[color:#64748b];
   @apply tw:[line-height:1.4];

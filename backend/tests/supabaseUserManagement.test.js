@@ -2,10 +2,18 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
 const { createFakeSupabase } = require('./helpers/fakeSupabase');
+process.env.STORAGE_URL_SIGNING_SECRET = 'user-management-test-signing-secret';
+const { verifyStorageAccessToken } = require('../utils/fileStorage');
 const storage = require('../services/supabaseStorageService');
 let client;
 storage.getSupabaseStorageClient = () => client;
 require('../services/gmailService').sendEmailViaGmail = async () => ({ sent: true });
+const profileUploads = [];
+const uploadedProfilePath = 'uploads/profile-images/updated-profile.png';
+require('../services/storageService').uploadFile = async (options) => {
+  profileUploads.push(options);
+  return { storedPath: uploadedProfilePath };
+};
 const controller = require('../controllers/adminController');
 const { createSupabaseAccount, findSupabaseAccountByUsername } = require('../services/supabaseAccountService');
 const id = 'b6d565d69a7f4db1bd6f1ebfcc1a6444';
@@ -21,7 +29,7 @@ async function invoke(action, req = {}) {
     body: {},
     user: { _id: 'admin', role: 'admin' },
     protocol: 'http',
-    get: () => '',
+    get: () => 'localhost',
     ...req,
   }, {
     status() { return this; }, json(value) { body = value; return this; },
@@ -77,6 +85,155 @@ test('admin can update teacher and student accounts directly', async () => {
     client = createFakeSupabase({ users: [{ ...account, role, department: role === 'teacher' ? 'Science' : '' }] });
     await invoke('updateUser', { body: { name: `Updated ${role}` } });
     assert.equal(client.tables.users[0].name, `Updated ${role}`);
+  }
+});
+
+test('admin cannot upload, replace, or clear another account profile picture for any role', async (t) => {
+  const attempts = [
+    { label: 'uploaded picture', file: { originalname: 'replacement.png', mimetype: 'image/png', buffer: Buffer.from('image') } },
+    { label: 'replacement path', body: { profileImage: 'uploads/replacement.png' } },
+    { label: 'empty clear', body: { profileImage: '' } },
+    { label: 'null clear', body: { profileImage: null } },
+    { label: 'explicit undefined', body: { profileImage: undefined } },
+  ];
+  for (const role of ['secretary', 'headteacher', 'admin', 'teacher', 'student']) {
+    for (const attempt of attempts) {
+      await t.test(`${role}: ${attempt.label}`, async () => {
+        const original = { ...account, role, profile_image: 'uploads/original-profile.png' };
+        client = createFakeSupabase({ users: [original] });
+        profileUploads.length = 0;
+        await assert.rejects(invoke('updateUser', {
+          ...(attempt.file ? { file: attempt.file } : {}),
+          body: {
+            name: 'Changed name', email: 'changed.user@gmail.com', username: 'changed.user',
+            status: 'inactive', ...attempt.body,
+          },
+        }), { statusCode: 403, message: 'Only users can change their own profile picture' });
+        assert.deepEqual(profileUploads, [], 'rejected pictures must never reach storage');
+        assert.deepEqual(client.writes, [], 'other submitted fields must not be saved');
+        assert.deepEqual(client.tables.users, [original]);
+      });
+    }
+  }
+});
+
+test('profile picture changes require an authenticated account ID', async (t) => {
+  for (const attempt of [
+    { label: 'upload', file: { originalname: 'replacement.png', buffer: Buffer.from('image') } },
+    { label: 'direct field', body: { profileImage: '' } },
+  ]) {
+    await t.test(attempt.label, async () => {
+      const original = { ...account, role: 'admin', profile_image: 'uploads/original-profile.png' };
+      client = createFakeSupabase({ users: [original] });
+      profileUploads.length = 0;
+      await assert.rejects(invoke('updateUser', {
+        user: { role: 'admin' },
+        ...(attempt.file ? { file: attempt.file } : {}),
+        body: { name: 'Changed name', ...attempt.body },
+      }), { statusCode: 403, message: 'Only users can change their own profile picture' });
+      assert.deepEqual(profileUploads, []);
+      assert.deepEqual(client.writes, []);
+      assert.deepEqual(client.tables.users, [original]);
+    });
+  }
+});
+
+test('managed account edits preserve existing profile pictures for every manageable role', async (t) => {
+  for (const role of ['secretary', 'headteacher', 'teacher', 'student']) {
+    await t.test(role, async () => {
+      const profileImage = 'uploads/original-profile.png';
+      client = createFakeSupabase({ users: [{ ...account, role, profile_image: profileImage }] });
+      profileUploads.length = 0;
+      const result = await invoke('updateUser', { body: { name: `Updated ${role}` } });
+      assert.equal(client.tables.users[0].name, `Updated ${role}`);
+      assert.equal(client.tables.users[0].profile_image, profileImage);
+      const token = new URL(result.user.profileImage).searchParams.get('token');
+      assert.equal(verifyStorageAccessToken(token).storedPath, profileImage);
+      assert.deepEqual(profileUploads, []);
+    });
+  }
+});
+
+test('secretary cannot upload or clear instructional account profile pictures', async (t) => {
+  for (const role of ['headteacher', 'teacher', 'student']) {
+    for (const attempt of [
+      { label: 'upload', file: { originalname: 'replacement.png', buffer: Buffer.from('image') } },
+      { label: 'clear', body: { profileImage: '' } },
+    ]) {
+      await t.test(`${role}: ${attempt.label}`, async () => {
+        const original = { ...account, role, profile_image: 'uploads/original-profile.png' };
+        client = createFakeSupabase({ users: [original] });
+        profileUploads.length = 0;
+        await assert.rejects(invoke('updateUser', {
+          user: { _id: 'secretary-id', role: 'secretary' },
+          ...(attempt.file ? { file: attempt.file } : {}),
+          body: { name: 'Changed name', ...attempt.body },
+        }), { statusCode: 403, message: 'Only users can change their own profile picture' });
+        assert.deepEqual(profileUploads, []);
+        assert.deepEqual(client.writes, []);
+        assert.deepEqual(client.tables.users, [original]);
+      });
+    }
+  }
+});
+
+test('admin can still upload their own profile picture through account update', async () => {
+  client = createFakeSupabase({ users: [{ ...account, role: 'admin', profile_image: 'uploads/original-profile.png' }] });
+  profileUploads.length = 0;
+  const file = { originalname: 'self.png', mimetype: 'image/png', buffer: Buffer.from('image') };
+  const result = await invoke('updateUser', { user: { _id: id, role: 'admin' }, file });
+  assert.equal(profileUploads.length, 1);
+  assert.equal(profileUploads[0].file, file);
+  assert.equal(profileUploads[0].folder, `profile-images/admin-managed/${id}`);
+  assert.equal(client.tables.users[0].profile_image, uploadedProfilePath);
+  const token = new URL(result.user.profileImage).searchParams.get('token');
+  assert.equal(verifyStorageAccessToken(token).storedPath, uploadedProfilePath);
+  assert.equal(client.writes.length, 1);
+});
+
+test('admin self profile edits preserve their picture and other admin accounts remain protected', async () => {
+  const original = { ...account, role: 'admin', profile_image: 'uploads/original-profile.png' };
+  client = createFakeSupabase({ users: [original] });
+  profileUploads.length = 0;
+  await assert.rejects(invoke('updateUser', { body: { name: 'Not allowed' } }), {
+    statusCode: 403, message: 'Forbidden: you cannot manage accounts with this role',
+  });
+  assert.deepEqual(client.writes, []);
+  assert.deepEqual(client.tables.users, [original]);
+
+  const result = await invoke('updateUser', {
+    user: { _id: id, role: 'admin' },
+    body: {
+      name: 'Updated self', email: 'updated.self@gmail.com', username: 'updated.self',
+      contactNumber: '09123456789',
+    },
+  });
+  assert.equal(result.user.name, 'Updated self');
+  assert.equal(result.user.email, 'updated.self@gmail.com');
+  assert.equal(result.user.username, 'updated.self');
+  assert.equal(result.user.contactNumber, '09123456789');
+  assert.equal(client.tables.users[0].profile_image, original.profile_image);
+  assert.deepEqual(profileUploads, []);
+});
+
+test('admin self picture uploads cannot bypass restrictions on managed account fields', async (t) => {
+  for (const [field, value] of Object.entries({
+    password: 'Password123!', role: 'teacher', status: 'suspended', subject: 'Biology',
+    department: 'Science', strand: 'STEM', gradeLevel: 'Grade 10',
+  })) {
+    await t.test(field, async () => {
+      const original = { ...account, role: 'admin', profile_image: 'uploads/original-profile.png' };
+      client = createFakeSupabase({ users: [original] });
+      profileUploads.length = 0;
+      await assert.rejects(invoke('updateUser', {
+        user: { _id: id, role: 'admin' },
+        file: { originalname: 'self.png', mimetype: 'image/png', buffer: Buffer.from('image') },
+        body: { name: 'Changed self', [field]: value },
+      }), { statusCode: 403, message: 'Forbidden: you cannot manage accounts with this role' });
+      assert.deepEqual(profileUploads, [], 'forbidden self edits must not upload a picture');
+      assert.deepEqual(client.writes, [], 'forbidden self edits must not save any submitted fields');
+      assert.deepEqual(client.tables.users, [original]);
+    });
   }
 });
 

@@ -1201,7 +1201,7 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, email, username, password, role, status, subject, contactNumber, department, strand, gradeLevel } = req.body;
+  const { name, email, username, password, role, status, subject, contactNumber, department, strand, gradeLevel } = req.body || {};
 
   const user = await findSupabaseAccount('id', id);
   if (!user) {
@@ -1209,7 +1209,22 @@ const updateUser = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
-  ensureUserManagementPermission(req, normalizeAdminManagedRole(user.role));
+  const changesProfileImage = Boolean(req.file)
+    || Object.prototype.hasOwnProperty.call(req.body || {}, 'profileImage');
+  const isOwnProfile = Boolean(req.user?._id) && String(user._id) === String(req.user._id);
+  if (changesProfileImage && !isOwnProfile) {
+    const error = new Error('Only users can change their own profile picture');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const hasManagedAccountChanges = [password, role, status, subject, department, strand, gradeLevel]
+    .some((value) => value !== undefined);
+  const isOwnAdminProfile = isOwnProfile && req.user.role === ROLE_ADMIN && user.role === ROLE_ADMIN
+    && !hasManagedAccountChanges;
+  if (!isOwnAdminProfile) {
+    ensureUserManagementPermission(req, normalizeAdminManagedRole(user.role));
+  }
 
   if (email && String(email).toLowerCase().trim() !== user.email) {
     const emailExists = await findSupabaseAccountByEmail(email);
