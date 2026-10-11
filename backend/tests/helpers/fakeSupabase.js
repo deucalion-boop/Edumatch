@@ -19,6 +19,28 @@ function createFakeSupabase(initialTables = {}) {
     const query = {
       select() { return query; },
       eq(field, value) { filters.push((row) => row[field] === value); return query; },
+      ilike(field, value) {
+        let pattern = '';
+        const characters = [...String(value).toLowerCase()];
+        for (let index = 0; index < characters.length; index += 1) {
+          const character = characters[index];
+          if (character === '%' || character === '*') pattern += '.*';
+          else if (character === '_') pattern += '.';
+          else {
+            const literal = character === '\\' ? characters[++index] : character;
+            pattern += literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          }
+        }
+        const expression = new RegExp(`^${pattern}$(?![\\s\\S])`, 'su');
+        filters.push((row) => expression.test(String(row[field] || '').toLowerCase()));
+        return query;
+      },
+      filter(field, operator, value) {
+        if (operator !== 'match') throw new Error(`Unsupported fixture filter: ${operator}`);
+        const pattern = new RegExp(value);
+        filters.push((row) => pattern.test(String(row[field] || '')));
+        return query;
+      },
       neq(field, value) { filters.push((row) => row[field] !== value); return query; },
       is(field, value) { filters.push((row) => row[field] === value); return query; },
       gt(field, value) { filters.push((row) => row[field] > value); return query; },

@@ -8,7 +8,20 @@ const { assertPasswordMeetsPolicy } = require('../utils/passwordPolicy');
 const ACCOUNT_STATUSES = ['pending', 'active', 'inactive', 'suspended'];
 
 function accountError(error, fallbackMessage) {
-  const normalized = new Error(String(error?.message || fallbackMessage));
+  let message = String(error?.message || fallbackMessage);
+  if (error?.code === '23505') {
+    const constraint = `${error.constraint || ''} ${error.message || ''}`;
+    if (constraint.includes('users_username_lower_unique')) {
+      message = 'Username already exists';
+    } else if (constraint.includes('users_email_lower_unique')) {
+      message = 'Email already exists';
+    } else if (constraint.includes('users_headteacher_department_unique')) {
+      message = 'A head teacher is already assigned to this department';
+    } else if (error.message) {
+      message = 'An account with these details already exists';
+    }
+  }
+  const normalized = new Error(message);
   normalized.code = error?.code;
   normalized.details = error?.details;
   normalized.hint = error?.hint;
@@ -134,6 +147,10 @@ async function saveSupabaseAccount(account) {
 
 async function createSupabaseAccount(payload) {
   const account = { ...payload };
+  account.username = String(payload.username || '').trim();
+  if (!account.username || account.username.length > 50) {
+    throw Object.assign(new Error('Username must be between 1 and 50 characters'), { statusCode: 400 });
+  }
   let passwordHash = String(payload.password || '').trim();
   if (passwordHash) passwordHash = await bcrypt.hash(passwordHash, 10);
   const row = toRow(account, passwordHash);
@@ -158,7 +175,21 @@ async function findSupabaseAccount(field, value) {
   const normalized = String(value || '').trim();
   if (!normalized) return null;
   const client = getSupabaseStorageClient();
-  const query = client.from('users').select('*').eq(field, field === 'email' ? normalized.toLowerCase() : normalized).limit(1);
+  const query = client.from('users').select('*');
+  if (field === 'username') {
+    // ILIKE uses the same lower() rules as the unique index; escape its wildcards.
+    const literalUsername = normalized.replace(/[\\%_]/g, '\\$&').replace(/\*/g, '_');
+    query.ilike(field, literalUsername);
+    const starCount = (normalized.match(/\*/g) || []).length;
+    if (starCount) {
+      // PostgREST aliases '*' to '%'. Use one-character slots above and require
+      // exactly this many literal stars so those slots cannot match other characters.
+      query.filter(field, 'match', `^([^*]*\\*){${starCount}}[^*]*$`);
+    }
+  } else {
+    query.eq(field, field === 'email' ? normalized.toLowerCase() : normalized);
+  }
+  query.limit(1);
   const { data, error } = await query.maybeSingle();
   if (error) throw accountError(error, 'Failed to read account from Supabase');
   return fromRow(data);

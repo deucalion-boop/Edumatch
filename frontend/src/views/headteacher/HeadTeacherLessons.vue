@@ -723,7 +723,7 @@ const filteredManagedAssessments = computed(() => {
   if (!assessmentForm.teacherId) return managedAssessments.value
   return managedAssessments.value.filter((assessment) => assessment.teacherId === assessmentForm.teacherId)
 })
-const assessmentResolvedSubject = computed(() => selectedAssessmentLesson.value?.subject || selectedAssessmentTeacher.value?.subject || selectedAssessmentTeacher.value?.department || '')
+const assessmentResolvedSubject = computed(() => selectedAssessmentTeacher.value?.subject || selectedAssessmentLesson.value?.subject || selectedAssessmentTeacher.value?.department || '')
 const isGradingAssessment = computed(() => assessmentForm.assessmentMode === 'grading_assessment')
 const isQuizAssessment = computed(() => assessmentForm.assessmentMode === 'quiz')
 const isEditingAssessment = computed(() => Boolean(editingAssessmentId.value))
@@ -1037,7 +1037,7 @@ const saveManagedAssessment = async () => {
       lessonId: assessmentForm.lessonId,
       title: String((generatedDraftMeta.value?.title || assessmentForm.title) || '').trim(),
       examType: generatedDraftMeta.value?.examType || assessmentForm.examType,
-      subject: generatedDraftMeta.value?.subject || assessmentResolvedSubject.value,
+      subject: assessmentResolvedSubject.value || generatedDraftMeta.value?.subject,
       subjectCategory: generatedDraftMeta.value?.subjectCategory || '',
       difficulty: generatedDraftMeta.value?.difficulty || assessmentForm.difficulty,
       numberOfItems: Number(generatedDraftMeta.value?.numberOfItems || assessmentForm.numberOfItems),

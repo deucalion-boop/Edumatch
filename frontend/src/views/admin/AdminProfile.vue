@@ -575,6 +575,9 @@ onBeforeUnmount(() => {
 
 .profile-detail-item strong {
   @apply tw:block;
+  @apply tw:whitespace-normal;
+  @apply tw:[overflow-wrap:anywhere];
+  @apply tw:[line-height:1.5];
   @apply tw:[color:#111827];
   @apply tw:[font-size:1rem];
   @apply tw:[font-weight:700];
@@ -587,6 +590,7 @@ onBeforeUnmount(() => {
 }
 
 .profile-card {
+  @apply tw:min-w-0;
   @apply tw:[background:#ffffff];
   @apply tw:[border:1px_solid_#e5e7eb];
   @apply tw:[border-radius:20px];
@@ -622,6 +626,7 @@ onBeforeUnmount(() => {
 
 .profile-avatar {
   @apply tw:grid;
+  @apply tw:shrink-0;
   @apply tw:[width:96px];
   @apply tw:[height:96px];
   @apply tw:place-items-center;
@@ -645,11 +650,14 @@ onBeforeUnmount(() => {
 }
 
 .profile-identity {
+  @apply tw:flex-1;
   @apply tw:[min-width:0];
 }
 
 .profile-photo-control {
   @apply tw:inline-flex;
+  @apply tw:max-w-full;
+  @apply tw:whitespace-normal;
   @apply tw:items-center;
   @apply tw:justify-center;
   @apply tw:[gap:0.4rem];
@@ -696,12 +704,18 @@ onBeforeUnmount(() => {
 }
 
 .profile-photo-help {
+  @apply tw:min-w-0;
+  @apply tw:max-w-full;
+  @apply tw:whitespace-normal;
+  @apply tw:[overflow-wrap:anywhere];
   @apply tw:[color:#64748b];
   @apply tw:[font-size:0.75rem];
   @apply tw:[line-height:1.45];
 }
 
 .profile-identity h4 {
+  @apply tw:whitespace-normal;
+  @apply tw:[overflow-wrap:anywhere];
   @apply tw:[margin:0];
   @apply tw:[color:#111827];
   @apply tw:[font-size:1.18rem];
@@ -709,11 +723,10 @@ onBeforeUnmount(() => {
 }
 
 .profile-identity p {
-  @apply tw:overflow-hidden;
   @apply tw:[margin:0.28rem_0_0.6rem];
   @apply tw:[color:#6b7280];
-  @apply tw:text-ellipsis;
-  @apply tw:whitespace-nowrap;
+  @apply tw:whitespace-normal;
+  @apply tw:[overflow-wrap:anywhere];
 }
 
 .profile-chip {
@@ -734,6 +747,7 @@ onBeforeUnmount(() => {
 }
 
 .profile-detail-item {
+  @apply tw:min-w-0;
   @apply tw:[border:1px_solid_#e5e7eb];
   @apply tw:[border-radius:16px];
   @apply tw:[padding:0.95rem_1rem];
@@ -748,6 +762,7 @@ onBeforeUnmount(() => {
 
 .profile-field {
   @apply tw:flex;
+  @apply tw:min-w-0;
   @apply tw:flex-col;
 }
 
@@ -809,17 +824,21 @@ onBeforeUnmount(() => {
     @apply tw:text-center;
   }
 
+  .admin-profile-page .profile-summary {
+    @apply tw:flex-col;
+    @apply tw:items-center!;
+  }
+
+  .profile-avatar {
+    @apply tw:self-center;
+  }
+
   .profile-identity {
     @apply tw:w-full;
   }
 
   .profile-photo-actions {
     @apply tw:justify-center;
-  }
-
-  .profile-identity p {
-    @apply tw:whitespace-normal;
-    @apply tw:[overflow-wrap:anywhere];
   }
 
   .profile-form-actions {
@@ -862,10 +881,6 @@ onBeforeUnmount(() => {
 
   .profile-photo-control {
     @apply tw:w-full;
-  }
-
-  .profile-photo-help {
-    @apply tw:[overflow-wrap:anywhere];
   }
 }
 

@@ -1580,7 +1580,7 @@ const createAssessment = asyncHandler(async (req, res) => {
   const normalizedTitle = isActivityAssessment
     ? String(title || '').trim() || buildActivityTitleFromDescription(normalizedChallengeDescription)
     : String(title || '').trim();
-  const normalizedRequestedSubject = String(subject || lesson?.subject || selectedClass?.name || req.user?.subject || '').trim();
+  const normalizedRequestedSubject = String(subject || req.user?.subject || lesson?.subject || selectedClass?.name || '').trim();
   if (!normalizedTitle || !normalizedRequestedSubject) {
     const error = new Error('title and subject are required');
     error.statusCode = 400;
@@ -1692,7 +1692,7 @@ const createAssessment = asyncHandler(async (req, res) => {
       lessonId: lesson?._id || undefined,
       title: normalizedTitle,
       examType: normalizedExamType,
-      subject: String(subjectRecord?.name || normalizedSubject).trim(),
+      subject: normalizedSubject,
       subjectId: subjectRecord?._id || null,
       subjectCode: subjectRecord?.code || '',
       subjectCategory: resolveAssessmentSubjectCategory({

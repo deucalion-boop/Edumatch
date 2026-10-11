@@ -909,9 +909,15 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
     error.statusCode = 409;
     throw error;
   }
-  if (normalizedUsername.length > 50) {
-    const error = new Error('username must be 50 characters or fewer');
+  if (!normalizedUsername || normalizedUsername.length > 50) {
+    const error = new Error('Username must be between 1 and 50 characters');
     error.statusCode = 400;
+    throw error;
+  }
+  const existingUsername = await findSupabaseAccountByUsername(normalizedUsername);
+  if (existingUsername) {
+    const error = new Error('Username already exists');
+    error.statusCode = 409;
     throw error;
   }
 
@@ -1008,9 +1014,15 @@ const createUser = asyncHandler(async (req, res) => {
     department: scopedFields.department,
   });
   const normalizedStatus = String(status || '').trim().toLowerCase();
-  if (normalizedUsername.length > 50) {
-    const error = new Error('username must be 50 characters or fewer');
+  if (!normalizedUsername || normalizedUsername.length > 50) {
+    const error = new Error('Username must be between 1 and 50 characters');
     error.statusCode = 400;
+    throw error;
+  }
+  const existingUsername = await findSupabaseAccountByUsername(normalizedUsername);
+  if (existingUsername) {
+    const error = new Error('Username already exists');
+    error.statusCode = 409;
     throw error;
   }
   if (normalizedStatus && !ALLOWED_ACCOUNT_STATUSES.includes(normalizedStatus)) {

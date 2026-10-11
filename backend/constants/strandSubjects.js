@@ -45,9 +45,14 @@ function getSubjectsByStrand(strand) {
 }
 
 function isSubjectAllowedForStrand({ strand, subject }) {
-  const allowed = getSubjectsByStrand(strand);
+  const normalizedStrand = normalizeStrand(strand);
   const normalizedSubject = String(subject || '').trim();
-  return allowed.includes(normalizedSubject);
+  if (!normalizedStrand || !normalizedSubject) return false;
+
+  // GENERAL supports the custom subjects administrators assign to teachers.
+  if (normalizedStrand === 'GENERAL') return true;
+
+  return getSubjectsByStrand(normalizedStrand).includes(normalizedSubject);
 }
 
 function getSubjectCategory(subject) {

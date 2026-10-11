@@ -7,8 +7,13 @@ let client;
 storage.getSupabaseStorageClient = () => client;
 require('../services/gmailService').sendEmailViaGmail = async () => ({ sent: true });
 const controller = require('../controllers/adminController');
+const { createSupabaseAccount, findSupabaseAccountByUsername } = require('../services/supabaseAccountService');
 const id = 'b6d565d69a7f4db1bd6f1ebfcc1a6444';
 const account = { id, name: 'Test user', email: 'user@gmail.com', username: 'user', role: 'secretary', status: 'active' };
+const newTeacher = {
+  name: 'New Teacher', email: 'new.teacher@gmail.com', username: 'new.teacher',
+  role: 'teacher', department: 'Science',
+};
 async function invoke(action, req = {}) {
   let body;
   await controller[action]({
@@ -104,6 +109,153 @@ test('admin and secretary create directly managed roles with the selected role a
   assert.equal(teacherResult.user.department, 'Science');
   assert.equal(teacherResult.user.subject, 'Biology');
   assert.equal(client.tables.users[1].role, 'teacher');
+});
+
+test('account creation rejects existing usernames before writing for admin and secretary', async (t) => {
+  for (const action of ['createUser', 'createAndInviteUser']) {
+    for (const role of ['admin', 'secretary']) {
+      for (const username of ['user', ' UsEr ']) {
+        await t.test(`${action}: ${role}, ${JSON.stringify(username)}`, async () => {
+          client = createFakeSupabase({ users: [account] });
+          await assert.rejects(invoke(action, {
+            user: { _id: `${role}-id`, role },
+            body: { ...newTeacher, username },
+          }), { statusCode: 409, message: 'Username already exists' });
+          assert.deepEqual(client.writes, []);
+          assert.deepEqual(client.tables.users, [account]);
+        });
+      }
+    }
+  }
+});
+
+test('updating a username rejects another account regardless of casing and permits its own casing change', async () => {
+  const other = { ...account, id: 'other-id', email: 'other@gmail.com', username: 'OtherUser' };
+  client = createFakeSupabase({ users: [account, other] });
+  await assert.rejects(invoke('updateUser', {
+    body: { username: ' oThErUsEr ' },
+  }), { statusCode: 409, message: 'Username already exists' });
+  assert.deepEqual(client.writes, []);
+  assert.deepEqual(client.tables.users, [account, other]);
+
+  const result = await invoke('updateUser', { body: { username: ' UsEr ' } });
+  assert.equal(result.user.username, 'UsEr');
+  assert.equal(client.tables.users[0].username, 'UsEr');
+  assert.equal(client.tables.users[1].username, 'OtherUser');
+});
+
+test('username lookup is case insensitive and matches wildcard and regex characters literally', async (t) => {
+  for (const username of [
+    'alpha%beta', 'alpha_beta', 'alpha*beta', 'alpha\\beta', 'alpha.beta',
+    'alpha[+]?beta(2){3}|^$',
+  ]) {
+    await t.test(JSON.stringify(username), async () => {
+      client = createFakeSupabase({ users: [
+        { ...account, id: 'decoy-id', username: 'alphaXbeta' },
+        { ...account, id: 'prefix-id', username: `prefix${username}` },
+        { ...account, id: 'suffix-id', username: `${username}suffix` },
+        { ...account, username },
+      ] });
+      const match = await findSupabaseAccountByUsername(` ${username.toUpperCase()} `);
+      assert.equal(match.id, id);
+      assert.equal(match.username, username);
+      client.tables.users = client.tables.users.filter((row) => row.id !== id);
+      assert.equal(await findSupabaseAccountByUsername(username), null);
+      assert.deepEqual(client.writes, []);
+    });
+  }
+});
+
+test('username lookup follows lowercase uniqueness for distinct Greek sigma forms', async () => {
+  const finalSigma = { ...account, id: 'final-sigma-id', username: '\u03c2' };
+  const capitalSigma = { ...account, id: 'capital-sigma-id', username: '\u03a3' };
+  client = createFakeSupabase({ users: [finalSigma, capitalSigma] });
+  for (const username of ['\u03c3', '\u03a3']) {
+    const match = await findSupabaseAccountByUsername(username);
+    assert.equal(match.id, capitalSigma.id);
+    assert.equal(match.username, capitalSigma.username);
+  }
+  const match = await findSupabaseAccountByUsername('\u03c2');
+  assert.equal(match.id, finalSigma.id);
+  assert.equal(match.username, finalSigma.username);
+  assert.deepEqual(client.writes, []);
+});
+
+test('username lookup requires the exact literal star count and positions with mixed wildcards', async (t) => {
+  const cases = [
+    { username: '%*_', decoys: ['%x_', '%%_', '%**', '*%_'] },
+    { username: 'alpha**beta', decoys: ['alphaXXbeta', 'alpha*Xbeta', 'alpha***eta', 'alph*a*beta'] },
+  ];
+  for (const { username, decoys } of cases) {
+    await t.test(JSON.stringify(username), async () => {
+      client = createFakeSupabase({ users: [
+        ...decoys.map((decoy, index) => ({ ...account, id: `decoy-${index}`, username: decoy })),
+        { ...account, username },
+      ] });
+      const match = await findSupabaseAccountByUsername(username.toUpperCase());
+      assert.equal(match.id, id);
+      assert.equal(match.username, username);
+      client.tables.users = client.tables.users.filter((row) => row.id !== id);
+      assert.equal(await findSupabaseAccountByUsername(username), null);
+      assert.deepEqual(client.writes, []);
+    });
+  }
+});
+
+test('create and update reject usernames consisting only of whitespace without writing', async (t) => {
+  for (const action of ['createUser', 'createAndInviteUser', 'updateUser']) {
+    await t.test(action, async () => {
+      client = createFakeSupabase({ users: [account] });
+      await assert.rejects(invoke(action, {
+        body: { ...newTeacher, username: ' \t\n ' },
+      }), { statusCode: 400, message: 'Username must be between 1 and 50 characters' });
+      assert.deepEqual(client.writes, []);
+      assert.deepEqual(client.tables.users, [account]);
+    });
+  }
+});
+
+test('account service rejects blank and overlong usernames before inserting', async (t) => {
+  for (const username of [' \t\n ', 'u'.repeat(51)]) {
+    await t.test(`length ${username.trim().length}`, async () => {
+      client = createFakeSupabase({ users: [] });
+      await assert.rejects(createSupabaseAccount({ ...newTeacher, username }), {
+        statusCode: 400, message: 'Username must be between 1 and 50 characters',
+      });
+      assert.deepEqual(client.writes, []);
+      assert.deepEqual(client.tables.users, []);
+    });
+  }
+});
+
+test('concurrent username and email conflicts return friendly 409 errors and retain PostgreSQL codes', async (t) => {
+  const conflicts = [
+    { constraint: 'users_username_lower_unique', field: 'username', message: 'Username already exists' },
+    { constraint: 'users_email_lower_unique', field: 'email', message: 'Email already exists' },
+    { constraint: 'users_other_unique', field: 'other', message: 'An account with these details already exists' },
+  ];
+  for (const action of ['createUser', 'createAndInviteUser', 'updateUser']) {
+    for (const conflict of conflicts) {
+      await t.test(`${action}: ${conflict.field}`, async () => {
+        const initialUsers = action === 'updateUser' ? [account] : [];
+        client = createFakeSupabase({ users: initialUsers });
+        client.failures.push({
+          table: 'users', operation: action === 'updateUser' ? 'upsert' : 'insert',
+          error: {
+            code: '23505',
+            message: `duplicate key value violates unique constraint "${conflict.constraint}"`,
+            details: `Key (lower(${conflict.field}))=(conflicting-value) already exists.`,
+          },
+        });
+        await assert.rejects(invoke(action, {
+          body: action === 'updateUser' ? { username: newTeacher.username } : { ...newTeacher },
+        }), { statusCode: 409, code: '23505', message: conflict.message });
+        assert.equal(client.failures.length, 0, 'the database write must reach the injected race conflict');
+        assert.deepEqual(client.writes, []);
+        assert.deepEqual(client.tables.users, initialUsers);
+      });
+    }
+  }
 });
 
 

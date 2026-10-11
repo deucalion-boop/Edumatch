@@ -739,13 +739,7 @@ const createManagedTeacherLesson = asyncHandler(async (req, res) => {
   const teacher = await findManagedTeacherForHeadTeacher(req, normalizedTeacherId, { department });
 
   const normalizedTrack = normalizeStrand(strand || track || teacher.strand || 'GENERAL') || 'GENERAL';
-  const normalizedSubject = String(teacher.department || department).trim();
-
-  if (!normalizedSubject) {
-    const error = new Error('The selected teacher has no assigned department');
-    error.statusCode = 400;
-    throw error;
-  }
+  const normalizedSubject = ensureManagedTeacherSubject(teacher);
 
   if (!STRANDS.includes(normalizedTrack)) {
     const error = new Error(`strand must be one of: ${STRANDS.join(', ')}`);
@@ -886,7 +880,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
   }
 
   const normalizedTitle = String(title || '').trim();
-  const normalizedSubject = ensureManagedTeacherSubject(teacher, String(subject || lesson.subject || '').trim());
+  const normalizedSubject = ensureManagedTeacherSubject(teacher, subject);
   const lessonStrand = normalizeStrand(lesson.track);
   if (!isSubjectAllowedForStrand({ strand: lessonStrand, subject: normalizedSubject })) {
     const allowedSubjects = STRANDS.includes(lessonStrand) ? [normalizedSubject] : [];

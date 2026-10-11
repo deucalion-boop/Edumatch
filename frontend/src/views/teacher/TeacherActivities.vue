@@ -1330,7 +1330,7 @@ async function submitLesson() {
   const selectedClassId = String(lessonForm.subjectId || "").trim();
   const selectedClass = teacherClasses.value.find((item) => item.id === selectedClassId) || null;
   const track = String(selectedClass?.track || "GENERAL").trim() || "GENERAL";
-  const subject = String(selectedClass?.name || lessonForm.subject || "").trim();
+  const subject = String(teacherSubject.value || lessonForm.subject || selectedClass?.name || "").trim();
   const selectedFile = lessonForm.lessonPlanFile;
 
   if (!title || !subject || !selectedFile || !selectedClassId || !selectedClass) {
@@ -1722,10 +1722,10 @@ const canPublishActivity = computed(() => {
   const submissionDeadline = buildSubmissionDeadlineIso(challengeForm.deadlineDate, challengeForm.deadlineTime);
   const activityPoints = Number(challengeForm.activityPoints);
   const resolvedSubject = String(
-    selectedLinkedLesson.value?.subject
+    teacherSubject.value
+    || selectedLinkedLesson.value?.subject
     || selectedClass?.name
     || challengeForm.subject
-    || teacherSubject.value
     || ""
   ).trim();
   return Boolean(
@@ -1835,10 +1835,10 @@ async function generateWithAi() {
     const topic = String(challengeForm.challengeTopic || "").trim();
     const examType = String(challengeForm.challengeExamType || "").trim();
     const subject = String(
-      selectedLinkedLesson.value?.subject
+      teacherSubject.value
+      || selectedLinkedLesson.value?.subject
       || selectedClass?.name
       || challengeForm.subject
-      || teacherSubject.value
       || ""
     ).trim();
     const difficulty = String(challengeForm.challengeDifficulty || "").trim();
@@ -2054,10 +2054,10 @@ async function publishActivity() {
     const challengeDescription = String(challengeForm.challengeDescription || "").trim();
     const title = String(challengeForm.challengeTitle || "").trim();
     const subject = String(
-      selectedLinkedLesson.value?.subject
+      teacherSubject.value
+      || selectedLinkedLesson.value?.subject
       || selectedClass?.name
       || challengeForm.subject
-      || teacherSubject.value
       || ""
     ).trim();
     const gradingPeriod = String(challengeForm.gradingPeriod || "").trim();
@@ -2546,18 +2546,14 @@ watch(
   () => {
     const selectedClass = selectedChallengeClass.value;
     if (isActivityAssessment.value) {
-      challengeForm.subject = selectedClass?.name || teacherSubject.value || "";
+      challengeForm.subject = teacherSubject.value || selectedClass?.name || "";
       if (!filteredActivityLessons.value.some((lesson) => lesson.id === challengeForm.linkedLesson)) {
         challengeForm.linkedLesson = "";
       }
       return;
     }
     if (String(challengeForm.linkedLesson || "").trim()) return;
-    if (selectedClass?.name) {
-      challengeForm.subject = selectedClass.name;
-      return;
-    }
-    challengeForm.subject = teacherSubject.value || "";
+    challengeForm.subject = teacherSubject.value || selectedClass?.name || "";
   }
 );
 
