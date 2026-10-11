@@ -66,6 +66,25 @@ async function saveEnrollmentRequest({ studentId, subjectId, teacherId, sectionI
   return mapEnrollment(data);
 }
 
+async function saveApprovedEnrollment({ studentId, subjectId, teacherId, sectionId = null, sectionName = '' }) {
+  const now = new Date().toISOString();
+  const values = {
+    student_id: referenceId(studentId),
+    subject_id: referenceId(subjectId),
+    teacher_id: referenceId(teacherId),
+    section_id: referenceId(sectionId) || null,
+    section_name: String(sectionName || '').trim(),
+    status: 'approved',
+    requested_at: now,
+    decided_at: now,
+    updated_at: now,
+  };
+  const { data, error } = await getSupabaseStorageClient().from('subject_enrollments')
+    .upsert(values, { onConflict: 'subject_id,student_id' }).select('*').single();
+  if (error) throw enrollmentError(error, 'Failed to add student to the advisory class in Supabase');
+  return mapEnrollment(data);
+}
+
 async function listStudentEnrollments(studentId, status = '') {
   const normalizedStudentId = referenceId(studentId);
   if (!normalizedStudentId) return [];
@@ -100,5 +119,6 @@ module.exports = {
   listHydratedStudentEnrollments,
   listStudentEnrollments,
   mapEnrollment,
+  saveApprovedEnrollment,
   saveEnrollmentRequest,
 };

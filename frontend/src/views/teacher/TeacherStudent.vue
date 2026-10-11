@@ -167,7 +167,7 @@
           <div class="student-context-icon"><i class="fas fa-layer-group"></i></div>
           <div class="student-context-copy">
             <strong>{{ hasAdvisorySection ? `Advisory Section ${teacherAdvisorySectionName}` : 'Advisory section unassigned' }}</strong>
-            <span>{{ hasAdvisorySection ? 'New student accounts are placed in this section; handled classes remain code-based.' : 'Ask your Head Teacher to assign an advisory section before inviting students.' }}</span>
+            <span>{{ hasAdvisorySection ? 'New student accounts automatically join your advisory section and class.' : 'Ask your Head Teacher to assign an advisory section before inviting students.' }}</span>
           </div>
           <span class="student-context-subject"><i class="fas fa-book-open"></i>{{ teacherSubject || 'Department subject' }}</span>
         </div>
@@ -608,7 +608,7 @@
           <div class="modal-panel-head">
             <div>
               <h3><i class="fas fa-user-plus"></i> Create Student Account</h3>
-              <p>Create a student account, place the learner in your advisory section, and send a temporary password by email for first-login password reset.</p>
+              <p>Create a student account, automatically add the learner to your advisory class, and email a temporary password for their first login.</p>
             </div>
             <button type="button" class="modal-close-btn" @click="closeStudentInviteModal">
               <i class="fas fa-times"></i>
@@ -635,7 +635,7 @@
               <label class="class-form-group">
                 <span>Advisory Section</span>
                 <input :value="teacherAdvisorySectionName || 'Not assigned'" type="text" readonly>
-                <small class="invite-helper-copy">This creates an advisory student only. The student can join any handled class later with a class code, including classes from another advisory section.</small>
+                <small class="invite-helper-copy">The student automatically joins your advisory class with approved access. They can join additional classes later with a class code.</small>
               </label>
             </div>
             <p v-if="studentInviteMessage" class="class-form-feedback" :class="studentInviteMessageType">{{ studentInviteMessage }}</p>
@@ -1645,11 +1645,13 @@ const submitStudentInvite = async () => {
 
     const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()
     const emailSent = response.data?.invite?.emailSent !== false
-    studentInviteMessage.value = generatedPassword
-      ? `${emailSent ? 'Student account created and credentials emailed successfully.' : 'Student account created, but email sending failed.'} Advisory section: ${teacherAdvisorySectionName.value || 'Assigned section'}. The student can join handled classes later with a class code. Temporary password: ${generatedPassword}`
-      : 'Student account created successfully.'
+    const advisoryClassName = String(response.data?.advisoryClass?.className || '').trim()
+    const advisoryMembershipMessage = advisoryClassName
+      ? ` Automatically added to ${advisoryClassName}.`
+      : ' Automatically added to your advisory class.'
+    studentInviteMessage.value = `${emailSent ? 'Student account created and credentials emailed successfully.' : 'Student account created, but email sending failed.'}${advisoryMembershipMessage}${generatedPassword ? ` Temporary password: ${generatedPassword}` : ''}`
     studentInviteMessageType.value = emailSent ? 'success' : 'error'
-    await fetchStudents()
+    await Promise.allSettled([fetchStudents(), fetchSubjects()])
     window.setTimeout(() => {
       isStudentInviteModalOpen.value = false
     }, 400)

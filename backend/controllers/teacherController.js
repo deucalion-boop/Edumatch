@@ -2,6 +2,7 @@ const { subjectStudents, removeSubjectStudent, requireTeacherSubject, saveStuden
 const { readProfileRows } = require('../services/supabaseUserProfileService');
 const { teacherRequests, decideTeacherRequest, teacherResultData } = require('../services/supabaseTeacherRecordsService');
 const { nameError, phoneError } = require('../utils/teacherValidation');
+const { assertGmailEmail } = require('../utils/emailPolicy');
 const path = require('path');
 const crypto = require('crypto');
 const Lesson = require('../models/Lesson');
@@ -37,9 +38,11 @@ const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
 const {
   createSupabaseAccount,
+  deleteSupabaseAccount,
   findSupabaseAccountByEmail,
   findSupabaseAccountByUsername,
 } = require('../services/supabaseAccountService');
+const { saveApprovedEnrollment } = require('../services/supabaseEnrollmentService');
 const {
   createSupabaseLesson,
   listSupabaseLessons,
@@ -297,7 +300,7 @@ const createStudentInvite = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const normalizedEmail = String(email).toLowerCase().trim();
+  const normalizedEmail = assertGmailEmail(email);
   const normalizedUsername = String(username || '').trim();
   if (!String(req.user?.advisorySectionId || '').trim()) {
     const error = new Error('You must be assigned to an advisory section before creating student accounts');
@@ -331,6 +334,9 @@ const createStudentInvite = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  const advisorySection = await getSectionOrThrow(advisorySectionId);
+  const normalizedContactNumber = normalizeContactNumber(contactNumber);
+  const advisoryClass = await ensureTeacherAdvisoryClass(req.user);
   const now = new Date();
 
   const created = await createSupabaseAccount({
@@ -339,10 +345,10 @@ const createStudentInvite = asyncHandler(async (req, res) => {
     username: normalizedUsername,
     role: ROLE_STUDENT,
     status: 'active',
-    sectionId: advisorySectionId,
+    sectionId: advisorySection.id,
     department: String(req.user?.department || '').trim(),
     gradeLevel: 'Grade 10',
-    contactNumber: normalizeContactNumber(contactNumber),
+    contactNumber: normalizedContactNumber,
     managedBy: req.user._id,
     enrollment: {
       teacherId: req.user._id,
@@ -358,6 +364,27 @@ const createStudentInvite = asyncHandler(async (req, res) => {
     },
   });
 
+  let enrollment;
+  try {
+    enrollment = await saveApprovedEnrollment({
+      studentId: created._id,
+      subjectId: advisoryClass.id,
+      teacherId: req.user._id,
+      sectionId: advisorySection.id,
+      sectionName: advisorySection.name,
+    });
+  } catch (error) {
+    try {
+      await deleteSupabaseAccount(created._id);
+    } catch {
+      throw Object.assign(new Error('The student account was created, but advisory enrollment failed. Contact your administrator before trying again.'), {
+        statusCode: 500,
+        cause: error,
+      });
+    }
+    throw error;
+  }
+
   const inviteResult = await issueInviteForUser({
     user: created,
     req,
@@ -366,6 +393,8 @@ const createStudentInvite = asyncHandler(async (req, res) => {
   return sendSuccess(res, 201, 'Student account created successfully', {
     user: mapUserResponse(created, req),
     invite: inviteResult,
+    advisoryClass: subjectToResponse(advisoryClass),
+    enrollment,
   });
 });
 
