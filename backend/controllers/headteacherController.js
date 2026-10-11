@@ -33,6 +33,7 @@ const {
   findSectionById,
   getSectionOrThrow,
   syncTeacherAdvisoryAssignments,
+  ensureTeacherAdvisoryClass,
 } = require('../services/sectionService');
 const {
   createSupabaseAccount,
@@ -453,6 +454,9 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     department,
     subject,
   });
+  const advisorySection = advisorySectionId
+    ? await getSectionOrThrow(advisorySectionId)
+    : null;
 
   const created = await createSupabaseAccount({
     name: String(name).trim(),
@@ -462,7 +466,7 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     status: 'active',
     subject: scopedFields.subject,
     department: scopedFields.department,
-    advisorySectionId: advisorySectionId ? String(advisorySectionId).trim() : undefined,
+    advisorySectionId: advisorySection?._id,
     strand: '',
     gradeLevel: '',
     contactNumber: normalizeContactNumber(contactNumber),
@@ -474,6 +478,8 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
       usedAt: null,
     },
   });
+  await syncTeacherAdvisoryAssignments({ nextSectionId: created.advisorySectionId });
+  const advisoryClass = await ensureTeacherAdvisoryClass(created);
   const inviteResult = await issueInviteForUser({
     user: created,
     req,
@@ -482,6 +488,7 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
   return sendSuccess(res, 201, 'Teacher account created successfully', {
     user: mapUserResponse(created, req),
     invite: inviteResult,
+    advisoryClass,
   });
 });
 
@@ -628,9 +635,11 @@ const updateManagedTeacher = asyncHandler(async (req, res) => {
     previousSectionId: previousAdvisorySectionId,
     nextSectionId: teacher.advisorySectionId,
   });
+  const advisoryClass = await ensureTeacherAdvisoryClass(teacher);
 
   return sendSuccess(res, 200, 'Teacher updated successfully', {
     user: mapUserResponse(teacher, req),
+    advisoryClass,
   });
 });
 

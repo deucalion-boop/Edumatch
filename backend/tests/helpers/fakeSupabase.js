@@ -43,6 +43,11 @@ function createFakeSupabase(initialTables = {}) {
       },
       neq(field, value) { filters.push((row) => row[field] !== value); return query; },
       is(field, value) { filters.push((row) => row[field] === value); return query; },
+      not(field, operator, value) {
+        if (operator !== 'is') throw new Error(`Unsupported fixture negation: ${operator}`);
+        filters.push((row) => value === null ? row[field] != null : row[field] !== value);
+        return query;
+      },
       gt(field, value) { filters.push((row) => row[field] > value); return query; },
       contains(field, values) { filters.push(row => values.every(value => (row[field] || []).some(item => Object.entries(value).every(([key, expected]) => item[key] === expected)))); return query; },
       in(field, values) { filters.push((row) => values.includes(row[field])); return query; },

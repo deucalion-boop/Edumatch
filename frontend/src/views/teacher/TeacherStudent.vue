@@ -201,7 +201,7 @@
           <div class="class-management-header-copy">
             <span class="dashboard-panel-eyebrow">Teaching spaces</span>
             <h3 class="section-title">Class Management</h3>
-            <p class="class-list-subtitle">Create classes, share codes, and manage enrolled students.</p>
+            <p class="class-list-subtitle">Your advisory class is created automatically. Share its code or create additional classes.</p>
           </div>
           <div class="results-controls class-management-controls">
             <div class="tour-button-anchor" data-tour="students-invite-button">
@@ -224,9 +224,19 @@
           </div>
         </div>
 
-        <div v-if="subjects.length === 0" class="dashboard-empty-state">
+        <div v-if="isLoadingSubjects" class="dashboard-empty-state" role="status">
+          <span class="dashboard-empty-icon"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i></span>
+          <div><strong>Loading classes</strong><p>Preparing your advisory class.</p></div>
+        </div>
+
+        <div v-else-if="subjectsError" class="dashboard-empty-state" role="alert">
+          <span class="dashboard-empty-icon"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
+          <div><strong>Unable to load classes</strong><p>{{ subjectsError }}</p><button type="button" class="btn btn-outline btn-sm" @click="fetchSubjects">Retry</button></div>
+        </div>
+
+        <div v-else-if="subjects.length === 0" class="dashboard-empty-state">
           <span class="dashboard-empty-icon"><i class="fas fa-chalkboard"></i></span>
-          <div><strong>No classes yet</strong><p>Create your first class to generate a secure enrollment code.</p></div>
+          <div><strong>No classes available</strong><p>Your advisory class will appear here automatically.</p></div>
         </div>
 
         <div v-else class="subject-management-grid">
@@ -848,6 +858,8 @@ const {
   clearAllNotifications,
 } = useUserNotifications({ limit: 8, pollIntervalMs: 15000 })
 const subjects = ref([])
+const isLoadingSubjects = ref(false)
+const subjectsError = ref('')
 const students = ref([])
 const enrollmentRequests = ref([])
 const subjectActionsMenuId = ref('')
@@ -1247,6 +1259,8 @@ const fetchTeacherSections = async () => {
 }
 
 const fetchSubjects = async () => {
+  isLoadingSubjects.value = true
+  subjectsError.value = ''
   try {
     if (!authStore.token) {
       subjects.value = []
@@ -1276,7 +1290,14 @@ const fetchSubjects = async () => {
     }))
   } catch (error) {
     console.error('Failed to fetch subjects:', error)
-    subjects.value = []
+    const status = error.response?.status
+    subjectsError.value = status === 400
+      ? 'Your profile needs an assigned subject. Please contact your Head Teacher.'
+      : status === 404
+        ? 'Your assigned section is unavailable. Please contact your Head Teacher.'
+        : 'We could not load your classes. Please try again.'
+  } finally {
+    isLoadingSubjects.value = false
   }
 }
 
@@ -1974,7 +1995,7 @@ const refreshTeacherAssignmentState = async () => {
   try {
     const hasAssignmentChanged = await fetchTeacherSections()
     if (hasAssignmentChanged) {
-      await fetchStudents()
+      await Promise.allSettled([fetchSubjects(), fetchStudents()])
     }
   } catch (error) {
     console.error('Failed to refresh teacher assignment state:', error)

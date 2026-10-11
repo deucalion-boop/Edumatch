@@ -32,7 +32,7 @@ const { uploadFile, uploadFiles } = require('../services/storageService');
 const { ROLE_STUDENT } = require('../constants/userRoles');
 const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 const { normalizeContactNumber, issueInviteForUser, mapUserResponse } = require('../services/userManagementService');
-const { getSectionOrThrow } = require('../services/sectionService');
+const { getSectionOrThrow, ensureTeacherAdvisoryClass } = require('../services/sectionService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
 const {
@@ -1035,6 +1035,7 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
 });
 
 const getTeacherSubjects = asyncHandler(async (req, res) => {
+  await ensureTeacherAdvisoryClass(req.user, { allowDefault: true, onlyIfEmpty: true });
   const subjects = await syncTeacherSubjects(req.user._id);
   const counts = await getTeacherSubjectCounts(req.user._id);
 

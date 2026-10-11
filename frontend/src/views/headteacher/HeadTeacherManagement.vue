@@ -1729,14 +1729,15 @@ const persistTeacherAssignment = async (teacher, advisorySectionId) => {
   isUpdatingTeacherAssignment.value = true
   updatingTeacherAssignmentId.value = teacherId
   try {
-    await axios.put(`${resolveApiBaseUrl()}/headteacher/teachers/${encodeURIComponent(teacherId)}`, {
+    const response = await axios.put(`${resolveApiBaseUrl()}/headteacher/teachers/${encodeURIComponent(teacherId)}`, {
       status: teacher.status || 'active',
       subject: teacher.subject || departmentLabel.value,
       advisorySectionId: advisorySectionId || '',
     }, getAuthConfig())
 
+    const className = String(response.data?.advisoryClass?.className || '').trim()
     assignmentMessage.value = advisorySectionId
-      ? 'Advisory section assigned successfully.'
+      ? className ? `Advisory section assigned. Class "${className}" is ready.` : 'Advisory section assigned successfully.'
       : 'Advisory section cleared successfully.'
     assignmentMessageType.value = 'success'
 

@@ -15,6 +15,16 @@ function referenceId(value) {
   return String(value?._id || value?.id || value || '').trim();
 }
 
+function filterLiteralText(query, field, value) {
+  const pattern = value.replace(/[\\%_]/g, '\\$&').replace(/\*/g, '_');
+  query.ilike(field, pattern);
+  const starCount = (value.match(/\*/g) || []).length;
+  if (starCount) {
+    // PostgREST treats '*' as a wildcard, so require literal stars in its slots.
+    query.filter(field, 'match', `^([^*]*\\*){${starCount}}[^*]*$`);
+  }
+}
+
 function mapSubject(row) {
   if (!row) return null;
   return {
@@ -84,12 +94,13 @@ async function findSubjectByCode(code) {
   return mapSubject(data);
 }
 
-async function listTeacherSubjects(teacherId) {
+async function listTeacherSubjects(teacherId, { includeInactive = false } = {}) {
   const normalizedTeacherId = referenceId(teacherId);
   if (!normalizedTeacherId) return [];
-  const { data, error } = await getSupabaseStorageClient().from('subjects').select('*')
-    .eq('teacher_id', normalizedTeacherId).eq('is_active', true)
-    .order('name', { ascending: true }).order('created_at', { ascending: true });
+  let query = getSupabaseStorageClient().from('subjects').select('*')
+    .eq('teacher_id', normalizedTeacherId);
+  if (!includeInactive) query = query.eq('is_active', true);
+  const { data, error } = await query.order('name', { ascending: true }).order('created_at', { ascending: true });
   if (error) throw subjectError(error, 'Failed to list classes from Supabase');
   return (data || []).map(mapSubject);
 }
@@ -106,10 +117,11 @@ async function ensureTeacherSubject({ teacherId, name, track, subjectCategory = 
   }
 
   const client = getSupabaseStorageClient();
-  const { data: existing, error: findError } = await client.from('subjects').select('*')
-    .eq('teacher_id', normalizedTeacherId).ilike('name', normalizedName)
-    .ilike('track', normalizedTrack).ilike('class_name', normalizedClassName)
-    .limit(1).maybeSingle();
+  const query = client.from('subjects').select('*').eq('teacher_id', normalizedTeacherId);
+  filterLiteralText(query, 'name', normalizedName);
+  filterLiteralText(query, 'track', normalizedTrack);
+  filterLiteralText(query, 'class_name', normalizedClassName);
+  const { data: existing, error: findError } = await query.limit(1).maybeSingle();
   if (findError) throw subjectError(findError, 'Failed to check class in Supabase');
 
   const values = {

@@ -2,6 +2,8 @@ const { getSupabaseStorageClient } = require('./supabaseStorageService');
 const { findSupabaseAccount, listSupabaseAccounts } = require('./supabaseAccountService');
 const { DEFAULT_SECTION_NAMES, normalizeSectionName } = require('../constants/sections');
 const { ROLE_TEACHER, ROLE_STUDENT } = require('../constants/userRoles');
+const { normalizeStrand, getSubjectCategory } = require('../constants/strandSubjects');
+const { ensureTeacherSubject, listTeacherSubjects } = require('./subjectService');
 
 function normalizeSectionId(value) {
   return String(value?._id || value?.id || value || '').trim();
@@ -150,6 +152,52 @@ async function syncTeacherAdvisoryAssignments({ previousSectionId = '', nextSect
   await Promise.all(uniqueSectionIds.map(syncStudentsForSection));
 }
 
+async function ensureTeacherAdvisoryClass(teacher, { allowDefault = false, onlyIfEmpty = false } = {}) {
+  const teacherId = normalizeSectionId(teacher?._id || teacher?.id);
+  const sectionId = normalizeSectionId(teacher?.advisorySectionId);
+  if (!teacherId || (!sectionId && !allowDefault)) return null;
+  if (onlyIfEmpty && (await listTeacherSubjects(teacherId)).length) return null;
+
+  const subject = String(teacher.subject || teacher.department || '').trim();
+  if (!subject) {
+    const error = new Error('The selected teacher has no assigned subject');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const section = sectionId ? await getSectionOrThrow(sectionId) : null;
+  const track = normalizeStrand(teacher.strand) || 'GENERAL';
+  const className = `${subject} 10 - ${section?.name || 'Advisory'}`;
+  const findExistingClass = async () => {
+    const classes = await listTeacherSubjects(teacherId, { includeInactive: true });
+    return classes.find((entry) => (
+      entry.name.toLowerCase() === subject.toLowerCase()
+      && entry.track.toLowerCase() === track.toLowerCase()
+      && entry.className.toLowerCase() === className.toLowerCase()
+    ));
+  };
+  const existing = await findExistingClass();
+  if (existing?.isActive) return existing;
+
+  try {
+    return await ensureTeacherSubject({
+      teacherId,
+      name: subject,
+      track,
+      className,
+      subjectCategory: existing?.subjectCategory || getSubjectCategory(subject),
+      department: existing?.department || String(teacher.department || '').trim(),
+      description: existing?.description || '',
+    });
+  } catch (error) {
+    if (error.code === '23505') {
+      const concurrentClass = await findExistingClass();
+      if (concurrentClass?.isActive) return concurrentClass;
+    }
+    throw error;
+  }
+}
+
 async function listSectionsWithAdvisers() {
   await ensureDefaultSections();
 
@@ -203,6 +251,7 @@ module.exports = {
   syncStudentsForSection,
   syncStudentSectionAdviser,
   syncTeacherAdvisoryAssignments,
+  ensureTeacherAdvisoryClass,
   listSectionsWithAdvisers,
   normalizeSectionId,
 };
