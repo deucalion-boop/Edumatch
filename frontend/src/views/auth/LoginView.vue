@@ -24,13 +24,13 @@
         <div class="auth-card-container">
         <div class="auth-card">
           <div class="auth-card-header">
-            <span class="auth-card-badge">
-              <i class="fas" :class="isInviteMode ? 'fa-user-check' : 'fa-shield-alt'"></i>
-              {{ isInviteMode ? 'Account Activation' : 'Secure Sign In' }}
+            <span v-if="isInviteMode" class="auth-card-badge">
+              <i class="fas fa-user-check"></i>
+              Account Activation
             </span>
             <h1 class="auth-card-title">{{ isInviteMode ? 'Activate your account' : 'Sign In' }}</h1>
-            <p class="auth-card-subtitle">
-              {{ isInviteMode ? 'Create your password to complete setup and access EduMatch.' : 'Use your assigned EduMatch username and password to access your dashboard.' }}
+            <p v-if="isInviteMode" class="auth-card-subtitle">
+              Create your password to complete setup and access EduMatch.
             </p>
           </div>
 
@@ -142,6 +142,13 @@
               <div class="validation-message">{{ validation.otp }}</div>
             </div>
 
+            <div v-if="!otpRequired" class="auth-options">
+              <label class="remember-me">
+                <input type="checkbox" v-model="form.remember" />
+                <span>Keep me signed in on this device</span>
+              </label>
+            </div>
+
             <div class="auth-form-group captcha-group">
               <div class="auth-form-group-heading">
                 <label class="auth-form-label" for="captchaValidation">
@@ -151,13 +158,6 @@
               </div>
               <div ref="recaptchaContainer" class="recaptcha-widget"></div>
               <div v-if="captchaMessage" class="validation-message" id="captchaValidation">{{ captchaMessage }}</div>
-            </div>
-
-            <div v-if="!otpRequired" class="auth-options">
-              <label class="remember-me">
-                <input type="checkbox" v-model="form.remember" />
-                <span>Keep me signed in on this device</span>
-              </label>
             </div>
 
             <div class="auth-actions">
@@ -764,7 +764,7 @@ export default {
   @apply tw:[border-radius:12px];
   @apply tw:[background:rgba(248,_251,_243,_0.78)];
   @apply tw:[color:#4b5563];
-  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-size:0.75rem];
   @apply tw:[line-height:1.35];
 }
 
@@ -1011,7 +1011,7 @@ export default {
   @apply tw:[background:linear-gradient(135deg,_rgba(30,_67,_7,_0.12),_rgba(187,_255,_89,_0.24))];
   @apply tw:[border:1px_solid_rgba(30,_67,_7,_0.12)];
   @apply tw:[color:#1e4307];
-  @apply tw:[font-size:0.66rem];
+  @apply tw:[font-size:0.7rem];
   @apply tw:[font-weight:800];
   @apply tw:[letter-spacing:0.14em];
   @apply tw:uppercase;
@@ -1025,14 +1025,14 @@ export default {
   @apply tw:[background:none];
   @apply tw:[-webkit-text-fill-color:#111111];
   @apply tw:[color:#111111];
-  @apply tw:[font-size:clamp(1.35rem,_1.45vw,_1.65rem)];
+  @apply tw:[font-size:clamp(1.5rem,_1.6vw,_1.85rem)];
   @apply tw:[line-height:1.02];
   @apply tw:[letter-spacing:-0.04em];
 }
 
 .login-page .auth-card-subtitle {
   @apply tw:[color:#4b5563]!;
-  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-size:0.85rem];
   @apply tw:[line-height:1.35];
   @apply tw:[max-width:64ch];
 }
@@ -1061,7 +1061,7 @@ export default {
 .login-page .auth-form-section-label {
   @apply tw:[margin-bottom:0];
   @apply tw:[color:#3f7f2a];
-  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-size:0.75rem];
   @apply tw:[font-weight:800];
   @apply tw:[letter-spacing:0.14em];
   @apply tw:uppercase;
@@ -1073,7 +1073,7 @@ export default {
   @apply tw:[gap:0.4rem];
   @apply tw:[font-weight:700];
   @apply tw:[color:#111111];
-  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-size:0.82rem];
   @apply tw:[line-height:1.2];
   @apply tw:[margin-bottom:0.22rem];
 }
@@ -1090,7 +1090,7 @@ export default {
 .login-page .auth-form-helper {
   @apply tw:[margin-top:0.2rem];
   @apply tw:[color:#6b7280];
-  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-size:0.75rem];
   @apply tw:[line-height:1.25];
 }
 
@@ -1102,7 +1102,7 @@ export default {
   @apply tw:[font-weight:500];
   @apply tw:[padding-top:0.52rem];
   @apply tw:[padding-bottom:0.52rem];
-  @apply tw:[font-size:0.84rem];
+  @apply tw:[font-size:0.95rem];
 }
 
 .login-page .auth-form-input:focus {
@@ -1147,7 +1147,7 @@ export default {
 }
 
 .login-page .remember-me span {
-  @apply tw:[font-size:0.72rem];
+  @apply tw:[font-size:0.82rem];
   @apply tw:[line-height:1.25];
 }
 
@@ -1164,7 +1164,7 @@ export default {
   @apply tw:[background:linear-gradient(135deg,_#69aa47_0%,_#3f7f2a_100%)]!;
   @apply tw:[border:none]!;
   @apply tw:[box-shadow:0_16px_32px_rgba(63,_127,_42,_0.22)];
-  @apply tw:[font-size:0.82rem];
+  @apply tw:[font-size:0.95rem];
 }
 
 .login-page .auth-submit-btn:hover {
@@ -1185,7 +1185,7 @@ export default {
   @apply tw:w-full;
   @apply tw:text-center;
   @apply tw:[color:#6b7280];
-  @apply tw:[font-size:0.74rem];
+  @apply tw:[font-size:0.82rem];
 }
 
 .login-page .auth-copyright > p:not(.login-copyright-copy) {
@@ -1269,7 +1269,7 @@ export default {
 .login-design-copy {
   @apply tw:[max-width:34rem];
   @apply tw:[color:rgba(31,_20,_15,_0.8)];
-  @apply tw:[font-size:0.92rem];
+  @apply tw:[font-size:1rem];
   @apply tw:[line-height:1.6];
 }
 
@@ -1339,18 +1339,18 @@ export default {
   }
 
   .auth-card-title {
-    @apply tw:[font-size:1.3rem];
+    @apply tw:[font-size:1.45rem];
     @apply tw:[margin-bottom:0.45rem];
   }
 
   .auth-card-subtitle {
-    @apply tw:[font-size:0.9rem];
+    @apply tw:[font-size:0.95rem];
     @apply tw:[line-height:1.45];
   }
 
   .auth-form-input,
   .auth-submit-btn {
-    @apply tw:[font-size:0.9rem];
+    @apply tw:[font-size:1rem];
     @apply tw:[padding:0.68rem_0.85rem];
   }
 
@@ -1472,11 +1472,11 @@ export default {
   }
 
   .login-page .auth-card-title {
-    @apply tw:[font-size:1.25rem];
+    @apply tw:[font-size:1.35rem];
   }
 
   .login-page .auth-card-subtitle {
-    @apply tw:[font-size:0.72rem];
+    @apply tw:[font-size:0.85rem];
   }
 
   .login-page .captcha-group {

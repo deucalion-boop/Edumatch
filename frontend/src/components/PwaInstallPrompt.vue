@@ -16,6 +16,10 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 const installEvent = ref(null)
+let fallbackTimerId = null
+
+// beforeinstallprompt is Chromium-only; Firefox/Safari never fire it.
+const isPromptSupported = typeof window !== 'undefined' && 'onbeforeinstallprompt' in window
 
 const isStandalone = () =>
   window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
@@ -27,18 +31,27 @@ const onInstallAvailable = (event) => {
   }
 }
 
+const showFallbackHint = () => {
+  if (isStandalone() || sessionStorage.getItem('edumatch_install_dismissed') === 'true') return
+  fallbackTimerId = window.setTimeout(() => {
+    if (!installEvent.value) installEvent.value = { fallback: true }
+  }, 1500)
+}
+
 const onInstalled = () => {
   installEvent.value = null
   sessionStorage.removeItem('edumatch_install_dismissed')
 }
 
 const install = async () => {
-  if (!installEvent.value) return
-
   const promptEvent = installEvent.value
+  if (!promptEvent) return
+
   installEvent.value = null
-  await promptEvent.prompt()
-  await promptEvent.userChoice
+  if (typeof promptEvent.prompt === 'function') {
+    await promptEvent.prompt()
+    await promptEvent.userChoice
+  }
 }
 
 const dismiss = () => {
@@ -47,12 +60,19 @@ const dismiss = () => {
 }
 
 onMounted(() => {
-  window.addEventListener('beforeinstallprompt', onInstallAvailable)
+  if (isPromptSupported) {
+    window.addEventListener('beforeinstallprompt', onInstallAvailable)
+  } else {
+    showFallbackHint()
+  }
   window.addEventListener('appinstalled', onInstalled)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('beforeinstallprompt', onInstallAvailable)
+  if (fallbackTimerId !== null) window.clearTimeout(fallbackTimerId)
+  if (isPromptSupported) {
+    window.removeEventListener('beforeinstallprompt', onInstallAvailable)
+  }
   window.removeEventListener('appinstalled', onInstalled)
 })
 </script>
