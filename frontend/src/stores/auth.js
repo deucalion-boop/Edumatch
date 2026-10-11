@@ -350,13 +350,12 @@ export function useAuthStore() {
     }
   }
 
-  const verifyLoginOtp = async ({ challengeToken, otpCode, captchaToken, remember = false, username = '' }) => {
+  const verifyLoginOtp = async ({ challengeToken, otpCode, remember = false, username = '' }) => {
     clearAlerts()
     try {
       const response = await axios.post(`${resolveApiBaseUrl()}/auth/login/verify-otp`, {
         challengeToken,
         otpCode,
-        captchaToken,
       })
       const responseData = response.data || {}
       const normalizedRole = String(responseData.user?.role || '').toLowerCase().trim()

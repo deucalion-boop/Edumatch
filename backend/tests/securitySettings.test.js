@@ -236,7 +236,7 @@ test('forced password change allows account security actions but rejects unrelat
 function loginFixture(t, settingsValue = {}) {
   process.env.RECAPTCHA_SECRET_KEY = 'test-recaptcha-key';
   process.env.RECAPTCHA_ALLOWED_HOSTNAMES = 'localhost';
-  t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({ success: true, hostname: 'localhost' }) }));
+  const captchaVerification = t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({ success: true, hostname: 'localhost' }) }));
   const settings = settingsFixture(settingsValue);
   const events = [];
   const user = {
@@ -263,7 +263,7 @@ function loginFixture(t, settingsValue = {}) {
       consumeOpenChallenges: async (...args) => { events.push(['consume', ...args]); },
       createChallenge: async (payload) => { events.push(['otp', payload]); },
       recordLoginAttempt: async (payload) => { events.push(['attempt', payload]); },
-      findActiveChallenge: async () => challenge,
+      findActiveChallenge: async () => !challenge.consumedAt && new Date(challenge.expiresAt).getTime() > Date.now() ? challenge : null,
       findOpenChallenge: async () => challenge,
     },
     '../services/gmailService': { sendEmailViaGmail: async () => { events.push(['email']); return { sent: true }; } },
@@ -274,7 +274,7 @@ function loginFixture(t, settingsValue = {}) {
     body: { username: 'student', password, captchaToken: 'verified-test-captcha' },
     headers: {}, ip: '127.0.0.1',
   });
-  return { ...settings, controller, events, user, challenge, request };
+  return { ...settings, controller, events, user, challenge, request, captchaVerification };
 }
 
 test('an expired login OTP can be resent after cooldown without creating a session', async (t) => {
@@ -502,7 +502,7 @@ test('saved maintenance policy blocks both password and OTP login completion', a
   assert.equal(loginResult.failure.statusCode, 503);
   assert.equal(loginResult.failure.message, 'Scheduled downtime');
   const otpResult = await callController(fixture.controller.verifyLoginOtp, {
-    ...fixture.request(), body: { challengeToken: 'challenge', otpCode: '123456', captchaToken: 'verified-test-captcha' },
+    ...fixture.request(), body: { challengeToken: 'challenge', otpCode: '123456' },
   });
   assert.equal(otpResult.failure.statusCode, 503);
   assert.equal(fixture.events.some(([name]) => name === 'session'), false);
@@ -546,7 +546,7 @@ test('admin settings endpoints write Supabase settings and revoke non-admin sess
 test('disabling OTP does not let a pending verification challenge bypass its actual code', async (t) => {
   const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
   const request = (otpCode) => ({
-    ...fixture.request(), body: { challengeToken: 'challenge', otpCode, captchaToken: 'verified-test-captcha' },
+    ...fixture.request(), body: { challengeToken: 'challenge', otpCode },
   });
   assert.equal((await callController(fixture.controller.verifyLoginOtp, request(''))).failure.statusCode, 400);
   assert.equal((await callController(fixture.controller.verifyLoginOtp, request('000000'))).failure.statusCode, 401);
@@ -566,14 +566,42 @@ test('sample admin email cannot bypass Gmail verification', async (t) => {
   assert.equal(fixture.events.some(([name]) => name === 'session'), false);
 });
 
-test('only a correct email code completes login and creates a session', async (t) => {
+test('a correct email code completes login without CAPTCHA and cannot be reused', async (t) => {
   const fixture = loginFixture(t);
-  const request = (otpCode) => ({ ...fixture.request(), body: { challengeToken: 'challenge', otpCode, captchaToken: 'verified-test-captcha' } });
+  const request = (otpCode) => ({ ...fixture.request(), body: { challengeToken: 'challenge', otpCode } });
   const wrong = await callController(fixture.controller.verifyLoginOtp, request('000000'));
   assert.equal(wrong.failure.statusCode, 401);
+  assert.equal(fixture.challenge.failedAttempts, 1);
   assert.equal(fixture.events.some(([name]) => name === 'session'), false);
   const correct = await callController(fixture.controller.verifyLoginOtp, request('123456'));
   assert.equal(correct.failure, undefined);
   assert.equal(correct.response.statusCode, 200);
   assert.equal(typeof correct.response.body.token, 'string');
+  assert.equal(fixture.captchaVerification.mock.callCount(), 0);
+  const reused = await callController(fixture.controller.verifyLoginOtp, request('123456'));
+  assert.equal(reused.failure.statusCode, 400);
+  assert.equal(fixture.events.filter(([name]) => name === 'session').length, 1);
+});
+
+test('OTP verification without CAPTCHA still rejects expired and exhausted challenges', async (t) => {
+  const fixture = loginFixture(t);
+  const request = { ...fixture.request(), body: { challengeToken: 'challenge', otpCode: '123456' } };
+  fixture.challenge.expiresAt = new Date(Date.now() - 1000).toISOString();
+  assert.equal((await callController(fixture.controller.verifyLoginOtp, request)).failure.statusCode, 400);
+  fixture.challenge.expiresAt = new Date(Date.now() + 60000).toISOString();
+  fixture.challenge.failedAttempts = 5;
+  assert.equal((await callController(fixture.controller.verifyLoginOtp, request)).failure.statusCode, 400);
+  assert.equal(fixture.events.some(([name]) => name === 'session'), false);
+  assert.equal(fixture.captchaVerification.mock.callCount(), 0);
+});
+
+test('OTP verification without CAPTCHA still rejects accounts that are no longer active', async (t) => {
+  const fixture = loginFixture(t);
+  const request = { ...fixture.request(), body: { challengeToken: 'challenge', otpCode: '123456' } };
+  for (const status of ['pending', 'inactive', 'suspended']) {
+    fixture.user.status = status;
+    assert.equal((await callController(fixture.controller.verifyLoginOtp, request)).failure.statusCode, 403);
+  }
+  assert.equal(fixture.events.some(([name]) => name === 'session'), false);
+  assert.equal(fixture.captchaVerification.mock.callCount(), 0);
 });

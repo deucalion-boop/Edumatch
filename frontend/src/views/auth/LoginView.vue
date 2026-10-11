@@ -156,7 +156,7 @@
               </label>
             </div>
 
-            <div class="auth-form-group captcha-group">
+            <div v-if="!otpRequired" class="auth-form-group captcha-group">
               <div class="auth-form-group-heading">
                 <label class="auth-form-label" for="captchaValidation">
                   <i class="fas fa-shield-alt"></i> Security verification
@@ -429,18 +429,23 @@ export default {
       captchaToken.value = ''
       validation.captcha = ''
       if (typeof window === 'undefined') return
+      if (!recaptchaContainer.value?.isConnected) return
       if (!window.grecaptcha || recaptchaWidgetId.value === null) return
       window.grecaptcha.reset(recaptchaWidgetId.value)
     }
 
     const renderRecaptchaWidget = async () => {
-      if (isInviteMode.value) return
+      if (isInviteMode.value || otpRequired.value) return
       await nextTick()
-      if (!recaptchaContainer.value) return
+      const container = recaptchaContainer.value
+      if (!container) return
+      const isActiveContainer = () => !isInviteMode.value && !otpRequired.value &&
+        recaptchaContainer.value === container && container.isConnected
 
       try {
         captchaLoadError.value = ''
         const grecaptcha = await ensureRecaptchaScript()
+        if (!isActiveContainer()) return
         if (!grecaptcha) {
           throw new Error('reCAPTCHA is unavailable')
         }
@@ -450,23 +455,27 @@ export default {
           return
         }
 
-        recaptchaContainer.value.innerHTML = ''
-        recaptchaWidgetId.value = grecaptcha.render(recaptchaContainer.value, {
+        container.innerHTML = ''
+        recaptchaWidgetId.value = grecaptcha.render(container, {
           sitekey: RECAPTCHA_SITE_KEY,
           callback: (token) => {
+            if (!isActiveContainer()) return
             captchaToken.value = String(token || '').trim()
             validation.captcha = ''
             captchaLoadError.value = ''
           },
           'expired-callback': () => {
+            if (!isActiveContainer()) return
             captchaToken.value = ''
           },
           'error-callback': () => {
+            if (!isActiveContainer()) return
             captchaToken.value = ''
             captchaLoadError.value = 'CAPTCHA could not load. Check the site key and allowed domain.'
           },
         })
       } catch (error) {
+        if (!isActiveContainer()) return
         console.error('reCAPTCHA render failed:', error)
         captchaLoadError.value = 'CAPTCHA could not load. Check the site key and allowed domain.'
       }
@@ -511,7 +520,7 @@ export default {
       if (!otpRequired.value && (validation.username || validation.password)) {
         return
       }
-      if (!captchaToken.value) {
+      if (!otpRequired.value && !captchaToken.value) {
         validation.captcha = 'Please verify that you are not a robot'
         return
       }
@@ -532,7 +541,6 @@ export default {
           ? await authStore.verifyLoginOtp({
               challengeToken: otpChallengeToken.value,
               otpCode: form.otpCode,
-              captchaToken: captchaToken.value,
               remember: form.remember,
               username: form.username,
             })
@@ -549,7 +557,6 @@ export default {
           otpDeliveryHint.value = result.deliveryHint || ''
           form.otpCode = ''
           startOtpCountdown(result.expiresAt, result.resendAvailableAt)
-          resetCaptcha()
           return
         }
         
@@ -557,7 +564,7 @@ export default {
         router.push(redirectPath)
       } catch (err) {
         console.error('Login failed:', err)
-        resetCaptcha()
+        if (!otpRequired.value) resetCaptcha()
       } finally {
         isLoading.value = false
       }
@@ -592,7 +599,6 @@ export default {
       validation.password = ''
       validation.otp = ''
       authStore.clearAlerts()
-      resetCaptcha()
     }
 
     const loadInvite = async () => {
@@ -663,14 +669,18 @@ export default {
     })
 
     watch(
-      () => isInviteMode.value,
-      async (inviteMode) => {
-        if (inviteMode) {
-          resetCaptcha()
+      () => !isInviteMode.value && !otpRequired.value,
+      async (showCaptcha) => {
+        if (!showCaptcha) {
+          captchaToken.value = ''
+          validation.captcha = ''
+          captchaLoadError.value = ''
+          recaptchaWidgetId.value = null
           return
         }
         await renderRecaptchaWidget()
-      }
+      },
+      { flush: 'post' }
     )
 
     onBeforeUnmount(() => {
