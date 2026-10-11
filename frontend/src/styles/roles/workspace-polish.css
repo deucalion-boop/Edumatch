@@ -1,0 +1,198 @@
+@reference "../tailwind.css";
+
+body:is(.headteacher-dashboard, .teacher-dashboard, .student-dashboard) {
+  --workspace-canvas: #f4f7fb;
+  --workspace-surface: #ffffff;
+  --workspace-text: #172033;
+  --workspace-muted: #66758a;
+  --workspace-border: #e4eaf1;
+  --workspace-accent: #16836f;
+  --workspace-accent-strong: #106957;
+  --workspace-accent-soft: #e8f5f1;
+  --workspace-shadow: 0 12px 30px rgba(27, 43, 65, 0.065);
+  @apply tw:[color:var(--workspace-text)];
+  @apply tw:[font-family:Inter,_ui-sans-serif,_system-ui,_-apple-system,_BlinkMacSystemFont,_'Segoe_UI',_sans-serif];
+}
+
+body:is(.headteacher-dashboard, .teacher-dashboard, .student-dashboard) :is(h1, h2, h3, h4, h5, h6) {
+  @apply tw:[color:var(--workspace-text)];
+  @apply tw:[font-family:inherit];
+  @apply tw:[letter-spacing:-0.025em];
+}
+
+body:is(.headteacher-dashboard, .teacher-dashboard, .student-dashboard) :is(button, a, input, select, textarea) {
+  @apply tw:[transition:color_180ms_ease,_background-color_180ms_ease,_border-color_180ms_ease,_box-shadow_180ms_ease,_transform_180ms_ease];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-dashboard, .student-dashboard) {
+  @apply tw:[background:var(--workspace-canvas)];
+  @apply tw:[color:var(--workspace-text)];
+}
+
+body.teacher-dashboard .teacher-sidebar,
+body.student-dashboard .student-sidebar,
+body.headteacher-dashboard .headteacher-sidebar {
+  @apply tw:[background:var(--workspace-surface)];
+  @apply tw:[border-color:var(--workspace-border)];
+  @apply tw:[box-shadow:8px_0_28px_rgba(27,_43,_65,_0.055)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.sidebar-header, .sidebar-footer) {
+  @apply tw:[border-color:var(--workspace-border)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-logo-text h2, .student-logo-text h2) {
+  @apply tw:[font-weight:750];
+  @apply tw:[letter-spacing:-0.04em];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-logo-text p, .student-logo-text p, .nav-section-title) {
+  @apply tw:[color:var(--workspace-muted)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-sidebar .nav-link, .student-sidebar .nav-link) {
+  @apply tw:[border-radius:13px];
+  @apply tw:[color:#526176];
+  @apply tw:[font-weight:600];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-sidebar .nav-link, .student-sidebar .nav-link):hover {
+  @apply tw:[background:#f1f7f5];
+  @apply tw:[color:var(--workspace-accent-strong)];
+  @apply tw:[transform:translateX(2px)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-sidebar .nav-link.active, .student-sidebar .nav-link.active) {
+  @apply tw:[background:var(--workspace-accent-soft)];
+  @apply tw:[color:var(--workspace-accent-strong)];
+  @apply tw:[box-shadow:inset_3px_0_0_var(--workspace-accent)];
+}
+
+body.headteacher-dashboard .headteacher-nav-link {
+  @apply tw:[border-radius:13px];
+  @apply tw:[color:#526176];
+  @apply tw:[font-weight:600];
+}
+
+body.headteacher-dashboard .headteacher-nav-link:hover {
+  @apply tw:[background:#f1f7f5];
+  @apply tw:[color:var(--workspace-accent-strong)];
+  @apply tw:[transform:translateX(2px)];
+}
+
+body.headteacher-dashboard .headteacher-nav-link:is(.active, .router-link-active) {
+  @apply tw:[background:var(--workspace-accent-soft)];
+  @apply tw:[color:var(--workspace-accent-strong)];
+}
+
+body.headteacher-dashboard .headteacher-nav-link:is(.active, .router-link-active)::before {
+  @apply tw:[background:var(--workspace-accent)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-main, .student-main),
+body.headteacher-dashboard .headteacher-main {
+  @apply tw:[background:var(--workspace-canvas)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-main .top-header, .student-main .top-header),
+body.headteacher-dashboard .headteacher-top-header {
+  @apply tw:[border:1px_solid_rgba(228,_234,_241,_0.9)];
+  @apply tw:[border-radius:20px];
+  @apply tw:[background:rgba(255,_255,_255,_0.94)];
+  @apply tw:[box-shadow:0_8px_24px_rgba(27,_43,_65,_0.045)];
+  @apply tw:[backdrop-filter:blur(14px)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.header-subtitle, .teacher-main .header-subtitle, .student-main .header-subtitle),
+body.headteacher-dashboard .headteacher-header-subtitle {
+  @apply tw:[color:var(--workspace-muted)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.notification-bell, .header-tour-btn, .mobile-menu-toggle),
+body.headteacher-dashboard :is(.headteacher-mobile-menu-toggle, .headteacher-header-settings-button) {
+  @apply tw:[border-color:var(--workspace-border)];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:var(--workspace-surface)];
+  @apply tw:[color:#526176];
+  @apply tw:[box-shadow:0_3px_10px_rgba(27,_43,_65,_0.04)];
+}
+
+body:is(.teacher-dashboard, .student-dashboard) :is(.notification-bell, .header-tour-btn, .mobile-menu-toggle):hover,
+body.headteacher-dashboard :is(.headteacher-mobile-menu-toggle, .headteacher-header-settings-button):hover {
+  @apply tw:[border-color:#b9d9d0];
+  @apply tw:[background:#f1f8f6];
+  @apply tw:[color:var(--workspace-accent-strong)];
+  @apply tw:[transform:translateY(-1px)];
+}
+
+body.teacher-dashboard .teacher-main :is(.section-card, .stat-card, .activity-card, .content-card),
+body.student-dashboard .student-dashboard:not(.student-theme-dark) .student-main :is(.section-card, .stat-card, .activity-card, .content-card, .premium-panel, .premium-summary-card),
+body.headteacher-dashboard .headteacher-main :is(.headteacher-section-card, .headteacher-stat-card, .headteacher-attention-row) {
+  @apply tw:[border:1px_solid_var(--workspace-border)];
+  @apply tw:[border-radius:18px];
+  @apply tw:[background:var(--workspace-surface)];
+  @apply tw:[box-shadow:var(--workspace-shadow)];
+}
+
+body.teacher-dashboard .teacher-main :is(.section-card, .stat-card, .activity-card, .content-card),
+body.student-dashboard .student-dashboard:not(.student-theme-dark) .student-main :is(.section-card, .stat-card, .activity-card, .content-card, .premium-panel, .premium-summary-card),
+body.headteacher-dashboard .headteacher-main :is(.headteacher-section-card, .headteacher-stat-card) {
+  @apply tw:[transition:border-color_180ms_ease,_box-shadow_180ms_ease,_transform_180ms_ease];
+}
+
+body.teacher-dashboard .teacher-main :is(.section-card, .stat-card, .activity-card, .content-card):hover,
+body.student-dashboard .student-dashboard:not(.student-theme-dark) .student-main :is(.section-card, .stat-card, .activity-card, .content-card, .premium-panel, .premium-summary-card):hover,
+body.headteacher-dashboard .headteacher-main :is(.headteacher-section-card, .headteacher-stat-card):hover {
+  @apply tw:[border-color:#d4e4df];
+  @apply tw:[box-shadow:0_16px_34px_rgba(27,_43,_65,_0.09)];
+  @apply tw:[transform:translateY(-2px)];
+}
+
+body.headteacher-dashboard .headteacher-stat-icon,
+body.headteacher-dashboard .headteacher-stat-card .headteacher-stat-icon {
+  @apply tw:[border-radius:14px];
+}
+
+body:is(.headteacher-dashboard, .teacher-dashboard, .student-dashboard) :is(button, a, input, select, textarea):focus-visible {
+  @apply tw:[outline:3px_solid_rgba(22,_131,_111,_0.28)];
+  @apply tw:[outline-offset:3px];
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark {
+  --workspace-canvas: #111a15;
+  --workspace-surface: #162019;
+  --workspace-text: #f1f5f2;
+  --workspace-muted: #aebdb2;
+  --workspace-border: #34483b;
+  --workspace-accent: #8cc579;
+  --workspace-accent-strong: #b9dfa5;
+  --workspace-accent-soft: #203127;
+}
+
+body.student-dashboard .student-dashboard.student-theme-dark .student-main {
+  @apply tw:[background:var(--workspace-canvas)];
+}
+
+@media (max-width: 760px) {
+  body:is(.teacher-dashboard, .student-dashboard) :is(.teacher-main .top-header, .student-main .top-header),
+  body.headteacher-dashboard .headteacher-top-header {
+    @apply tw:[border-radius:16px];
+  }
+
+  body.teacher-dashboard .teacher-main :is(.section-card, .stat-card, .activity-card, .content-card),
+  body.student-dashboard .student-dashboard:not(.student-theme-dark) .student-main :is(.section-card, .stat-card, .activity-card, .content-card, .premium-panel, .premium-summary-card),
+  body.headteacher-dashboard .headteacher-main :is(.headteacher-section-card, .headteacher-stat-card, .headteacher-attention-row) {
+    @apply tw:[border-radius:15px];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:is(.headteacher-dashboard, .teacher-dashboard, .student-dashboard) *,
+  body:is(.headteacher-dashboard, .teacher-dashboard, .student-dashboard) *::before,
+  body:is(.headteacher-dashboard, .teacher-dashboard, .student-dashboard) *::after {
+    @apply tw:[scroll-behavior:auto]!;
+    @apply tw:[transition-duration:0.01ms]!;
+    @apply tw:[animation-duration:0.01ms]!;
+    @apply tw:[animation-iteration-count:1]!;
+  }
+}
