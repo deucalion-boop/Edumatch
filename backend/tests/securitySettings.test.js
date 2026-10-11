@@ -95,13 +95,44 @@ test('settings default safely, persist all policies and preserve unrelated metad
   }, 'admin');
   await service.saveAppSettings({ security: { sessionTimeoutMinutes: 10, maxLoginAttempts: 3 } }, 'admin');
   const saved = await service.getAppSettings();
-  assert.equal(saved.user.emailVerificationRequired, true);
+  assert.equal(saved.user.emailVerificationRequired, false);
   assert.equal(saved.security.sessionTimeoutMinutes, 10);
   assert.equal(saved.security.maxLoginAttempts, 3);
   assert.equal(saved.security.accountLockoutDurationMinutes, 30);
   assert.equal(saved.maintenance.maintenanceModeEnabled, true);
   assert.equal(saved.maintenance.lastBackupFileName, 'backup.json');
   assert.equal(saved.updatedBy, 'admin');
+});
+
+test('email OTP can be switched off and back on without losing security policies', async () => {
+  const { state, service } = settingsFixture({ security: { maxLoginAttempts: 4 } });
+  const disabled = await service.saveAppSettings({ user: { emailVerificationRequired: false } }, 'admin');
+  assert.equal(disabled.user.emailVerificationRequired, false);
+  assert.equal(state.row.value.user.emailVerificationRequired, false);
+  const enabled = await service.saveAppSettings({ user: { emailVerificationRequired: true } }, 'admin');
+  assert.equal(enabled.user.emailVerificationRequired, true);
+  assert.equal(state.row.value.user.emailVerificationRequired, true);
+  assert.equal(enabled.security.maxLoginAttempts, 4);
+});
+
+test('only an explicit saved false disables OTP; absent and malformed policies remain enabled', async () => {
+  for (const value of [undefined, null, 0, '', 'false', {}, []]) {
+    const { service } = settingsFixture({ user: { emailVerificationRequired: value } });
+    assert.equal((await service.getAppSettings()).user.emailVerificationRequired, true);
+    assert.equal((await service.saveAppSettings({ user: { emailVerificationRequired: value } }, 'admin')).user.emailVerificationRequired, true);
+  }
+});
+
+test('a concurrent OTP policy change survives an unrelated settings save', async () => {
+  const { state, service } = settingsFixture({ user: { emailVerificationRequired: true } });
+  state.conflict = {
+    key: 'global', updated_at: '2025-01-02T00:00:00.000Z',
+    value: { user: { emailVerificationRequired: false }, maintenance: { maintenanceModeEnabled: true } },
+  };
+  const saved = await service.saveAppSettings({ security: { sessionTimeoutMinutes: 10 } }, 'admin');
+  assert.equal(saved.user.emailVerificationRequired, false);
+  assert.equal(saved.maintenance.maintenanceModeEnabled, true);
+  assert.equal(saved.security.sessionTimeoutMinutes, 10);
 });
 
 test('partial settings save retries a concurrent maintenance change without overwriting it', async () => {
@@ -217,7 +248,7 @@ function loginFixture(t, settingsValue = {}) {
   const challenge = {
     userId: user._id, otpHash: 'test-otp-hash', remember: false, failedAttempts: 0,
     createdAt: new Date(Date.now() - 60000).toISOString(),
-    expiresAt: new Date(Date.now() - 1000).toISOString(),
+    expiresAt: new Date(Date.now() + 60000).toISOString(),
     save: async () => {},
   };
   const controller = loadModule('controllers/authController.js', {
@@ -229,7 +260,7 @@ function loginFixture(t, settingsValue = {}) {
     '../services/supabaseAuthPersistenceService': {
       sessionExists: async () => false,
       createSession: async (payload) => { events.push(['session', payload]); },
-      consumeOpenChallenges: async () => {},
+      consumeOpenChallenges: async (...args) => { events.push(['consume', ...args]); },
       createChallenge: async (payload) => { events.push(['otp', payload]); },
       recordLoginAttempt: async (payload) => { events.push(['attempt', payload]); },
       findActiveChallenge: async () => challenge,
@@ -248,6 +279,7 @@ function loginFixture(t, settingsValue = {}) {
 
 test('an expired login OTP can be resent after cooldown without creating a session', async (t) => {
   const fixture = loginFixture(t);
+  fixture.challenge.expiresAt = new Date(Date.now() - 1000).toISOString();
   const result = await callController(fixture.controller.resendLoginOtp, {
     ...fixture.request(), body: { challengeToken: 'a'.repeat(64) },
   });
@@ -282,7 +314,7 @@ test('login honors saved lockout threshold and duration', async (t) => {
   assert.equal(fixture.events.some(([name]) => name === 'session'), false);
 });
 
-test('login always requires OTP even when settings request disabling verification', async (t) => {
+test('the saved OTP policy applies immediately to later logins when switched off and back on', async (t) => {
   const fixture = loginFixture(t);
   const otp = await callController(fixture.controller.login, fixture.request());
   assert.equal(otp.failure, undefined);
@@ -292,9 +324,176 @@ test('login always requires OTP even when settings request disabling verificatio
   await fixture.service.saveAppSettings({ user: { emailVerificationRequired: false } }, 'admin');
   const direct = await callController(fixture.controller.login, fixture.request());
   assert.equal(direct.failure, undefined);
-  assert.equal(direct.response.statusCode, 202);
-  assert.equal(direct.response.body.token, undefined);
-  assert.equal(fixture.events.filter(([name]) => name === 'session').length, 0);
+  assert.equal(direct.response.statusCode, 200);
+  assert.equal(direct.response.body.requiresOtp, false);
+  assert.equal(typeof direct.response.body.token, 'string');
+  assert.equal(fixture.events.filter(([name]) => name === 'session').length, 1);
+  await fixture.service.saveAppSettings({ user: { emailVerificationRequired: true } }, 'admin');
+  const restored = await callController(fixture.controller.login, fixture.request());
+  assert.equal(restored.failure, undefined);
+  assert.equal(restored.response.statusCode, 202);
+  assert.equal(restored.response.body.requiresOtp, true);
+  assert.equal(restored.response.body.token, undefined);
+  assert.equal(fixture.events.filter(([name]) => name === 'session').length, 1);
+});
+
+test('OTP-off login creates an authenticated normal session, clears challenges and records successful activity', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  fixture.user.failedLoginAttempts = 2;
+  fixture.user.lockUntil = new Date(Date.now() - 60000);
+  fixture.user.tokenVersion = 3;
+  const req = fixture.request();
+  req.headers['user-agent'] = 'test-browser';
+  const startedAt = Date.now();
+  const result = await callController(fixture.controller.login, req);
+  assert.equal(result.failure, undefined);
+  assert.equal(result.response.statusCode, 200);
+  assert.equal(result.response.body.requiresOtp, false);
+  assert.equal(result.response.body.challengeToken, undefined);
+  assert.equal(result.response.body.deliveryHint, undefined);
+  assert.equal(result.response.body.user.id, fixture.user._id);
+  assert.equal(result.response.body.user.forcePasswordChange, false);
+  assert.equal(result.response.body.user.password, undefined);
+  assert.equal(fixture.user.failedLoginAttempts, 0);
+  assert.equal(fixture.user.lockUntil, null);
+  assert.ok(fixture.user.lastLoginAt instanceof Date);
+  assert.equal(fixture.user.lastActivityAt.getTime(), fixture.user.lastLoginAt.getTime());
+  assert.ok(fixture.user.lastLoginAt.getTime() >= startedAt);
+  assert.deepEqual(fixture.events.find(([name]) => name === 'consume'), ['consume', 'student-1']);
+  const sessions = fixture.events.filter(([name]) => name === 'session');
+  assert.equal(sessions.length, 1);
+  const session = sessions[0][1];
+  assert.equal(session.userId, 'student-1');
+  assert.equal(session.remember, false);
+  assert.equal(session.userAgent, 'test-browser');
+  assert.equal(session.ipAddress, '127.0.0.1');
+  assert.ok(session.expiresAt.getTime() - startedAt >= 24 * 60 * 60 * 1000);
+  const claims = jwt.verify(result.response.body.token, process.env.JWT_SECRET, {
+    algorithms: ['HS256'], issuer: 'edumatch-api', audience: 'edumatch-web',
+  });
+  assert.equal(claims.id, 'student-1');
+  assert.equal(claims.jti, session.tokenId);
+  assert.equal(claims.tokenVersion, 3);
+  assert.equal(claims.remember, false);
+  assert.equal(claims.exp - claims.iat, 24 * 60 * 60);
+  const attempts = fixture.events.filter(([name]) => name === 'attempt');
+  assert.equal(attempts.length, 1);
+  assert.equal(attempts[0][1].outcome, 'success');
+  assert.equal(attempts[0][1].userId, 'student-1');
+  assert.equal(req.auditLogContext.actorUserId, 'student-1');
+  assert.equal(fixture.events.some(([name]) => name === 'otp' || name === 'email'), false);
+});
+
+test('OTP-off login preserves remember-me lifetime and the mandatory password-change redirect', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  fixture.user.forcePasswordChange = true;
+  fixture.user.temporaryPasswordIssuedAt = '2025-01-01T00:00:00.000Z';
+  const req = fixture.request();
+  req.body.remember = 'true';
+  const result = await callController(fixture.controller.login, req);
+  assert.equal(result.failure, undefined);
+  assert.equal(result.response.statusCode, 200);
+  assert.equal(result.response.body.redirectPath, '/auth/change-password');
+  assert.equal(result.response.body.user.forcePasswordChange, true);
+  assert.equal(result.response.body.user.temporaryPasswordIssuedAt, fixture.user.temporaryPasswordIssuedAt);
+  assert.equal(fixture.user.forcePasswordChange, true);
+  const claims = jwt.verify(result.response.body.token, process.env.JWT_SECRET);
+  assert.equal(claims.remember, true);
+  assert.equal(claims.exp - claims.iat, 30 * 24 * 60 * 60);
+  assert.equal(fixture.events.find(([name]) => name === 'session')[1].remember, true);
+});
+
+test('client-supplied OTP flags cannot bypass the enabled server policy', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: true } });
+  const req = fixture.request();
+  Object.assign(req.body, { emailVerificationRequired: false, requiresOtp: false, skipOtp: true });
+  const result = await callController(fixture.controller.login, req);
+  assert.equal(result.failure, undefined);
+  assert.equal(result.response.statusCode, 202);
+  assert.equal(result.response.body.requiresOtp, true);
+  assert.equal(result.response.body.token, undefined);
+  assert.equal(fixture.events.filter(([name]) => name === 'otp').length, 1);
+  assert.equal(fixture.events.some(([name]) => name === 'session'), false);
+});
+
+test('OTP-off login still rejects incorrect passwords and enforces the configured lockout', async (t) => {
+  const fixture = loginFixture(t, {
+    user: { emailVerificationRequired: false },
+    security: { maxLoginAttempts: 3, accountLockoutDurationMinutes: 2 },
+  });
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    assert.equal((await callController(fixture.controller.login, fixture.request('wrong'))).failure.statusCode, 401);
+  }
+  assert.equal((await callController(fixture.controller.login, fixture.request())).failure.statusCode, 423);
+  assert.equal(fixture.events.some(([name]) => name === 'session' || name === 'otp'), false);
+  assert.equal(fixture.user.lastLoginAt, undefined);
+});
+
+test('OTP-off login still requires a verified CAPTCHA', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  const req = fixture.request();
+  delete req.body.captchaToken;
+  assert.equal((await callController(fixture.controller.login, req)).failure.statusCode, 400);
+  assert.equal(fixture.events.some(([name]) => name === 'session' || name === 'otp'), false);
+  assert.equal(fixture.user.lastLoginAt, undefined);
+});
+
+test('OTP-off login still rejects pending, inactive, suspended and incomplete accounts', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  for (const status of ['pending', 'inactive', 'suspended']) {
+    fixture.user.status = status;
+    assert.equal((await callController(fixture.controller.login, fixture.request())).failure.statusCode, 403);
+  }
+  fixture.user.status = 'active';
+  fixture.user.password = '';
+  assert.equal((await callController(fixture.controller.login, fixture.request())).failure.statusCode, 403);
+  assert.equal(fixture.events.some(([name]) => name === 'session' || name === 'otp'), false);
+  assert.equal(fixture.user.lastLoginAt, undefined);
+});
+
+test('OTP-off login still blocks non-admin accounts during maintenance', async (t) => {
+  const fixture = loginFixture(t, {
+    user: { emailVerificationRequired: false },
+    maintenance: { maintenanceModeEnabled: true, maintenanceMessage: 'Scheduled downtime' },
+  });
+  for (const role of ['student', 'teacher', 'headteacher']) {
+    fixture.user.role = role;
+    const result = await callController(fixture.controller.login, fixture.request());
+    assert.equal(result.failure.statusCode, 503);
+    assert.equal(result.failure.message, 'Scheduled downtime');
+  }
+  assert.equal(fixture.events.some(([name]) => name === 'session' || name === 'otp'), false);
+  fixture.user.role = 'admin';
+  const admin = await callController(fixture.controller.login, fixture.request());
+  assert.equal(admin.failure, undefined);
+  assert.equal(admin.response.statusCode, 200);
+  assert.equal(admin.response.body.requiresOtp, false);
+});
+
+test('unavailable security settings cannot allow OTP-off sign-in', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  fixture.state.unavailable = true;
+  const result = await callController(fixture.controller.login, fixture.request());
+  assert.equal(result.failure.statusCode, 503);
+  assert.equal(fixture.events.some(([name]) => name === 'session' || name === 'otp'), false);
+  assert.equal(fixture.user.lastLoginAt, undefined);
+});
+
+test('the OTP-off policy permits teacher and headteacher sign-in with the same session validation', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  for (const role of ['teacher', 'headteacher']) {
+    fixture.user.role = role;
+    const result = await callController(fixture.controller.login, fixture.request());
+    assert.equal(result.failure, undefined);
+    assert.equal(result.response.statusCode, 200);
+    assert.equal(result.response.body.user.role, role);
+    const claims = jwt.verify(result.response.body.token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'], issuer: 'edumatch-api', audience: 'edumatch-web',
+    });
+    assert.equal(claims.id, fixture.user._id);
+  }
+  assert.equal(fixture.events.filter(([name]) => name === 'session').length, 2);
+  assert.equal(fixture.events.some(([name]) => name === 'otp'), false);
 });
 
 test('saved maintenance policy blocks both password and OTP login completion', async (t) => {
@@ -337,11 +536,25 @@ test('admin settings endpoints write Supabase settings and revoke non-admin sess
   assert.ok((await service.getAppSettings()).maintenance.lastCacheClearedAt);
   assert.deepEqual(revocations, ['System maintenance', 'System cache cleared']);
   const read = await callController(admin.getSystemSettings);
-  assert.equal(read.response.body.settings.user.emailVerificationRequired, true);
+  assert.equal(read.response.body.settings.user.emailVerificationRequired, false);
   const invalid = await callController(admin.saveSecuritySettings, {
     user: { _id: 'admin' }, body: { sessionTimeoutMinutes: 0, maxLoginAttempts: 4, accountLockoutDurationMinutes: 5 },
   });
   assert.equal(invalid.failure.statusCode, 400);
+});
+
+test('disabling OTP does not let a pending verification challenge bypass its actual code', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  const request = (otpCode) => ({
+    ...fixture.request(), body: { challengeToken: 'challenge', otpCode, captchaToken: 'verified-test-captcha' },
+  });
+  assert.equal((await callController(fixture.controller.verifyLoginOtp, request(''))).failure.statusCode, 400);
+  assert.equal((await callController(fixture.controller.verifyLoginOtp, request('000000'))).failure.statusCode, 401);
+  assert.equal(fixture.events.some(([name]) => name === 'session'), false);
+  const correct = await callController(fixture.controller.verifyLoginOtp, request('123456'));
+  assert.equal(correct.failure, undefined);
+  assert.equal(correct.response.statusCode, 200);
+  assert.equal(typeof correct.response.body.token, 'string');
 });
 
 test('sample admin email cannot bypass Gmail verification', async (t) => {

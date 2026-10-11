@@ -394,6 +394,21 @@ const login = asyncHandler(async (req, res) => {
 
   assertGmailEmail(user.email);
 
+  if (settings.user.emailVerificationRequired === false) {
+    await consumeOpenChallenges(user._id);
+    user.lastLoginAt = now;
+    user.lastActivityAt = now;
+    await user.save();
+    const token = await createSessionAndSignToken(user, req, rememberSession);
+    await recordLoginAttempt(req, { username: user.username, user, outcome: 'success', reason: 'Login successful' });
+    return sendSuccess(res, 200, 'Login successful', {
+      requiresOtp: false,
+      token,
+      redirectPath: user.forcePasswordChange ? '/auth/change-password' : undefined,
+      user: buildLoginUser(user, req),
+    });
+  }
+
   const challenge = await issueLoginOtp(user, req, rememberSession);
   return sendSuccess(res, 202, 'Verification code sent', {
     requiresOtp: true,
