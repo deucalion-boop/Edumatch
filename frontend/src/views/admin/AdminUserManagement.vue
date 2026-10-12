@@ -561,10 +561,16 @@
                 <input id="teacherSubject" v-model.trim="newUser.subject" type="text" placeholder="Defaults to department">
               </div>
               <div v-if="newUser.role === 'student'" class="form-group">
-                <label for="studentGradeLevel">Grade Level *</label>
-                <select id="studentGradeLevel" v-model="newUser.gradeLevel" required>
-                  <option v-for="grade in studentGradeLevels" :key="grade" :value="grade">{{ grade }}</option>
+                <label for="studentSection">Section *</label>
+                <select id="studentSection" v-model="newUser.sectionId" required :disabled="isLoadingSections || availableStudentSections.length === 0">
+                  <option value="" disabled>
+                    {{ isLoadingSections ? 'Loading sections…' : (availableStudentSections.length ? 'Select section' : 'No section with an assigned teacher') }}
+                  </option>
+                  <option v-for="section in availableStudentSections" :key="section.id" :value="section.id">
+                    {{ section.name }} — {{ section.adviser.name }}
+                  </option>
                 </select>
+                <p class="hint-text">Only sections with an active assigned teacher are available.</p>
               </div>
             </div>
 
@@ -1383,6 +1389,7 @@ export default {
       department: '',
       subject: '',
       gradeLevel: 'Grade 10',
+      sectionId: '',
       strand: '',
       contactNumber: '',
     })
@@ -1398,6 +1405,13 @@ export default {
     ]
     const studentGradeLevels = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
     const studentStrands = ['STEM', 'HUMSS', 'ABM', 'TVL']
+    const sections = ref([])
+    const isLoadingSections = ref(false)
+    const availableStudentSections = computed(() => sections.value.filter((section) => (
+      section.isActive === true
+      && section.adviser
+      && String(section.adviser.status || '').toLowerCase() === 'active'
+    )))
     
     const selectedUser = ref(null)
     const editUserData = ref({
@@ -2190,6 +2204,7 @@ export default {
         if (role !== 'student') {
           newUser.gradeLevel = 'Grade 10'
           newUser.strand = ''
+          newUser.sectionId = ''
         }
       }
     )
@@ -2270,6 +2285,7 @@ export default {
         department: '',
         subject: '',
         gradeLevel: 'Grade 10',
+        sectionId: '',
         strand: '',
         contactNumber: '',
       })
@@ -2392,7 +2408,8 @@ export default {
           status: 'active',
           department: ['headteacher', 'teacher'].includes(newUser.role) ? newUser.department : '',
           subject: newUser.role === 'teacher' ? newUser.subject : '',
-          gradeLevel: newUser.role === 'student' ? newUser.gradeLevel : '',
+          gradeLevel: newUser.role === 'student' ? 'Grade 10' : '',
+          sectionId: newUser.role === 'student' ? newUser.sectionId : '',
           strand: newUser.role === 'student' ? newUser.strand : '',
           contactNumber,
         }
@@ -2854,6 +2871,19 @@ export default {
       }
     }
 
+    const fetchSections = async () => {
+      isLoadingSections.value = true
+      try {
+        const response = await axios.get(`${managementApiPath.value}/sections`, getAuthConfig())
+        sections.value = Array.isArray(response.data?.sections) ? response.data.sections : []
+      } catch (error) {
+        sections.value = []
+        showToastMessage(error.response?.data?.message || 'Unable to load available sections', 'error')
+      } finally {
+        isLoadingSections.value = false
+      }
+    }
+
     const refreshUserPresenceIfVisible = () => {
       if (typeof document === 'undefined') return
       if (document.visibilityState !== 'visible') return
@@ -2870,6 +2900,7 @@ export default {
       document.addEventListener('visibilitychange', refreshUserPresenceIfVisible)
       window.addEventListener('focus', refreshUserPresenceIfVisible)
       fetchUsers()
+      fetchSections()
       userPresenceRefreshTimerId = window.setInterval(() => {
         if (document.visibilityState !== 'visible') return
         fetchUsers({ silent: true })
@@ -2934,6 +2965,8 @@ export default {
       canManageUser,
       studentGradeLevels,
       studentStrands,
+      availableStudentSections,
+      isLoadingSections,
       isActive,
       toggleSidebar,
       closeSidebar,

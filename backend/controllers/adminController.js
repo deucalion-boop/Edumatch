@@ -60,6 +60,11 @@ const {
   findSupabaseHeadTeacherByDepartment,
   listSupabaseAccounts,
 } = require('../services/supabaseAccountService');
+const {
+  getSectionOrThrow,
+  findTeacherByAdvisorySection,
+  syncStudentSectionAdviser,
+} = require('../services/sectionService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const ALLOWED_STRANDS = ['STEM', 'HUMSS', 'ABM', 'TVL'];
@@ -756,6 +761,20 @@ function normalizeStudentFields({ role, strand, gradeLevel }) {
   return { strand: normalizedStrand, gradeLevel: normalizedGradeLevel };
 }
 
+async function resolveStudentSection(role, sectionId) {
+  if (role !== ROLE_STUDENT || !String(sectionId || '').trim()) {
+    return { sectionId: undefined, adviserId: undefined };
+  }
+  const section = await getSectionOrThrow(sectionId);
+  const adviser = await findTeacherByAdvisorySection(section.id);
+  if (!adviser || String(adviser.status || '').trim().toLowerCase() !== 'active') {
+    const error = new Error('The selected section does not have an active assigned teacher');
+    error.statusCode = 400;
+    throw error;
+  }
+  return { sectionId: section.id, adviserId: adviser._id || adviser.id };
+}
+
 function normalizeAdminManagedRole(roleInput) {
   const normalized = String(roleInput || '').trim().toLowerCase();
   if (normalized === 'head_teacher') return ROLE_HEADTEACHER;
@@ -987,6 +1006,7 @@ const createUser = asyncHandler(async (req, res) => {
     subject,
     strand,
     gradeLevel,
+    sectionId,
   } = req.body;
 
   if (!name || !email || !username || !role) {
@@ -1009,6 +1029,7 @@ const createUser = asyncHandler(async (req, res) => {
   const normalizedContactNumber = normalizeContactNumber(contactNumber);
   const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
   const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
+  const studentSection = await resolveStudentSection(normalizedRole, sectionId);
   await ensureSingleHeadTeacherPerDepartment({
     role: normalizedRole,
     department: scopedFields.department,
@@ -1044,7 +1065,8 @@ const createUser = asyncHandler(async (req, res) => {
       subject: scopedFields.subject,
       department: scopedFields.department,
       gradeLevel: studentFields.gradeLevel,
-      managedBy: req.user._id,
+      sectionId: studentSection.sectionId,
+      managedBy: studentSection.adviserId || req.user._id,
       contactNumber: normalizedContactNumber,
       invite: {
         tokenHash: '',
@@ -1053,6 +1075,7 @@ const createUser = asyncHandler(async (req, res) => {
         usedAt: null,
       },
     });
+    if (studentSection.sectionId) await syncStudentSectionAdviser(created._id);
   } catch (saveError) {
     console.error('[createUser] save failed:', {
       message: saveError.message,
