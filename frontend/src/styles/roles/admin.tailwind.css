@@ -9802,11 +9802,6 @@ body.admin-dashboard .admin-main > * {
     @apply tw:max-w-full;
 }
 
-body.admin-dashboard .admin-main > footer {
-    @apply tw:[margin:3rem_0_1rem];
-    @apply tw:text-center;
-}
-
 body.admin-dashboard .analytics-grid,
 body.admin-dashboard .ai-analytics-grid,
 body.admin-dashboard .stats-grid,

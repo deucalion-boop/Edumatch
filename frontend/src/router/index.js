@@ -28,6 +28,7 @@ import AdminLoginAttempts from '../views/admin/AdminLoginAttempts.vue'
 import AdminAuditLogs from '../views/admin/AdminAuditLogs.vue'
 import AdminSettings from '../views/admin/AdminSettings.vue'
 import AdminProfile from '../views/admin/AdminProfile.vue'
+import AdminAnnouncements from '../views/admin/AdminAnnouncements.vue'
 import SecretaryView from '../views/secretary/SecretaryView.vue'
 import SecretaryUserList from '../views/secretary/SecretaryUserList.vue'
 import SecretaryUserManagement from '../views/secretary/SecretaryUserManagement.vue'
@@ -197,6 +198,7 @@ const routes = [
   { path: '/teacher/students', name: 'teacher-students', component: TeacherStudent, meta: { requiresAuth: true, roles: ['teacher'] } },
   { path: '/teacher/profile', name: 'teacher-profile', component: TeacherProfile, meta: { requiresAuth: true, roles: ['teacher'] } },
   { path: '/teacher/settings', name: 'teacher-settings', component: TeacherSettings, meta: { requiresAuth: true, roles: ['teacher'] } },
+  { path: '/teacher/announcements', name: 'teacher-announcements', component: () => import('../views/teacher/TeacherAnnouncements.vue'), meta: { requiresAuth: true, roles: ['teacher'] } },
   { path: '/secretary/dashboard', name: 'secretary-dashboard', component: SecretaryView, meta: { requiresAuth: true, roles: ['secretary'] } },
   { path: '/secretary/users', name: 'secretary-users', component: SecretaryUserManagement, meta: { requiresAuth: true, roles: ['secretary'] } },
   { path: '/secretary/teachers', name: 'secretary-teachers', component: SecretaryUserList, meta: { requiresAuth: true, roles: ['secretary'] } },
@@ -209,6 +211,7 @@ const routes = [
   { path: '/headteacher/lessons', name: 'headteacher-lessons', component: HeadTeacherLessons, meta: { requiresAuth: true, roles: ['headteacher'] } },
   { path: '/headteacher/profile', name: 'headteacher-profile', component: HeadTeacherProfile, meta: { requiresAuth: true, roles: ['headteacher'] } },
   { path: '/headteacher/settings', name: 'headteacher-settings', component: HeadTeacherSettings, meta: { requiresAuth: true, roles: ['headteacher'] } },
+  { path: '/headteacher/announcements', name: 'headteacher-announcements', component: () => import('../views/headteacher/HeadTeacherAnnouncements.vue'), meta: { requiresAuth: true, roles: ['headteacher'] } },
   { path: '/admin/dashboard', name: 'admin-dashboard', component: AdminView, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/users', name: 'admin-users', component: AdminUserManagement, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/requests', name: 'admin-requests', component: AdminRequest, meta: { requiresAuth: true, roles: ['admin'] } },
@@ -216,6 +219,7 @@ const routes = [
   { path: '/admin/audit-logs', name: 'admin-audit-logs', component: AdminAuditLogs, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/settings', name: 'admin-settings', component: AdminSettings, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/profile', name: 'admin-profile', component: AdminProfile, meta: { requiresAuth: true, roles: ['admin'] } },
+  { path: '/admin/announcements', name: 'admin-announcements', component: AdminAnnouncements, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/logs', redirect: '/admin/audit-logs' },
   { path: '/:pathMatch(.*)*', redirect: '/auth/login' },
 ]

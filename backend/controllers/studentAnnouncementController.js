@@ -27,6 +27,7 @@ exports.publishAnnouncement = wrap(async (req, res) => {
 });
 
 function mapAnnouncement(data) {
+  const isSchool = String(data.event_key || '').startsWith('school-announcement:');
   return {
     id: data.id,
     eventKey: data.event_key,
@@ -34,16 +35,20 @@ function mapAnnouncement(data) {
     content: data.meta?.content || data.message,
     subject: data.subject,
     teacher: data.sender_name,
+    senderName: data.sender_name,
+    urgent: data.urgent === true,
+    audienceRoles: data.meta?.audienceRoles || [],
+    source: isSchool ? 'school' : 'class',
     createdAt: data.created_at,
   };
 }
 
 exports.listAnnouncements = wrap(async (req, res) => {
-  if (req.user.role !== 'student') throw fail('Student access required', 403);
+  if (!['student', 'teacher', 'headteacher'].includes(req.user.role)) throw fail('Announcement access required', 403);
   const requestedLimit = Number(req.query.limit || 100);
   const limit = Math.min(100, Math.max(1, Number.isFinite(requestedLimit) ? requestedLimit : 100));
   const { data, error } = await getSupabaseStorageClient().from('notifications').select('*')
-    .eq('recipient_id', String(req.user._id)).eq('recipient_role', 'student')
+    .eq('recipient_id', String(req.user._id)).eq('recipient_role', req.user.role)
     .eq('type', 'announcement_published')
     .order('created_at', { ascending: false }).limit(limit);
   if (error) throw fail('Unable to load announcements', 500);
@@ -53,11 +58,11 @@ exports.listAnnouncements = wrap(async (req, res) => {
 });
 
 exports.getAnnouncement = wrap(async (req, res) => {
-  if (req.user.role !== 'student') throw fail('Student access required', 403);
+  if (!['student', 'teacher', 'headteacher'].includes(req.user.role)) throw fail('Announcement access required', 403);
   const eventKey = typeof req.query.event === 'string' ? req.query.event : '';
-  if (!/^announcement:[a-f0-9]{64}$/.test(eventKey)) throw fail('Invalid announcement ID', 400);
+  if (!/^(?:announcement|school-announcement):[a-f0-9]{64}$/.test(eventKey)) throw fail('Invalid announcement ID', 400);
   const { data, error } = await getSupabaseStorageClient().from('notifications').select('*')
-    .eq('recipient_id', String(req.user._id)).eq('recipient_role', 'student')
+    .eq('recipient_id', String(req.user._id)).eq('recipient_role', req.user.role)
     .eq('type', 'announcement_published').eq('event_key', eventKey).maybeSingle();
   if (error) throw fail('Unable to load announcement', 500);
   if (!data) throw fail('Announcement not found', 404);

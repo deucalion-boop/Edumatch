@@ -82,6 +82,7 @@ const ICONS_BY_TYPE = {
   recommendation_progress: 'fas fa-route',
   admin_message: 'fas fa-bullhorn',
   management_message: 'fas fa-bullhorn',
+  announcement_published: 'fas fa-bullhorn',
   enrollment_request: 'fas fa-user-plus',
   student_submission: 'fas fa-file-alt',
   grading_queue: 'fas fa-marker',
@@ -96,7 +97,7 @@ function notificationIcon(type) {
 
 function isClickable(notification) {
   const route = resolveNotificationRoute(notification)
-  return route.startsWith('/student/') || route.startsWith('/teacher/')
+  return route.startsWith('/student/') || route.startsWith('/teacher/') || route.startsWith('/headteacher/')
 }
 
 function resolveNotificationRoute(notification) {

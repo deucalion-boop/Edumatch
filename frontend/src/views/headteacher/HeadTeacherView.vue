@@ -31,6 +31,10 @@
             <i class="fas fa-book-open"></i>
             <span>Lessons & Exams</span>
           </router-link>
+          <router-link to="/headteacher/announcements" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/announcements' }" @click="closeSidebar">
+            <i class="fas fa-bullhorn"></i>
+            <span>Announcements</span>
+          </router-link>
         </div>
       </nav>
 

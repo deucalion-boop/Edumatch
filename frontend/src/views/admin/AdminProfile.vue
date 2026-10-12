@@ -86,6 +86,7 @@
               <i class="fas fa-inbox"></i>
               <span>Request</span>
             </router-link>
+            <router-link to="/admin/announcements" class="nav-link sidebar-item" :class="{ active: isActive('/admin/announcements') }" @click="closeSidebar"><i class="fas fa-bullhorn"></i><span>Announcements</span></router-link>
             <router-link to="/admin/login-attempts" class="nav-link sidebar-item sidebar-item--login-attempts" :class="{ active: isActive('/admin/login-attempts') }" @click="closeSidebar">
               <i class="fas fa-right-to-bracket"></i>
               <span>Login Attempts</span>
@@ -218,7 +219,6 @@
             </form>
           </article>
         </section>
-        <footer>© 2026 EduMatch</footer>
       </main>
     </div>
   </div>

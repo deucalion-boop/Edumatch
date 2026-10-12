@@ -31,10 +31,12 @@ const {
 } = require('../controllers/studentSettingsController');
 
 const router = express.Router();
+const { publishSchoolAnnouncement, listSchoolAnnouncements } = require('../controllers/schoolAnnouncementController');
 
 router.use(authMiddleware, roleMiddleware('admin'));
 
 router.route('/users').post(createUser).get(getUsers);
+router.route('/announcements').get(listSchoolAnnouncements).post(publishSchoolAnnouncement);
 router.route('/users/:id').get(getUserById).put(uploadLimiter, uploadProfileImage.single('profileImage'), updateUser).delete(deleteUser);
 router.post('/users/:id/messages', sendUserMessage);
 router.get('/audit-logs', getAuditLogs);

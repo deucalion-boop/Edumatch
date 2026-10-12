@@ -2,9 +2,9 @@
   <section class="announcement-page">
     <header class="page-header">
       <div>
-        <p class="eyebrow">Class updates</p>
+        <p class="eyebrow">School updates</p>
         <h1>Announcements</h1>
-        <p>Important messages posted by your teachers appear here.</p>
+        <p>Important messages for your account appear here.</p>
       </div>
       <button v-if="selectedAnnouncement" type="button" class="back-button" aria-label="Back to announcements" @click="showAll">
         <i class="fas fa-arrow-left" aria-hidden="true"></i>
@@ -19,7 +19,7 @@
     </div>
 
     <article v-else-if="selectedAnnouncement" class="announcement-detail">
-      <p class="eyebrow">Announcement &middot; {{ selectedAnnouncement.subject }}</p>
+      <p class="eyebrow">{{ selectedAnnouncement.source === 'school' ? 'School announcement' : 'Class announcement' }} &middot; {{ selectedAnnouncement.subject }}</p>
       <h2>{{ selectedAnnouncement.title }}</h2>
       <p class="meta">{{ selectedAnnouncement.teacher }} &middot; {{ formatDate(selectedAnnouncement.createdAt) }}</p>
       <p class="content">{{ selectedAnnouncement.content }}</p>
@@ -35,7 +35,7 @@
       >
         <span class="announcement-icon"><i class="fas fa-bullhorn" aria-hidden="true"></i></span>
         <span class="announcement-summary">
-          <span class="announcement-subject">{{ item.subject }}</span>
+          <span class="announcement-subject">{{ item.source === 'school' ? 'School announcement' : item.subject }}</span>
           <strong>{{ item.title }}</strong>
           <span class="announcement-preview">{{ item.content }}</span>
           <span class="meta">{{ item.teacher }} &middot; {{ formatDate(item.createdAt) }}</span>
@@ -47,7 +47,7 @@
     <div v-else class="state-card empty-state">
       <i class="fas fa-bullhorn" aria-hidden="true"></i>
       <h2>No announcements yet</h2>
-      <p>Announcements from your teachers will appear here.</p>
+      <p>New school and class announcements will appear here.</p>
     </div>
   </section>
 </template>
@@ -59,6 +59,8 @@ import { useAuthStore } from '../../stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const role = computed(() => String(auth.user?.role || 'student').toLowerCase())
+const announcementPath = computed(() => `/${role.value}/announcements`)
 const announcements = ref([])
 const fallbackAnnouncement = ref(null)
 const loading = ref(false)
@@ -97,10 +99,10 @@ async function load() {
   } finally { if (current === version) loading.value = false }
 }
 function openAnnouncement(item) {
-  router.push({ path: '/student/announcements', query: { event: item.eventKey } })
+  router.push({ path: announcementPath.value, query: { event: item.eventKey } })
 }
 function showAll() {
-  router.push('/student/announcements')
+  router.push(announcementPath.value)
 }
 function formatDate(value) {
   const date = new Date(value)
