@@ -9,10 +9,6 @@
     <div class="admin-layout">
       <aside id="admin-sidebar-drawer" class="admin-sidebar" :class="{ active: isSidebarOpen }">
         <div class="sidebar-header">
-          <div class="admin-sidebar-brand">
-            <div class="admin-sidebar-brand-icon"><img src="/logo.png" alt="EduMatch" class="admin-sidebar-logo-img"></div>
-            <div class="admin-sidebar-brand-copy"><h3>EduMatch</h3><p>Admin Portal</p></div>
-          </div>
           <button type="button" class="sidebar-close" aria-label="Close sidebar" @click="closeSidebar"><i class="fas fa-times"></i></button>
         </div>
         <nav class="sidebar-menu sidebar-nav" aria-label="Admin navigation">
