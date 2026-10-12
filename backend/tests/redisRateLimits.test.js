@@ -92,7 +92,7 @@ test('Redis readiness waits for the connection and every limiter script initiali
 
   connection.resolve();
   await new Promise(setImmediate);
-  assert.equal(transport.scriptLoads.length, 12);
+  assert.equal(transport.scriptLoads.length, 16);
   assert.equal(ready, false);
   transport.scriptLoads.slice(0, -1).forEach((load) => load.resolve());
   await new Promise(setImmediate);

@@ -233,10 +233,18 @@ test('forced password change allows account security actions but rejects unrelat
   assert.equal((await fixture.request({ baseUrl: '/api/auth', path: '/change-password-unrelated', method: 'POST' })).failure.statusCode, 403);
 });
 
-function loginFixture(t, settingsValue = {}) {
-  process.env.RECAPTCHA_SECRET_KEY = 'test-recaptcha-key';
-  process.env.RECAPTCHA_ALLOWED_HOSTNAMES = 'localhost';
-  const captchaVerification = t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({ success: true, hostname: 'localhost' }) }));
+function loginFixture(t, settingsValue = {}, { captchaService } = {}) {
+  const captchaProofs = new Set();
+  let proofSequence = 0;
+  const captchaVerification = t.mock.fn(async (token) => {
+    if (captchaService) return captchaService.consumeToken(token);
+    if (captchaProofs.delete(token)) return true;
+    throw Object.assign(new Error('Complete a new CAPTCHA before signing in.'), {
+      statusCode: 400,
+      code: token ? 'CAPTCHA_EXPIRED_OR_USED' : 'CAPTCHA_REQUIRED',
+      data: { refreshRequired: true },
+    });
+  });
   const settings = settingsFixture(settingsValue);
   const events = [];
   const user = {
@@ -252,6 +260,7 @@ function loginFixture(t, settingsValue = {}) {
     save: async () => {},
   };
   const controller = loadModule('controllers/authController.js', {
+    '../services/mathCaptchaService': { consumeToken: captchaVerification },
     '../services/supabaseSettingsService': settings.service,
     '../services/supabaseAccountService': {
       findSupabaseAccountByUsername: async () => user,
@@ -270,10 +279,14 @@ function loginFixture(t, settingsValue = {}) {
     '../utils/fileStorage': { resolveStoredFileUrl: (_req, url) => url },
     bcryptjs: { hash: async () => 'test-otp-hash', compare: async (value) => value === '123456' },
   });
-  const request = (password = 'correct-password') => ({
-    body: { username: 'student', password, captchaToken: 'verified-test-captcha' },
-    headers: {}, ip: '127.0.0.1',
-  });
+  const request = (password = 'correct-password') => {
+    const captchaToken = (++proofSequence).toString(16).padStart(64, '0');
+    captchaProofs.add(captchaToken);
+    return {
+      body: { username: 'student', password, captchaToken },
+      headers: {}, ip: '127.0.0.1',
+    };
+  };
   return { ...settings, controller, events, user, challenge, request, captchaVerification };
 }
 
@@ -433,9 +446,53 @@ test('OTP-off login still requires a verified CAPTCHA', async (t) => {
   const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
   const req = fixture.request();
   delete req.body.captchaToken;
-  assert.equal((await callController(fixture.controller.login, req)).failure.statusCode, 400);
+  const result = await callController(fixture.controller.login, req);
+  assert.equal(result.response.statusCode, 400);
+  assert.equal(result.response.body.code, 'CAPTCHA_REQUIRED');
   assert.equal(fixture.events.some(([name]) => name === 'session' || name === 'otp'), false);
   assert.equal(fixture.user.lastLoginAt, undefined);
+});
+
+test('login rejects fabricated and reused CAPTCHA proofs before creating a session', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  const fabricated = fixture.request();
+  fabricated.body.captchaToken = 'f'.repeat(64);
+  assert.equal((await callController(fixture.controller.login, fabricated)).response.statusCode, 400);
+  assert.equal(fixture.events.some(([name]) => name === 'session'), false);
+  const issued = fixture.request();
+  assert.equal((await callController(fixture.controller.login, issued)).response.statusCode, 200);
+  const reused = await callController(fixture.controller.login, issued);
+  assert.equal(reused.response.statusCode, 400);
+  assert.equal(reused.response.body.code, 'CAPTCHA_EXPIRED_OR_USED');
+  assert.equal(fixture.events.filter(([name]) => name === 'session').length, 1);
+});
+
+test('a failed password consumes its CAPTCHA proof and requires a new solve', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  const request = fixture.request('wrong');
+  assert.equal((await callController(fixture.controller.login, request)).failure.statusCode, 401);
+  request.body.password = 'correct-password';
+  assert.equal((await callController(fixture.controller.login, request)).response.statusCode, 400);
+  assert.equal(fixture.events.some(([name]) => name === 'session' || name === 'otp'), false);
+});
+
+test('a real solved math CAPTCHA permits only one concurrent password login', async (t) => {
+  const { createMathCaptchaService, createMemoryCaptchaStore } = require('../services/mathCaptchaService');
+  const captchaService = createMathCaptchaService({
+    environment: 'test', store: createMemoryCaptchaStore(),
+    randomInt: (min) => min === 0 ? 0 : 4,
+  });
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } }, { captchaService });
+  const challenge = await captchaService.createChallenge();
+  const req = fixture.request();
+  req.body.captchaToken = challenge.challengeId;
+  assert.equal((await callController(fixture.controller.login, req)).response.statusCode, 400);
+  assert.equal(fixture.events.some(([name]) => name === 'session'), false);
+  req.body.captchaToken = (await captchaService.verifyChallenge({ challengeId: challenge.challengeId, answer: 8 })).captchaToken;
+  const results = await Promise.all(Array.from({ length: 10 }, () => callController(fixture.controller.login, req)));
+  assert.equal(results.filter(({ response }) => response.statusCode === 200).length, 1);
+  assert.equal(results.filter(({ response }) => response.statusCode === 400).length, 9);
+  assert.equal(fixture.events.filter(([name]) => name === 'session').length, 1);
 });
 
 test('OTP-off login still rejects pending, inactive, suspended and incomplete accounts', async (t) => {

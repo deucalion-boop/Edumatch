@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'edumatch-v15'
+const CACHE_VERSION = 'edumatch-v16'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const PAGE_CACHE = `${CACHE_VERSION}-pages`
 

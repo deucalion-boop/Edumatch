@@ -7,6 +7,7 @@ const { sendEmailViaGmail } = require('../services/gmailService');
 const { assertPasswordMeetsPolicy, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } = require('../utils/passwordPolicy');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
 const { getAppSettings } = require('../services/supabaseSettingsService');
+const { consumeToken: consumeCaptchaToken } = require('../services/mathCaptchaService');
 const {
   findSupabaseAccount,
   findSupabaseAccountByEmail,
@@ -215,43 +216,6 @@ async function sendPasswordResetEmail({ email, name, resetLink }) {
   });
 }
 
-async function verifyRecaptchaToken({ token, remoteIp }) {
-  const recaptchaSecret = String(process.env.RECAPTCHA_SECRET_KEY || '').trim();
-  const captchaToken = String(token || '').trim();
-  if (!recaptchaSecret || !captchaToken) return false;
-
-  const payload = new URLSearchParams({
-    secret: recaptchaSecret,
-    response: captchaToken,
-  });
-  if (remoteIp) {
-    payload.append('remoteip', String(remoteIp));
-  }
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: payload.toString(),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    if (!response.ok) return false;
-    const body = await response.json();
-    const allowedHostnames = String(process.env.RECAPTCHA_ALLOWED_HOSTNAMES || '')
-      .split(',')
-      .map((hostname) => hostname.trim().toLowerCase())
-      .filter(Boolean);
-    const verifiedHostname = String(body?.hostname || '').trim().toLowerCase();
-    return body?.success === true
-      && (allowedHostnames.length === 0 || allowedHostnames.includes(verifiedHostname));
-  } catch (_error) {
-    return false;
-  }
-}
-
 const login = asyncHandler(async (req, res) => {
   const { username, password, captchaToken, remember } = req.body;
   const normalizedUsername = String(username || '').trim();
@@ -268,19 +232,21 @@ const login = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const isCaptchaValid = await verifyRecaptchaToken({
-    token: captchaToken,
-    remoteIp: resolveClientIpAddress(req),
-  });
-  if (!isCaptchaValid) {
+  try {
+    await consumeCaptchaToken(captchaToken);
+  } catch (error) {
+    if (!String(error?.code || '').startsWith('CAPTCHA_')) throw error;
     await recordLoginAttempt(req, {
       username: normalizedUsername,
       outcome: 'failed',
       reason: 'Please verify that you are not a robot',
     });
-    const error = new Error('Please verify that you are not a robot');
-    error.statusCode = 400;
-    throw error;
+    return res.status(error.statusCode).json({
+      success: false,
+      message: error.statusCode === 503 ? error.message : 'Please verify that you are not a robot',
+      code: error.code,
+      data: error.data,
+    });
   }
 
   const user = await findSupabaseAccountByUsername(normalizedUsername);

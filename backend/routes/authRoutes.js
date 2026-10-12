@@ -12,11 +12,14 @@ const {
   completePasswordReset,
 } = require('../controllers/authController');
 const { changePassword } = require('../controllers/passwordController');
-const { inviteLimiter, loginLimiter, passwordResetLimiter } = require('../middlewares/rateLimiters');
+const { inviteLimiter, loginLimiter, passwordResetLimiter, captchaChallengeLimiter, captchaVerifyLimiter } = require('../middlewares/rateLimiters');
 const { listSessions, logout, revokeSession } = require('../controllers/securityController');
+const { createCaptchaChallenge, verifyCaptchaChallenge } = require('../controllers/captchaController');
 
 const router = express.Router();
 
+router.post('/captcha/challenge', captchaChallengeLimiter, createCaptchaChallenge);
+router.post('/captcha/verify', captchaVerifyLimiter, verifyCaptchaChallenge);
 router.post('/login', loginLimiter, login);
 router.post('/login/verify-otp', loginLimiter, verifyLoginOtp);
 router.post('/login/resend-otp', loginLimiter, resendLoginOtp);

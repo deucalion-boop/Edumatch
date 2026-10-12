@@ -77,7 +77,12 @@ function createSharedStore(prefix) {
   return store;
 }
 
-function buildLimiter({ prefix, windowMs, limit, message, keyGenerator = authenticatedRateLimitKey }) {
+async function getSharedRedisClient() {
+  await redisConnection;
+  return redisClient;
+}
+
+function buildLimiter({ prefix, windowMs, limit, message, code, keyGenerator = authenticatedRateLimitKey }) {
   return rateLimit({
     windowMs,
     limit,
@@ -86,7 +91,7 @@ function buildLimiter({ prefix, windowMs, limit, message, keyGenerator = authent
     keyGenerator,
     passOnStoreError: false,
     store: createSharedStore(prefix),
-    message: { success: false, message },
+    message: { success: false, message, ...(code ? { code, data: { refreshRequired: false } } : {}) },
   });
 }
 
@@ -103,6 +108,22 @@ const loginLimiter = buildLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 10,
   message: 'Too many sign-in attempts. Please try again later.',
+});
+
+const captchaChallengeLimiter = buildLimiter({
+  prefix: 'captcha-challenge',
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  message: 'Too many CAPTCHA refreshes. Please try again later.',
+  code: 'CAPTCHA_RATE_LIMITED',
+});
+
+const captchaVerifyLimiter = buildLimiter({
+  prefix: 'captcha-verify',
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  message: 'Too many CAPTCHA answers. Please try again later.',
+  code: 'CAPTCHA_RATE_LIMITED',
 });
 
 const passwordResetLimiter = buildLimiter({
@@ -136,8 +157,11 @@ const aiLimiter = buildLimiter({
 module.exports = {
   apiRateLimitKey,
   buildLimiter,
+  getSharedRedisClient,
   aiLimiter,
   apiLimiter,
+  captchaChallengeLimiter,
+  captchaVerifyLimiter,
   inviteLimiter,
   loginLimiter,
   passwordResetLimiter,

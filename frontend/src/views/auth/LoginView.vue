@@ -158,13 +158,12 @@
 
             <div v-if="!otpRequired" class="auth-form-group captcha-group">
               <div class="auth-form-group-heading">
-                <label class="auth-form-label" for="captchaValidation">
+                <span class="auth-form-label">
                   <i class="fas fa-shield-alt"></i> Security verification
-                </label>
+                </span>
                 <p class="auth-form-helper">Complete the check below before signing in.</p>
               </div>
-              <div ref="recaptchaContainer" class="recaptcha-widget"></div>
-              <div v-if="captchaMessage" class="validation-message" id="captchaValidation">{{ captchaMessage }}</div>
+              <MathCaptcha ref="mathCaptcha" v-model="captchaToken" :disabled="isLoading" />
             </div>
 
             <div class="auth-actions">
@@ -264,43 +263,16 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
+import MathCaptcha from '../../components/MathCaptcha.vue'
 
 const PASSWORD_MIN_LENGTH = 8
 const PASSWORD_MAX_LENGTH = 16
-const RECAPTCHA_SITE_KEY = String(import.meta.env.VITE_RECAPTCHA_SITE_KEY || '').trim()
-const RECAPTCHA_SCRIPT_ID = 'google-recaptcha-v2-script'
-let recaptchaLoaderPromise = null
-
-function waitForRecaptchaReady(resolve, reject) {
-  const startedAt = Date.now()
-
-  const checkReady = () => {
-    if (typeof window === 'undefined') {
-      reject(new Error('reCAPTCHA is unavailable'))
-      return
-    }
-
-    if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
-      resolve(window.grecaptcha)
-      return
-    }
-
-    if (Date.now() - startedAt > 10000) {
-      reject(new Error('Timed out while loading reCAPTCHA'))
-      return
-    }
-
-    window.setTimeout(checkReady, 100)
-  }
-
-  checkReady()
-}
-
 export default {
   name: 'LoginView',
+  components: { MathCaptcha },
   
   setup() {
     const router = useRouter()
@@ -333,15 +305,12 @@ export default {
     const isInviteMode = computed(() => Boolean(String(route.params.token || '').trim()))
     const flashMessage = ref('')
     const captchaToken = ref('')
-    const recaptchaContainer = ref(null)
-    const recaptchaWidgetId = ref(null)
-    const captchaLoadError = ref('')
+    const mathCaptcha = ref(null)
     
     // Validation state
     const validation = reactive({
       username: '',
       password: '',
-      captcha: '',
       otp: '',
     })
     const inviteForm = reactive({
@@ -354,7 +323,6 @@ export default {
     })
     
     const message = computed(() => flashMessage.value)
-    const captchaMessage = computed(() => validation.captcha || captchaLoadError.value)
     
     // Validation methods
     const validateUsername = () => {
@@ -379,107 +347,7 @@ export default {
       validation[field] = ''
     }
 
-    const ensureRecaptchaScript = () => {
-      if (!RECAPTCHA_SITE_KEY) {
-        return Promise.reject(new Error('Missing reCAPTCHA site key'))
-      }
-
-      if (recaptchaLoaderPromise) {
-        return recaptchaLoaderPromise
-      }
-
-      recaptchaLoaderPromise = new Promise((resolve, reject) => {
-        if (typeof window === 'undefined') {
-          reject(new Error('reCAPTCHA is unavailable'))
-          return
-        }
-
-        if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
-          resolve(window.grecaptcha)
-          return
-        }
-
-        const finishWhenReady = () => waitForRecaptchaReady(resolve, reject)
-        const existingScript = document.getElementById(RECAPTCHA_SCRIPT_ID)
-
-        if (existingScript) {
-          existingScript.addEventListener('load', finishWhenReady, { once: true })
-          existingScript.addEventListener('error', () => reject(new Error('Failed to load reCAPTCHA')), { once: true })
-          finishWhenReady()
-          return
-        }
-
-        const script = document.createElement('script')
-        script.id = RECAPTCHA_SCRIPT_ID
-        script.src = 'https://www.google.com/recaptcha/api.js?render=explicit'
-        script.async = true
-        script.defer = true
-        script.addEventListener('load', finishWhenReady, { once: true })
-        script.addEventListener('error', () => reject(new Error('Failed to load reCAPTCHA')), { once: true })
-        document.head.appendChild(script)
-      }).catch((error) => {
-        recaptchaLoaderPromise = null
-        throw error
-      })
-
-      return recaptchaLoaderPromise
-    }
-
-    const resetCaptcha = () => {
-      captchaToken.value = ''
-      validation.captcha = ''
-      if (typeof window === 'undefined') return
-      if (!recaptchaContainer.value?.isConnected) return
-      if (!window.grecaptcha || recaptchaWidgetId.value === null) return
-      window.grecaptcha.reset(recaptchaWidgetId.value)
-    }
-
-    const renderRecaptchaWidget = async () => {
-      if (isInviteMode.value || otpRequired.value) return
-      await nextTick()
-      const container = recaptchaContainer.value
-      if (!container) return
-      const isActiveContainer = () => !isInviteMode.value && !otpRequired.value &&
-        recaptchaContainer.value === container && container.isConnected
-
-      try {
-        captchaLoadError.value = ''
-        const grecaptcha = await ensureRecaptchaScript()
-        if (!isActiveContainer()) return
-        if (!grecaptcha) {
-          throw new Error('reCAPTCHA is unavailable')
-        }
-
-        if (recaptchaWidgetId.value !== null) {
-          grecaptcha.reset(recaptchaWidgetId.value)
-          return
-        }
-
-        container.innerHTML = ''
-        recaptchaWidgetId.value = grecaptcha.render(container, {
-          sitekey: RECAPTCHA_SITE_KEY,
-          callback: (token) => {
-            if (!isActiveContainer()) return
-            captchaToken.value = String(token || '').trim()
-            validation.captcha = ''
-            captchaLoadError.value = ''
-          },
-          'expired-callback': () => {
-            if (!isActiveContainer()) return
-            captchaToken.value = ''
-          },
-          'error-callback': () => {
-            if (!isActiveContainer()) return
-            captchaToken.value = ''
-            captchaLoadError.value = 'CAPTCHA could not load. Check the site key and allowed domain.'
-          },
-        })
-      } catch (error) {
-        if (!isActiveContainer()) return
-        console.error('reCAPTCHA render failed:', error)
-        captchaLoadError.value = 'CAPTCHA could not load. Check the site key and allowed domain.'
-      }
-    }
+    const resetCaptcha = () => mathCaptcha.value?.refresh()
     
     const togglePasswordVisibility = () => {
       showPassword.value = !showPassword.value
@@ -510,6 +378,7 @@ export default {
     
     // Form submission
     const handleSubmit = async () => {
+      if (isLoading.value) return
       // Validate all fields
       if (!otpRequired.value) {
         validateUsername()
@@ -518,10 +387,6 @@ export default {
       
       // Check if there are any validation errors
       if (!otpRequired.value && (validation.username || validation.password)) {
-        return
-      }
-      if (!otpRequired.value && !captchaToken.value) {
-        validation.captcha = 'Please verify that you are not a robot'
         return
       }
       if (otpRequired.value && !/^\d{6}$/.test(form.otpCode)) {
@@ -536,6 +401,11 @@ export default {
       isLoading.value = true
       
       try {
+        if (!otpRequired.value) {
+          const verifiedToken = await mathCaptcha.value?.verify()
+          if (!verifiedToken) return
+          captchaToken.value = verifiedToken
+        }
         // Call your authentication service
         const result = otpRequired.value
           ? await authStore.verifyLoginOtp({
@@ -564,7 +434,7 @@ export default {
         router.push(redirectPath)
       } catch (err) {
         console.error('Login failed:', err)
-        if (!otpRequired.value) resetCaptcha()
+        if (!otpRequired.value) await resetCaptcha()
       } finally {
         isLoading.value = false
       }
@@ -653,9 +523,6 @@ export default {
 
     onMounted(async () => {
       loadInvite()
-      if (!isInviteMode.value) {
-        await renderRecaptchaWidget()
-      }
 
       const queryMessage = String(route.query.message || '').trim()
       const storeMessage = String(authStore.consumeMessage?.() || '').trim()
@@ -668,24 +535,8 @@ export default {
       }
     })
 
-    watch(
-      () => !isInviteMode.value && !otpRequired.value,
-      async (showCaptcha) => {
-        if (!showCaptcha) {
-          captchaToken.value = ''
-          validation.captcha = ''
-          captchaLoadError.value = ''
-          recaptchaWidgetId.value = null
-          return
-        }
-        await renderRecaptchaWidget()
-      },
-      { flush: 'post' }
-    )
-
     onBeforeUnmount(() => {
       stopOtpCountdown()
-      resetCaptcha()
     })
     
     return {
@@ -697,12 +548,12 @@ export default {
       isResendingOtp,
       invite,
       inviteForm,
-      recaptchaContainer,
+      mathCaptcha,
+      captchaToken,
       isInviteMode,
       showPassword,
       isLoading,
       validation,
-      captchaMessage,
       error,
       message,
       validateUsername,
@@ -1426,19 +1277,6 @@ export default {
   @apply tw:[margin-top:0.15rem];
 }
 
-.recaptcha-widget {
-  @apply tw:flex;
-  @apply tw:justify-center;
-  @apply tw:items-start;
-  @apply tw:[min-height:78px];
-  @apply tw:w-full;
-  @apply tw:overflow-visible;
-}
-
-.recaptcha-widget > div {
-  @apply tw:[margin-inline:auto];
-}
-
 @media (max-width: 576px) {
   .auth-card {
     @apply tw:[padding:1.05rem];
@@ -1636,18 +1474,6 @@ export default {
   .login-page .captcha-group {
     @apply tw:[padding-inline:0.35rem];
     @apply tw:overflow-hidden;
-  }
-
-  .recaptcha-widget {
-    --captcha-scale: clamp(0.76, calc((100vw - 4.25rem) / 304), 1);
-    @apply tw:[min-height:calc(78px_*_var(--captcha-scale))];
-    @apply tw:overflow-hidden;
-  }
-
-  .recaptcha-widget > div {
-    @apply tw:[flex:0_0_304px];
-    @apply tw:[transform:scale(var(--captcha-scale))];
-    @apply tw:[transform-origin:top_center];
   }
 
   .login-page .auth-options {

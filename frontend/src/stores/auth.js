@@ -78,7 +78,7 @@ function dashboardPathByRole(role) {
   return '/admin/dashboard'
 }
 
-function resolveApiBaseUrl() {
+export function resolveApiBaseUrl() {
   const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
   if (!configured) return '/api'
   if (configured.endsWith('/api')) return configured

@@ -1,6 +1,10 @@
 const { createAuditLog } = require('../services/supabaseAuditLogService');
 
 const AUDITED_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const SENSITIVE_KEYS = new Set([
+  'password', 'newPassword', 'currentPassword', 'confirmPassword', 'captchaToken', 'token',
+  'answer', 'challengeId', 'previousChallengeId',
+]);
 const CATEGORY_LABELS = {
   auth: 'Authentication',
   admin: 'Admin',
@@ -144,6 +148,7 @@ function sanitizeObjectEntries(value, maxEntries = 12) {
   const source = value && typeof value === 'object' ? value : {};
   return Object.fromEntries(
     Object.entries(source)
+      .filter(([key]) => !SENSITIVE_KEYS.has(key))
       .slice(0, maxEntries)
       .map(([key, itemValue]) => [truncate(key, 80), truncate(itemValue, 120)])
   );
@@ -152,7 +157,7 @@ function sanitizeObjectEntries(value, maxEntries = 12) {
 function buildMetadata(req) {
   const body = req.body && typeof req.body === 'object' ? req.body : {};
   const bodyKeys = Object.keys(body)
-    .filter((key) => !['password', 'newPassword', 'currentPassword', 'confirmPassword', 'captchaToken', 'token'].includes(key))
+    .filter((key) => !SENSITIVE_KEYS.has(key))
     .slice(0, 20)
     .map((key) => truncate(key, 80));
 

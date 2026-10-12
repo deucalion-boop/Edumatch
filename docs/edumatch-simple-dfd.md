@@ -18,7 +18,7 @@ flowchart LR
   DB[(MongoDB)]
   FS[[File Storage<br/>Local uploads or Supabase]]
   MAIL[[Mail API]]
-  CAPTCHA[[Google reCAPTCHA]]
+  CAPTCHA[(Server Math CAPTCHA<br/>Temporary challenge and proof store)]
   AI[[AI Model API]]
 
   A -->|manage users, security, reports| SYS
@@ -56,7 +56,7 @@ flowchart LR
   D4[(D4 Audit Logs, Login Attempts,<br/>Notifications, and Export Requests)]
 
   MAIL[[Mail API]]
-  CAPTCHA[[Google reCAPTCHA]]
+  CAPTCHA[(Server Math CAPTCHA<br/>Temporary challenge and proof store)]
   FS[[File Storage]]
   AI[[AI Model API]]
 
@@ -109,7 +109,7 @@ flowchart LR
 
 ## 3. Process Summary
 
-- `1.0 Authentication and Security`: login with reCAPTCHA, JWT access, invite activation, password reset, login-attempt logging, and maintenance enforcement.
+- `1.0 Authentication and Security`: login with server-verified math CAPTCHA, JWT access, invite activation, password reset, login-attempt logging, and maintenance enforcement.
 - `2.0 User, Section, and Subject Management`: admin and academic staff manage users, advisory sections, handled classes, enrollments, and subject membership.
 - `3.0 Lessons and Classroom Content`: teachers and head teachers create lessons, upload attachments, and let students view or download learning materials.
 - `4.0 Assessments, Submissions, and Recommendations`: staff create assessments manually or with AI, students take exams or submit activity work, and the system computes scores, progress, and strand recommendations.
@@ -124,7 +124,7 @@ flowchart LR
 
 ## 5. External Services
 
-- `Google reCAPTCHA`: validates login requests before authentication succeeds.
+- Math CAPTCHA is handled inside the Express backend with a temporary Redis store in production (bounded memory in local development), rather than an external service. It validates login requests before authentication succeeds.
 - `Mail API`: sends invite emails, password reset emails, and admin-originated messages.
 - `File Storage`: stores lesson files, assessment attachments, profile images, and student submission files using local uploads or Supabase Storage.
 - `AI Model API`: supports AI-based assessment generation and recommendation-related text generation.
