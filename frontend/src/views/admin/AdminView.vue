@@ -360,15 +360,15 @@
           </article>
         </section>
 
-        <section class="ai-analytics-section section-card tw:inline:[border-color:#69aa47]!" >
+        <section class="ai-analytics-section section-card tw:inline:[border-color:#69aa47]!">
           <div class="section-header analytics-section-header">
             <div class="analytics-section-heading">
               <h3 class="section-title">
-                <i class="fas fa-robot tw:inline:[margin-right:0.5rem] tw:inline:[color:var(--edu-teal,_#374151)]" ></i>
-                AI Usage Quality
+                <i class="fas fa-robot tw:inline:[margin-right:0.5rem] tw:inline:[color:var(--edu-teal,_#374151)]"></i>
+                AI Usage
               </h3>
               <p class="analytics-section-subtitle">
-                Track how many generated exams are actually attempted and which difficulty level is performing best.
+                Track AI generation requests and how many complete successfully.
               </p>
             </div>
           </div>
@@ -376,54 +376,48 @@
           <div class="ai-analytics-grid">
             <div class="ai-analytics-card ai-chart-card">
               <h4 class="config-subtitle">
-                <i class="fas fa-chart-area"></i> Difficulty Distribution
+                <i class="fas fa-chart-line"></i> AI Requests Over Time
               </h4>
-              <div class="chart-wrap chart-wrap--hexagon">
-                <canvas ref="aiUsageCanvas" aria-label="AI exam difficulty hexagon chart"></canvas>
+              <div v-if="aiMetrics.requestCountAvailable" class="chart-wrap chart-wrap--ai-usage">
+                <canvas ref="aiUsageCanvas" aria-label="Daily AI generation requests over the past 30 days"></canvas>
               </div>
-              <p class="ai-chart-caption">How many generated assessments fall under easy, medium, and hard difficulty.</p>
+              <div v-else class="chart-wrap chart-wrap--ai-usage insight-empty" role="status">
+                {{ loadingAnalytics ? 'Loading AI usage…' : 'AI usage is currently unavailable. Please try refreshing.' }}
+              </div>
+              <p class="ai-chart-caption">Daily generation requests over the past 30 days.</p>
             </div>
 
             <div class="ai-analytics-card ai-summary-card">
               <h4 class="config-subtitle">
-                <i class="fas fa-list-check"></i> Challenge Snapshot
+                <i class="fas fa-list-check"></i> Generation Requests
               </h4>
               <div class="ai-kpi-grid">
                 <div class="ai-kpi-item">
-                  <span class="ai-kpi-label">Total AI-Generated Exams</span>
-                  <span class="ai-kpi-value">{{ formatNumber(aiMetrics.totalGeneratedExams) }}</span>
+                  <span class="ai-kpi-label">Total AI Requests</span>
+                  <span class="ai-kpi-value">{{ aiMetrics.requestCountAvailable ? formatNumber(aiMetrics.totalGenerationRequests) : '—' }}</span>
                 </div>
                 <div class="ai-kpi-item">
-                  <span class="ai-kpi-label">Easy</span>
-                  <span class="ai-kpi-value">{{ formatNumber(aiMetrics.difficultyData.easy) }}</span>
+                  <span class="ai-kpi-label">Successful Generations</span>
+                  <span class="ai-kpi-value">{{ aiMetrics.requestCountAvailable ? formatNumber(aiMetrics.successfulGenerationRequests) : '—' }}</span>
                 </div>
                 <div class="ai-kpi-item">
-                  <span class="ai-kpi-label">Medium</span>
-                  <span class="ai-kpi-value">{{ formatNumber(aiMetrics.difficultyData.medium) }}</span>
+                  <span class="ai-kpi-label">Failed Requests</span>
+                  <span class="ai-kpi-value">{{ aiMetrics.requestCountAvailable ? formatNumber(aiMetrics.failedGenerationRequests) : '—' }}</span>
                 </div>
                 <div class="ai-kpi-item">
-                  <span class="ai-kpi-label">Hard</span>
-                  <span class="ai-kpi-value">{{ formatNumber(aiMetrics.difficultyData.hard) }}</span>
+                  <span class="ai-kpi-label">Requests in Past 30 Days</span>
+                  <span class="ai-kpi-value">{{ aiMetrics.requestCountAvailable ? formatNumber(aiMetrics.recentGenerationRequests) : '—' }}</span>
                 </div>
               </div>
 
               <div class="ai-highlight">
-                <span class="ai-highlight-label">Most Used Difficulty</span>
+                <span class="ai-highlight-label">Generation Success Rate</span>
                 <strong class="ai-highlight-value">
-                  {{ aiMetrics.topDifficulty || 'No data yet' }}
+                  {{ aiMetrics.requestCountAvailable ? (aiMetrics.totalGenerationRequests > 0 ? formatPercent(aiMetrics.successfulGenerationRequests / aiMetrics.totalGenerationRequests * 100) : 'No requests yet') : '—' }}
                 </strong>
-                <small v-if="aiMetrics.topDifficulty">
-                  Based on the current generated assessment counts by difficulty level.
-                </small>
+                <small>Includes generated drafts, even if they were never published.</small>
               </div>
-
-              <h5 class="ai-examtype-title">Exam Type Distribution</h5>
-              <div class="ai-examtype-list">
-                <span v-if="aiMetrics.examTypes.length === 0" class="ai-examtype-pill">No data yet</span>
-                <span v-for="type in aiMetrics.examTypes" :key="type.name" class="ai-examtype-pill">
-                  {{ type.name }}: {{ type.count }}
-                </span>
-              </div>
+              <p class="ai-chart-caption">Based on recorded AI generation requests.</p>
             </div>
           </div>
         </section>
@@ -588,27 +582,14 @@ export default {
       atRiskSubjects: []
     })
 
-    // AI Metrics
+    // AI generation requests are counted from the existing audit history.
     const aiMetrics = reactive({
-      totalGeneratedExams: 0,
-      totalAiChallenges: 0,
-      recentChallenges: 0,
-      topExamType: '',
-      examTypes: [],
-      difficultyData: {
-        easy: 0,
-        medium: 0,
-        hard: 0
-      },
-      topDifficulty: '',
-      attemptedExams: 0,
-      unattemptedExams: 0,
-      completionRate: 0,
-      mostEffectiveDifficulty: null,
-      usageDistribution: {
-        labels: ['Attempted', 'Not Yet Attempted'],
-        values: [0, 0],
-      },
+      requestCountAvailable: false,
+      totalGenerationRequests: 0,
+      successfulGenerationRequests: 0,
+      failedGenerationRequests: 0,
+      recentGenerationRequests: 0,
+      dailyGenerationRequests: { labels: [], values: [] },
     })
 
     const metricModalConfig = {
@@ -821,35 +802,15 @@ export default {
     }
 
     const applyAiAnalyticsPayload = (payload = {}) => {
-      const easyCount = payload.difficultyData?.easy ?? 0
-      const mediumCount = payload.difficultyData?.medium ?? 0
-      const hardCount = payload.difficultyData?.hard ?? 0
-      const difficultyEntries = [
-        { key: 'easy', value: easyCount },
-        { key: 'medium', value: mediumCount },
-        { key: 'hard', value: hardCount },
-      ]
-      const topDifficultyEntry = [...difficultyEntries].sort((left, right) => right.value - left.value)[0]
-
       Object.assign(aiMetrics, {
-        totalGeneratedExams: payload.totalGeneratedExams ?? 0,
-        totalAiChallenges: payload.totalAiChallenges ?? 0,
-        recentChallenges: payload.recentChallenges ?? 0,
-        topExamType: payload.topExamType || '',
-        examTypes: Array.isArray(payload.examTypes) ? payload.examTypes : [],
-        difficultyData: {
-          easy: easyCount,
-          medium: mediumCount,
-          hard: hardCount,
-        },
-        topDifficulty: topDifficultyEntry?.value ? topDifficultyEntry.key : '',
-        attemptedExams: payload.attemptedExams ?? 0,
-        unattemptedExams: payload.unattemptedExams ?? 0,
-        completionRate: payload.completionRate ?? 0,
-        mostEffectiveDifficulty: payload.mostEffectiveDifficulty ?? null,
-        usageDistribution: {
-          labels: ['Easy', 'Medium', 'Hard'],
-          values: [easyCount, mediumCount, hardCount],
+        requestCountAvailable: payload.requestCountAvailable === true,
+        totalGenerationRequests: payload.totalGenerationRequests ?? 0,
+        successfulGenerationRequests: payload.successfulGenerationRequests ?? 0,
+        failedGenerationRequests: payload.failedGenerationRequests ?? 0,
+        recentGenerationRequests: payload.recentGenerationRequests ?? 0,
+        dailyGenerationRequests: {
+          labels: Array.isArray(payload.dailyGenerationRequests?.labels) ? payload.dailyGenerationRequests.labels : [],
+          values: Array.isArray(payload.dailyGenerationRequests?.values) ? payload.dailyGenerationRequests.values : [],
         },
       })
     }
@@ -1033,57 +994,43 @@ export default {
     }
 
     const createAiUsageChart = () => {
-      if (!aiUsageCanvas.value) return
+      if (!aiUsageCanvas.value || !aiMetrics.requestCountAvailable) return
 
       const ctx = aiUsageCanvas.value.getContext('2d')
-      const [easy = 0, medium = 0, hard = 0] = aiMetrics.usageDistribution.values
-      const hexagonValues = [easy, easy, medium, medium, hard, hard]
-      const difficultyLabels = ['Easy', '', 'Medium', '', 'Hard', '']
-      const tooltipLabels = ['Easy', 'Easy', 'Medium', 'Medium', 'Hard', 'Hard']
-
       aiUsageChart = new Chart(ctx, {
-        type: 'radar',
+        type: 'bar',
         data: {
-          labels: difficultyLabels,
-          datasets: [
-            {
-              label: 'Generated assessments',
-              data: hexagonValues,
-              backgroundColor: 'rgba(59, 130, 246, 0.2)',
-              borderColor: '#2563eb',
-              borderWidth: 3,
-              pointBackgroundColor: ['#3b82f6', '#3b82f6', '#14b8a6', '#14b8a6', '#f59e0b', '#f59e0b'],
-              pointBorderColor: '#ffffff',
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-            },
-          ],
+          labels: aiMetrics.dailyGenerationRequests.labels,
+          datasets: [{
+            label: 'AI generation requests',
+            data: aiMetrics.dailyGenerationRequests.values,
+            backgroundColor: '#69aa47',
+            borderColor: '#3f7f2a',
+            borderWidth: 1,
+            borderRadius: 4,
+            maxBarThickness: 24,
+          }],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            r: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#475569', autoSkip: true, maxTicksLimit: 6, maxRotation: 0 },
+            },
+            y: {
               beginAtZero: true,
-              angleLines: { color: 'rgba(100, 116, 139, 0.3)' },
-              grid: { circular: false, color: 'rgba(148, 163, 184, 0.35)' },
-              pointLabels: {
-                color: '#334155',
-                font: { size: 12, weight: '600' },
-              },
-              ticks: {
-                display: false,
-                precision: 0,
-              },
+              suggestedMax: 1,
+              ticks: { precision: 0, color: '#475569' },
+              grid: { color: 'rgba(203, 213, 225, 0.55)' },
             },
           },
           plugins: {
             legend: { display: false },
             tooltip: {
               callbacks: {
-                title: (items) => tooltipLabels[items[0]?.dataIndex] || '',
-                label: (context) => `${context.dataset.label}: ${context.raw}`,
+                label: (context) => `AI requests: ${context.raw}`,
               },
             },
           },
@@ -1454,7 +1401,7 @@ export default {
   @apply tw:[min-height:320px];
 }
 
-.chart-wrap--hexagon {
+.chart-wrap--ai-usage {
   @apply tw:[min-height:320px];
 }
 
@@ -1815,13 +1762,6 @@ export default {
   @apply tw:overflow-hidden;
 }
 
-.ai-examtype-pill {
-  @apply tw:[border:1px_solid_#d1d5db];
-  @apply tw:[background:#f9fafb];
-  @apply tw:[color:#1f2937];
-  @apply tw:[font-weight:600];
-}
-
 .activity-item {
   @apply tw:relative;
   @apply tw:[border:1px_solid_#e7ecf2];
@@ -2018,7 +1958,7 @@ export default {
 
   .chart-wrap,
   .chart-wrap--lg,
-  .chart-wrap--hexagon {
+  .chart-wrap--ai-usage {
     @apply tw:[min-height:260px];
   }
 
@@ -2054,7 +1994,7 @@ export default {
 
   .chart-wrap,
   .chart-wrap--lg,
-  .chart-wrap--hexagon {
+  .chart-wrap--ai-usage {
     @apply tw:[min-height:220px];
     @apply tw:[padding:0.6rem];
   }

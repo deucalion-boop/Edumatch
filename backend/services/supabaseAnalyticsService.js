@@ -1,6 +1,11 @@
 const { getSupabaseStorageClient } = require('./supabaseStorageService');
 
 const ANALYTICS_ROLES = ['student', 'teacher', 'headteacher', 'secretary'];
+const AI_GENERATION_ENDPOINTS = [
+  '/api/teacher/assessments/ai-generate',
+  '/api/headteacher/assessments/ai-generate',
+];
+const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
 
 function analyticsError(error, fallbackMessage) {
   const normalized = new Error(String(error?.message || fallbackMessage));
@@ -53,6 +58,92 @@ function formatTimeAgo(value) {
   return `${Math.floor(seconds / 604800)}w ago`;
 }
 
+function aiUsageDayKey(value) {
+  const date = dateValue(value);
+  return date ? new Date(date.getTime() + MANILA_OFFSET_MS).toISOString().slice(0, 10) : '';
+}
+
+function aiUsageBuckets(now) {
+  const today = new Date(`${aiUsageDayKey(now)}T00:00:00+08:00`);
+  return Array.from({ length: 30 }, (_, index) => {
+    const date = new Date(today.getTime() - (29 - index) * 24 * 60 * 60 * 1000);
+    return {
+      key: aiUsageDayKey(date),
+      label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Manila' }),
+      start: date.toISOString(),
+    };
+  });
+}
+
+function aiGenerationQuery(client, columns, options) {
+  return client.from('audit_logs').select(columns, options)
+    .eq('method', 'POST')
+    .in('endpoint', AI_GENERATION_ENDPOINTS);
+}
+
+async function readAiUsage(client, now) {
+  const buckets = aiUsageBuckets(now);
+  const dailyGenerationRequests = { labels: buckets.map((bucket) => bucket.label), values: buckets.map(() => 0) };
+  const unavailable = {
+    requestCountAvailable: false,
+    totalGenerationRequests: null,
+    successfulGenerationRequests: null,
+    failedGenerationRequests: null,
+    recentGenerationRequests: null,
+    dailyGenerationRequests: { labels: dailyGenerationRequests.labels, values: [] },
+  };
+
+  try {
+    const countOptions = { count: 'exact', head: true };
+    const usageQuery = (columns, options) => aiGenerationQuery(client, columns, options)
+      .lte('created_at', now.toISOString());
+    const recentQuery = (columns, options) => usageQuery(columns, options)
+      .gte('created_at', buckets[0].start);
+    const results = await Promise.all([
+      usageQuery('id', countOptions),
+      usageQuery('id', countOptions).eq('succeeded', true),
+      usageQuery('id', countOptions).eq('succeeded', false),
+      recentQuery('id', countOptions),
+    ]);
+    results.forEach((result) => {
+      if (result.error) throw analyticsError(result.error, 'Failed to read AI request counts from Supabase');
+      if (!Number.isInteger(result.count)) throw new Error('AI request count was not returned');
+    });
+
+    const dayIndexes = new Map(buckets.map((bucket, index) => [bucket.key, index]));
+    // Audit events include successful drafts even when no assessment is saved.
+    // Page through the recent events so Supabase's row limit cannot truncate usage.
+    let offset = 0;
+    while (offset < results[3].count) {
+      const result = await recentQuery('id,created_at')
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(offset, offset + 499);
+      if (result.error) throw analyticsError(result.error, 'Failed to read AI request history from Supabase');
+      const rows = result.data || [];
+      if (!rows.length) throw new Error('AI request history was incomplete');
+      rows.forEach((row) => {
+        const index = dayIndexes.get(aiUsageDayKey(row.created_at));
+        if (index !== undefined) dailyGenerationRequests.values[index] += 1;
+      });
+      offset += rows.length;
+    }
+
+    return {
+      requestCountAvailable: true,
+      totalGenerationRequests: results[0].count,
+      successfulGenerationRequests: results[1].count,
+      failedGenerationRequests: results[2].count,
+      recentGenerationRequests: results[3].count,
+      dailyGenerationRequests,
+    };
+  } catch (_error) {
+    // An unavailable audit source must not turn into a misleading zero count
+    // or prevent the rest of the dashboard from loading.
+    return unavailable;
+  }
+}
+
 async function readAnalyticsRows() {
   const client = getSupabaseStorageClient();
   const [usersResult, lessonsResult, assessmentsResult] = await Promise.all([
@@ -100,8 +191,11 @@ function detailUser(user) {
 }
 
 async function getSupabaseAnalytics() {
-  const { users, lessons, assessments } = await readAnalyticsRows();
   const now = new Date();
+  const [{ users, lessons, assessments }, aiUsage] = await Promise.all([
+    readAnalyticsRows(),
+    readAiUsage(getSupabaseStorageClient(), now),
+  ]);
   const periodStart = new Date(now);
   periodStart.setDate(periodStart.getDate() - 30);
   const previousPeriodStart = new Date(periodStart);
@@ -236,6 +330,7 @@ async function getSupabaseAnalytics() {
       atRiskSubjects,
     },
     aiAnalytics: {
+      ...aiUsage,
       totalGeneratedExams: assessments.length,
       totalAiChallenges: assessments.length,
       recentChallenges: assessments.filter((assessment) => inRange(assessment.created_at, periodStart)).length,

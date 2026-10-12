@@ -665,14 +665,6 @@
               View Subject
             </button>
             <button
-              v-if="canManageUser(selectedUser) && ['student', 'teacher'].includes(selectedUser?.role)"
-              class="action-card"
-              @click="sendMessage"
-            >
-              <i class="fas fa-envelope"></i>
-              Send Message
-            </button>
-            <button
               v-if="canManageUser(selectedUser) && selectedUser?.status === 'pending'"
               class="action-card"
               @click="sendInviteToUser"
@@ -1259,90 +1251,6 @@
       </div>
     </div>
 
-    <!-- Send Message Modal -->
-    <div class="modal message-modal" :class="{ active: modals.sendMessage }">
-      <div class="modal-overlay" @click="closeSendMessageModal"></div>
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3><i class="fas fa-envelope"></i> Send Message</h3>
-          <button class="modal-close" @click="closeSendMessageModal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form id="messageForm" class="message-form" @submit.prevent="sendMessageToUser">
-            <input type="hidden" id="messageUserId" v-model="messageData.userId">
-            <div class="message-recipient">
-              <div class="message-recipient-avatar">
-                <img
-                  v-if="selectedUser?.avatar"
-                  :src="selectedUser.avatar"
-                  :alt="selectedUser.name"
-                >
-                <div v-else class="avatar-placeholder" :class="selectedUser?.role || 'student'">
-                  {{ getInitials(selectedUser?.name || 'User') }}
-                </div>
-              </div>
-              <div class="message-recipient-copy">
-                <span class="message-recipient-label">Sending to</span>
-                <strong id="recipientName">{{ selectedUser ? selectedUser.name : '' }}</strong>
-                <span>{{ selectedUser?.email || 'In-app user' }}</span>
-              </div>
-              <span class="message-recipient-check" aria-label="Recipient selected">
-                <i class="fas fa-check" aria-hidden="true"></i>
-              </span>
-            </div>
-            <div class="message-compose-card">
-              <div class="form-group">
-                <label for="messageSubject">Subject</label>
-                <input 
-                  type="text" 
-                  id="messageSubject" 
-                  v-model="messageData.subject"
-                  placeholder="Enter message subject" 
-                  required
-                >
-              </div>
-              <div class="form-group">
-                <label for="messageContent">Message</label>
-                <textarea 
-                  id="messageContent" 
-                  v-model="messageData.content"
-                  placeholder="Write a clear message..."
-                  required
-                ></textarea>
-              </div>
-            </div>
-            <div class="message-options">
-              <span class="message-options-title">Delivery options</span>
-              <label class="checkbox-label message-option-card">
-                <input type="checkbox" v-model="messageData.sendEmail">
-                <span class="checkmark"></span>
-                <span class="message-option-copy">
-                  <strong>Send as email too</strong>
-                  <small>Deliver a copy to the user’s email address.</small>
-                </span>
-              </label>
-              <label class="checkbox-label message-option-card">
-                <input type="checkbox" v-model="messageData.urgent">
-                <span class="checkmark"></span>
-                <span class="message-option-copy">
-                  <strong>Mark as urgent</strong>
-                  <small>Highlight this message for faster attention.</small>
-                </span>
-              </label>
-            </div>
-          </form>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-primary send-message-btn" :disabled="isSendingMessage" @click="sendMessageToUser">
-            <i :class="['fas', isSendingMessage ? 'fa-spinner fa-spin' : 'fa-paper-plane']"></i>
-            {{ isSendingMessage ? ' Sending...' : ' Send Message' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Confirmation Modal -->
     <div class="modal" :class="{ active: modals.confirmation }">
       <div class="modal-overlay" @click="closeConfirmationModal"></div>
@@ -1460,7 +1368,6 @@ export default {
       viewProfile: false,
       viewProgress: false,
       viewCourses: false,
-      sendMessage: false,
       confirmation: false
     })
     
@@ -1508,14 +1415,6 @@ export default {
       avatar: ''
     })
     
-    const messageData = reactive({
-      userId: '',
-      subject: '',
-      content: '',
-      sendEmail: true,
-      urgent: false
-    })
-    
     const confirmAction = ref(null)
     const confirmTitle = ref('Confirm Action')
     const confirmMessage = ref('Are you sure you want to perform this action?')
@@ -1525,7 +1424,6 @@ export default {
     const isSavingEdit = ref(false)
     const isProfileLoading = ref(false)
     const isProgressLoading = ref(false)
-    const isSendingMessage = ref(false)
     const archivedPdfExportRequests = ref([])
     const isExportRequestsLoading = ref(false)
     const activeExportRequestActionId = ref('')
@@ -2303,7 +2201,6 @@ export default {
         || modals.addUser
         || modals.viewProgress
         || modals.viewCourses
-        || modals.sendMessage
         || modals.confirmation
         || modals.userActions
       ),
@@ -2707,62 +2604,6 @@ export default {
       modals.viewCourses = false
     }
     
-    const sendMessage = () => {
-      if (!selectedUser.value?.id) {
-        showToastMessage('Unable to open message composer', 'error')
-        return
-      }
-
-      messageData.userId = selectedUser.value.id
-      modals.sendMessage = true
-      closeUserActionsModal()
-    }
-    
-    const closeSendMessageModal = () => {
-      modals.sendMessage = false
-      messageData.subject = ''
-      messageData.content = ''
-      messageData.urgent = false
-    }
-    
-    const sendMessageToUser = async () => {
-      const userId = String(messageData.userId || '').trim()
-      if (!userId) {
-        showToastMessage('Unable to send message: recipient not found', 'error')
-        return
-      }
-
-      if (!String(messageData.subject || '').trim()) {
-        showToastMessage('Please enter a message subject', 'error')
-        return
-      }
-
-      if (!String(messageData.content || '').trim()) {
-        showToastMessage('Please enter a message', 'error')
-        return
-      }
-
-      try {
-        isSendingMessage.value = true
-        await axios.post(
-          `${managementApiPath.value}/users/${userId}/messages`,
-          {
-            subject: String(messageData.subject || '').trim(),
-            content: String(messageData.content || '').trim(),
-            urgent: messageData.urgent === true
-          },
-          getAuthConfig()
-        )
-
-        showToastMessage(messageData.urgent ? 'Urgent message sent successfully' : 'Message sent successfully')
-        closeSendMessageModal()
-      } catch (error) {
-        showToastMessage(error.response?.data?.message || 'Failed to send message', 'error')
-      } finally {
-        isSendingMessage.value = false
-      }
-    }
-
     const sendInviteToUser = async () => {
       const userId = selectedUser.value?.id
       if (!userId) {
@@ -3064,8 +2905,6 @@ export default {
       newUser,
       selectedUser,
       editUserData,
-      messageData,
-      isSendingMessage,
       confirmTitle,
       confirmMessage,
       confirmPassword,
@@ -3155,9 +2994,6 @@ export default {
       closeViewProgressModal,
       viewUserCourses,
       closeViewCoursesModal,
-      sendMessage,
-      closeSendMessageModal,
-      sendMessageToUser,
       sendInviteToUser,
       toggleUserStatus,
       confirmDeleteUser,
@@ -5320,272 +5156,6 @@ body.admin-dashboard .btn.btn-primary.edit-user-btn:active {
 
 body.admin-dashboard .btn.btn-primary.edit-user-btn i {
   @apply tw:[color:#ffffff]!;
-}
-
-.modal.message-modal .modal-content {
-  @apply tw:[width:min(680px,_94vw)];
-  @apply tw:[max-width:680px];
-  @apply tw:[max-height:min(92vh,_820px)];
-  @apply tw:flex;
-  @apply tw:flex-col;
-  @apply tw:overflow-hidden;
-}
-
-.modal.message-modal .modal-body {
-  @apply tw:[min-height:0];
-  @apply tw:overflow-y-auto;
-  @apply tw:[padding:1rem_1.1rem];
-}
-
-.modal.message-modal .message-form {
-  @apply tw:grid;
-  @apply tw:[gap:1rem];
-}
-
-.modal.message-modal .message-recipient {
-  @apply tw:grid;
-  @apply tw:[grid-template-columns:52px_minmax(0,_1fr)_32px];
-  @apply tw:items-center;
-  @apply tw:[gap:0.8rem];
-  @apply tw:[padding:0.85rem];
-  @apply tw:[border:1px_solid_#d8e7d1];
-  @apply tw:[border-radius:15px];
-  @apply tw:[background:radial-gradient(circle_at_92%_20%,_rgba(105,_170,_71,_0.14),_transparent_32%),______#f7faf5];
-}
-
-.modal.message-modal .message-recipient-avatar {
-  @apply tw:[width:48px];
-  @apply tw:[height:48px];
-  @apply tw:overflow-hidden;
-  @apply tw:[border:2px_solid_#ffffff];
-  @apply tw:[border-radius:50%];
-  @apply tw:[background:#e8f0e4];
-  @apply tw:[box-shadow:0_5px_12px_rgba(49,_95,_35,_0.14)];
-}
-
-.modal.message-modal .message-recipient-avatar img,
-.modal.message-modal .message-recipient-avatar .avatar-placeholder {
-  @apply tw:w-full!;
-  @apply tw:h-full!;
-  @apply tw:min-w-full!;
-  @apply tw:min-h-full!;
-  @apply tw:max-w-full!;
-  @apply tw:max-h-full!;
-  @apply tw:[border-radius:50%]!;
-  @apply tw:object-cover;
-}
-
-.modal.message-modal .message-recipient-copy {
-  @apply tw:grid;
-  @apply tw:[min-width:0];
-  @apply tw:[gap:0.1rem];
-}
-
-.modal.message-modal .message-recipient-label {
-  @apply tw:[color:#5d7960];
-  @apply tw:[font-size:0.66rem];
-  @apply tw:[font-weight:800];
-  @apply tw:[letter-spacing:0.08em];
-  @apply tw:uppercase;
-}
-
-.modal.message-modal .message-recipient-copy strong {
-  @apply tw:overflow-hidden;
-  @apply tw:[color:#172033];
-  @apply tw:[font-size:0.92rem];
-  @apply tw:text-ellipsis;
-  @apply tw:whitespace-nowrap;
-}
-
-.modal.message-modal .message-recipient-copy > span:last-child {
-  @apply tw:overflow-hidden;
-  @apply tw:[color:#718096];
-  @apply tw:[font-size:0.75rem];
-  @apply tw:text-ellipsis;
-  @apply tw:whitespace-nowrap;
-}
-
-.modal.message-modal .message-recipient-check {
-  @apply tw:inline-grid;
-  @apply tw:[width:28px];
-  @apply tw:[height:28px];
-  @apply tw:place-items-center;
-  @apply tw:[border-radius:50%];
-  @apply tw:[background:#4f8a35];
-  @apply tw:[color:#ffffff];
-  @apply tw:[font-size:0.7rem];
-}
-
-.modal.message-modal .message-compose-card {
-  @apply tw:grid;
-  @apply tw:[gap:0.85rem];
-  @apply tw:[padding:1rem];
-  @apply tw:[border:1px_solid_#e1e8ee];
-  @apply tw:[border-radius:15px];
-  @apply tw:[background:#ffffff];
-  @apply tw:[box-shadow:0_5px_16px_rgba(15,_23,_42,_0.04)];
-}
-
-.modal.message-modal .form-group {
-  @apply tw:[margin:0];
-}
-
-.modal.message-modal .form-group label {
-  @apply tw:block;
-  @apply tw:[margin-bottom:0.4rem];
-  @apply tw:[color:#475569];
-  @apply tw:[font-size:0.78rem];
-  @apply tw:[font-weight:700];
-}
-
-.modal.message-modal .form-group input,
-.modal.message-modal .form-group textarea {
-  @apply tw:w-full;
-  @apply tw:[border:1px_solid_#dce3ea];
-  @apply tw:[border-radius:11px];
-  @apply tw:[background:#f9fafb];
-  @apply tw:[color:#172033];
-  @apply tw:[font-size:0.88rem];
-  @apply tw:[transition:border-color_0.18s_ease,_box-shadow_0.18s_ease,_background_0.18s_ease];
-}
-
-.modal.message-modal .form-group input {
-  @apply tw:[min-height:44px];
-  @apply tw:[padding:0.7rem_0.85rem];
-}
-
-.modal.message-modal .form-group textarea {
-  @apply tw:[min-height:170px];
-  @apply tw:[max-height:320px];
-  @apply tw:[padding:0.8rem_0.85rem];
-  @apply tw:[line-height:1.55];
-  @apply tw:resize-y;
-}
-
-.modal.message-modal .form-group input:focus,
-.modal.message-modal .form-group textarea:focus {
-  @apply tw:[border-color:#69aa47];
-  @apply tw:[outline:none];
-  @apply tw:[background:#ffffff];
-  @apply tw:[box-shadow:0_0_0_3px_rgba(105,_170,_71,_0.14)];
-}
-
-.modal.message-modal .message-options {
-  @apply tw:grid;
-  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
-  @apply tw:[gap:0.65rem];
-  @apply tw:[margin:0];
-  @apply tw:[padding:0];
-  @apply tw:[background:transparent];
-}
-
-.modal.message-modal .message-options-title {
-  @apply tw:[grid-column:1_/_-1];
-  @apply tw:[color:#475569];
-  @apply tw:[font-size:0.76rem];
-  @apply tw:[font-weight:750];
-}
-
-.modal.message-modal .message-option-card {
-  @apply tw:grid;
-  @apply tw:[grid-template-columns:20px_minmax(0,_1fr)];
-  @apply tw:[align-items:start];
-  @apply tw:[gap:0.65rem];
-  @apply tw:[min-width:0];
-  @apply tw:[margin:0];
-  @apply tw:[padding:0.75rem];
-  @apply tw:[border:1px_solid_#e1e8ee];
-  @apply tw:[border-radius:12px];
-  @apply tw:[background:#f8fafc];
-  @apply tw:[color:#334155];
-  @apply tw:[transition:border-color_0.18s_ease,_background_0.18s_ease];
-}
-
-.modal.message-modal .message-option-card:hover {
-  @apply tw:[border-color:#bdd6b1];
-  @apply tw:[background:#f7faf5];
-}
-
-.modal.message-modal .message-option-card .checkmark {
-  @apply tw:[margin-top:0.1rem];
-  @apply tw:[border-color:#a8b5c3];
-  @apply tw:[border-radius:6px];
-}
-
-.modal.message-modal .message-option-card input:checked + .checkmark {
-  @apply tw:[border-color:#4f8a35];
-  @apply tw:[background:#edf7e9];
-}
-
-.modal.message-modal .message-option-card .checkmark::after {
-  @apply tw:[background:#4f8a35];
-}
-
-.modal.message-modal .message-option-copy {
-  @apply tw:grid;
-  @apply tw:[min-width:0];
-  @apply tw:[gap:0.18rem];
-}
-
-.modal.message-modal .message-option-copy strong {
-  @apply tw:[color:#334155];
-  @apply tw:[font-size:0.78rem];
-}
-
-.modal.message-modal .message-option-copy small {
-  @apply tw:[color:#7b8797];
-  @apply tw:[font-size:0.68rem];
-  @apply tw:[line-height:1.4];
-}
-
-.modal.message-modal .modal-actions {
-  @apply tw:justify-end;
-  @apply tw:[padding:0.8rem_1.1rem];
-  @apply tw:[border-top:1px_solid_#e5e7eb];
-  @apply tw:[background:#ffffff];
-}
-
-body.admin-dashboard .modal.message-modal .btn.btn-primary.send-message-btn {
-  @apply tw:[min-width:150px];
-  @apply tw:[background:#4f8a35]!;
-  @apply tw:bg-none!;
-  @apply tw:[border-color:#4f8a35]!;
-  @apply tw:[color:#ffffff]!;
-  @apply tw:[box-shadow:0_6px_14px_rgba(79,_138,_53,_0.22)]!;
-}
-
-body.admin-dashboard .modal.message-modal .btn.btn-primary.send-message-btn:hover,
-body.admin-dashboard .modal.message-modal .btn.btn-primary.send-message-btn:focus {
-  @apply tw:[background:#477d30]!;
-  @apply tw:[border-color:#477d30]!;
-  @apply tw:[color:#ffffff]!;
-}
-
-body.admin-dashboard .modal.message-modal .send-message-btn i {
-  @apply tw:[color:#ffffff]!;
-}
-
-@media (max-width: 600px) {
-  .modal.message-modal .modal-content {
-    @apply tw:[width:96vw];
-    @apply tw:[max-height:92vh];
-  }
-
-  .modal.message-modal .modal-body {
-    @apply tw:[padding:0.85rem];
-  }
-
-  .modal.message-modal .message-options {
-    @apply tw:[grid-template-columns:1fr];
-  }
-
-  .modal.message-modal .message-option-card {
-    @apply tw:[grid-column:1];
-  }
-
-  .modal.message-modal .modal-actions {
-    @apply tw:[padding:0.7rem_0.85rem];
-  }
 }
 
 .modal.new-user-modal .modal-content {
