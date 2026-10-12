@@ -378,6 +378,7 @@
             <div class="ai-analytics-card ai-chart-card">
               <h4 class="config-subtitle">
                 <i class="fas fa-chart-line"></i> AI Requests Over Time
+                <span class="chart-type-badge">Line chart</span>
               </h4>
               <div v-if="aiMetrics.requestCountAvailable" class="chart-wrap chart-wrap--ai-usage">
                 <canvas ref="aiUsageCanvas" aria-label="Daily AI generation requests over the past 30 days"></canvas>
@@ -1022,13 +1023,13 @@ export default {
             label: 'AI generation requests',
             data: aiMetrics.dailyGenerationRequests.values,
             backgroundColor: usageFill,
-            borderColor: '#3f7f2a',
-            borderWidth: 3,
+            borderColor: '#69aa47',
+            borderWidth: 4,
             fill: true,
             tension: 0.35,
-            pointRadius: 3,
-            pointHoverRadius: 5,
-            pointBackgroundColor: '#69aa47',
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#3f7f2a',
             pointBorderColor: '#ffffff',
             pointBorderWidth: 2,
           }],
@@ -1036,6 +1037,7 @@ export default {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { top: 12, right: 12, bottom: 8, left: 8 } },
           scales: {
             x: {
               grid: { display: false },
@@ -1423,7 +1425,30 @@ export default {
 }
 
 .chart-wrap--ai-usage {
+  @apply tw:[height:320px];
   @apply tw:[min-height:320px];
+  @apply tw:[border-color:#b7d8a6];
+  @apply tw:[background:linear-gradient(180deg,_#ffffff_0%,_#f4faef_100%)];
+}
+
+.chart-wrap--ai-usage canvas {
+  @apply tw:block!;
+  @apply tw:w-full!;
+  @apply tw:h-full!;
+}
+
+.chart-type-badge {
+  @apply tw:inline-flex;
+  @apply tw:[margin-left:0.5rem];
+  @apply tw:[padding:0.22rem_0.5rem];
+  @apply tw:[border:1px_solid_#69aa47];
+  @apply tw:[border-radius:999px];
+  @apply tw:[background:#effae9];
+  @apply tw:[color:#3f7f2a];
+  @apply tw:[font-size:0.68rem];
+  @apply tw:[font-weight:700];
+  @apply tw:uppercase;
+  @apply tw:[vertical-align:middle];
 }
 
 .trend-badge-grid {
@@ -1983,6 +2008,10 @@ export default {
     @apply tw:[min-height:260px];
   }
 
+  .chart-wrap--ai-usage {
+    @apply tw:[height:260px];
+  }
+
   .activity-content {
     @apply tw:[gap:0.7rem]!;
   }
@@ -2018,6 +2047,10 @@ export default {
   .chart-wrap--ai-usage {
     @apply tw:[min-height:220px];
     @apply tw:[padding:0.6rem];
+  }
+
+  .chart-wrap--ai-usage {
+    @apply tw:[height:220px];
   }
 
   .analytics-grid {
