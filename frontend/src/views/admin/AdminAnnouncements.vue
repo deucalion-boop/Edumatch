@@ -30,13 +30,13 @@
       <button v-if="isSidebarOpen" type="button" class="sidebar-backdrop" aria-label="Close sidebar" @click="closeSidebar"></button>
 
     <main class="admin-main announcement-admin-main">
-      <section class="announcement-hero">
-        <div><p class="announcement-kicker">School communications</p><h2>Post an announcement</h2><p>Send one update to students, teachers, head teachers, or any combination of these audiences.</p></div>
+      <section class="announcement-hero admin-profile-hero fade-in">
+        <div class="header-left"><p class="announcement-kicker">School communications</p><h2>Post an announcement</h2><p>Send one update to students, teachers, head teachers, or any combination of these audiences.</p></div>
         <span class="announcement-hero-icon"><i class="fas fa-bullhorn"></i></span>
       </section>
 
       <div class="announcement-admin-grid">
-        <form class="announcement-panel announcement-form" @submit.prevent="publish">
+        <form class="announcement-panel announcement-form section-card" @submit.prevent="publish">
           <div class="panel-heading"><div><h3>Compose message</h3><p>Recipients will see this in their notification feed and announcements page.</p></div></div>
           <label class="form-field"><span>Title</span><input v-model="form.title" maxlength="200" required placeholder="Enter a clear announcement title"><small>{{ form.title.length }}/200</small></label>
           <label class="form-field"><span>Message</span><textarea v-model="form.content" maxlength="5000" rows="9" required placeholder="Write the full announcement"></textarea><small>{{ form.content.length }}/5000</small></label>
@@ -49,7 +49,7 @@
           <button class="publish-button" type="submit" :disabled="saving"><i class="fas" :class="saving ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>{{ saving ? 'Posting...' : 'Post announcement' }}</button>
         </form>
 
-        <section class="announcement-panel history-panel">
+        <section class="announcement-panel history-panel section-card">
           <div class="panel-heading"><div><h3>Published announcements</h3><p>Recent school messages and their recipient totals.</p></div><button type="button" class="refresh-button" :disabled="loading" @click="load"><i class="fas fa-rotate"></i></button></div>
           <p v-if="loading" class="history-state">Loading announcements...</p>
           <div v-else-if="loadError" class="history-state error"><p>{{ loadError }}</p><button type="button" @click="load">Try again</button></div>
@@ -124,38 +124,39 @@ onMounted(load)
 
 <style scoped>
 @reference "../../styles/tailwind.css";
-.announcement-admin-main { @apply tw:w-full; @apply tw:[max-width:none]; @apply tw:[padding:2rem]; }
-.announcement-hero { @apply tw:flex; @apply tw:items-center; @apply tw:justify-between; @apply tw:[gap:1.5rem]; @apply tw:[padding:1.7rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-xl)]; @apply tw:[background:linear-gradient(135deg,_var(--primary),_var(--primary-dark))]; @apply tw:[color:var(--light)]; @apply tw:[box-shadow:var(--shadow-lg)]; }
-.announcement-kicker { @apply tw:[margin:0_0_.35rem]; @apply tw:[font-size:.78rem]; @apply tw:[font-weight:800]; @apply tw:uppercase; @apply tw:[letter-spacing:.1em]; @apply tw:[color:var(--gray-light)]; }
+.admin-announcements-page { @apply tw:[background:#F8FAFC]; }
+.announcement-admin-main { @apply tw:w-full; @apply tw:[max-width:none]; @apply tw:[padding:2rem]; @apply tw:[background:#F8FAFC]!; }
+.announcement-hero { @apply tw:flex; @apply tw:items-center; @apply tw:justify-between; @apply tw:[gap:1.5rem]; }
+.announcement-kicker { @apply tw:[margin:0_0_.15rem]; @apply tw:[font-size:.78rem]; @apply tw:[font-weight:800]; @apply tw:uppercase; @apply tw:[letter-spacing:.1em]; @apply tw:[color:#4f8a35]!; }
 .announcement-hero h2 { @apply tw:[margin:0]; @apply tw:[font-size:clamp(1.6rem,_3vw,_2.25rem)]; }
-.announcement-hero p { @apply tw:[margin:.45rem_0_0]; @apply tw:[color:var(--gray-light)]; }
-.announcement-hero-icon { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:72px]; @apply tw:[height:72px]; @apply tw:[border-radius:20px]; @apply tw:[background:rgba(255,_255,_255,_.14)]; @apply tw:[font-size:1.8rem]; }
+.announcement-hero p { @apply tw:[margin:.2rem_0_0]; @apply tw:[color:var(--admin-muted)]; }
+.announcement-hero-icon { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:72px]; @apply tw:[height:72px]; @apply tw:[border:1px_solid_transparent]; @apply tw:[border-radius:20px]; @apply tw:[background:linear-gradient(#FFFFFF,_#FFFFFF)_padding-box,linear-gradient(135deg,_#1E4307,_#FFD542,_#BBFF59)_border-box]; @apply tw:[color:#3F7F2A]; @apply tw:[font-size:1.8rem]; }
 .announcement-admin-grid { @apply tw:grid; @apply tw:[grid-template-columns:minmax(0,_1fr)_minmax(340px,_.85fr)]; @apply tw:[gap:1.25rem]; @apply tw:[margin-top:1.25rem]; }
-.announcement-panel { @apply tw:[padding:1.4rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-xl)]; @apply tw:[background:var(--admin-surface)]; @apply tw:[box-shadow:var(--shadow-md)]; }
+.announcement-panel { @apply tw:[padding:1.4rem]!; @apply tw:[border:1px_solid_transparent]!; @apply tw:[background:linear-gradient(#FFFFFF,_#FFFFFF)_padding-box,linear-gradient(135deg,_#1E4307,_#FFD542,_#BBFF59)_border-box]!; @apply tw:[box-shadow:0_10px_28px_rgba(30,_67,_7,_.08)]!; }
 .panel-heading { @apply tw:flex; @apply tw:items-start; @apply tw:justify-between; @apply tw:[gap:1rem]; @apply tw:[margin-bottom:1.2rem]; }
 .panel-heading h3 { @apply tw:[margin:0]; @apply tw:[color:var(--admin-text)]; }
 .panel-heading p { @apply tw:[margin:.3rem_0_0]; @apply tw:[color:var(--admin-muted)]; @apply tw:[font-size:.9rem]; }
 .form-field { @apply tw:grid; @apply tw:[gap:.45rem]; @apply tw:[margin-bottom:1rem]; @apply tw:[font-weight:700]; @apply tw:[color:var(--admin-text)]; }
 .form-field input, .form-field textarea { @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[padding:.8rem_.9rem]; @apply tw:[background:var(--admin-surface)]; @apply tw:[color:var(--admin-text)]; @apply tw:[font:inherit]; @apply tw:[font-weight:400]; @apply tw:[resize:vertical]; }
-.form-field input:focus, .form-field textarea:focus { @apply tw:[outline:2px_solid_var(--primary)]; @apply tw:[outline-offset:2px]; }
+.form-field input:focus, .form-field textarea:focus { @apply tw:[border-color:#69AA47]; @apply tw:[outline:3px_solid_rgba(105,_170,_71,_.16)]; @apply tw:[outline-offset:1px]; }
 .form-field small { @apply tw:text-right; @apply tw:[color:var(--admin-muted)]; @apply tw:[font-weight:400]; }
 .audience-field { @apply tw:[margin:0_0_1rem]; @apply tw:[padding:0]; @apply tw:[border:0]; }
 .audience-field legend { @apply tw:[margin-bottom:.55rem]; @apply tw:[font-weight:700]; @apply tw:[color:var(--admin-text)]; }
 .audience-option { @apply tw:inline-flex; @apply tw:[margin:0_.55rem_.55rem_0]; @apply tw:cursor-pointer; }
 .audience-option input { @apply tw:[position:absolute]; @apply tw:[opacity:0]; }
 .audience-option span { @apply tw:flex; @apply tw:items-center; @apply tw:[gap:.45rem]; @apply tw:[padding:.65rem_.8rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:var(--admin-surface)]; @apply tw:[color:var(--admin-muted)]; }
-.audience-option input:checked + span { @apply tw:[border-color:var(--primary)]; @apply tw:[background:var(--primary-light)]; @apply tw:[color:var(--primary)]; @apply tw:[box-shadow:inset_0_0_0_1px_var(--primary)]; }
+.audience-option input:checked + span { @apply tw:[border-color:#69AA47]; @apply tw:[background:rgba(187,_255,_89,_.2)]; @apply tw:[color:#1E4307]; @apply tw:[box-shadow:inset_0_0_0_1px_rgba(105,_170,_71,_.18)]; }
 .urgent-option { @apply tw:flex; @apply tw:items-start; @apply tw:[gap:.7rem]; @apply tw:[padding:.85rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:var(--admin-surface-alt)]; @apply tw:[color:var(--admin-text)]; }
 .urgent-option span { @apply tw:grid; @apply tw:[gap:.15rem]; }.urgent-option small { @apply tw:[color:var(--admin-muted)]; }
-.publish-button { @apply tw:w-full; @apply tw:[margin-top:1rem]; @apply tw:[padding:.85rem]; @apply tw:[border:0]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:var(--primary)]; @apply tw:[color:var(--light)]; @apply tw:[font-weight:800]; @apply tw:cursor-pointer; @apply tw:[transition:var(--transition-fast)]; }.publish-button:hover:not(:disabled) { @apply tw:[background:var(--primary-dark)]; @apply tw:[transform:translateY(-1px)]; }.publish-button i { @apply tw:[margin-right:.5rem]; }.publish-button:disabled { @apply tw:[opacity:.65]; @apply tw:cursor-wait; }
+.publish-button { @apply tw:w-full; @apply tw:[margin-top:1rem]; @apply tw:[padding:.85rem]; @apply tw:[border:1px_solid_#69AA47]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:#69AA47]; @apply tw:[color:#FFFFFF]; @apply tw:[font-weight:800]; @apply tw:cursor-pointer; @apply tw:[transition:var(--transition-fast)]; }.publish-button:hover:not(:disabled) { @apply tw:[border-color:#3F7F2A]; @apply tw:[background:#3F7F2A]; @apply tw:[box-shadow:0_10px_22px_rgba(63,_127,_42,_.22)]; @apply tw:[transform:translateY(-1px)]; }.publish-button i { @apply tw:[margin-right:.5rem]; }.publish-button:disabled { @apply tw:[opacity:.65]; @apply tw:cursor-wait; }
 .form-message { @apply tw:[padding:.75rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-md)]; }.form-message.error { @apply tw:[background:var(--admin-surface-alt)]; @apply tw:[color:var(--danger)]; }.form-message.success { @apply tw:[background:var(--admin-surface-alt)]; @apply tw:[color:var(--success)]; }
 .refresh-button, .history-state button { @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-md)]; @apply tw:[background:var(--admin-surface)]; @apply tw:[color:var(--admin-text)]; @apply tw:[padding:.55rem_.7rem]; @apply tw:cursor-pointer; @apply tw:[transition:var(--transition-fast)]; }
-.refresh-button:hover:not(:disabled), .history-state button:hover { @apply tw:[background:var(--primary-light)]; @apply tw:[border-color:var(--primary)]; }
+.refresh-button:hover:not(:disabled), .history-state button:hover { @apply tw:[background:#69AA47]; @apply tw:[border-color:#69AA47]; @apply tw:[color:#FFFFFF]; }
 .history-list { @apply tw:grid; @apply tw:[gap:.8rem]; @apply tw:[max-height:720px]; @apply tw:overflow-y-auto; }
 .history-card { @apply tw:[padding:1rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:var(--admin-surface-alt)]; }.history-card.urgent { @apply tw:[border-color:var(--warning)]; @apply tw:[box-shadow:inset_3px_0_0_var(--warning)]; }
 .history-title { @apply tw:flex; @apply tw:items-start; @apply tw:justify-between; @apply tw:[gap:.7rem]; }.history-title span { @apply tw:[padding:.2rem_.45rem]; @apply tw:[border-radius:99px]; @apply tw:[background:var(--gray-light)]; @apply tw:[color:var(--warning)]; @apply tw:[font-size:.72rem]; @apply tw:[font-weight:800]; }
 .history-card p { @apply tw:whitespace-pre-wrap; @apply tw:[color:var(--admin-muted)]; @apply tw:[line-height:1.5]; }.history-card small { @apply tw:[color:var(--admin-muted)]; }
-.audience-tags { @apply tw:flex; @apply tw:flex-wrap; @apply tw:[gap:.35rem]; @apply tw:[margin:.7rem_0]; }.audience-tags span { @apply tw:[padding:.25rem_.5rem]; @apply tw:[border-radius:99px]; @apply tw:[background:var(--gray-light)]; @apply tw:[color:var(--admin-text)]; @apply tw:[font-size:.75rem]; @apply tw:[font-weight:700]; }
+.audience-tags { @apply tw:flex; @apply tw:flex-wrap; @apply tw:[gap:.35rem]; @apply tw:[margin:.7rem_0]; }.audience-tags span { @apply tw:[padding:.25rem_.5rem]; @apply tw:[border:1px_solid_rgba(30,_67,_7,_.1)]; @apply tw:[border-radius:99px]; @apply tw:[background:rgba(187,_255,_89,_.22)]; @apply tw:[color:#1e4307]; @apply tw:[font-size:.75rem]; @apply tw:[font-weight:700]; }
 .history-state { @apply tw:[padding:2rem_1rem]; @apply tw:text-center; @apply tw:[color:var(--admin-muted)]; }.history-state.error { @apply tw:[color:var(--danger)]; }
 @media (max-width:900px) { .announcement-admin-grid { @apply tw:[grid-template-columns:1fr]; }.announcement-admin-main { @apply tw:[padding:1.25rem]; } }
 @media (max-width:520px) { .announcement-hero-icon { @apply tw:hidden; }.announcement-panel { @apply tw:[padding:1rem]; } }
