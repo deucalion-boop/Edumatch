@@ -50,7 +50,7 @@
           <p v-if="loading" class="history-state">Loading announcements...</p>
           <div v-else-if="loadError" class="history-state error"><p>{{ loadError }}</p><button type="button" @click="load">Try again</button></div>
           <div v-else-if="announcements.length" class="history-list">
-            <article v-for="item in announcements" :key="item.id" class="history-card" :class="{ urgent: item.urgent }">
+            <article v-for="item in announcements" :key="item.id" class="history-card">
               <div class="history-title"><strong>{{ item.title }}</strong><span v-if="item.urgent">Urgent</span></div>
               <p>{{ item.content }}</p>
               <div class="audience-tags"><span v-for="role in item.audienceRoles" :key="role">{{ roleLabel(role) }}</span></div>
@@ -149,7 +149,7 @@ onMounted(load)
 .refresh-button, .history-state button { @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-md)]; @apply tw:[background:var(--admin-surface)]; @apply tw:[color:var(--admin-text)]; @apply tw:[padding:.55rem_.7rem]; @apply tw:cursor-pointer; @apply tw:[transition:var(--transition-fast)]; }
 .refresh-button:hover:not(:disabled), .history-state button:hover { @apply tw:[background:#69AA47]; @apply tw:[border-color:#69AA47]; @apply tw:[color:#FFFFFF]; }
 .history-list { @apply tw:grid; @apply tw:[gap:.8rem]; @apply tw:[max-height:720px]; @apply tw:overflow-y-auto; }
-.history-card { @apply tw:[padding:1rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:var(--admin-surface-alt)]; }.history-card.urgent { @apply tw:[border-color:var(--warning)]; @apply tw:[box-shadow:inset_3px_0_0_var(--warning)]; }
+.history-card { @apply tw:[padding:1rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:var(--admin-surface-alt)]; @apply tw:[box-shadow:none]; }
 .history-title { @apply tw:flex; @apply tw:items-start; @apply tw:justify-between; @apply tw:[gap:.7rem]; }.history-title span { @apply tw:[padding:.2rem_.45rem]; @apply tw:[border-radius:99px]; @apply tw:[background:var(--gray-light)]; @apply tw:[color:var(--warning)]; @apply tw:[font-size:.72rem]; @apply tw:[font-weight:800]; }
 .history-card p { @apply tw:whitespace-pre-wrap; @apply tw:[color:var(--admin-muted)]; @apply tw:[line-height:1.5]; }.history-card small { @apply tw:[color:var(--admin-muted)]; }
 .audience-tags { @apply tw:flex; @apply tw:flex-wrap; @apply tw:[gap:.35rem]; @apply tw:[margin:.7rem_0]; }.audience-tags span { @apply tw:[padding:.25rem_.5rem]; @apply tw:[border:1px_solid_rgba(30,_67,_7,_.1)]; @apply tw:[border-radius:99px]; @apply tw:[background:rgba(187,_255,_89,_.22)]; @apply tw:[color:#1e4307]; @apply tw:[font-size:.75rem]; @apply tw:[font-weight:700]; }
