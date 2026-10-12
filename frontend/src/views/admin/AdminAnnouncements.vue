@@ -1,10 +1,35 @@
 <template>
   <div class="admin-dashboard admin-announcements-page">
     <header class="admin-header"><div class="container"><div class="admin-header-content">
+      <button type="button" class="mobile-menu-toggle" :aria-label="isSidebarOpen ? 'Close menu' : 'Open menu'" :aria-expanded="isSidebarOpen ? 'true' : 'false'" aria-controls="admin-sidebar-drawer" @click="toggleSidebar"><i class="fas fa-bars"></i></button>
       <div class="admin-logo"><div class="admin-logo-icon"><img src="/logo.png" alt="EduMatch" class="admin-logo-img"></div><div class="admin-logo-text"><h1>EduMatch Admin</h1><span class="page-title">Announcements</span></div></div>
       <div class="admin-actions"><button type="button" class="header-account-trigger" aria-label="Admin dashboard" @click="router.push('/admin/dashboard')"><i class="fas fa-home"></i></button></div>
     </div></div></header>
-    <main class="announcement-admin-main">
+
+    <div class="admin-layout">
+      <aside id="admin-sidebar-drawer" class="admin-sidebar" :class="{ active: isSidebarOpen }">
+        <div class="sidebar-header">
+          <div class="admin-sidebar-brand">
+            <div class="admin-sidebar-brand-icon"><img src="/logo.png" alt="EduMatch" class="admin-sidebar-logo-img"></div>
+            <div class="admin-sidebar-brand-copy"><h3>EduMatch</h3><p>Admin Portal</p></div>
+          </div>
+          <button type="button" class="sidebar-close" aria-label="Close sidebar" @click="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="sidebar-menu sidebar-nav" aria-label="Admin navigation">
+          <div class="nav-section">
+            <h4 class="nav-section-title">Navigation</h4>
+            <router-link to="/admin/dashboard" class="nav-link sidebar-item sidebar-item--dashboard" :class="{ active: isActive('/admin/dashboard') }" @click="closeSidebar"><i class="fas fa-tachometer-alt"></i><span>Overview</span></router-link>
+            <router-link to="/admin/users" class="nav-link sidebar-item sidebar-item--users" :class="{ active: isActive('/admin/users') }" @click="closeSidebar"><i class="fas fa-user-cog"></i><span>User Management</span></router-link>
+            <router-link to="/admin/requests" class="nav-link sidebar-item sidebar-item--requests" :class="{ active: isActive('/admin/requests') }" @click="closeSidebar"><i class="fas fa-inbox"></i><span>Request</span></router-link>
+            <router-link to="/admin/announcements" class="nav-link sidebar-item active" aria-current="page" @click="closeSidebar"><i class="fas fa-bullhorn"></i><span>Announcements</span></router-link>
+            <router-link to="/admin/login-attempts" class="nav-link sidebar-item sidebar-item--login-attempts" :class="{ active: isActive('/admin/login-attempts') }" @click="closeSidebar"><i class="fas fa-right-to-bracket"></i><span>Login Attempts</span></router-link>
+            <router-link to="/admin/audit-logs" class="nav-link sidebar-item sidebar-item--audit-logs" :class="{ active: isActive('/admin/audit-logs') }" @click="closeSidebar"><i class="fas fa-clipboard-list"></i><span>Audit Logs</span></router-link>
+          </div>
+        </nav>
+      </aside>
+      <button v-if="isSidebarOpen" type="button" class="sidebar-backdrop" aria-label="Close sidebar" @click="closeSidebar"></button>
+
+    <main class="admin-main announcement-admin-main">
       <section class="announcement-hero">
         <div><p class="announcement-kicker">School communications</p><h2>Post an announcement</h2><p>Send one update to students, teachers, head teachers, or any combination of these audiences.</p></div>
         <span class="announcement-hero-icon"><i class="fas fa-bullhorn"></i></span>
@@ -40,17 +65,20 @@
         </section>
       </div>
     </main>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore, resolveApiBaseUrl } from '../../stores/auth.js'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
+const isSidebarOpen = ref(false)
 const announcements = ref([])
 const loading = ref(false)
 const saving = ref(false)
@@ -65,6 +93,9 @@ const audienceOptions = [
   { value: 'headteacher', label: 'Head Teachers', icon: 'fas fa-user-tie' },
 ]
 const config = () => ({ headers: { Authorization: `Bearer ${auth.token}` } })
+const isActive = (path) => route.path === path
+const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
+const closeSidebar = () => { isSidebarOpen.value = false }
 
 async function load() {
   loading.value = true; loadError.value = ''
@@ -93,7 +124,7 @@ onMounted(load)
 
 <style scoped>
 @reference "../../styles/tailwind.css";
-.announcement-admin-main { @apply tw:[max-width:1280px]; @apply tw:[margin:0_auto]; @apply tw:[padding:2rem]; }
+.announcement-admin-main { @apply tw:w-full; @apply tw:[max-width:none]; @apply tw:[padding:2rem]; }
 .announcement-hero { @apply tw:flex; @apply tw:items-center; @apply tw:justify-between; @apply tw:[gap:1.5rem]; @apply tw:[padding:1.7rem]; @apply tw:[border-radius:22px]; @apply tw:[background:linear-gradient(135deg,_#102d57,_#2563eb)]; @apply tw:[color:white]; @apply tw:[box-shadow:0_18px_45px_rgba(37,_99,_235,_.2)]; }
 .announcement-kicker { @apply tw:[margin:0_0_.35rem]; @apply tw:[font-size:.78rem]; @apply tw:[font-weight:800]; @apply tw:uppercase; @apply tw:[letter-spacing:.1em]; @apply tw:[color:#bfdbfe]; }
 .announcement-hero h2 { @apply tw:[margin:0]; @apply tw:[font-size:clamp(1.6rem,_3vw,_2.25rem)]; }
