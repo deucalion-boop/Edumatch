@@ -2877,7 +2877,6 @@ export default {
     })
 
     onBeforeUnmount(() => {
-      document.body.classList.remove('admin-dashboard')
       document.body.classList.remove('admin-mobile-menu-open')
       window.removeEventListener('resize', syncMobileMenuBodyState)
       document.removeEventListener('click', handleDocumentClick)

@@ -787,7 +787,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   clearAutoRefreshTimer()
-  document.body.classList.remove('admin-dashboard')
   document.body.classList.remove('admin-mobile-menu-open')
   window.removeEventListener('resize', syncMobileMenuBodyState)
   window.removeEventListener('focus', handleWindowFocus)
