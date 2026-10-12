@@ -13,7 +13,7 @@ const HEADTEACHER_ENDPOINT = '/api/headteacher/assessments/ai-generate';
 function event(id, overrides = {}) {
   return {
     id, method: 'POST', endpoint: TEACHER_ENDPOINT, succeeded: true,
-    created_at: '2026-10-12T03:00:00.000Z', ...overrides,
+    actor_user_id: 'teacher', created_at: '2026-10-12T03:00:00.000Z', ...overrides,
   };
 }
 
@@ -80,6 +80,9 @@ test('AI usage counts recorded generation requests including unsaved drafts and 
   assert.equal(aiAnalytics.successfulGenerationRequests, 2);
   assert.equal(aiAnalytics.failedGenerationRequests, 1);
   assert.equal(aiAnalytics.recentGenerationRequests, 2);
+  assert.equal(aiAnalytics.activeAiUserCount, 1);
+  assert.equal(aiAnalytics.eligibleAiUserCount, 1);
+  assert.equal(aiAnalytics.aiAdoptionRate, 100);
   assert.equal(aiAnalytics.dailyGenerationRequests.values.reduce((sum, value) => sum + value, 0), 2);
   assert.equal(analytics.totalAssessments, 2, 'saved assessment counts remain independent from request counts');
 });

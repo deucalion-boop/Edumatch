@@ -90,6 +90,7 @@ async function readAiUsage(client, now) {
     successfulGenerationRequests: null,
     failedGenerationRequests: null,
     recentGenerationRequests: null,
+    aiUserIds: [],
     dailyGenerationRequests: { labels: dailyGenerationRequests.labels, values: [] },
   };
 
@@ -112,10 +113,12 @@ async function readAiUsage(client, now) {
 
     const dayIndexes = new Map(buckets.map((bucket, index) => [bucket.key, index]));
     // Audit events include successful drafts even when no assessment is saved.
-    // Page through the recent events so Supabase's row limit cannot truncate usage.
+    // Page through all events so Supabase's row limit cannot truncate either
+    // the daily chart or the distinct staff usage count.
+    const aiUserIds = new Set();
     let offset = 0;
-    while (offset < results[3].count) {
-      const result = await recentQuery('id,created_at')
+    while (offset < results[0].count) {
+      const result = await usageQuery('id,actor_user_id,created_at')
         .order('created_at', { ascending: true })
         .order('id', { ascending: true })
         .range(offset, offset + 499);
@@ -123,6 +126,7 @@ async function readAiUsage(client, now) {
       const rows = result.data || [];
       if (!rows.length) throw new Error('AI request history was incomplete');
       rows.forEach((row) => {
+        if (row.actor_user_id) aiUserIds.add(String(row.actor_user_id));
         const index = dayIndexes.get(aiUsageDayKey(row.created_at));
         if (index !== undefined) dailyGenerationRequests.values[index] += 1;
       });
@@ -135,6 +139,7 @@ async function readAiUsage(client, now) {
       successfulGenerationRequests: results[1].count,
       failedGenerationRequests: results[2].count,
       recentGenerationRequests: results[3].count,
+      aiUserIds: [...aiUserIds],
       dailyGenerationRequests,
     };
   } catch (_error) {
@@ -201,6 +206,15 @@ async function getSupabaseAnalytics() {
   const previousPeriodStart = new Date(periodStart);
   previousPeriodStart.setDate(previousPeriodStart.getDate() - 30);
   const trendBuckets = buildRecentDayBuckets(30);
+  const eligibleAiUsers = users.filter((user) => (
+    ['teacher', 'headteacher'].includes(user.role) && user.status === 'active'
+  ));
+  const eligibleAiUserIds = new Set(eligibleAiUsers.map((user) => String(user.id)));
+  const activeAiUserCount = aiUsage.aiUserIds.filter((id) => eligibleAiUserIds.has(id)).length;
+  const aiAdoptionRate = eligibleAiUsers.length
+    ? Number(((activeAiUserCount / eligibleAiUsers.length) * 100).toFixed(1))
+    : 0;
+  const { aiUserIds: _aiUserIds, ...publicAiUsage } = aiUsage;
   const activeUsers = users.filter((user) => user.status === 'active');
 
   const roleStats = Object.fromEntries(ANALYTICS_ROLES.map((role) => [
@@ -330,7 +344,10 @@ async function getSupabaseAnalytics() {
       atRiskSubjects,
     },
     aiAnalytics: {
-      ...aiUsage,
+      ...publicAiUsage,
+      activeAiUserCount,
+      eligibleAiUserCount: eligibleAiUsers.length,
+      aiAdoptionRate,
       totalGeneratedExams: assessments.length,
       totalAiChallenges: assessments.length,
       recentChallenges: assessments.filter((assessment) => inRange(assessment.created_at, periodStart)).length,

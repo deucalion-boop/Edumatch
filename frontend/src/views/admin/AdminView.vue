@@ -412,6 +412,14 @@
               </div>
 
               <div class="ai-highlight">
+                <span class="ai-highlight-label">AI Usage Rate</span>
+                <strong class="ai-highlight-value">
+                  {{ aiMetrics.requestCountAvailable ? formatPercent(aiMetrics.aiAdoptionRate) : '—' }}
+                </strong>
+                <small>{{ formatNumber(aiMetrics.activeAiUserCount) }} of {{ formatNumber(aiMetrics.eligibleAiUserCount) }} active teachers and head teachers have used AI.</small>
+              </div>
+
+              <div class="ai-highlight">
                 <span class="ai-highlight-label">Generation Success Rate</span>
                 <strong class="ai-highlight-value">
                   {{ aiMetrics.requestCountAvailable ? (aiMetrics.totalGenerationRequests > 0 ? formatPercent(aiMetrics.successfulGenerationRequests / aiMetrics.totalGenerationRequests * 100) : 'No requests yet') : '—' }}
@@ -589,6 +597,9 @@ export default {
       successfulGenerationRequests: 0,
       failedGenerationRequests: 0,
       recentGenerationRequests: 0,
+      activeAiUserCount: 0,
+      eligibleAiUserCount: 0,
+      aiAdoptionRate: 0,
       dailyGenerationRequests: { labels: [], values: [] },
     })
 
@@ -808,6 +819,9 @@ export default {
         successfulGenerationRequests: payload.successfulGenerationRequests ?? 0,
         failedGenerationRequests: payload.failedGenerationRequests ?? 0,
         recentGenerationRequests: payload.recentGenerationRequests ?? 0,
+        activeAiUserCount: payload.activeAiUserCount ?? 0,
+        eligibleAiUserCount: payload.eligibleAiUserCount ?? 0,
+        aiAdoptionRate: payload.aiAdoptionRate ?? 0,
         dailyGenerationRequests: {
           labels: Array.isArray(payload.dailyGenerationRequests?.labels) ? payload.dailyGenerationRequests.labels : [],
           values: Array.isArray(payload.dailyGenerationRequests?.values) ? payload.dailyGenerationRequests.values : [],
