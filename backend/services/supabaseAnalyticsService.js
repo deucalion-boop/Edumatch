@@ -47,6 +47,37 @@ function buildRecentDayBuckets(dayCount = 30) {
   return buckets;
 }
 
+function buildRecentMonthBuckets(monthCount = 12) {
+  const now = new Date();
+  return Array.from({ length: monthCount }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (monthCount - 1 - index), 1);
+    return {
+      key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
+      label: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+    };
+  });
+}
+
+function buildRecentYearBuckets(yearCount = 5) {
+  const currentYear = new Date().getFullYear();
+  return Array.from({ length: yearCount }, (_, index) => {
+    const year = currentYear - (yearCount - 1 - index);
+    return { key: String(year), label: String(year) };
+  });
+}
+
+function buildRoleTrend(users, buckets, keyForDate) {
+  return {
+    labels: buckets.map((bucket) => bucket.label),
+    series: ANALYTICS_ROLES.map((role) => ({
+      label: role === 'headteacher' ? 'Head Teachers' : `${role[0].toUpperCase()}${role.slice(1)}s`,
+      data: buckets.map((bucket) => users.filter((user) => (
+        user.role === role && keyForDate(user.created_at) === bucket.key
+      )).length),
+    })),
+  };
+}
+
 function formatTimeAgo(value) {
   const date = dateValue(value);
   if (!date) return 'Just now';
@@ -206,6 +237,8 @@ async function getSupabaseAnalytics() {
   const previousPeriodStart = new Date(periodStart);
   previousPeriodStart.setDate(previousPeriodStart.getDate() - 30);
   const trendBuckets = buildRecentDayBuckets(30);
+  const monthTrendBuckets = buildRecentMonthBuckets(12);
+  const yearTrendBuckets = buildRecentYearBuckets(5);
   const eligibleAiUsers = users.filter((user) => (
     ['teacher', 'headteacher'].includes(user.role) && user.status === 'active'
   ));
@@ -231,6 +264,17 @@ async function getSupabaseAnalytics() {
       user.role === role && String(user.created_at || '').slice(0, 10) === bucket.key
     )).length),
   }));
+  const roleTrendsByPeriod = {
+    day: { labels: trendBuckets.map((bucket) => bucket.label), series: roleSeries },
+    month: buildRoleTrend(users, monthTrendBuckets, (value) => {
+      const date = dateValue(value);
+      return date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` : '';
+    }),
+    year: buildRoleTrend(users, yearTrendBuckets, (value) => {
+      const date = dateValue(value);
+      return date ? String(date.getFullYear()) : '';
+    }),
+  };
 
   const examTypeCounts = new Map();
   const difficultyData = { easy: 0, medium: 0, hard: 0 };
@@ -330,6 +374,7 @@ async function getSupabaseAnalytics() {
       courseCompletion: 0,
       weeklyCompletionGrowth: 0,
       roleTrends: { labels: trendBuckets.map((bucket) => bucket.label), series: roleSeries },
+      roleTrendsByPeriod,
       learningFunnel: { labels: ['Lessons', 'Assessments', 'Submissions'], values: [lessons.length, assessments.length, 0] },
       detailTables: {
         students: users.filter((user) => user.role === 'student').map(detailUser),

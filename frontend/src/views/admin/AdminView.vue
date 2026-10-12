@@ -279,7 +279,18 @@
             <div class="panel-header">
               <div>
                 <h3 class="section-title">Role Growth Trends</h3>
-                <p class="panel-subtitle">Daily account creation over the last 30 days for every admin-managed role.</p>
+                <p class="panel-subtitle">{{ roleTrendSubtitle }}</p>
+              </div>
+              <div class="trend-period-filter" aria-label="Role growth chart period">
+                <button
+                  v-for="period in roleTrendPeriods"
+                  :key="period.value"
+                  type="button"
+                  :class="{ active: selectedRoleTrendPeriod === period.value }"
+                  @click="selectedRoleTrendPeriod = period.value"
+                >
+                  {{ period.label }}
+                </button>
               </div>
             </div>
             <div class="chart-wrap chart-wrap--lg">
@@ -574,6 +585,11 @@ export default {
         labels: [],
         series: [],
       },
+      roleTrendsByPeriod: {
+        day: { labels: [], series: [] },
+        month: { labels: [], series: [] },
+        year: { labels: [], series: [] },
+      },
       learningFunnel: {
         labels: ['Lessons', 'Assessments', 'Submissions'],
         values: [0, 0, 0],
@@ -590,6 +606,20 @@ export default {
       topTracks: [],
       atRiskSubjects: []
     })
+    const selectedRoleTrendPeriod = ref('day')
+    const roleTrendPeriods = [
+      { value: 'day', label: 'Day' },
+      { value: 'month', label: 'Month' },
+      { value: 'year', label: 'Year' },
+    ]
+    const activeRoleTrends = computed(() => (
+      metrics.roleTrendsByPeriod[selectedRoleTrendPeriod.value] || metrics.roleTrends
+    ))
+    const roleTrendSubtitle = computed(() => ({
+      day: 'Daily account creation over the last 30 days for every admin-managed role.',
+      month: 'Monthly account creation over the last 12 months for every admin-managed role.',
+      year: 'Yearly account creation over the last 5 years for every admin-managed role.',
+    }[selectedRoleTrendPeriod.value]))
 
     // AI generation requests are counted from the existing audit history.
     const aiMetrics = reactive({
@@ -793,6 +823,11 @@ export default {
           labels: Array.isArray(payload.roleTrends?.labels) ? payload.roleTrends.labels : [],
           series: Array.isArray(payload.roleTrends?.series) ? payload.roleTrends.series : [],
         },
+        roleTrendsByPeriod: {
+          day: payload.roleTrendsByPeriod?.day || payload.roleTrends || { labels: [], series: [] },
+          month: payload.roleTrendsByPeriod?.month || { labels: [], series: [] },
+          year: payload.roleTrendsByPeriod?.year || { labels: [], series: [] },
+        },
         learningFunnel: {
           labels: Array.isArray(payload.learningFunnel?.labels)
             ? payload.learningFunnel.labels
@@ -892,8 +927,8 @@ export default {
       roleTrendChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: metrics.roleTrends.labels,
-          datasets: metrics.roleTrends.series.map((series, index) => {
+          labels: activeRoleTrends.value.labels,
+          datasets: activeRoleTrends.value.series.map((series, index) => {
             const chartArea = roleTrendCanvas.value ? roleTrendCanvas.value.getBoundingClientRect() : null
             const colorSet = palette[index % palette.length]
             const borderGradient = ctx.createLinearGradient(0, 0, chartArea?.width || 260, 0)
@@ -1142,6 +1177,10 @@ export default {
       }
     )
 
+    watch(selectedRoleTrendPeriod, () => {
+      renderCharts()
+    })
+
     watch(
       () => route.path,
       () => {
@@ -1209,6 +1248,9 @@ export default {
       analyticsError,
       metrics,
       aiMetrics,
+      selectedRoleTrendPeriod,
+      roleTrendPeriods,
+      roleTrendSubtitle,
       activeMetricModal,
       isSidebarOpen,
       isActive,
@@ -1404,6 +1446,31 @@ export default {
   @apply tw:[color:#64748b];
   @apply tw:[font-size:0.92rem];
   @apply tw:[line-height:1.5];
+}
+
+.trend-period-filter {
+  @apply tw:inline-flex;
+  @apply tw:[padding:0.25rem];
+  @apply tw:[border:1px_solid_#b7d8a6];
+  @apply tw:[border-radius:12px];
+  @apply tw:[background:#f4faef];
+}
+
+.trend-period-filter button {
+  @apply tw:[padding:0.45rem_0.75rem];
+  @apply tw:[border:0];
+  @apply tw:[border-radius:9px];
+  @apply tw:[background:transparent];
+  @apply tw:[color:#475569];
+  @apply tw:[font-size:0.78rem];
+  @apply tw:[font-weight:700];
+  @apply tw:cursor-pointer;
+}
+
+.trend-period-filter button.active {
+  @apply tw:[background:#69aa47];
+  @apply tw:[color:#ffffff];
+  @apply tw:[box-shadow:0_5px_12px_rgba(63,_127,_42,_0.22)];
 }
 
 .chart-wrap {
