@@ -1011,18 +1011,26 @@ export default {
       if (!aiUsageCanvas.value || !aiMetrics.requestCountAvailable) return
 
       const ctx = aiUsageCanvas.value.getContext('2d')
+      const usageFill = ctx.createLinearGradient(0, 0, 0, 300)
+      usageFill.addColorStop(0, 'rgba(105, 170, 71, 0.35)')
+      usageFill.addColorStop(1, 'rgba(187, 255, 89, 0.04)')
       aiUsageChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
           labels: aiMetrics.dailyGenerationRequests.labels,
           datasets: [{
             label: 'AI generation requests',
             data: aiMetrics.dailyGenerationRequests.values,
-            backgroundColor: '#69aa47',
+            backgroundColor: usageFill,
             borderColor: '#3f7f2a',
-            borderWidth: 1,
-            borderRadius: 4,
-            maxBarThickness: 24,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            pointBackgroundColor: '#69aa47',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
           }],
         },
         options: {
