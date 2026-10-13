@@ -94,8 +94,8 @@
                 <td><div class="secretary-row-actions">
                   <button type="button" title="View account" @click="viewUser(user)"><i class="fas fa-eye"></i></button>
                   <button type="button" title="Edit account" @click="openEdit(user)"><i class="fas fa-pen"></i></button>
-                  <button type="button" :title="user.status === 'active' ? 'Deactivate account' : 'Activate account'" @click="toggleStatus(user)"><i :class="user.status === 'active' ? 'fas fa-pause' : 'fas fa-play'"></i></button>
-                  <button type="button" title="Send new temporary password" @click="resendInvite(user)"><i class="fas fa-paper-plane"></i></button>
+                  <button type="button" :title="user.status === 'active' ? 'Deactivate account' : 'Activate account'" :disabled="isRowActionPending(user, 'status')" :class="{ 'is-loading': isRowActionPending(user, 'status'), 'is-success': isRowActionSucceeded(user, 'status') }" @click="toggleStatus(user)"><i :class="rowActionIcon(user, 'status', user.status === 'active' ? 'fas fa-pause' : 'fas fa-play')"></i></button>
+                  <button type="button" title="Send new temporary password" :disabled="isRowActionPending(user, 'invite')" :class="{ 'is-loading': isRowActionPending(user, 'invite'), 'is-success': isRowActionSucceeded(user, 'invite') }" @click="resendInvite(user)"><i :class="rowActionIcon(user, 'invite', 'fas fa-paper-plane')"></i></button>
                   <button type="button" class="danger" title="Delete account" @click="openDelete(user)"><i class="fas fa-trash"></i></button>
                 </div></td>
               </tr>
@@ -300,15 +300,37 @@ const viewUser = async (user) => {
   try { const response = await axios.get(`${apiBase.value}/users/${encodeURIComponent(user.id)}`, authConfig()); detailsModal.value = mapUser(response.data?.user || user) }
   catch (error) { notify(error.response?.data?.message || 'Unable to load account details.', 'error') }
 }
-const toggleStatus = async (user) => {
+const rowActionState = reactive({})
+const rowActionFlashTimers = new Map()
+const rowActionKey = (user, action) => `${user.id}:${action}`
+const isRowActionPending = (user, action) => rowActionState[rowActionKey(user, action)] === 'loading'
+const isRowActionSucceeded = (user, action) => rowActionState[rowActionKey(user, action)] === 'success'
+const rowActionIcon = (user, action, fallbackIcon) => {
+  const state = rowActionState[rowActionKey(user, action)]
+  if (state === 'loading') return 'fas fa-spinner fa-spin'
+  if (state === 'success') return 'fas fa-check'
+  return fallbackIcon
+}
+const runRowAction = async (user, action, task) => {
+  const key = rowActionKey(user, action)
+  if (rowActionState[key] === 'loading') return
+  rowActionState[key] = 'loading'
+  const succeeded = (await task()) === true
+  rowActionState[key] = succeeded ? 'success' : ''
+  if (!succeeded) return
+  window.clearTimeout(rowActionFlashTimers.get(key))
+  rowActionFlashTimers.set(key, window.setTimeout(() => { rowActionState[key] = ''; rowActionFlashTimers.delete(key) }, 1600))
+}
+
+const toggleStatus = (user) => runRowAction(user, 'status', async () => {
   const nextStatus = user.status === 'active' ? 'inactive' : 'active'
-  try { await axios.put(`${apiBase.value}/users/${encodeURIComponent(user.id)}`, { status: nextStatus }, authConfig()); notify(`Account ${nextStatus === 'active' ? 'activated' : 'deactivated'}.`); await fetchUsers() }
-  catch (error) { notify(error.response?.data?.message || 'Unable to update account status.', 'error') }
-}
-const resendInvite = async (user) => {
-  try { const response = await axios.post(`${apiBase.value}/users/${encodeURIComponent(user.id)}/send-invite`, {}, authConfig()); const password = String(response.data?.invite?.generatedPassword || '').trim(); notify(`New sign-in credentials generated.${password ? ` Temporary password: ${password}` : ''}`); await fetchUsers() }
-  catch (error) { notify(error.response?.data?.message || 'Unable to send new credentials.', 'error') }
-}
+  try { await axios.put(`${apiBase.value}/users/${encodeURIComponent(user.id)}`, { status: nextStatus }, authConfig()); notify(`Account ${nextStatus === 'active' ? 'activated' : 'deactivated'}.`); await fetchUsers(); return true }
+  catch (error) { notify(error.response?.data?.message || 'Unable to update account status.', 'error'); return false }
+})
+const resendInvite = (user) => runRowAction(user, 'invite', async () => {
+  try { const response = await axios.post(`${apiBase.value}/users/${encodeURIComponent(user.id)}/send-invite`, {}, authConfig()); const password = String(response.data?.invite?.generatedPassword || '').trim(); notify(`New sign-in credentials generated.${password ? ` Temporary password: ${password}` : ''}`); await fetchUsers(); return true }
+  catch (error) { notify(error.response?.data?.message || 'Unable to send new credentials.', 'error'); return false }
+})
 const openDelete = (user) => { deleteTarget.value = user; deletePassword.value = ''; deleteError.value = '' }
 const closeDelete = () => { if (!isDeleting.value) deleteTarget.value = null }
 const deleteUser = async () => {
@@ -319,11 +341,21 @@ const deleteUser = async () => {
 }
 
 onMounted(() => { document.addEventListener('click', handleOutsideClick); fetchUsers(); fetchSections() })
-onBeforeUnmount(() => { document.removeEventListener('click', handleOutsideClick); if (toastTimer) window.clearTimeout(toastTimer) })
+onBeforeUnmount(() => { document.removeEventListener('click', handleOutsideClick); if (toastTimer) window.clearTimeout(toastTimer); rowActionFlashTimers.forEach((timer) => window.clearTimeout(timer)) })
 </script>
 
 <style scoped>
 @reference "../../styles/tailwind.css";.secretary-top-header{@apply tw:[padding:.9rem_1rem]!;@apply tw:[border-radius:18px]!}.secretary-header-content,.secretary-header-copy,.secretary-header-tools{@apply tw:flex;@apply tw:items-center}.secretary-header-content{@apply tw:justify-between;@apply tw:[gap:1rem]}.secretary-header-copy{@apply tw:[gap:.9rem];@apply tw:[min-width:0]}.secretary-header-copy h1{@apply tw:[margin:0];@apply tw:[font-size:1.35rem]}.secretary-header-copy .header-subtitle{@apply tw:[margin:.2rem_0_0];@apply tw:[font-size:.86rem]}.secretary-header-tools{@apply tw:[gap:.65rem]}.secretary-management-panel{@apply tw:[padding:1.35rem];@apply tw:[border:1px_solid_transparent];@apply tw:[border-radius:24px];@apply tw:[background:linear-gradient(#fff,#fff)_padding-box,linear-gradient(135deg,#1e4307,#ffd542_42%,#bbff59)_border-box]!}.secretary-section-head{@apply tw:flex;@apply tw:justify-between;@apply tw:[gap:1rem];@apply tw:[padding-bottom:1rem];@apply tw:[margin-bottom:1rem];@apply tw:[border-bottom:1px_solid_#91b99b]}.secretary-summary-meta{@apply tw:h-max;@apply tw:[padding:.45rem_.8rem];@apply tw:[border:1px_solid_#78a985];@apply tw:[border-radius:999px];@apply tw:[background:#dcecdf];@apply tw:[color:#356f48];@apply tw:[font-size:.84rem]}.secretary-management-toolbar{@apply tw:grid;@apply tw:[grid-template-columns:minmax(260px,1.6fr)_minmax(150px,.7fr)_minmax(150px,.7fr)_auto];@apply tw:[align-items:end];@apply tw:[gap:.8rem];@apply tw:[margin-bottom:1rem]}.secretary-search-field{@apply tw:flex;@apply tw:items-center;@apply tw:[gap:.65rem];@apply tw:[min-height:46px];@apply tw:[padding:0_.9rem];@apply tw:[border:1px_solid_#7fac8a];@apply tw:[border-radius:14px]}.secretary-search-field input{@apply tw:w-full;@apply tw:[border:0];@apply tw:[outline:0]}.secretary-filter-group{@apply tw:grid;@apply tw:[gap:.35rem]}.secretary-filter-group span,.secretary-field span{@apply tw:[color:#526170];@apply tw:[font-size:.78rem];@apply tw:[font-weight:600]}.secretary-filter-group select,.secretary-field input,.secretary-field select{@apply tw:w-full;@apply tw:[min-height:46px];@apply tw:[padding:.7rem_.8rem];@apply tw:[border:1px_solid_#7fac8a];@apply tw:[border-radius:12px];@apply tw:[background:#fff];@apply tw:[color:#0f172a]}.secretary-primary-btn,.secretary-secondary-btn,.secretary-danger-btn{@apply tw:inline-flex;@apply tw:items-center;@apply tw:justify-center;@apply tw:[gap:.45rem];@apply tw:[min-height:44px];@apply tw:[padding:.7rem_1rem];@apply tw:[border-radius:12px];@apply tw:[font-weight:700]}.secretary-primary-btn{@apply tw:[border:1px_solid_#245b13];@apply tw:[background:#356f48];@apply tw:[color:#fff]}.secretary-secondary-btn{@apply tw:[border:1px_solid_#78a985];@apply tw:[background:#fff];@apply tw:[color:#356f48]}.secretary-danger-btn{@apply tw:[border:1px_solid_#b91c1c];@apply tw:[background:#dc2626];@apply tw:[color:#fff]}.secretary-primary-btn:disabled,.secretary-danger-btn:disabled{@apply tw:[opacity:.65]}.secretary-table-wrap{@apply tw:overflow-x-auto;@apply tw:[border:1px_solid_#78a985];@apply tw:[border-radius:18px]}.secretary-table{@apply tw:w-full;@apply tw:[min-width:980px];@apply tw:border-collapse}.secretary-table th{@apply tw:[padding:.9rem];@apply tw:text-left;@apply tw:[background:#f7fbf8];@apply tw:[color:#526170];@apply tw:[font-size:.74rem];@apply tw:uppercase}.secretary-table td{@apply tw:[padding:.9rem];@apply tw:[border-top:1px_solid_#e5e7eb];@apply tw:[font-size:.86rem]}.secretary-person-cell{@apply tw:flex;@apply tw:items-center;@apply tw:[gap:.75rem]}.secretary-person-avatar{@apply tw:grid;@apply tw:place-items-center;@apply tw:[width:40px];@apply tw:[height:40px];@apply tw:[border:1px_solid_#47855a];@apply tw:[border-radius:50%];@apply tw:[color:#356f48];@apply tw:[font-weight:800]}.secretary-person-copy{@apply tw:grid;@apply tw:[gap:.12rem]}.secretary-person-copy small{@apply tw:[color:#64748b]}.secretary-role-pill,.secretary-account-status{@apply tw:inline-flex;@apply tw:items-center;@apply tw:[gap:.4rem];@apply tw:[padding:.32rem_.65rem];@apply tw:[border-radius:999px];@apply tw:[font-size:.75rem];@apply tw:[font-weight:700]}.role-headteacher{@apply tw:[background:#dbeafe];@apply tw:[color:#1d4ed8]}.role-teacher{@apply tw:[background:#dcfce7];@apply tw:[color:#166534]}.role-student{@apply tw:[background:#fef3c7];@apply tw:[color:#92400e]}.secretary-account-status{@apply tw:[background:#f1f5f9];@apply tw:[color:#475569]}.secretary-account-status span{@apply tw:[width:8px];@apply tw:[height:8px];@apply tw:[border-radius:50%];@apply tw:[background:currentColor]}.status-active{@apply tw:[background:#dcfce7];@apply tw:[color:#15803d]}.status-suspended{@apply tw:[background:#fee2e2];@apply tw:[color:#b91c1c]}.secretary-row-actions{@apply tw:flex;@apply tw:[gap:.35rem]}.secretary-row-actions button,.secretary-icon-btn{@apply tw:grid;@apply tw:place-items-center;@apply tw:[width:34px];@apply tw:[height:34px];@apply tw:[border:1px_solid_#b7cfbd];@apply tw:[border-radius:9px];@apply tw:[background:#fff];@apply tw:[color:#356f48]}.secretary-row-actions button.danger{@apply tw:[color:#b91c1c];@apply tw:[border-color:#fecaca]}.table-state{@apply tw:grid;@apply tw:place-items-center;@apply tw:[gap:.5rem];@apply tw:[min-height:180px];@apply tw:[color:#64748b]}.secretary-feedback{@apply tw:[padding:.75rem_.9rem];@apply tw:[border-radius:12px];@apply tw:[margin:.75rem_0]}.secretary-feedback.error{@apply tw:[border:1px_solid_#fecaca];@apply tw:[background:#fef2f2];@apply tw:[color:#b91c1c]}.secretary-modal{@apply tw:fixed;@apply tw:[inset:0];@apply tw:[z-index:3000];@apply tw:grid;@apply tw:place-items-center;@apply tw:[padding:1rem]}.secretary-modal-backdrop{@apply tw:absolute;@apply tw:[inset:0];@apply tw:[border:0];@apply tw:[background:rgba(15,23,42,.58)]}.secretary-modal-card{@apply tw:relative;@apply tw:[z-index:1];@apply tw:[width:min(760px,100%)];@apply tw:[max-height:92vh];@apply tw:overflow-auto;@apply tw:[padding:1.25rem];@apply tw:[border-radius:22px];@apply tw:[background:#fff];@apply tw:[box-shadow:0_24px_70px_rgba(15,23,42,.28)]}.secretary-modal-card.compact{@apply tw:[width:min(600px,100%)]}.secretary-modal-card header{@apply tw:flex;@apply tw:justify-between;@apply tw:[gap:1rem];@apply tw:[padding-bottom:1rem];@apply tw:[border-bottom:1px_solid_#e2e8f0]}.secretary-modal-card h2{@apply tw:[margin:0];@apply tw:[color:#1e4307];@apply tw:[font-size:1.25rem]}.secretary-modal-card header p{@apply tw:[margin:.3rem_0_0];@apply tw:[color:#64748b]}.secretary-account-form{@apply tw:grid;@apply tw:[gap:1rem];@apply tw:[padding-top:1rem]}.secretary-form-grid,.secretary-details-grid{@apply tw:grid;@apply tw:[grid-template-columns:repeat(2,minmax(0,1fr))];@apply tw:[gap:.9rem]}.secretary-field{@apply tw:grid;@apply tw:[gap:.4rem]}.secretary-form-actions{@apply tw:flex;@apply tw:justify-end;@apply tw:[gap:.65rem]}.secretary-details-grid div{@apply tw:grid;@apply tw:[gap:.25rem];@apply tw:[padding:.8rem];@apply tw:[border:1px_solid_#e2e8f0];@apply tw:[border-radius:12px]}.secretary-details-grid span{@apply tw:[color:#64748b];@apply tw:[font-size:.76rem];@apply tw:uppercase}.secretary-details-grid strong{@apply tw:[word-break:break-word]}.secretary-toast{@apply tw:fixed;@apply tw:[right:1rem];@apply tw:[bottom:1rem];@apply tw:[z-index:4000];@apply tw:flex;@apply tw:items-center;@apply tw:[gap:.65rem];@apply tw:[max-width:460px];@apply tw:[padding:.85rem_1rem];@apply tw:[border:1px_solid_#86efac];@apply tw:[border-radius:14px];@apply tw:[background:#f0fdf4];@apply tw:[color:#166534];@apply tw:[box-shadow:0_15px_40px_rgba(15,23,42,.18)]}.secretary-toast.error{@apply tw:[border-color:#fecaca];@apply tw:[background:#fef2f2];@apply tw:[color:#b91c1c]}.secretary-toast button{@apply tw:[border:0];@apply tw:[background:transparent];@apply tw:[color:inherit]}.secretary-header-copy .mobile-menu-toggle{@apply tw:[width:40px];@apply tw:[height:40px]}
 @media(max-width:900px){.secretary-management-toolbar{@apply tw:[grid-template-columns:1fr_1fr]}.secretary-search-field{@apply tw:[grid-column:1/-1]}}@media(max-width:768px){.secretary-header-copy>div{@apply tw:hidden}.secretary-header-tools .secretary-primary-btn span{@apply tw:hidden}.secretary-management-panel{@apply tw:[padding:.9rem]}.secretary-section-head{@apply tw:flex-col}.secretary-management-toolbar,.secretary-form-grid,.secretary-details-grid{@apply tw:[grid-template-columns:1fr]}.secretary-search-field{@apply tw:[grid-column:auto]}.secretary-form-actions{@apply tw:flex-col-reverse}.secretary-form-actions button{@apply tw:w-full}}
 
+.secretary-row-actions button{cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,color .18s ease,background .18s ease}
+.secretary-row-actions button:hover{transform:translateY(-2px);border-color:#7fac8a;background:#f0fdf4;color:#1e4307;box-shadow:0 8px 18px rgba(53,111,72,.18)}
+.secretary-row-actions button:active{transform:scale(.9);box-shadow:none;transition-duration:.06s}
+.secretary-row-actions button:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(53,111,72,.22)}
+.secretary-row-actions button.danger:hover{border-color:#fca5a5;background:#fef2f2;color:#b91c1c;box-shadow:0 8px 18px rgba(185,28,28,.16)}
+.secretary-row-actions button.is-loading{pointer-events:none;opacity:.75}
+.secretary-row-actions button.is-loading i{animation:secretary-action-bounce .6s ease-in-out infinite alternate}
+.secretary-row-actions button.is-success{border-color:#86b86a;background:#ecfdf5;color:#15803d;animation:secretary-action-pop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes secretary-action-bounce{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+@keyframes secretary-action-pop{0%{transform:scale(.85)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
 </style>

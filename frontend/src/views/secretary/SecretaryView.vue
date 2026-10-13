@@ -2,9 +2,11 @@
   <div class="teacher-dashboard secretary-dashboard-page">
     <aside id="secretary-sidebar-drawer" class="teacher-sidebar" :class="{ active: isSidebarOpen }">
       <div class="sidebar-header">
-        <button type="button" class="sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
-          <i class="fas fa-times"></i>
-        </button>
+        <div class="teacher-logo">
+          <div class="secretary-logo-icon"><img src="/logo.png" alt="EduMatch" class="secretary-logo-img"></div>
+          <div class="teacher-logo-text"><h2>EduMatch</h2><p>Secretary Portal</p></div>
+        </div>
+        <button type="button" class="sidebar-close" aria-label="Close sidebar" @click="closeSidebar"><i class="fas fa-times"></i></button>
       </div>
 
       <nav class="sidebar-nav">
