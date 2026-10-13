@@ -117,8 +117,7 @@
             <label class="secretary-field"><span>Contact number</span><PhilippinePhoneInput id="contactNumber" v-model="form.contactNumber"></PhilippinePhoneInput></label>
             <label class="secretary-field"><span>Role *</span><select v-model="form.role" required @change="onRoleChange"><option value="headteacher">Head Teacher</option><option value="teacher">Teacher</option><option value="student">Student</option></select></label>
             <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Status *</span><select v-model="form.status"><option v-for="status in statuses" :key="status" :value="status">{{ capitalize(status) }}</option></select></label>
-            <label v-if="['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required :disabled="selectableDepartments.length === 0"><option value="" disabled>{{ selectableDepartments.length ? 'Select department' : 'No department available' }}</option><option v-for="department in selectableDepartments" :key="department" :value="department">{{ department }}</option></select></label>
-            <label v-if="form.role === 'teacher'" class="secretary-field"><span>Subject</span><input v-model.trim="form.subject" placeholder="Defaults to department"></label>
+            <label v-if="['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required :disabled="selectableDepartments.length === 0"><option value="" disabled>{{ selectableDepartments.length ? (form.role === 'teacher' ? 'Select department with a Head Teacher' : 'Select department') : 'No department available' }}</option><option v-for="department in selectableDepartments" :key="department" :value="department">{{ department }}</option></select></label>
             <label v-if="form.role === 'student'" class="secretary-field"><span>Assigned teacher *</span><select v-model="form.sectionId" required :disabled="isLoadingSections || availableStudentSections.length === 0"><option value="" disabled>{{ isLoadingSections ? 'Loading teachers...' : (availableStudentSections.length ? 'Select teacher' : 'No teacher with an assigned section') }}</option><option v-for="section in availableStudentSections" :key="section.id" :value="section.id">{{ section.adviser.name }} — {{ section.name }}</option></select></label>
           </div>
           <div v-if="formError" class="secretary-feedback error" role="alert">{{ formError }}</div>
@@ -183,17 +182,27 @@ const availableStudentSections = computed(() => sections.value.filter((section) 
   && String(section.adviser.status || '').toLowerCase() === 'active'
 )))
 const selectableDepartments = computed(() => {
-  if (form.role !== 'headteacher') return departments
-  const assignedDepartments = new Set(
+  const headTeacherDepartments = new Set(
     users.value
-      .filter((user) => user.role === 'headteacher' && user.id !== form.id)
+      .filter((user) => user.role === 'headteacher' && user.department)
       .map((user) => user.department)
   )
-  return departments.filter((department) => !assignedDepartments.has(department))
+  if (form.role === 'teacher') {
+    return departments.filter((department) => headTeacherDepartments.has(department))
+  }
+  if (form.role === 'headteacher') {
+    const assignedDepartments = new Set(
+      users.value
+        .filter((user) => user.role === 'headteacher' && user.id !== form.id)
+        .map((user) => user.department)
+    )
+    return departments.filter((department) => !assignedDepartments.has(department))
+  }
+  return departments
 })
 const statuses = ['pending', 'active', 'inactive', 'suspended']
 const managedRoles = ['headteacher', 'teacher', 'student']
-const emptyForm = () => ({ id: '', name: '', email: '', username: '', contactNumber: '', role: 'headteacher', status: 'active', department: '', subject: '', sectionId: '' })
+const emptyForm = () => ({ id: '', name: '', email: '', username: '', contactNumber: '', role: 'headteacher', status: 'active', department: '', sectionId: '' })
 const form = reactive(emptyForm())
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
@@ -212,7 +221,7 @@ const sectionAssignment = (user) => {
   if (section) return [section.adviser?.name, section.name].filter(Boolean).join(' — ')
   return user.sectionName || ''
 }
-const assignmentLabel = (user) => user.role === 'student' ? [user.gradeLevel, sectionAssignment(user)].filter(Boolean).join(' · ') || 'Not assigned' : [user.department, user.role === 'teacher' ? user.subject : ''].filter(Boolean).join(' · ') || 'Not assigned'
+const assignmentLabel = (user) => user.role === 'student' ? [user.gradeLevel, sectionAssignment(user)].filter(Boolean).join(' · ') || 'Not assigned' : user.role === 'teacher' ? (user.subject && user.subject !== user.department ? [user.department, user.subject] : [user.department]).filter(Boolean).join(' · ') || 'Not assigned' : [user.department, ''].filter(Boolean).join(' · ') || 'Not assigned'
 const mapUser = (user) => ({ id: user.id || user._id, name: user.name || '', email: user.email || '', username: user.username || '', contactNumber: normalizePhilippinePhone(user.contactNumber), role: String(user.role || '').toLowerCase(), status: String(user.status || 'active').toLowerCase(), department: user.department || '', subject: user.subject || '', gradeLevel: user.gradeLevel || 'Grade 10', sectionId: user.sectionId || user.section?.id || '', sectionName: user.section?.name || '', createdAt: user.createdAt || null, lastLoginAt: user.lastLoginAt || null, lastActivityAt: user.lastActivityAt || null })
 
 const filteredUsers = computed(() => {
@@ -258,13 +267,14 @@ const fetchSections = async () => {
 const openCreate = () => { Object.assign(form, emptyForm()); formModal.mode = 'create'; formModal.open = true; formError.value = '' }
 const openEdit = (user) => { Object.assign(form, emptyForm(), user); formModal.mode = 'edit'; formModal.open = true; formError.value = '' }
 const closeForm = () => { if (!isSaving.value) formModal.open = false }
-const onRoleChange = () => { if (!['headteacher', 'teacher'].includes(form.role)) form.department = ''; if (form.role !== 'teacher') form.subject = ''; if (form.role !== 'student') form.sectionId = '' }
+const onRoleChange = () => { if (!['headteacher', 'teacher'].includes(form.role)) form.department = ''; if (form.role !== 'student') form.sectionId = '' }
 const validateForm = () => {
   if (!form.name || !form.username || !form.email) return 'Name, username, and email are required.'
   if (!/^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(form.email)) return 'Enter a valid Gmail address.'
   if (!managedRoles.includes(form.role)) return 'Select a permitted role.'
   if (['headteacher', 'teacher'].includes(form.role) && !form.department) return 'Department is required for this role.'
   if (form.role === 'headteacher' && !selectableDepartments.value.includes(form.department)) return 'Select an available department for the Head Teacher.'
+  if (form.role === 'teacher' && !selectableDepartments.value.includes(form.department)) return 'Select a department that has a Head Teacher.'
   if (form.role === 'student' && !form.sectionId) return 'Select the teacher to assign this student to.'
   const phone = normalizePhilippinePhone(form.contactNumber)
   if (phone && !isValidPhilippinePhone(phone)) return 'Enter a valid Philippine contact number beginning with +63.'
@@ -273,7 +283,7 @@ const validateForm = () => {
 const submitForm = async () => {
   formError.value = validateForm()
   if (formError.value) return
-  const payload = { name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role, status: formModal.mode === 'create' ? 'active' : form.status, contactNumber: normalizePhilippinePhone(form.contactNumber), department: ['headteacher', 'teacher'].includes(form.role) ? form.department : '', subject: form.role === 'teacher' ? form.subject : '', gradeLevel: form.role === 'student' ? 'Grade 10' : '', strand: '', sectionId: form.role === 'student' ? form.sectionId : '' }
+  const payload = { name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role, status: formModal.mode === 'create' ? 'active' : form.status, contactNumber: normalizePhilippinePhone(form.contactNumber), department: ['headteacher', 'teacher'].includes(form.role) ? form.department : '', subject: '', gradeLevel: form.role === 'student' ? 'Grade 10' : '', strand: '', sectionId: form.role === 'student' ? form.sectionId : '' }
   isSaving.value = true
   try {
     const response = formModal.mode === 'create'
