@@ -300,6 +300,43 @@ test('admin and secretary create directly managed roles with the selected role a
   assert.equal(client.tables.users[1].role, 'teacher');
 });
 
+test('secretary updates assign a student to the selected section adviser', async () => {
+  client = createFakeSupabase({
+    users: [
+      {
+        ...account, id: 'student-1', name: 'Student One', email: 'student.one@gmail.com',
+        username: 'student.one', role: 'student', grade_level: 'Grade 10', section_id: 'sincerity', managed_by: 'teacher-1',
+      },
+      {
+        ...account, id: 'teacher-1', name: 'Teacher One', email: 'teacher.one@gmail.com',
+        username: 'teacher.one', role: 'teacher', department: 'Science', status: 'active', advisory_section_id: 'sincerity',
+      },
+      {
+        ...account, id: 'teacher-2', name: 'Teacher Two', email: 'teacher.two@gmail.com',
+        username: 'teacher.two', role: 'teacher', department: 'Science', status: 'active', advisory_section_id: 'unity',
+      },
+    ],
+    sections: [
+      { id: 'sincerity', name: 'Sincerity', is_active: true },
+      { id: 'unity', name: 'Unity', is_active: true },
+    ],
+  });
+
+  const result = await invoke('updateUser', {
+    user: { _id: 'secretary-id', role: 'secretary' },
+    params: { id: 'student-1' },
+    body: { role: 'student', gradeLevel: 'Grade 10', sectionId: 'unity' },
+  });
+  assert.equal(result.user.role, 'student');
+  assert.equal(result.user.gradeLevel, 'Grade 10');
+
+  const updated = client.tables.users.find((row) => row.id === 'student-1');
+  assert.equal(updated.section_id, 'unity');
+  assert.equal(updated.managed_by, 'teacher-2');
+  assert.equal(updated.enrollment.teacherId, 'teacher-2');
+  assert.equal(updated.enrollment.status, 'approved');
+});
+
 test('account creation rejects existing usernames before writing for admin and secretary', async (t) => {
   for (const action of ['createUser', 'createAndInviteUser']) {
     for (const role of ['admin', 'secretary']) {

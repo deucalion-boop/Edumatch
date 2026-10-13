@@ -1229,7 +1229,7 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, email, username, password, role, status, subject, contactNumber, department, strand, gradeLevel } = req.body || {};
+  const { name, email, username, password, role, status, subject, contactNumber, department, strand, gradeLevel, sectionId } = req.body || {};
 
   const user = await findSupabaseAccount('id', id);
   if (!user) {
@@ -1320,6 +1320,16 @@ const updateUser = asyncHandler(async (req, res) => {
     user.gradeLevel = studentFields.gradeLevel;
   }
 
+  let syncSectionAdviser = false;
+  if (user.role === ROLE_STUDENT && sectionId !== undefined) {
+    const studentSection = await resolveStudentSection(user.role, sectionId);
+    if (studentSection.sectionId) {
+      user.sectionId = studentSection.sectionId;
+      user.managedBy = studentSection.adviserId || user.managedBy;
+      syncSectionAdviser = true;
+    }
+  }
+
   if (req.file) {
     const uploadedProfile = await uploadFile({
       file: req.file,
@@ -1336,6 +1346,7 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 
   await user.save();
+  if (syncSectionAdviser) await syncStudentSectionAdviser(user._id);
 
   return sendSuccess(res, 200, 'User updated successfully', {
     user: {

@@ -119,8 +119,7 @@
             <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Status *</span><select v-model="form.status"><option v-for="status in statuses" :key="status" :value="status">{{ capitalize(status) }}</option></select></label>
             <label v-if="['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required><option value="" disabled>Select department</option><option v-for="department in departments" :key="department" :value="department">{{ department }}</option></select></label>
             <label v-if="form.role === 'teacher'" class="secretary-field"><span>Subject</span><input v-model.trim="form.subject" placeholder="Defaults to department"></label>
-            <label v-if="form.role === 'student'" class="secretary-field"><span>Grade level *</span><select v-model="form.gradeLevel" required><option v-for="grade in gradeLevels" :key="grade" :value="grade">{{ grade }}</option></select></label>
-            <label v-if="form.role === 'student'" class="secretary-field"><span>Strand</span><select v-model="form.strand"><option value="">Not assigned</option><option v-for="strand in strands" :key="strand" :value="strand">{{ strand }}</option></select></label>
+            <label v-if="form.role === 'student'" class="secretary-field"><span>Assigned teacher *</span><select v-model="form.sectionId" required :disabled="isLoadingSections || availableStudentSections.length === 0"><option value="" disabled>{{ isLoadingSections ? 'Loading teachers...' : (availableStudentSections.length ? 'Select teacher' : 'No teacher with an assigned section') }}</option><option v-for="section in availableStudentSections" :key="section.id" :value="section.id">{{ section.adviser.name }} — {{ section.name }}</option></select></label>
           </div>
           <div v-if="formError" class="secretary-feedback error" role="alert">{{ formError }}</div>
           <div class="secretary-form-actions"><button type="button" class="secretary-secondary-btn" @click="closeForm">Cancel</button><button type="submit" class="secretary-primary-btn" :disabled="isSaving"><i :class="isSaving ? 'fas fa-spinner fa-spin' : 'fas fa-save'"></i>{{ isSaving ? 'Saving...' : (formModal.mode === 'create' ? 'Create account' : 'Save changes') }}</button></div>
@@ -176,11 +175,16 @@ const toast = reactive({ message: '', type: 'success' })
 let toastTimer = null
 
 const departments = ['Mathematics', 'English', 'Science', 'TLE', 'Filipino', 'Araling Panlipunan', 'Edukasyon sa Pagpapakatao (ESP)', 'MAPEH']
-const gradeLevels = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
-const strands = ['STEM', 'HUMSS', 'ABM', 'TVL']
+const sections = ref([])
+const isLoadingSections = ref(false)
+const availableStudentSections = computed(() => sections.value.filter((section) => (
+  section.isActive === true
+  && section.adviser
+  && String(section.adviser.status || '').toLowerCase() === 'active'
+)))
 const statuses = ['pending', 'active', 'inactive', 'suspended']
 const managedRoles = ['headteacher', 'teacher', 'student']
-const emptyForm = () => ({ id: '', name: '', email: '', username: '', contactNumber: '', role: 'headteacher', status: 'active', department: '', subject: '', gradeLevel: 'Grade 10', strand: '' })
+const emptyForm = () => ({ id: '', name: '', email: '', username: '', contactNumber: '', role: 'headteacher', status: 'active', department: '', subject: '', sectionId: '' })
 const form = reactive(emptyForm())
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
@@ -194,15 +198,20 @@ const roleLabel = (role) => ({ headteacher: 'Head Teacher', teacher: 'Teacher', 
 const capitalize = (value) => { const text = String(value || ''); return text ? text.charAt(0).toUpperCase() + text.slice(1) : 'N/A' }
 const initials = (name) => String(name || 'U').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'U'
 const formatDate = (value) => { if (!value) return 'N/A'; const date = new Date(value); return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) }
-const assignmentLabel = (user) => user.role === 'student' ? [user.gradeLevel, user.strand].filter(Boolean).join(' · ') || 'Not assigned' : [user.department, user.role === 'teacher' ? user.subject : ''].filter(Boolean).join(' · ') || 'Not assigned'
-const mapUser = (user) => ({ id: user.id || user._id, name: user.name || '', email: user.email || '', username: user.username || '', contactNumber: normalizePhilippinePhone(user.contactNumber), role: String(user.role || '').toLowerCase(), status: String(user.status || 'active').toLowerCase(), department: user.department || '', subject: user.subject || '', gradeLevel: user.gradeLevel || 'Grade 10', strand: user.strand || '', createdAt: user.createdAt || null, lastLoginAt: user.lastLoginAt || null, lastActivityAt: user.lastActivityAt || null })
+const sectionAssignment = (user) => {
+  const section = sections.value.find((item) => item.id === user.sectionId)
+  if (section) return [section.adviser?.name, section.name].filter(Boolean).join(' — ')
+  return user.sectionName || ''
+}
+const assignmentLabel = (user) => user.role === 'student' ? [user.gradeLevel, sectionAssignment(user)].filter(Boolean).join(' · ') || 'Not assigned' : [user.department, user.role === 'teacher' ? user.subject : ''].filter(Boolean).join(' · ') || 'Not assigned'
+const mapUser = (user) => ({ id: user.id || user._id, name: user.name || '', email: user.email || '', username: user.username || '', contactNumber: normalizePhilippinePhone(user.contactNumber), role: String(user.role || '').toLowerCase(), status: String(user.status || 'active').toLowerCase(), department: user.department || '', subject: user.subject || '', gradeLevel: user.gradeLevel || 'Grade 10', sectionId: user.sectionId || user.section?.id || '', sectionName: user.section?.name || '', createdAt: user.createdAt || null, lastLoginAt: user.lastLoginAt || null, lastActivityAt: user.lastActivityAt || null })
 
 const filteredUsers = computed(() => {
   const query = search.value.toLowerCase()
   return users.value.filter((user) => {
     const matchesRole = filters.role === 'all' || user.role === filters.role
     const matchesStatus = filters.status === 'all' || user.status === filters.status
-    const haystack = [user.name, user.email, user.username, user.department, user.subject, user.gradeLevel, user.strand].join(' ').toLowerCase()
+    const haystack = [user.name, user.email, user.username, user.department, user.subject, user.gradeLevel, user.sectionName].join(' ').toLowerCase()
     return matchesRole && matchesStatus && (!query || haystack.includes(query))
   })
 })
@@ -227,15 +236,26 @@ const fetchUsers = async () => {
   } finally { isLoading.value = false }
 }
 
+const fetchSections = async () => {
+  isLoadingSections.value = true
+  try {
+    const response = await axios.get(`${apiBase.value}/sections`, authConfig())
+    sections.value = Array.isArray(response.data?.sections) ? response.data.sections : []
+  } catch {
+    sections.value = []
+  } finally { isLoadingSections.value = false }
+}
+
 const openCreate = () => { Object.assign(form, emptyForm()); formModal.mode = 'create'; formModal.open = true; formError.value = '' }
 const openEdit = (user) => { Object.assign(form, emptyForm(), user); formModal.mode = 'edit'; formModal.open = true; formError.value = '' }
 const closeForm = () => { if (!isSaving.value) formModal.open = false }
-const onRoleChange = () => { if (!['headteacher', 'teacher'].includes(form.role)) form.department = ''; if (form.role !== 'teacher') form.subject = ''; if (form.role !== 'student') { form.gradeLevel = 'Grade 10'; form.strand = '' } }
+const onRoleChange = () => { if (!['headteacher', 'teacher'].includes(form.role)) form.department = ''; if (form.role !== 'teacher') form.subject = ''; if (form.role !== 'student') form.sectionId = '' }
 const validateForm = () => {
   if (!form.name || !form.username || !form.email) return 'Name, username, and email are required.'
   if (!/^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(form.email)) return 'Enter a valid Gmail address.'
   if (!managedRoles.includes(form.role)) return 'Select a permitted role.'
   if (['headteacher', 'teacher'].includes(form.role) && !form.department) return 'Department is required for this role.'
+  if (form.role === 'student' && !form.sectionId) return 'Select the teacher to assign this student to.'
   const phone = normalizePhilippinePhone(form.contactNumber)
   if (phone && !isValidPhilippinePhone(phone)) return 'Enter a valid Philippine contact number beginning with +63.'
   return ''
@@ -243,7 +263,7 @@ const validateForm = () => {
 const submitForm = async () => {
   formError.value = validateForm()
   if (formError.value) return
-  const payload = { name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role, status: formModal.mode === 'create' ? 'active' : form.status, contactNumber: normalizePhilippinePhone(form.contactNumber), department: ['headteacher', 'teacher'].includes(form.role) ? form.department : '', subject: form.role === 'teacher' ? form.subject : '', gradeLevel: form.role === 'student' ? form.gradeLevel : '', strand: form.role === 'student' ? form.strand : '' }
+  const payload = { name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role, status: formModal.mode === 'create' ? 'active' : form.status, contactNumber: normalizePhilippinePhone(form.contactNumber), department: ['headteacher', 'teacher'].includes(form.role) ? form.department : '', subject: form.role === 'teacher' ? form.subject : '', gradeLevel: form.role === 'student' ? 'Grade 10' : '', strand: '', sectionId: form.role === 'student' ? form.sectionId : '' }
   isSaving.value = true
   try {
     const response = formModal.mode === 'create'
@@ -278,7 +298,7 @@ const deleteUser = async () => {
   catch (error) { deleteError.value = error.response?.data?.message || 'Unable to delete the account.' } finally { isDeleting.value = false }
 }
 
-onMounted(() => { document.addEventListener('click', handleOutsideClick); fetchUsers() })
+onMounted(() => { document.addEventListener('click', handleOutsideClick); fetchUsers(); fetchSections() })
 onBeforeUnmount(() => { document.removeEventListener('click', handleOutsideClick); if (toastTimer) window.clearTimeout(toastTimer) })
 </script>
 
