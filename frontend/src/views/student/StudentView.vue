@@ -1320,14 +1320,14 @@ body.student-dashboard .dashboard-home-btn {
 }
 
 .student-tour-btn-primary {
-  @apply tw:[border-color:#0f172a];
-  @apply tw:[background:#0f172a];
+  @apply tw:[border-color:#4f8a35];
+  @apply tw:[background:#4f8a35];
   @apply tw:[color:#ffffff];
 }
 
 .student-tour-btn-primary:hover {
-  @apply tw:[background:#1e293b];
-  @apply tw:[border-color:#1e293b];
+  @apply tw:[background:#3f6f2a];
+  @apply tw:[border-color:#3f6f2a];
 }
 
 .header-tour-btn {
