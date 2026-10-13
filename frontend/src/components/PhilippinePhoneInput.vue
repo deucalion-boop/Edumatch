@@ -17,7 +17,6 @@
       <span>+63</span>
     </span>
     <input
-      v-bind="$attrs"
       :id="id"
       :value="nationalNumber"
       class="philippine-phone-input__number"
@@ -30,6 +29,7 @@
       @beforeinput="preventLetters"
       @input="updateNumber"
       @paste="pasteNumber"
+      v-bind="$attrs"
     >
   </div>
 </template>
@@ -126,5 +126,9 @@ const pasteNumber = (event) => {
   @apply tw:flex-1 tw:w-full tw:min-w-0 tw:[height:46px] tw:[padding:0.75rem_0.85rem];
   @apply tw:[border:0]! tw:[outline:0]! tw:[box-shadow:none]! tw:[background:transparent]!;
   @apply tw:[border-radius:0] tw:[color:#0f172a] tw:[font-size:0.95rem] tw:[font-family:inherit];
+}
+
+.philippine-phone-input > input.philippine-phone-input__number[readonly] {
+  @apply tw:[background:#f8fafc]! tw:[color:#64748b] tw:[cursor:default];
 }
 </style>

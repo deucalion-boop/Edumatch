@@ -313,7 +313,7 @@
               </label>
               <label class="headteacher-form-group">
                 <span>Contact Number</span>
-                <input v-model.trim="form.contactNumber" type="tel" inputmode="tel" placeholder="09123456789 or +639123456789" :aria-invalid="Boolean(teacherErrors.contactNumber)" @input="validateTeacherForm">
+                <PhilippinePhoneInput id="contactNumber" v-model="form.contactNumber" :aria-invalid="Boolean(teacherErrors.contactNumber)" @input="validateTeacherForm" />
                 <small v-if="teacherErrors.contactNumber" class="headteacher-field-error" role="alert">{{ teacherErrors.contactNumber }}</small>
               </label>
             </div>
@@ -337,6 +337,7 @@
 <script setup>
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
+import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 import { nameError, phoneError } from '../../utils/teacherValidation.js'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'

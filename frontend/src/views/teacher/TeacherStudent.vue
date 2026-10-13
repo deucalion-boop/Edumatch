@@ -630,7 +630,7 @@
               </label>
               <label class="class-form-group">
                 <span>Contact Number</span>
-                <input v-model.trim="studentInviteForm.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789">
+                <PhilippinePhoneInput id="contactNumber" v-model="studentInviteForm.contactNumber" />
               </label>
               <label class="class-form-group">
                 <span>Advisory Section</span>
@@ -814,6 +814,7 @@ import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
+import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 const router = useRouter()
 const route = useRoute()

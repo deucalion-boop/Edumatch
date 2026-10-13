@@ -176,14 +176,7 @@
                   <div class="form-row">
                     <div class="form-group">
                       <label for="phone">Phone Number</label>
-                      <input 
-                        type="tel" 
-                        id="phone" 
-                        v-model="formData.phone"
-                        inputmode="tel"
-                        placeholder="+63 912 345 6789"
-                        :readonly="!isEditing"
-                      >
+                      <PhilippinePhoneInput id="phone" v-model="formData.phone" :readonly="!isEditing" />
                     </div>
                   </div>
                 </div>
@@ -208,9 +201,11 @@
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
+import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 export default {
   name: 'StudentProfile',
+  components: { PhilippinePhoneInput },
   data() {
     return {
       authStore: null,

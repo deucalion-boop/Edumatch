@@ -110,7 +110,7 @@
               </label>
               <label class="headteacher-form-group headteacher-form-group-full">
                 <span>Contact Number</span>
-                <input v-model.trim="profileForm.contactNumber" type="tel" inputmode="tel" placeholder="+63 912 345 6789">
+                <PhilippinePhoneInput id="contactNumber" v-model="profileForm.contactNumber" />
                 <small v-if="errors.contactNumber" class="headteacher-form-feedback error">{{ errors.contactNumber }}</small>
               </label>
             </div>
@@ -133,6 +133,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
+import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

@@ -254,14 +254,14 @@
                     <div class="form-row">
                       <div class="form-group">
                         <label for="phone">Phone Number</label>
-                        <input
+                        <PhilippinePhoneInput
                           id="phone"
                           v-model="formData.phone"
-                          type="tel"
-                          inputmode="tel"
-                          placeholder="09123456789 or +639123456789"
                           :readonly="!isEditing"
-                         :aria-invalid="Boolean(fieldErrors.phone)" :aria-describedby="fieldErrors.phone ? 'phone-error' : undefined" @input="validateCommonFields">
+                          :aria-invalid="Boolean(fieldErrors.phone)"
+                          :aria-describedby="fieldErrors.phone ? 'phone-error' : undefined"
+                          @input="validateCommonFields"
+                        />
                         <small v-if="fieldErrors.phone" id="phone-error" class="field-error" role="alert">{{ fieldErrors.phone }}</small>
                       </div>
                     </div>
@@ -315,6 +315,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
+import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 

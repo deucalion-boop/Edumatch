@@ -114,7 +114,7 @@
             <label class="secretary-field"><span>Full name *</span><input v-model.trim="form.name" required maxlength="100"></label>
             <label class="secretary-field"><span>Username *</span><input v-model.trim="form.username" required maxlength="50"></label>
             <label class="secretary-field"><span>Gmail address *</span><input v-model.trim="form.email" type="email" required placeholder="user@gmail.com"></label>
-            <label class="secretary-field"><span>Contact number</span><input v-model.trim="form.contactNumber" type="tel" placeholder="+63 912 345 6789"></label>
+            <label class="secretary-field"><span>Contact number</span><PhilippinePhoneInput id="contactNumber" v-model="form.contactNumber"></PhilippinePhoneInput></label>
             <label class="secretary-field"><span>Role *</span><select v-model="form.role" required @change="onRoleChange"><option value="headteacher">Head Teacher</option><option value="teacher">Teacher</option><option value="student">Student</option></select></label>
             <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Status *</span><select v-model="form.status"><option v-for="status in statuses" :key="status" :value="status">{{ capitalize(status) }}</option></select></label>
             <label v-if="['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required><option value="" disabled>Select department</option><option v-for="department in departments" :key="department" :value="department">{{ department }}</option></select></label>
@@ -151,6 +151,7 @@ import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
+import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 const route = useRoute()
 const router = useRouter()
