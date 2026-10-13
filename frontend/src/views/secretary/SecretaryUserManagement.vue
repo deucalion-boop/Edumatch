@@ -117,7 +117,7 @@
             <label class="secretary-field"><span>Contact number</span><PhilippinePhoneInput id="contactNumber" v-model="form.contactNumber"></PhilippinePhoneInput></label>
             <label class="secretary-field"><span>Role *</span><select v-model="form.role" required @change="onRoleChange"><option value="headteacher">Head Teacher</option><option value="teacher">Teacher</option><option value="student">Student</option></select></label>
             <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Status *</span><select v-model="form.status"><option v-for="status in statuses" :key="status" :value="status">{{ capitalize(status) }}</option></select></label>
-            <label v-if="['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required><option value="" disabled>Select department</option><option v-for="department in departments" :key="department" :value="department">{{ department }}</option></select></label>
+            <label v-if="['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required :disabled="selectableDepartments.length === 0"><option value="" disabled>{{ selectableDepartments.length ? 'Select department' : 'No department available' }}</option><option v-for="department in selectableDepartments" :key="department" :value="department">{{ department }}</option></select></label>
             <label v-if="form.role === 'teacher'" class="secretary-field"><span>Subject</span><input v-model.trim="form.subject" placeholder="Defaults to department"></label>
             <label v-if="form.role === 'student'" class="secretary-field"><span>Assigned teacher *</span><select v-model="form.sectionId" required :disabled="isLoadingSections || availableStudentSections.length === 0"><option value="" disabled>{{ isLoadingSections ? 'Loading teachers...' : (availableStudentSections.length ? 'Select teacher' : 'No teacher with an assigned section') }}</option><option v-for="section in availableStudentSections" :key="section.id" :value="section.id">{{ section.adviser.name }} — {{ section.name }}</option></select></label>
           </div>
@@ -182,6 +182,15 @@ const availableStudentSections = computed(() => sections.value.filter((section) 
   && section.adviser
   && String(section.adviser.status || '').toLowerCase() === 'active'
 )))
+const selectableDepartments = computed(() => {
+  if (form.role !== 'headteacher') return departments
+  const assignedDepartments = new Set(
+    users.value
+      .filter((user) => user.role === 'headteacher' && user.id !== form.id)
+      .map((user) => user.department)
+  )
+  return departments.filter((department) => !assignedDepartments.has(department))
+})
 const statuses = ['pending', 'active', 'inactive', 'suspended']
 const managedRoles = ['headteacher', 'teacher', 'student']
 const emptyForm = () => ({ id: '', name: '', email: '', username: '', contactNumber: '', role: 'headteacher', status: 'active', department: '', subject: '', sectionId: '' })
@@ -255,6 +264,7 @@ const validateForm = () => {
   if (!/^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(form.email)) return 'Enter a valid Gmail address.'
   if (!managedRoles.includes(form.role)) return 'Select a permitted role.'
   if (['headteacher', 'teacher'].includes(form.role) && !form.department) return 'Department is required for this role.'
+  if (form.role === 'headteacher' && !selectableDepartments.value.includes(form.department)) return 'Select an available department for the Head Teacher.'
   if (form.role === 'student' && !form.sectionId) return 'Select the teacher to assign this student to.'
   const phone = normalizePhilippinePhone(form.contactNumber)
   if (phone && !isValidPhilippinePhone(phone)) return 'Enter a valid Philippine contact number beginning with +63.'
