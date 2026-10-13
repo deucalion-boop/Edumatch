@@ -4778,3 +4778,77 @@ body.headteacher-dashboard .headteacher-sidebar-status-indicator {
     @apply tw:[box-shadow:0_0_0_4px_rgba(20,_184,_166,_0.12),_0_14px_28px_rgba(15,_23,_42,_0.12)];
   }
 }
+
+/* ============================================================
+   Sidebar brand header — parity with the secretary portal.
+   The secretary sidebar header was refreshed (larger seal,
+   tighter brand gap, lighter divider); mirror those exact
+   values here so both portals render the same header.
+   ============================================================ */
+body.headteacher-dashboard .headteacher-sidebar-header {
+  @apply tw:items-start!;
+  @apply tw:justify-between!;
+  @apply tw:[gap:1rem]!;
+  @apply tw:[margin-bottom:1.6rem]!;
+  @apply tw:[padding-bottom:1.5rem]!;
+  @apply tw:[border-bottom:1px_solid_rgba(148,_163,_184,_0.28)]!;
+}
+
+body.headteacher-dashboard .headteacher-brand {
+  @apply tw:items-center!;
+  @apply tw:[gap:1rem]!;
+  @apply tw:[flex:1]!;
+  @apply tw:[min-width:0]!;
+}
+
+body.headteacher-dashboard .headteacher-brand-icon {
+  @apply tw:[width:48px]!;
+  @apply tw:[height:48px]!;
+  @apply tw:[flex:0_0_48px]!;
+  @apply tw:[border-radius:50%]!;
+  @apply tw:[background:transparent]!;
+  @apply tw:[border:none]!;
+  @apply tw:[box-shadow:none]!;
+  @apply tw:flex!;
+  @apply tw:items-center!;
+  @apply tw:justify-center!;
+  @apply tw:shrink-0!;
+  @apply tw:[margin-left:0]!;
+}
+
+body.headteacher-dashboard .headteacher-sidebar .headteacher-brand-image {
+  @apply tw:block!;
+  @apply tw:[width:40px]!;
+  @apply tw:[height:40px]!;
+  @apply tw:[max-width:40px]!;
+  @apply tw:[max-height:40px]!;
+  @apply tw:[flex:0_0_40px]!;
+  @apply tw:[padding:0]!;
+  @apply tw:[background:transparent]!;
+  @apply tw:object-contain!;
+}
+
+body.headteacher-dashboard .headteacher-brand-copy h2 {
+  @apply tw:[margin:0]!;
+  @apply tw:[color:#111111]!;
+  @apply tw:[font-size:1.25rem]!;
+  @apply tw:[font-weight:700]!;
+  @apply tw:[line-height:1.25]!;
+}
+
+body.headteacher-dashboard .headteacher-brand-copy p {
+  @apply tw:[margin:0]!;
+  @apply tw:[color:#64748b]!;
+  @apply tw:[font-size:0.75rem]!;
+  @apply tw:[line-height:1.4]!;
+}
+
+@media (max-width: 1024px) {
+  body.headteacher-dashboard .headteacher-sidebar-header {
+    @apply tw:items-center!;
+    @apply tw:justify-between!;
+    @apply tw:[padding:0_0_12px]!;
+    @apply tw:[margin-bottom:16px]!;
+  }
+}
+
