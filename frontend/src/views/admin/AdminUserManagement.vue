@@ -577,13 +577,7 @@
             <div class="tab-content" :class="{ active: addUserTab === 'additional' }" id="additionalTab">
               <div class="form-group">
                 <label for="contactNumber">Contact Number</label>
-                <input 
-                  type="tel" 
-                  id="contactNumber" 
-                  v-model.trim="newUser.contactNumber"
-                  inputmode="tel"
-                  placeholder="+63 912 345 6789"
-                >
+                <PhilippinePhoneInput id="contactNumber" v-model="newUser.contactNumber" />
               </div>
               <div class="form-group">
                 <label>Security</label>
@@ -753,13 +747,7 @@
                 </div>
                 <div class="form-group">
                   <label for="editContactNumber">Contact Number</label>
-                  <input
-                    type="tel"
-                    id="editContactNumber"
-                    v-model.trim="editUserData.contactNumber"
-                    inputmode="tel"
-                    placeholder="+63 912 345 6789"
-                  >
+                  <PhilippinePhoneInput id="editContactNumber" v-model="editUserData.contactNumber" />
                 </div>
               </div>
             </div>
@@ -1325,9 +1313,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { debounce } from 'lodash'
 import { useAuthStore } from '../../stores/auth.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
+import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 export default {
   name: 'AdminUserManagement',
+  components: { PhilippinePhoneInput },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -5497,7 +5487,7 @@ body.admin-dashboard .btn.btn-primary.edit-user-btn i {
   @apply tw:[line-height:1.4];
 }
 
-.modal.edit-user-modal .form-group input,
+.modal.edit-user-modal .form-group input:not(.philippine-phone-input__number),
 .modal.edit-user-modal .form-group select {
   @apply tw:[min-height:44px];
   @apply tw:[border:1px_solid_#dce3ea];
@@ -5508,7 +5498,7 @@ body.admin-dashboard .btn.btn-primary.edit-user-btn i {
   @apply tw:[transition:border-color_0.18s_ease,_box-shadow_0.18s_ease,_background_0.18s_ease];
 }
 
-.modal.edit-user-modal .form-group input:focus,
+.modal.edit-user-modal .form-group input:not(.philippine-phone-input__number):focus,
 .modal.edit-user-modal .form-group select:focus {
   @apply tw:[border-color:#69aa47];
   @apply tw:[outline:none];
