@@ -62,6 +62,7 @@ const {
 } = require('../services/supabaseAccountService');
 const {
   getSectionOrThrow,
+  findSectionById,
   findTeacherByAdvisorySection,
   syncStudentSectionAdviser,
 } = require('../services/sectionService');
@@ -1189,8 +1190,9 @@ const getUserById = asyncHandler(async (req, res) => {
 
   if (user.role === 'teacher') {
     const approvedEnrollmentStatuses = ['approved', 'accepted'];
-    const [lessons, accounts] = await Promise.all([
+    const [lessons, accounts, advisorySection] = await Promise.all([
       readProfileRows('lessons', 'created_by', user._id), listSupabaseAccounts(),
+      user.advisorySectionId ? findSectionById(user.advisorySectionId, { includeInactive: true }) : null,
     ]);
     const lessonsCreated = lessons.length;
     const students = accounts.filter((account) => account.role === 'student'
@@ -1199,6 +1201,9 @@ const getUserById = asyncHandler(async (req, res) => {
 
     responseUser.lessonsCreated = lessonsCreated;
     responseUser.students = students;
+    responseUser.advisorySection = advisorySection
+      ? { id: advisorySection.id, name: advisorySection.name }
+      : null;
   }
 
   if (user.role === ROLE_STUDENT) {

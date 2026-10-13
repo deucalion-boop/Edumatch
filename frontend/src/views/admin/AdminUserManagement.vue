@@ -934,6 +934,10 @@
                     <span class="info-section-icon"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
                     Teaching summary
                   </h4>
+                  <div class="info-item info-item--wide">
+                    <span class="info-label">Handled section</span>
+                    <span class="info-value">{{ selectedUser.advisorySection?.name || (selectedUser.advisorySectionId ? 'Section unavailable' : 'No section assigned') }}</span>
+                  </div>
                   <div class="info-item">
                     <span class="info-label">Lessons created</span>
                     <span class="info-value">{{ selectedUser.lessonsCreated || 0 }}</span>
@@ -1850,6 +1854,8 @@ export default {
         inviteUsedAt: firstDefined(user?.inviteUsedAt, fallback?.inviteUsedAt, null),
         department: firstDefined(user?.department, fallback?.department, ''),
         subject: firstDefined(user?.subject, fallback?.subject, ''),
+        advisorySectionId: firstDefined(user?.advisorySectionId, fallback?.advisorySectionId, null),
+        advisorySection: firstDefined(user?.advisorySection, fallback?.advisorySection, null),
         strand: firstDefined(user?.strand, fallback?.strand, ''),
         gradeLevel: firstDefined(user?.gradeLevel, fallback?.gradeLevel, 'Grade 10'),
         contactNumber: normalizePhilippinePhone(firstDefined(user?.contactNumber, fallback?.contactNumber, '')),

@@ -45,6 +45,38 @@ test('admin reads Supabase profiles with non-ObjectId IDs for every role', async
     assert.equal(result.user.password, '');
   }
 });
+test('admin teacher profiles show the current assigned section, including inactive sections, without writing data', async () => {
+  client = createFakeSupabase({
+    users: [{ ...account, role: 'teacher', department: 'Science', advisory_section_id: 'sincerity' }],
+    sections: [
+      { id: 'sincerity', name: 'Sincerity', is_active: true },
+      { id: 'unity', name: 'Unity', is_active: false },
+    ],
+  });
+  const first = await invoke('getUserById');
+  assert.equal(first.user.advisorySectionId, 'sincerity');
+  assert.deepEqual(first.user.advisorySection, { id: 'sincerity', name: 'Sincerity' });
+  client.tables.users[0].advisory_section_id = 'unity';
+  const reassigned = await invoke('getUserById');
+  assert.equal(reassigned.user.advisorySectionId, 'unity');
+  assert.deepEqual(reassigned.user.advisorySection, { id: 'unity', name: 'Unity' });
+  client.tables.users[0].advisory_section_id = null;
+  const cleared = await invoke('getUserById');
+  assert.equal(cleared.user.advisorySectionId, '');
+  assert.equal(cleared.user.advisorySection, null);
+  assert.deepEqual(client.writes, []);
+});
+test('admin teacher profiles tolerate missing section references and surface section lookup failures', async () => {
+  client = createFakeSupabase({
+    users: [{ ...account, role: 'teacher', advisory_section_id: 'missing-section' }], sections: [],
+  });
+  const missing = await invoke('getUserById');
+  assert.equal(missing.user.advisorySectionId, 'missing-section');
+  assert.equal(missing.user.advisorySection, null);
+  client.failures.push({ table: 'sections', operation: 'select', error: { message: 'Section lookup unavailable' } });
+  await assert.rejects(invoke('getUserById'), { statusCode: 500, message: 'Section lookup unavailable' });
+  assert.deepEqual(client.writes, []);
+});
 test('admin updates Supabase account and permits its existing username', async () => {
   client = createFakeSupabase({ users: [account] });
   await invoke('updateUser', { body: { name: 'Updated', username: 'user' } });
