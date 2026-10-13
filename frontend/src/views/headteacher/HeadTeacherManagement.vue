@@ -1,65 +1,12 @@
 <template>
   <div class="headteacher-workspace headteacher-dashboard-page headteacher-content-page headteacher-management-page">
-    <aside id="headteacher-sidebar-drawer" class="headteacher-sidebar" :class="{ active: isSidebarOpen }">
-      <div class="headteacher-sidebar-header">
-        <div class="headteacher-brand">
-          <div class="headteacher-brand-icon">
-            <img src="/logo.png" alt="EduMatch" class="headteacher-brand-image" />
-          </div>
-          <div class="headteacher-brand-copy">
-            <h2>EduMatch</h2>
-            <p>Head Teacher Portal</p>
-          </div>
-        </div>
-        <button type="button" class="headteacher-sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <nav class="headteacher-sidebar-nav">
-        <div class="headteacher-nav-section">
-          <h4 class="headteacher-nav-section-title">Workspace</h4>
-          <router-link to="/headteacher/dashboard" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/dashboard' }" @click="closeSidebar">
-            <i class="fas fa-home"></i>
-            <span>Dashboard</span>
-          </router-link>
-          <router-link to="/headteacher/management" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/management' }" @click="closeSidebar">
-            <i class="fas fa-users-cog"></i>
-            <span>Teacher Management</span>
-          </router-link>
-          <router-link to="/headteacher/lessons" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/lessons' }" @click="closeSidebar">
-            <i class="fas fa-book-open"></i>
-            <span>Lessons & Exams</span>
-          </router-link>
-        </div>
-      </nav>
-
-      <div class="headteacher-sidebar-footer">
-        <div class="headteacher-sidebar-profile">
-          <div class="headteacher-sidebar-avatar">
-            <i class="fas fa-user" aria-hidden="true"></i>
-          </div>
-          <div class="headteacher-sidebar-info">
-            <h5>{{ displayName }}</h5>
-            <div class="headteacher-sidebar-meta">
-              <p class="headteacher-sidebar-role">Head Teacher</p>
-              <div class="headteacher-sidebar-status">
-                <span class="headteacher-sidebar-status-indicator active"></span>
-                <span>active</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <button v-if="isSidebarOpen" type="button" class="headteacher-sidebar-backdrop" @click="closeSidebar" aria-label="Close sidebar"></button>
+    <HeadTeacherSidebar v-model:is-open="isSidebarOpen" :display-name="displayName" />
 
     <main class="headteacher-main headteacher-page-container">
       <header class="headteacher-top-header headteacher-matched-page-header">
         <div class="headteacher-header-content">
           <div class="headteacher-header-copy">
-            <button type="button" class="headteacher-mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
+            <button type="button" class="headteacher-mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar" aria-controls="headteacher-sidebar-drawer" :aria-expanded="isSidebarOpen">
               <i class="fas fa-bars"></i>
             </button>
             <div class="headteacher-management-header-copy headteacher-matched-header-copy">
@@ -110,7 +57,7 @@
         <div class="headteacher-section-head headteacher-directory-head">
           <div class="headteacher-directory-heading">
             <h2 class="headteacher-section-title">Teacher Directory</h2>
-            <p class="headteacher-section-subtitle">Manage faculty accounts, access, and advisory assignments for {{ departmentLabel }}.</p>
+            <p class="headteacher-section-subtitle">Manage faculty accounts, access, and advisory assignments for {{ departmentLabel }}. Sections already used by another subject or teacher are unavailable.</p>
           </div>
           <div v-if="!isLoading && teachers.length > 0" class="headteacher-directory-create-actions">
             <button
@@ -473,7 +420,7 @@
                   </span>
                 </div>
                 <p class="headteacher-mobile-assignment-copy">
-                  Choose the section this teacher will advise for advisory attendance and student account creation.
+                  Choose the section this teacher will advise for advisory attendance and student account creation. Each section can be assigned to only one teacher across all subjects.
                 </p>
                 <div class="headteacher-mobile-assignment">
                   <select
@@ -671,7 +618,7 @@
       </div>
 
       <div v-if="isCreateModalOpen" class="headteacher-modal-shell" @click.self="closeModal">
-        <div class="headteacher-modal-panel">
+        <div class="headteacher-modal-panel headteacher-create-teacher-modal">
           <div class="headteacher-modal-head">
             <div>
               <h3>Create Teacher Account</h3>
@@ -720,6 +667,7 @@
                     {{ section.name }}
                   </option>
                 </select>
+                <small>Sections assigned to another subject or teacher are unavailable.</small>
               </label>
             </div>
 
@@ -984,16 +932,16 @@
 
 <script setup>
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
+import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import { nameError, phoneError } from '../../utils/teacherValidation.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import gsap from 'gsap'
 import { useAuthStore } from '../../stores/auth.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 
 const isSidebarOpen = ref(false)
@@ -1343,7 +1291,6 @@ watch(totalPages, (value) => {
 })
 
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
-const closeSidebar = () => { isSidebarOpen.value = false }
 const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.value }
 
 const resetForm = () => {
@@ -1529,9 +1476,24 @@ const setTeacherAssignmentDraft = (teacherId, advisorySectionId) => {
 const getAssignableSections = (teacherId) => {
   const normalizedTeacherId = normalizeTeacherId(teacherId)
   return sections.value.filter((section) => {
-    const adviserId = String(section?.adviser?.id || '').trim()
-    return !adviserId || adviserId === normalizedTeacherId
+    if (section?.isActive !== true) return false
+    const advisers = Array.isArray(section.advisers)
+      ? section.advisers
+      : section.adviser ? [section.adviser] : []
+    return advisers.every((adviser) => {
+      const adviserId = normalizeTeacherId(adviser)
+      return adviserId && adviserId === normalizedTeacherId
+    })
   })
+}
+
+const refreshSectionAvailability = async () => {
+  try {
+    const response = await axios.get(`${resolveApiBaseUrl()}/headteacher/sections`, getAuthConfig())
+    if (Array.isArray(response.data?.sections)) sections.value = response.data.sections
+  } catch {
+    // Preserve the current options and the original conflict message if refreshing fails.
+  }
 }
 
 const hasTeacherAssignmentChanged = (teacher) => {
@@ -1658,6 +1620,7 @@ const createTeacher = async () => {
   } catch (error) {
     formMessage.value = error.response?.data?.message || 'Failed to create teacher account.'
     formMessageType.value = 'error'
+    if (error.response?.status === 409) await refreshSectionAvailability()
   } finally {
     isSubmitting.value = false
   }
@@ -1726,6 +1689,13 @@ const persistTeacherAssignment = async (teacher, advisorySectionId) => {
 
   assignmentMessage.value = ''
   assignmentMessageType.value = 'success'
+  const requestedSectionId = String(advisorySectionId || '').trim()
+  if (requestedSectionId && !getAssignableSections(teacherId).some((section) => section.id === requestedSectionId)) {
+    assignmentMessage.value = 'This section is unavailable or already assigned to another subject or teacher. Choose another advisory section.'
+    assignmentMessageType.value = 'error'
+    setTeacherAssignmentDraft(teacherId, teacher.advisorySectionId || '')
+    return
+  }
   isUpdatingTeacherAssignment.value = true
   updatingTeacherAssignmentId.value = teacherId
   try {
@@ -1757,6 +1727,7 @@ const persistTeacherAssignment = async (teacher, advisorySectionId) => {
     if (selectedTeacher.value?.id === teacherId) {
       studentsErrorMessage.value = message
     }
+    if (error.response?.status === 409) await refreshSectionAvailability()
   } finally {
     isUpdatingTeacherAssignment.value = false
     updatingTeacherAssignmentId.value = ''
@@ -1787,6 +1758,13 @@ onBeforeUnmount(() => {
 
 <style scoped>
 @reference "../../styles/tailwind.css";
+
+.headteacher-management-page .headteacher-create-teacher-modal {
+  @apply tw:box-border;
+  @apply tw:[max-height:calc(100dvh_-_2rem)];
+  @apply tw:overflow-y-auto;
+  @apply tw:overscroll-contain;
+}
 
 .headteacher-announcement-modal {
   @apply tw:[max-width:620px];

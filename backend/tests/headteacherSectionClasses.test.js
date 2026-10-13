@@ -17,13 +17,14 @@ const {
   updateManagedTeacher,
 } = require('../controllers/headteacherController');
 const { listTeacherSubjects } = require('../services/subjectService');
+const { getAssignableSectionOrThrow, listSectionsWithAdvisers } = require('../services/sectionService');
 
 const headteacherId = 'mapeh-headteacher';
 const teacherId = 'mapeh-teacher';
 const sincerityId = 'sincerity-section';
 const unityId = 'unity-section';
 
-function fixture({ teacher = {}, create = false, subjects = [], students = [] } = {}) {
+function fixture({ teacher = {}, create = false, subjects = [], students = [], otherUsers = [] } = {}) {
   emails = [];
   responses = [];
   client = createFakeSupabase({
@@ -43,6 +44,7 @@ function fixture({ teacher = {}, create = false, subjects = [], students = [] } 
         advisory_section_id: null,
         ...teacher,
       }] : []),
+      ...otherUsers,
       ...students,
     ],
     sections: [
@@ -73,6 +75,63 @@ function existingClass(changes = {}) {
     created_at: '2026-09-01T00:00:00.000Z',
     updated_at: '2026-09-01T00:00:00.000Z',
     ...changes,
+  };
+}
+
+function sectionOwner(changes = {}) {
+  return {
+    id: 'science-teacher',
+    name: 'Jose Rizal',
+    email: 'jose.rizal@gmail.com',
+    username: 'jose.rizal',
+    role: 'teacher',
+    status: 'active',
+    department: 'Science',
+    subject: 'SCIENCE',
+    managed_by: 'science-headteacher',
+    advisory_section_id: sincerityId,
+    ...changes,
+  };
+}
+
+function advisoryStudent() {
+  return {
+    id: 'sincerity-student',
+    name: 'Juan Dela Cruz',
+    email: 'juan.delacruz@gmail.com',
+    username: 'juan.delacruz',
+    role: 'student',
+    status: 'active',
+    section_id: sincerityId,
+    managed_by: 'science-teacher',
+    department: 'Science',
+    enrollment: { teacherId: 'science-teacher', status: 'approved' },
+  };
+}
+
+function assertRejectedAssignmentUnchanged(snapshot) {
+  assert.deepEqual(client.tables, snapshot);
+  assert.deepEqual(client.writes, []);
+  assert.deepEqual(emails, []);
+  assert.deepEqual(responses, []);
+}
+
+function capUserReadResults(maxRows, ranges = []) {
+  const originalFrom = client.from;
+  client.from = (table) => {
+    const query = originalFrom(table);
+    if (table !== 'users') return query;
+    const originalRange = query.range;
+    query.range = (first, last) => {
+      ranges.push([first, last]);
+      return originalRange(first, last);
+    };
+    const originalThen = query.then;
+    query.then = (resolve, reject) => originalThen((result) => resolve({
+      ...result,
+      data: Array.isArray(result.data) ? result.data.slice(0, maxRows) : result.data,
+    }), reject);
+    return query;
   };
 }
 
@@ -326,4 +385,196 @@ test('teacher creation does not send an invitation or report success when its au
   assert.deepEqual(client.tables.subjects, []);
   assert.deepEqual(emails, []);
   assert.deepEqual(responses, []);
+});
+
+for (const status of ['active', 'pending', 'inactive', 'suspended']) {
+  test(`a section owned by a ${status} teacher in another subject and department rejects creation and reassignment`, async () => {
+    for (const creating of [true, false]) {
+      fixture({
+        create: creating,
+        otherUsers: [sectionOwner({ status })],
+        students: [advisoryStudent()],
+        subjects: [existingClass({ teacher_id: 'science-teacher', name: 'SCIENCE', class_name: 'SCIENCE 10 - Sincerity' })],
+      });
+      const snapshot = structuredClone(client.tables);
+      await assert.rejects(creating ? create() : assign({ name: 'Changed Name' }), (error) => {
+        assert.equal(error.statusCode, 409);
+        assert.match(error.message, /Sincerity.*already assigned.*SCIENCE.*Jose Rizal.*different section/i);
+        return true;
+      });
+      assertRejectedAssignmentUnchanged(snapshot);
+    }
+  });
+}
+
+test('a section cannot be shared by two teachers within the same subject and department', async () => {
+  fixture({ otherUsers: [sectionOwner({ department: 'MAPEH', subject: 'MAPEH', managed_by: headteacherId })] });
+  const snapshot = structuredClone(client.tables);
+  await assert.rejects(assign(), (error) => {
+    assert.equal(error.statusCode, 409);
+    assert.match(error.message, /Sincerity.*already assigned.*MAPEH.*Jose Rizal/i);
+    return true;
+  });
+  assertRejectedAssignmentUnchanged(snapshot);
+});
+
+test('a section conflict names the department when its owner has no separate subject', async () => {
+  fixture({ otherUsers: [sectionOwner({ subject: '', department: 'Science' })] });
+  await assert.rejects(assign(), (error) => {
+    assert.equal(error.statusCode, 409);
+    assert.match(error.message, /Sincerity.*already assigned.*Science.*Jose Rizal/i);
+    return true;
+  });
+});
+
+test('repeat assignment also rejects a legacy duplicate even when the current teacher is the first owner', async () => {
+  fixture({
+    teacher: { advisory_section_id: sincerityId },
+    otherUsers: [sectionOwner()],
+    subjects: [existingClass()],
+    students: [advisoryStudent()],
+  });
+  assert.equal(client.tables.users[0].id, teacherId);
+  const snapshot = structuredClone(client.tables);
+  await assert.rejects(assign(), (error) => {
+    assert.equal(error.statusCode, 409);
+    assert.match(error.message, /already assigned.*SCIENCE.*Jose Rizal/i);
+    return true;
+  });
+  assertRejectedAssignmentUnchanged(snapshot);
+});
+
+for (const nextSectionId of ['', unityId]) {
+  test(`${nextSectionId ? 'moving to another section' : 'clearing the assigned section'} releases the original section for another teacher`, async () => {
+    fixture({ teacher: { advisory_section_id: sincerityId }, subjects: [existingClass()] });
+    await assign({ advisorySectionId: nextSectionId });
+    const { statusCode, response } = await create({
+      name: 'Ana Santos', email: 'ana.santos@gmail.com', username: 'ana.santos',
+    });
+    assert.equal(statusCode, 201);
+    const replacement = client.tables.users.find((row) => row.username === 'ana.santos');
+    assert.equal(replacement.advisory_section_id, sincerityId);
+    assert.equal(response.advisoryClass.className, 'MAPEH 10 - Sincerity');
+    assert.equal(client.tables.users.filter((row) => row.role === 'teacher' && row.advisory_section_id === sincerityId).length, 1);
+  });
+}
+
+test('a failed ownership query prevents section assignment', async () => {
+  fixture({ otherUsers: [sectionOwner()] });
+  const snapshot = structuredClone(client.tables);
+  client.failures.push({ table: 'users', operation: 'select', error: { message: 'Ownership storage unavailable' } });
+  await assert.rejects(getAssignableSectionOrThrow(sincerityId, { teacherId }), {
+    statusCode: 500,
+    message: 'Ownership storage unavailable',
+  });
+  assertRejectedAssignmentUnchanged(snapshot);
+});
+
+for (const operation of ['insert', 'upsert']) {
+  test(`a database section conflict during ${operation} reports a friendly error without later side effects`, async () => {
+    fixture({ create: operation === 'insert', students: [advisoryStudent()] });
+    const snapshot = structuredClone(client.tables);
+    client.failures.push({
+      table: 'users',
+      operation,
+      error: {
+        code: '23505',
+        constraint: 'users_advisory_section_unique',
+        message: 'duplicate key value violates unique constraint "users_advisory_section_unique"',
+        details: `Key (advisory_section_id)=(${sincerityId}) already exists.`,
+      },
+    });
+    await assert.rejects(operation === 'insert' ? create() : assign(), {
+      statusCode: 409,
+      message: 'This section is already assigned to another teacher. Choose a different section.',
+    });
+    assertRejectedAssignmentUnchanged(snapshot);
+  });
+}
+
+test('section directory lists every adviser so legacy duplicates cannot hide an owner', async () => {
+  fixture({
+    teacher: { advisory_section_id: sincerityId },
+    otherUsers: [
+      sectionOwner({ status: 'inactive', profile_image: '/images/jose.jpg' }),
+      { id: 'headteacher-with-section', role: 'headteacher', name: 'Head Teacher', advisory_section_id: sincerityId },
+    ],
+    students: [advisoryStudent()],
+  });
+  const sections = await listSectionsWithAdvisers();
+  const sincerity = sections.find((section) => section.id === sincerityId);
+  assert.deepEqual(sincerity.advisers.map((adviser) => adviser.id).sort(), [teacherId, 'science-teacher'].sort());
+  assert.equal(sincerity.advisers.find((adviser) => adviser.id === 'science-teacher').subject, 'SCIENCE');
+  assert.equal(sincerity.advisers.find((adviser) => adviser.id === 'science-teacher').status, 'inactive');
+  assert.equal(sincerity.advisers.find((adviser) => adviser.id === 'science-teacher').profileImage, '/images/jose.jpg');
+  assert.equal(sincerity.advisers.find((adviser) => adviser.id === 'science-teacher').email, 'jose.rizal@gmail.com');
+  assert.ok(sincerity.advisers.some((adviser) => adviser.id === sincerity.adviser.id));
+  assert.equal(sincerity.studentCount, 1);
+  assert.deepEqual(sections.find((section) => section.id === unityId).advisers, []);
+  assert.equal(sections.find((section) => section.id === unityId).adviser, null);
+});
+
+test('section directory finds an older owner behind a server limit of 1000 newer student accounts', async () => {
+  fixture({
+    create: true,
+    otherUsers: [sectionOwner({ created_at: '2026-01-01T00:00:00.000Z' })],
+    students: Array.from({ length: 1000 }, (_, index) => ({
+      id: `newer-student-${index}`,
+      name: `Student ${index}`,
+      role: 'student',
+      section_id: unityId,
+      created_at: '2026-10-01T00:00:00.000Z',
+    })),
+  });
+  capUserReadResults(1000);
+  const sections = await listSectionsWithAdvisers();
+  const sincerity = sections.find((section) => section.id === sincerityId);
+  assert.equal(sincerity.adviser.id, 'science-teacher');
+  assert.deepEqual(sincerity.advisers.map((adviser) => adviser.id), ['science-teacher']);
+  assert.equal(sincerity.advisers[0].subject, 'SCIENCE');
+  assert.equal(sections.find((section) => section.id === unityId).studentCount, 1000);
+});
+
+test('section directory pages assigned teachers and includes an owner beyond its first 500 rows', async () => {
+  const owners = Array.from({ length: 501 }, (_, index) => sectionOwner({
+    id: `teacher-${String(index).padStart(4, '0')}`,
+    advisory_section_id: `assigned-section-${index}`,
+  }));
+  fixture({ create: true, otherUsers: owners });
+  client.tables.sections.push(...owners.map((owner) => ({
+    id: owner.advisory_section_id,
+    name: `Assigned ${owner.id}`,
+    is_active: true,
+  })));
+  const ranges = [];
+  capUserReadResults(500, ranges);
+  const sections = await listSectionsWithAdvisers();
+  assert.deepEqual(ranges, [[0, 499], [500, 999]]);
+  const lastSection = sections.find((section) => section.id === owners[500].advisory_section_id);
+  assert.equal(lastSection.adviser.id, owners[500].id);
+  assert.deepEqual(lastSection.advisers.map((adviser) => adviser.id), [owners[500].id]);
+  assert.equal(sections.flatMap((section) => section.advisers).length, owners.length);
+});
+
+test('section directory rejects an assigned-teacher read failure rather than reporting sections as available', async () => {
+  fixture({ otherUsers: [sectionOwner()] });
+  const originalFrom = client.from;
+  client.from = (table) => {
+    const query = originalFrom(table);
+    const originalNot = query.not;
+    query.not = (field, operator, value) => {
+      if (table === 'users' && field === 'advisory_section_id') {
+        query.then = (resolve, reject) => Promise.resolve({
+          data: null,
+          error: { message: 'Section adviser storage unavailable' },
+        }).then(resolve, reject);
+      }
+      return originalNot(field, operator, value);
+    };
+    return query;
+  };
+  await assert.rejects(listSectionsWithAdvisers(), {
+    statusCode: 500,
+    message: 'Section adviser storage unavailable',
+  });
 });

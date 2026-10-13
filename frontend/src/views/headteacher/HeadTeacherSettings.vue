@@ -1,9 +1,13 @@
 <template>
   <div class="headteacher-workspace headteacher-dashboard-page">
+    <HeadTeacherSidebar v-model:is-open="isSidebarOpen" :display-name="displayName" />
     <main class="headteacher-main headteacher-page-container">
       <header class="headteacher-top-header">
         <div class="headteacher-header-content">
           <div class="headteacher-header-copy">
+            <button type="button" class="headteacher-mobile-menu-toggle" :aria-expanded="isSidebarOpen" aria-controls="headteacher-sidebar-drawer" aria-label="Open sidebar" @click="isSidebarOpen = !isSidebarOpen">
+              <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
             <div>
               <h1>Change Password</h1>
               <p class="headteacher-header-subtitle">Update your Head Teacher account password and keep your department access secure.</p>
@@ -168,6 +172,7 @@
 </template>
 
 <script setup>
+import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -176,6 +181,8 @@ import { useAuthStore } from '../../stores/auth.js'
 const router = useRouter()
 const authStore = useAuthStore()
 
+const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'HeadTeacher').trim())
+const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
 const banner = reactive({
@@ -308,9 +315,7 @@ onBeforeUnmount(() => {
 
 .headteacher-main,
 .headteacher-main.headteacher-page-container {
-  @apply tw:w-full;
   @apply tw:max-w-none!;
-  @apply tw:[margin:0];
 }
 
 .headteacher-profile-grid,

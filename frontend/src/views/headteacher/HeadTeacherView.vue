@@ -1,69 +1,12 @@
 <template>
   <div class="headteacher-workspace headteacher-dashboard-page headteacher-overview-page">
-    <aside id="headteacher-sidebar-drawer" class="headteacher-sidebar" :class="{ active: isSidebarOpen }">
-      <div class="headteacher-sidebar-header">
-        <div class="headteacher-brand">
-          <div class="headteacher-brand-icon">
-            <img src="/logo.png" alt="EduMatch" class="headteacher-brand-image">
-          </div>
-          <div class="headteacher-brand-copy">
-            <h2>EduMatch</h2>
-            <p>Head Teacher Portal</p>
-          </div>
-        </div>
-        <button type="button" class="headteacher-sidebar-close" @click="closeSidebar" aria-label="Close sidebar">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <nav class="headteacher-sidebar-nav">
-        <div class="headteacher-nav-section">
-          <h4 class="headteacher-nav-section-title">Workspace</h4>
-          <router-link to="/headteacher/dashboard" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/dashboard' }" @click="closeSidebar">
-            <i class="fas fa-home"></i>
-            <span>Dashboard</span>
-          </router-link>
-          <router-link to="/headteacher/management" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/management' }" @click="closeSidebar">
-            <i class="fas fa-users-cog"></i>
-            <span>Teacher Management</span>
-          </router-link>
-          <router-link to="/headteacher/lessons" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/lessons' }" @click="closeSidebar">
-            <i class="fas fa-book-open"></i>
-            <span>Lessons & Exams</span>
-          </router-link>
-          <router-link to="/headteacher/announcements" class="headteacher-nav-link" :class="{ active: route.path === '/headteacher/announcements' }" @click="closeSidebar">
-            <i class="fas fa-bullhorn"></i>
-            <span>Announcements</span>
-          </router-link>
-        </div>
-      </nav>
-
-      <div class="headteacher-sidebar-footer">
-        <div class="headteacher-sidebar-profile">
-          <div class="headteacher-sidebar-avatar">
-            <i class="fas fa-user" aria-hidden="true"></i>
-          </div>
-          <div class="headteacher-sidebar-info">
-            <h5>{{ displayName }}</h5>
-            <div class="headteacher-sidebar-meta">
-              <p class="headteacher-sidebar-role">Head Teacher</p>
-              <div class="headteacher-sidebar-status">
-                <span class="headteacher-sidebar-status-indicator active"></span>
-                <span>active</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <button v-if="isSidebarOpen" type="button" class="headteacher-sidebar-backdrop" @click="closeSidebar" aria-label="Close sidebar"></button>
+    <HeadTeacherSidebar v-model:is-open="isSidebarOpen" :display-name="displayName" />
 
     <main class="headteacher-main headteacher-page-container">
       <header class="headteacher-top-header headteacher-matched-page-header">
         <div class="headteacher-header-content">
           <div class="headteacher-header-copy">
-            <button type="button" class="headteacher-mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
+            <button type="button" class="headteacher-mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar" aria-controls="headteacher-sidebar-drawer" :aria-expanded="isSidebarOpen">
               <i class="fas fa-bars"></i>
             </button>
             <div class="headteacher-management-header-copy headteacher-matched-header-copy">
@@ -393,16 +336,16 @@
 
 <script setup>
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
+import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import { nameError, phoneError } from '../../utils/teacherValidation.js'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Chart from 'chart.js/auto'
 import { useAuthStore } from '../../stores/auth.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 
 const isSidebarOpen = ref(false)
@@ -667,7 +610,6 @@ watch(totalPages, (value) => {
 })
 
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
-const closeSidebar = () => { isSidebarOpen.value = false }
 const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.value }
 const openCreateModal = () => {
   isAccountMenuOpen.value = false

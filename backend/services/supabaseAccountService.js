@@ -17,6 +17,8 @@ function accountError(error, fallbackMessage) {
       message = 'Email already exists';
     } else if (constraint.includes('users_headteacher_department_unique')) {
       message = 'A head teacher is already assigned to this department';
+    } else if (constraint.includes('users_advisory_section_unique')) {
+      message = 'This section is already assigned to another teacher. Choose a different section.';
     } else if (error.message) {
       message = 'An account with these details already exists';
     }

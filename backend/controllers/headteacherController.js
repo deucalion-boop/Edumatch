@@ -32,6 +32,7 @@ const { uploadFiles } = require('../services/storageService');
 const {
   findSectionById,
   getSectionOrThrow,
+  getAssignableSectionOrThrow,
   syncTeacherAdvisoryAssignments,
   ensureTeacherAdvisoryClass,
 } = require('../services/sectionService');
@@ -455,7 +456,7 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     subject,
   });
   const advisorySection = advisorySectionId
-    ? await getSectionOrThrow(advisorySectionId)
+    ? await getAssignableSectionOrThrow(advisorySectionId)
     : null;
 
   const created = await createSupabaseAccount({
@@ -626,7 +627,7 @@ const updateManagedTeacher = asyncHandler(async (req, res) => {
   const previousAdvisorySectionId = String(teacher.advisorySectionId || '').trim();
   if (advisorySectionId !== undefined) {
     teacher.advisorySectionId = advisorySectionId
-      ? (await getSectionOrThrow(advisorySectionId))._id
+      ? (await getAssignableSectionOrThrow(advisorySectionId, { teacherId: teacher._id || teacher.id }))._id
       : undefined;
   }
 

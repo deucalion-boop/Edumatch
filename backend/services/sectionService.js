@@ -75,6 +75,25 @@ async function getSectionOrThrow(sectionId, options = {}) {
   return section;
 }
 
+async function getAssignableSectionOrThrow(sectionId, { teacherId = '' } = {}) {
+  const section = await getSectionOrThrow(sectionId);
+  const normalizedTeacherId = normalizeSectionId(teacherId);
+  const client = getSupabaseStorageClient();
+  let query = client.from('users').select('id,name,subject,department')
+    .eq('role', ROLE_TEACHER).eq('advisory_section_id', section.id);
+  if (normalizedTeacherId) query = query.neq('id', normalizedTeacherId);
+  const { data: adviser, error } = await query.limit(1).maybeSingle();
+  if (error) throw sectionError(error, 'Failed to check section assignment');
+  if (adviser) {
+    const subject = String(adviser.subject || adviser.department || 'another teacher').trim();
+    const name = String(adviser.name || '').trim();
+    const conflict = new Error(`Section "${section.name}" is already assigned to ${subject}${name ? ` (${name})` : ''}. Choose a different section.`);
+    conflict.statusCode = 409;
+    throw conflict;
+  }
+  return section;
+}
+
 async function findTeacherByAdvisorySection(sectionId) {
   const normalizedSectionId = normalizeSectionId(sectionId);
   if (!normalizedSectionId) return null;
@@ -198,28 +217,71 @@ async function ensureTeacherAdvisoryClass(teacher, { allowDefault = false, onlyI
   }
 }
 
+async function listAssignedSectionAdvisers() {
+  const client = getSupabaseStorageClient();
+  const pageSize = 500;
+  const advisers = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await client.from('users')
+      .select('id,name,email,department,subject,status,profile_image,advisory_section_id')
+      .eq('role', ROLE_TEACHER)
+      .not('advisory_section_id', 'is', null)
+      .order('id', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error) throw sectionError(error, 'Failed to list section advisers');
+    advisers.push(...(data || []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      department: row.department,
+      subject: row.subject,
+      status: row.status,
+      profileImage: row.profile_image,
+      advisorySectionId: row.advisory_section_id,
+    })));
+    if ((data || []).length < pageSize) return advisers;
+  }
+}
+
 async function listSectionsWithAdvisers() {
   await ensureDefaultSections();
 
   const client = getSupabaseStorageClient();
-  const [{ data: rows, error }, accounts] = await Promise.all([
+  const [{ data: rows, error }, accounts, advisers] = await Promise.all([
     client.from('sections').select('*').order('name', { ascending: true }),
     listSupabaseAccounts(),
+    listAssignedSectionAdvisers(),
   ]);
   if (error) throw sectionError(error, 'Failed to list sections from Supabase');
 
-  const advisers = accounts.filter((account) => String(account?.role || '').trim() === ROLE_TEACHER);
   const students = accounts.filter((account) => String(account?.role || '').trim() === ROLE_STUDENT);
   const adviserBySectionId = new Map(
     advisers
       .map((teacher) => [normalizeSectionId(teacher.advisorySectionId), teacher])
       .filter(([sectionId]) => Boolean(sectionId))
   );
+  const advisersBySectionId = new Map();
+  advisers.forEach((teacher) => {
+    const sectionId = normalizeSectionId(teacher.advisorySectionId);
+    if (!sectionId) return;
+    if (!advisersBySectionId.has(sectionId)) advisersBySectionId.set(sectionId, []);
+    advisersBySectionId.get(sectionId).push(teacher);
+  });
   const studentCountBySectionId = new Map();
   students.forEach((student) => {
     const sectionId = normalizeSectionId(student.sectionId);
     if (!sectionId) return;
     studentCountBySectionId.set(sectionId, (studentCountBySectionId.get(sectionId) || 0) + 1);
+  });
+
+  const mapAdviser = (adviser) => ({
+    id: String(adviser._id || adviser.id || '').trim(),
+    name: String(adviser.name || '').trim(),
+    email: String(adviser.email || '').trim(),
+    department: String(adviser.department || '').trim(),
+    subject: String(adviser.subject || adviser.department || '').trim(),
+    status: String(adviser.status || '').trim().toLowerCase(),
+    profileImage: String(adviser.profileImage || '').trim(),
   });
 
   return (rows || []).map((row) => {
@@ -228,17 +290,8 @@ async function listSectionsWithAdvisers() {
     return {
       ...section,
       studentCount: Number(studentCountBySectionId.get(section.id) || 0),
-      adviser: adviser
-        ? {
-          id: String(adviser._id || adviser.id || '').trim(),
-          name: String(adviser.name || '').trim(),
-          email: String(adviser.email || '').trim(),
-          department: String(adviser.department || '').trim(),
-          subject: String(adviser.subject || adviser.department || '').trim(),
-          status: String(adviser.status || '').trim().toLowerCase(),
-          profileImage: String(adviser.profileImage || '').trim(),
-        }
-        : null,
+      adviser: adviser ? mapAdviser(adviser) : null,
+      advisers: (advisersBySectionId.get(section.id) || []).map(mapAdviser),
     };
   });
 }
@@ -247,6 +300,7 @@ module.exports = {
   ensureDefaultSections,
   findSectionById,
   getSectionOrThrow,
+  getAssignableSectionOrThrow,
   findTeacherByAdvisorySection,
   syncStudentsForSection,
   syncStudentSectionAdviser,
