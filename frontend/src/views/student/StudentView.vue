@@ -23,6 +23,7 @@
             <router-link
               to="/student/dashboard"
               class="nav-link nav-link-dropdown"
+              data-tour="dashboard-link"
               :class="{ active: isActiveRoute('/student/dashboard'), 'is-expanded': isDashboardMenuExpanded }"
               @click="closeSidebar"
             >
@@ -76,7 +77,7 @@
             <i class="fas fa-tasks"></i>
             <span>Activities</span>
           </router-link>
-          <router-link to="/student/announcements" class="nav-link" :class="{ active: isActiveRoute('/student/announcements') }" @click="closeSidebar">
+          <router-link to="/student/announcements" class="nav-link" data-tour="announcements-link" :class="{ active: isActiveRoute('/student/announcements') }" @click="closeSidebar">
             <i class="fas fa-bullhorn"></i>
             <span>Announcements</span>
           </router-link>
@@ -369,16 +370,42 @@ export default {
 
     const tourSteps = [
       {
-        key: 'welcome',
+        key: 'navigation-overview',
         title: 'Welcome to EduMatch',
-        description: 'EduMatch helps you access lessons, complete activities, track your progress, and receive strand recommendations based on your learning strengths.',
-        route: '/student/dashboard'
+        description: 'This sidebar is your main navigation area. EduMatch helps you access lessons, complete activities, track your progress, and receive strand recommendations based on your learning strengths. The next steps explain each page before showing what is inside it.',
+        selector: '[data-tour="sidebar"]',
+        route: '/student/dashboard',
+        openSidebar: true
       },
       {
-        key: 'sidebar',
-        title: 'Navigation Overview',
-        description: 'Use this navigation menu to move between your Dashboard, Lessons, Activities, and Announcements.',
-        selector: '[data-tour="sidebar"]',
+        key: 'dashboard-link',
+        title: 'Dashboard',
+        description: 'Open Dashboard for a quick overview of your learning materials, completed activities, recent progress, and strand recommendations.',
+        selector: '[data-tour="dashboard-link"]',
+        route: '/student/dashboard',
+        openSidebar: true
+      },
+      {
+        key: 'lessons-link',
+        title: 'Lessons',
+        description: 'Open Lessons to view the learning materials and file attachments shared by your teachers.',
+        selector: '[data-tour="lessons-link"]',
+        route: '/student/dashboard',
+        openSidebar: true
+      },
+      {
+        key: 'challenges-link',
+        title: 'Activities',
+        description: 'Open Activities to see assigned quizzes and exams, review instructions, and track your submissions.',
+        selector: '[data-tour="challenges-link"]',
+        route: '/student/dashboard',
+        openSidebar: true
+      },
+      {
+        key: 'announcements-link',
+        title: 'Announcements',
+        description: 'Open Announcements to read updates posted by your teachers and the school.',
+        selector: '[data-tour="announcements-link"]',
         route: '/student/dashboard',
         openSidebar: true
       },
