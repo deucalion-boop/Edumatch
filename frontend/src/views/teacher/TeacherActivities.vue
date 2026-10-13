@@ -594,6 +594,12 @@
                   </div>
                 </div>
 
+                <CompetencySuggestions v-if="!isActivityAssessment" class="full"
+                  v-model="competencyReview" :lesson-id="challengeForm.linkedLesson"
+                  :request-suggestions="requestCompetencySuggestions"
+                  :disabled="isGenerating || isSavingGeneratedAssessment"
+                  @busy="competenciesBusy = $event" />
+
                 <div class="form-group full">
                   <label for="challengeDescription">{{ isActivityAssessment ? "Activity Instructions" : "Assessment Instructions" }}</label>
                   <textarea
@@ -819,7 +825,7 @@
                   type="button"
                   id="generateAssessmentBtn"
                   data-tour="challenges-generate-action"
-                  :disabled="!canGenerate || isGenerating || !challengeCanContinue"
+                  :disabled="!canGenerate || isGenerating || !challengeCanContinue || !competenciesReady"
                   :title="generateButtonTitle"
                   @click="generateWithAi"
                 >
@@ -883,6 +889,7 @@
 </template>
 
 <script setup>
+import CompetencySuggestions from '../../components/CompetencySuggestions.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
@@ -1395,6 +1402,15 @@ async function submitLesson() {
 }
 
 /** Challenge form */
+const competencyReview = ref(null)
+const competenciesBusy = ref(false)
+const competenciesReady = computed(() => !competenciesBusy.value && (!competencyReview.value ||
+  (competencyReview.value.rows.length > 0 && competencyReview.value.rows.every(row => row.reviewed && row.text.trim()))))
+const requestCompetencySuggestions = async (payload) => {
+  const response = await axios.post(`${resolveApiBaseUrl()}/teacher/assessments/competencies/suggest`, payload, getAuthConfig())
+  return response.data?.competencies || []
+}
+
 const challengeForm = reactive({
   challengeTitle: "",
   linkedLesson: "",
@@ -1565,6 +1581,7 @@ const showCorrectAnswers = ref(false);
 const isGenerating = ref(false);
 const isSavingGeneratedAssessment = ref(false);
 const isPublishingActivity = ref(false);
+watch(() => [challengeForm.linkedLesson, challengeForm.assessmentMode], () => { competencyReview.value = null })
 const canGenerate = ref(false);
 const AI_CONFIG_WARNING_MESSAGE = "AI Generator is not configured. Please contact the administrator to set up the API Key and Model.";
 const aiGenerationWarning = ref("");
@@ -1741,6 +1758,7 @@ function resetAssessmentBuilder() {
   challengeForm.deadlineTime = "";
   challengeForm.challengeDescription = "";
   challengeForm.activityAttachments = [];
+  competencyReview.value = null;
   generatedQuestions.value = [];
   generatedDraftMeta.value = null;
   isGeneratedPreviewVisible.value = false;
@@ -1779,6 +1797,7 @@ async function refreshAiStatus() {
  */
 async function generateWithAi() {
   try {
+    if (!competenciesReady.value) throw new Error('Review and confirm every selected competency before generating.');
     await refreshAiStatus();
     if (!canGenerate.value) {
       throw new Error(aiGenerationWarning.value || AI_CONFIG_WARNING_MESSAGE);
@@ -1833,6 +1852,7 @@ async function generateWithAi() {
     }
 
     const payload = {
+      competencyReview: competencyReview.value,
       lessonId: lessonId || undefined,
       subjectId: subjectId || undefined,
       title,

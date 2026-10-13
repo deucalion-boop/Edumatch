@@ -510,6 +510,12 @@
             </label>
           </div>
 
+          <CompetencySuggestions v-model="competencyReview"
+            :lesson-id="assessmentForm.lessonId" :teacher-id="assessmentForm.teacherId"
+            :request-suggestions="requestCompetencySuggestions"
+            :disabled="isAssessmentGenerating || isAssessmentSaving"
+            @busy="competenciesBusy = $event" />
+
           <div class="headteacher-policy-note">
             <strong>Recommendation rule:</strong>
             Only exams tagged as 1st, 2nd, or 3rd grading affect strand recommendations. Activities stay visible to students but do not affect the AI recommendation.
@@ -552,7 +558,7 @@
 
           <div class="headteacher-modal-actions headteacher-assessment-actions">
             <button type="button" class="headteacher-button headteacher-button-outline" :disabled="isAssessmentGenerating || isAssessmentSaving" @click="resetAssessmentDraft">Clear Draft</button>
-            <button type="button" class="headteacher-button headteacher-button-outline" :disabled="!canGenerateAssessment || isAssessmentGenerating" :title="assessmentGenerateButtonTitle" @click="generateAssessmentWithAi">
+            <button type="button" class="headteacher-button headteacher-button-outline" :disabled="!canGenerateAssessment || isAssessmentGenerating || !competenciesReady" :title="assessmentGenerateButtonTitle" @click="generateAssessmentWithAi">
               <i class="fas" :class="isAssessmentGenerating ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'"></i>
               {{ isAssessmentGenerating ? 'Generating...' : (isEditingAssessment ? 'Regenerate Draft' : 'Generate with AI') }}
             </button>
@@ -616,6 +622,7 @@
 </template>
 
 <script setup>
+import CompetencySuggestions from '../../components/CompetencySuggestions.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -657,6 +664,15 @@ const form = reactive({
   title: '',
   lessonPlanFile: null,
 })
+const competencyReview = ref(null)
+const competenciesBusy = ref(false)
+const competenciesReady = computed(() => !competenciesBusy.value && (!competencyReview.value ||
+  (competencyReview.value.rows.length > 0 && competencyReview.value.rows.every(row => row.reviewed && row.text.trim()))))
+const requestCompetencySuggestions = async (payload) => {
+  const response = await axios.post(`${resolveApiBaseUrl()}/headteacher/assessments/competencies/suggest`, payload, getAuthConfig())
+  return response.data?.competencies || []
+}
+
 const assessmentForm = reactive({
   teacherId: '',
   lessonId: '',
@@ -913,6 +929,7 @@ const submitLesson = async () => {
 }
 
 const resetAssessmentDraft = () => {
+  competencyReview.value = null
   activeWorkspaceTab.value = 'exams'
   editingAssessmentId.value = ''
   generatedQuestions.value = []
@@ -944,6 +961,8 @@ const onOptionsInput = (index, value) => {
   if (generatedQuestions.value[index]) generatedQuestions.value[index].options = lines
 }
 
+watch(() => [assessmentForm.lessonId, assessmentForm.teacherId], () => { competencyReview.value = null })
+
 const validateAssessmentForm = () => {
   const submissionDeadline = buildSubmissionDeadlineIso(assessmentForm.deadlineDate, assessmentForm.deadlineTime)
   if (!assessmentForm.teacherId || !assessmentForm.lessonId || !assessmentForm.title || !assessmentResolvedSubject.value || !assessmentForm.examType || !assessmentForm.difficulty) {
@@ -969,6 +988,7 @@ const validateAssessmentForm = () => {
 
 const generateAssessmentWithAi = async () => {
   try {
+    if (!competenciesReady.value) throw new Error('Review and confirm every selected competency before generating.')
     await refreshAssessmentAiStatus()
     if (!canGenerateAssessment.value) {
       throw new Error(assessmentGenerationWarning.value || AI_CONFIG_WARNING_MESSAGE)
@@ -978,6 +998,7 @@ const generateAssessmentWithAi = async () => {
     isAssessmentGenerating.value = true
 
     const payload = {
+      competencyReview: competencyReview.value,
       teacherId: assessmentForm.teacherId,
       lessonId: assessmentForm.lessonId,
       title: String(assessmentForm.title || '').trim(),
@@ -1077,6 +1098,7 @@ const saveManagedAssessment = async () => {
 }
 
 const startEditingAssessment = (assessment) => {
+  competencyReview.value = null
   activeWorkspaceTab.value = 'exams'
   editingAssessmentId.value = String(assessment?.id || '')
   assessmentForm.teacherId = String(assessment?.teacherId || '')

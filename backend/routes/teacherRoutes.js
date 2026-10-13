@@ -34,7 +34,7 @@ const {
   updateTeacherProfile,
   updateTeacherTourPreference,
 } = require('../controllers/teacherController');
-const { getAiStatus, generateAssessmentWithAi } = require('../controllers/aiController');
+const { getAiStatus, generateAssessmentWithAi, suggestAssessmentCompetencies } = require('../controllers/aiController');
 const {
   getTeacherAttendanceRoster,
   listTeacherAttendanceRecords,
@@ -104,5 +104,6 @@ router.patch('/tour-preference', updateTeacherTourPreference);
 
 router.get('/ai/status', getAiStatus);
 router.post('/assessments/ai-generate', aiLimiter, generateAssessmentWithAi);
+router.post('/assessments/competencies/suggest', aiLimiter, suggestAssessmentCompetencies);
 
 module.exports = router;
