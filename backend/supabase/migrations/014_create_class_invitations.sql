@@ -135,7 +135,7 @@ as $$
 declare
   v_invitation public.class_invitations%rowtype;
   v_student public.class_registration_students%rowtype;
-  v_subject public.subjects%rowtype;
+  v_subject public.subjects%rowtype; 
   v_teacher public.users%rowtype;
   v_adviser public.users%rowtype;
   v_section public.sections%rowtype;
