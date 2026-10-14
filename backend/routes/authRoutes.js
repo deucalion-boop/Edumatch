@@ -17,6 +17,7 @@ const { listSessions, logout, revokeSession } = require('../controllers/security
 const { createCaptchaChallenge, verifyCaptchaChallenge } = require('../controllers/captchaController');
 
 const router = express.Router();
+router.use('/class-invitations', require('./classInvitationRoutes').publicRoutes);
 
 router.post('/captcha/challenge', captchaChallengeLimiter, createCaptchaChallenge);
 router.post('/captcha/verify', captchaVerifyLimiter, verifyCaptchaChallenge);

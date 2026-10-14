@@ -47,6 +47,7 @@ const { aiLimiter, inviteLimiter, uploadLimiter } = require('../middlewares/rate
 const router = express.Router();
 
 router.use(authMiddleware, roleMiddleware('teacher'));
+router.use('/class-invitations', require('./classInvitationRoutes').teacher);
 
 router.post(
   '/lessons',

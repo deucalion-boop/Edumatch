@@ -208,10 +208,9 @@
               <button
                 type="button"
                 class="btn btn-primary btn-sm create-class-btn student-invite-icon-btn"
-                :disabled="!hasAdvisorySection"
                 @click="openStudentInviteModal"
                 aria-label="Invite Student"
-                :title="hasAdvisorySection ? 'Invite Student' : 'Assign an advisory section first'"
+                title="Import a student list and share a class invitation"
               >
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 <span>Invite Student</span>
@@ -300,7 +299,12 @@
               <span class="subject-metric-chip"><i class="fas fa-user-graduate"></i><strong>{{ subject.approvedStudentsCount }}</strong> Students</span>
               <span v-if="subject.pendingRequestsCount > 0" class="subject-metric-chip is-pending"><i class="fas fa-clock"></i><strong>{{ subject.pendingRequestsCount }}</strong> Pending</span>
             </div>
-            <p v-if="subject.approvedStudentsCount === 0" class="subject-management-waiting">Waiting for students to join with the class code</p>
+            <div v-if="invitationForSubject(subject.id)" class="class-invitation-summary">
+              <div class="class-invitation-counts"><span><strong>{{ invitationForSubject(subject.id).registeredCount }}</strong> registered</span><span><strong>{{ invitationForSubject(subject.id).unregisteredCount }}</strong> unregistered</span><span :class="{ 'invitation-expired-copy': isInvitationExpired(invitationForSubject(subject.id)) }">{{ isInvitationExpired(invitationForSubject(subject.id)) ? 'Invitation expired' : 'Enrollment in progress' }}</span></div>
+              <progress :value="invitationForSubject(subject.id).registeredCount || 0" :max="invitationForSubject(subject.id).totalCount || 1" :aria-label="`${invitationForSubject(subject.id).registeredCount} of ${invitationForSubject(subject.id).totalCount} invited students registered`"></progress>
+              <div class="class-invitation-tools"><button type="button" @click="openClassInvitation(subject.id)"><i class="fas fa-users" aria-hidden="true"></i>View invitation</button><button type="button" :disabled="isInvitationExpired(invitationForSubject(subject.id))" @click="copyInvitationLink(invitationForSubject(subject.id))"><i class="fas fa-copy" aria-hidden="true"></i>Copy link</button><button type="button" @click="openClassInvitation(subject.id)"><i class="fas fa-file-export" aria-hidden="true"></i>Registration codes</button></div>
+            </div>
+            <p v-else-if="subject.approvedStudentsCount === 0" class="subject-management-waiting">Waiting for students to join with the class code</p>
           </article>
         </div>
       </section>
@@ -378,6 +382,8 @@
             </button>
           </div>
         </div>
+        <div v-if="classInvitations.length" class="invitation-queue-summary" aria-live="polite"><strong>Invited student enrollment</strong><span>{{ invitationTotals.registered }} registered · {{ invitationTotals.unregistered }} unregistered</span><small>Students with valid registration codes join automatically. Class-code requests still require your approval.</small></div>
+        <p v-if="invitationLoadError" class="invitation-load-error" role="status">{{ invitationLoadError }} <button type="button" @click="refreshEnrollment">Retry</button></p>
       </section>
 
       </section>
@@ -437,15 +443,16 @@
         <div class="student-list-toolbar" aria-label="Student list tools">
           <label class="student-search-field">
             <i class="fas fa-search"></i>
-            <input type="search" placeholder="Search students..." aria-label="Search students" />
+            <input v-model.trim="studentSearch" type="search" placeholder="Search students..." aria-label="Search students" />
           </label>
-          <label class="student-toolbar-select"><i class="fas fa-filter"></i><select aria-label="Filter by class"><option>All Classes</option><option v-for="subject in subjects" :key="subject.id">{{ subject.className || subject.name }}</option></select></label>
-          <label class="student-toolbar-select"><i class="fas fa-arrow-down-wide-short"></i><select aria-label="Sort students"><option>Sort: Name</option><option>Sort: Progress</option><option>Sort: Average</option><option>Sort: Status</option></select></label>
+          <label class="student-toolbar-select"><i class="fas fa-filter"></i><select v-model="studentClassFilter" aria-label="Filter by class"><option value="">All Classes</option><option v-for="subject in subjects" :key="subject.id" :value="String(subject.id)">{{ subject.className || subject.name }}</option></select></label>
+          <label class="student-toolbar-select"><i class="fas fa-arrow-down-wide-short"></i><select v-model="studentSort" aria-label="Sort students"><option value="name">Sort: Name</option><option value="progress">Sort: Progress</option><option value="average">Sort: Average</option><option value="status">Sort: Status</option></select></label>
           <div class="student-toolbar-actions">
             <button type="button" class="toolbar-icon-btn" title="Export roster" aria-label="Export roster" onclick="window.print()"><i class="fas fa-file-export"></i><span>Export</span></button>
-            <button type="button" class="toolbar-icon-btn" title="Refresh student list" aria-label="Refresh student list" :disabled="isLoading" @click="fetchStudents"><i class="fas" :class="isLoading ? 'fa-spinner fa-spin' : 'fa-rotate'"></i><span>Refresh</span></button>
+            <button type="button" class="toolbar-icon-btn" title="Refresh student list" aria-label="Refresh student list" :disabled="isLoading || isEnrollmentRefreshing" @click="refreshEnrollment"><i class="fas" :class="isLoading || isEnrollmentRefreshing ? 'fa-spinner fa-spin' : 'fa-rotate'"></i><span>Refresh</span></button>
           </div>
         </div>
+        <div v-if="classInvitations.length" class="roster-enrollment-filters"><label>Enrollment status<select v-model="studentEnrollmentFilter" aria-label="Filter by enrollment status"><option value="">All students</option><option value="registered">Registered</option><option value="unregistered">Unregistered</option><option value="expired">Expired invitations</option></select></label><span>{{ invitationTotals.registered }} registered · {{ invitationTotals.unregistered }} unregistered in imported lists</span></div>
 
         <div class="class-list-table-wrap">
           <table class="class-list-table">
@@ -477,7 +484,7 @@
                 <td colspan="7">
                   <div class="table-state">
                     <i class="fas fa-user-graduate"></i>
-                    <span>{{ studentRosterView === 'advisory' ? 'No advisory-section students have joined your classes yet' : 'No students from other sections have joined your handled classes yet' }}</span>
+                    <span>{{ studentSearch || studentClassFilter || studentEnrollmentFilter ? 'No students match your search or filters' : studentRosterView === 'advisory' ? 'No advisory-section students have joined your classes yet' : 'No students from other sections have joined your handled classes yet' }}</span>
                   </div>
                 </td>
               </tr>
@@ -496,25 +503,25 @@
                     </div>
                   </div>
                 </td>
-                <td class="student-email">{{ student.email }}</td>
+                <td class="student-email">{{ student.isInvitationOnly ? 'Awaiting registration' : student.email }}</td>
                 <td>
-                  <span class="lessons-pill">{{ student.completedChallenges }}/{{ student.totalChallenges }}</span>
+                  <span v-if="!student.isInvitationOnly" class="lessons-pill">{{ student.completedChallenges }}/{{ student.totalChallenges }}</span><span v-else class="invitation-table-muted">—</span>
                 </td>
                 <td>
-                  <span class="average-score">{{ student.averageScore }}%</span>
+                  <span v-if="!student.isInvitationOnly" class="average-score">{{ student.averageScore }}%</span><span v-else class="invitation-table-muted">—</span>
                 </td>
                 <td>
-                  <div class="progress-cell">
+                  <div v-if="!student.isInvitationOnly" class="progress-cell">
                     <span class="progress-label">{{ student.progress }}%</span>
                     <div class="progress-bar">
                       <div class="progress-fill" :style="{ width: student.progress + '%' }"></div>
                     </div>
-                  </div>
+                  </div><span v-else class="invitation-table-muted">Not started</span>
                 </td>
                 <td>
                   <div class="student-recommendation-cell">
-                    <strong>{{ student.recommendationName || 'Not generated' }}</strong>
-                    <small>
+                    <strong>{{ student.isInvitationOnly ? 'Awaiting registration' : student.recommendationName || 'Not generated' }}</strong>
+                    <small v-if="!student.isInvitationOnly">
                       {{ student.recommendationConfidence ? `${student.recommendationConfidence} confidence` : 'Awaiting enough attempts' }}
                     </small>
                     <small v-if="student.subjectNames">{{ student.subjectNames }}</small>
@@ -524,12 +531,15 @@
                   <span class="status-pill" :class="`status-${normalizeStatus(student.status)}`" data-tour="students-status-pill">
                     {{ statusLabel(student.status) }}
                   </span>
+                  <small v-if="student.invitationStatus && !student.isInvitationOnly" class="student-enrollment-label">Registered</small>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
+
+      <ClassInvitationModal v-if="isClassInvitationModalOpen" :subjects="subjects" :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" :initial-subject-id="invitationSubjectId" :invitation="selectedClassInvitation" :can-create-individual="hasAdvisorySection" @close="isClassInvitationModalOpen = false" @manual="openManualStudentInvite" @imported="handleInvitationImported" />
 
       <div v-if="isCreateClassModalOpen" class="modal-shell" @click.self="closeCreateClassModal">
         <div class="modal-panel">
@@ -815,6 +825,7 @@ import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
+import ClassInvitationModal from '../../components/teacher/ClassInvitationModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -834,7 +845,7 @@ const TOUR_ROUTE_ORDER = ['/teacher/dashboard', '/teacher/activities', '/teacher
 const TOUR_PROGRESS_PREFIX = 'edumatch_teacher_tour_progress_v3_'
 const SIDEBAR_BREAKPOINT = 1024
 const SIDEBAR_WIDTH = 280
-const ADVISORY_SECTION_REFRESH_MS = 15000
+const ADVISORY_SECTION_REFRESH_MS = 30000
 const ACTIVITY_TAB_KEYS = ['lesson', 'challenge']
 const RECORDS_TAB_KEYS = ['lessons', 'assessments', 'attendance']
 
@@ -857,12 +868,28 @@ const {
   toggleNotificationsPanel,
   closeNotificationsPanel,
   clearAllNotifications,
-} = useUserNotifications({ limit: 8, pollIntervalMs: 15000 })
+} = useUserNotifications({ limit: 8, pollIntervalMs: 60000 })
 const subjects = ref([])
 const isLoadingSubjects = ref(false)
 const subjectsError = ref('')
 const students = ref([])
 const enrollmentRequests = ref([])
+const classInvitations = ref([])
+const invitationLoadError = ref('')
+const isEnrollmentRefreshing = ref(false)
+const isClassInvitationModalOpen = ref(false)
+const invitationSubjectId = ref('')
+const selectedInvitationId = ref('')
+const studentSearch = ref('')
+const studentClassFilter = ref('')
+const studentSort = ref('name')
+const studentEnrollmentFilter = ref('')
+let invitationsFetchPromise = null
+let subjectsFetchPromise = null
+let studentsFetchPromise = null
+let enrollmentRequestsFetchPromise = null
+let lastEnrollmentRequestRefreshAt = 0
+let lastTeacherSectionRefreshAt = 0
 const subjectActionsMenuId = ref('')
 const isCreateClassModalOpen = ref(false)
 const isCreatingClass = ref(false)
@@ -1121,24 +1148,71 @@ const averageProgress = computed(() => {
 
 const normalizeRosterSectionName = (value) => String(value || '').trim().toLowerCase()
 
+const invitationForSubject = (subjectId) => classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId) && invitation.status === 'active')
+  || classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId))
+const selectedClassInvitation = computed(() => classInvitations.value.find(invitation => String(invitation.id) === selectedInvitationId.value) || null)
+const isInvitationExpired = invitation => invitation?.status === 'expired' || new Date(invitation?.expiresAt).getTime() <= Date.now()
+const invitationsByClass = computed(() => subjects.value.map(subject => invitationForSubject(subject.id)).filter(Boolean))
+const invitationTotals = computed(() => invitationsByClass.value.reduce((totals, invitation) => ({ registered: totals.registered + Number(invitation.registeredCount || 0), unregistered: totals.unregistered + Number(invitation.unregisteredCount || 0) }), { registered: 0, unregistered: 0 }))
+const mergedRosterStudents = computed(() => {
+  const registered = students.value.map(student => ({ ...student, subjectIds: [...(student.subjectIds || [])] }))
+  const byStudentId = new Map(registered.map(student => [String(student.id), student]))
+  const imported = []
+  for (const invitation of invitationsByClass.value) {
+    for (const entry of invitation.students || []) {
+      const existing = entry.studentId ? byStudentId.get(String(entry.studentId)) : null
+      if (existing) {
+        existing.invitationStatus = 'registered'
+        if (!existing.subjectIds.includes(String(invitation.subjectId))) existing.subjectIds.push(String(invitation.subjectId))
+        continue
+      }
+      const isRegistered = entry.status === 'registered'
+      imported.push({
+        id: `invitation-${invitation.id}-${entry.id}`,
+        name: entry.fullName,
+        email: '',
+        sectionName: entry.section,
+        subjectIds: [String(invitation.subjectId)],
+        subjectNames: invitation.className,
+        status: isRegistered ? 'registered' : isInvitationExpired(invitation) ? 'expired' : 'unregistered',
+        invitationStatus: isRegistered ? 'registered' : 'unregistered',
+        isInvitationOnly: true,
+        progress: 0,
+        averageScore: 0,
+      })
+    }
+  }
+  return [...registered, ...imported]
+})
+
 const advisoryStudents = computed(() => {
   const advisoryName = normalizeRosterSectionName(teacherAdvisorySectionName.value)
   if (!advisoryName) return []
-  return students.value.filter(
+  return mergedRosterStudents.value.filter(
     (student) => normalizeRosterSectionName(student.sectionName) === advisoryName
   )
 })
 
 const handledClassStudents = computed(() => {
   const advisoryStudentIds = new Set(advisoryStudents.value.map((student) => student.id))
-  return students.value.filter((student) => !advisoryStudentIds.has(student.id))
+  return mergedRosterStudents.value.filter((student) => !advisoryStudentIds.has(student.id))
 })
 
-const visibleRosterStudents = computed(() => (
-  studentRosterView.value === 'advisory'
+const visibleRosterStudents = computed(() => {
+  const roster = studentRosterView.value === 'advisory'
     ? advisoryStudents.value
     : handledClassStudents.value
-))
+  const query = studentSearch.value.toLowerCase()
+  return roster.filter(student => (!query || `${student.name} ${student.email} ${student.sectionName} ${student.subjectNames}`.toLowerCase().includes(query))
+    && (!studentClassFilter.value || student.subjectIds?.includes(studentClassFilter.value))
+    && (!studentEnrollmentFilter.value || (studentEnrollmentFilter.value === 'registered' ? !student.isInvitationOnly || student.invitationStatus === 'registered' : student.status === studentEnrollmentFilter.value)))
+    .sort((left, right) => {
+      if (studentSort.value === 'progress') return Number(right.progress || 0) - Number(left.progress || 0)
+      if (studentSort.value === 'average') return Number(right.averageScore || 0) - Number(left.averageScore || 0)
+      if (studentSort.value === 'status') return String(left.status).localeCompare(String(right.status))
+      return String(left.name).localeCompare(String(right.name))
+    })
+})
 
 const normalizeStatus = (status) => {
   const normalized = String(status || '').trim().toLowerCase()
@@ -1151,6 +1225,9 @@ const statusLabel = (status) => {
   if (normalized === 'active') return 'Active'
   if (normalized === 'suspended') return 'Suspended'
   if (normalized === 'inactive') return 'Inactive'
+  if (normalized === 'unregistered') return 'Unregistered'
+  if (normalized === 'registered') return 'Registered'
+  if (normalized === 'expired') return 'Invitation expired'
   return normalized.charAt(0).toUpperCase() + normalized.slice(1)
 }
 
@@ -1259,9 +1336,14 @@ const fetchTeacherSections = async () => {
   }
 }
 
-const fetchSubjects = async () => {
-  isLoadingSubjects.value = true
-  subjectsError.value = ''
+const fetchSubjects = (options = {}) => {
+  if (subjectsFetchPromise) return subjectsFetchPromise
+  const silent = options.silent === true
+  subjectsFetchPromise = (async () => {
+  if (!silent) {
+    isLoadingSubjects.value = true
+    subjectsError.value = ''
+  }
   try {
     if (!authStore.token) {
       subjects.value = []
@@ -1289,21 +1371,27 @@ const fetchSubjects = async () => {
       canDelete: subject.canDelete !== false,
       deleteBlockedReason: String(subject.deleteBlockedReason || '').trim(),
     }))
+    subjectsError.value = ''
   } catch (error) {
     console.error('Failed to fetch subjects:', error)
     const status = error.response?.status
-    subjectsError.value = status === 400
+    if (!silent) subjectsError.value = status === 400
       ? 'Your profile needs an assigned subject. Please contact your Head Teacher.'
       : status === 404
         ? 'Your assigned section is unavailable. Please contact your Head Teacher.'
         : 'We could not load your classes. Please try again.'
   } finally {
-    isLoadingSubjects.value = false
+    if (!silent) isLoadingSubjects.value = false
   }
+  })().finally(() => { subjectsFetchPromise = null })
+  return subjectsFetchPromise
 }
 
-const fetchStudents = async () => {
-  isLoading.value = true
+const fetchStudents = (options = {}) => {
+  if (studentsFetchPromise) return studentsFetchPromise
+  const silent = options.silent === true
+  studentsFetchPromise = (async () => {
+  if (!silent) isLoading.value = true
   try {
     if (!authStore.token) {
       students.value = []
@@ -1334,6 +1422,7 @@ const fetchStudents = async () => {
           requestedAt: student.requestedAt || null,
           approvedAt: student.approvedAt || null,
           enrollmentTrack: student.enrollmentTrack || '',
+          subjectIds: Array.isArray(student.subjects) ? student.subjects.map(subject => String(subject.id || subject._id || '')).filter(Boolean) : [],
           subjectNames: Array.isArray(student.subjects) ? student.subjects.map((subject) => subject.className || subject.name).filter(Boolean).join(', ') : '',
           recommendationName: String(student?.recommendation?.recommendedStrand?.name || '').trim(),
           recommendationConfidence: String(student?.recommendation?.recommendedStrand?.confidence || '').trim(),
@@ -1343,10 +1432,12 @@ const fetchStudents = async () => {
         }))
   } catch (error) {
     console.error('Failed to fetch students:', error)
-    students.value = []
+    if (!silent) showToast('error', error.response?.data?.message || 'Unable to refresh the student list. Please try again.')
   } finally {
-    isLoading.value = false
+    if (!silent) isLoading.value = false
   }
+  })().finally(() => { studentsFetchPromise = null })
+  return studentsFetchPromise
 }
 
 const fetchSubjectStudents = async (subjectId = '') => {
@@ -1385,8 +1476,11 @@ const fetchSubjectStudents = async (subjectId = '') => {
   }
 }
 
-const fetchEnrollmentRequests = async () => {
-  isEnrollmentRequestsLoading.value = true
+const fetchEnrollmentRequests = (options = {}) => {
+  if (enrollmentRequestsFetchPromise) return enrollmentRequestsFetchPromise
+  const silent = options.silent === true
+  enrollmentRequestsFetchPromise = (async () => {
+  if (!silent) isEnrollmentRequestsLoading.value = true
   try {
     if (!authStore.token) {
       enrollmentRequests.value = []
@@ -1414,13 +1508,60 @@ const fetchEnrollmentRequests = async () => {
       sectionName: request.sectionName || '',
       avatar: request.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(request.name || 'Student')}&background=334155&color=fff`,
     }))
-    await focusEnrollmentRequest()
+    lastEnrollmentRequestRefreshAt = Date.now()
+    if (!silent) await focusEnrollmentRequest()
   } catch (error) {
     console.error('Failed to fetch enrollment requests:', error)
-    showToast('error', error.response?.data?.message || 'Failed to load student requests. Please refresh to retry.')
+    if (!silent) showToast('error', error.response?.data?.message || 'Failed to load student requests. Please refresh to retry.')
   } finally {
-    isEnrollmentRequestsLoading.value = false
+    if (!silent) isEnrollmentRequestsLoading.value = false
   }
+  })().finally(() => { enrollmentRequestsFetchPromise = null })
+  return enrollmentRequestsFetchPromise
+}
+
+const invitationSignature = invitations => JSON.stringify(invitations.map(invitation => [invitation.id, invitation.status, invitation.registeredCount, invitation.unregisteredCount, invitation.expiresAt, (invitation.students || []).map(student => [student.id, student.status, student.studentId])]))
+const fetchClassInvitations = (options = {}) => {
+  if (invitationsFetchPromise) return invitationsFetchPromise
+  const silent = options.silent === true
+  invitationsFetchPromise = (async () => {
+    if (!authStore.token) { classInvitations.value = []; return false }
+    try {
+      const response = await axios.get(`${resolveApiBaseUrl()}/teacher/class-invitations`, getAuthConfig())
+      const nextInvitations = Array.isArray(response.data?.invitations) ? response.data.invitations : []
+      const changed = invitationSignature(nextInvitations) !== invitationSignature(classInvitations.value)
+      classInvitations.value = nextInvitations
+      invitationLoadError.value = ''
+      return changed
+    } catch (error) {
+      if (!silent || classInvitations.value.length) invitationLoadError.value = error.response?.data?.message || 'Enrollment updates are temporarily unavailable. Your last loaded data is shown.'
+      return false
+    }
+  })().finally(() => { invitationsFetchPromise = null })
+  return invitationsFetchPromise
+}
+const refreshEnrollment = async () => {
+  if (isEnrollmentRefreshing.value) return
+  isEnrollmentRefreshing.value = true
+  try { await Promise.allSettled([fetchStudents(), fetchSubjects(), fetchEnrollmentRequests(), fetchClassInvitations()]) }
+  finally { isEnrollmentRefreshing.value = false }
+}
+const openClassInvitation = (subjectId = '') => {
+  invitationSubjectId.value = String(subjectId)
+  selectedInvitationId.value = String(invitationForSubject(subjectId)?.id || '')
+  isClassInvitationModalOpen.value = true
+}
+const handleInvitationImported = async invitation => {
+  const index = classInvitations.value.findIndex(item => String(item.id) === String(invitation.id))
+  if (index >= 0) classInvitations.value.splice(index, 1, invitation)
+  else classInvitations.value.unshift(invitation)
+  selectedInvitationId.value = String(invitation.id)
+  await refreshEnrollment()
+}
+const copyInvitationLink = async invitation => {
+  if (isInvitationExpired(invitation)) { showToast('error', 'This invitation has expired. Open the invitation to renew it.'); return }
+  try { await navigator.clipboard.writeText(invitation.invitationUrl); showToast('success', 'Class invitation link copied. Share each registration code privately.') }
+  catch { openClassInvitation(invitation.subjectId); showToast('error', 'Copying is unavailable. Select and copy the invitation link in the dialog.') }
 }
 
 const focusEnrollmentRequest = async () => {
@@ -1601,10 +1742,21 @@ const resetStudentInviteForm = () => {
 }
 
 const openStudentInviteModal = () => {
+  if (!subjects.value.length) {
+    showToast('error', 'Create or load a class before importing students.')
+    return
+  }
+  invitationSubjectId.value = ''
+  selectedInvitationId.value = ''
+  isClassInvitationModalOpen.value = true
+}
+
+const openManualStudentInvite = () => {
   if (!hasAdvisorySection.value) {
     showToast('error', 'Assign an advisory section first. Student accounts created here belong to your advisory section.')
     return
   }
+  isClassInvitationModalOpen.value = false
   resetStudentInviteForm()
   isStudentInviteModalOpen.value = true
 }
@@ -1996,9 +2148,16 @@ const refreshTeacherAssignmentState = async () => {
 
   isTeacherAssignmentRefreshInFlight = true
   try {
-    const hasAssignmentChanged = await fetchTeacherSections()
-    if (hasAssignmentChanged) {
-      await Promise.allSettled([fetchSubjects(), fetchStudents()])
+    const refreshSections = Date.now() - lastTeacherSectionRefreshAt >= 60000
+    const refreshRequests = Date.now() - lastEnrollmentRequestRefreshAt >= 60000
+    const [hasAssignmentChanged, hasInvitationChanged] = await Promise.all([
+      refreshSections ? fetchTeacherSections() : Promise.resolve(false),
+      fetchClassInvitations({ silent: true }),
+      refreshRequests ? fetchEnrollmentRequests({ silent: true }) : Promise.resolve(),
+    ])
+    if (refreshSections) lastTeacherSectionRefreshAt = Date.now()
+    if (hasAssignmentChanged || hasInvitationChanged) {
+      await Promise.allSettled([fetchSubjects({ silent: true }), fetchStudents({ silent: true })])
     }
   } catch (error) {
     console.error('Failed to refresh teacher assignment state:', error)
@@ -2091,10 +2250,11 @@ onMounted(async () => {
   teacher.status = authUser.status || 'Online'
   teacher.email = authUser.email || ''
 
-  fetchTeacherSections()
+  fetchTeacherSections().then(() => { lastTeacherSectionRefreshAt = Date.now() })
   fetchSubjects()
   fetchStudents()
   fetchEnrollmentRequests()
+  fetchClassInvitations()
   syncMobileMenuBodyState()
   startTeacherAssignmentRefreshLoop()
 })
@@ -2119,6 +2279,29 @@ onBeforeUnmount(() => {
 
 <style scoped>
 @reference "../../styles/tailwind.css";
+
+.class-invitation-summary { @apply tw:[margin-top:.65rem] tw:[padding:.6rem] tw:[border:1px_solid_#dce8d3] tw:[border-radius:9px] tw:[background:#f8fbf5]; }
+.class-invitation-counts { @apply tw:flex tw:flex-wrap tw:justify-between tw:[gap:.4rem] tw:[font-size:.7rem] tw:[color:#5c7550]; }
+.class-invitation-counts strong { @apply tw:[color:#356020]; }
+.class-invitation-summary progress { @apply tw:w-full tw:[height:7px] tw:[margin:.4rem_0] tw:[accent-color:#5a8e3d]; }
+.class-invitation-tools { @apply tw:flex tw:flex-wrap tw:[gap:.7rem]; }
+.class-invitation-tools button { @apply tw:inline-flex tw:items-center tw:[gap:.3rem] tw:[border:0] tw:bg-transparent tw:[padding:.2rem_0] tw:[font:inherit] tw:[font-size:.7rem] tw:font-semibold tw:[color:#426f2e] tw:cursor-pointer; }
+.class-invitation-tools button:disabled { @apply tw:opacity-50 tw:cursor-not-allowed; }
+.class-invitation-tools button:focus-visible { @apply tw:[outline:2px_solid_#87b765] tw:[outline-offset:2px]; }
+.invitation-expired-copy { @apply tw:[color:#a3482d]; }
+.invitation-queue-summary { @apply tw:grid tw:[gap:.3rem] tw:[margin-top:.8rem] tw:[padding:.7rem] tw:[border-top:1px_solid_#e0ead9] tw:[font-size:.74rem] tw:[color:#567048]; }
+.invitation-queue-summary strong { @apply tw:[color:#365a24]; }
+.invitation-queue-summary small { @apply tw:[font-size:.67rem] tw:[line-height:1.5] tw:[color:#76856d]; }
+.invitation-load-error { @apply tw:[padding:.65rem] tw:[font-size:.72rem] tw:[line-height:1.5] tw:[color:#946133] tw:[background:#fff9ec] tw:[border-radius:9px]; }
+.invitation-load-error button { @apply tw:[border:0] tw:bg-transparent tw:[color:#4b772f] tw:underline tw:cursor-pointer; }
+.roster-enrollment-filters { @apply tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:[gap:.5rem] tw:[margin:0_0_.55rem] tw:[font-size:.7rem] tw:[color:#6d7f63]; }
+.roster-enrollment-filters label { @apply tw:flex tw:items-center tw:[gap:.5rem] tw:font-semibold; }
+.roster-enrollment-filters select { @apply tw:[padding:.3rem_.5rem] tw:[border:1px_solid_#dce7d4] tw:[border-radius:8px] tw:bg-white tw:[font:inherit] tw:[color:#465e37]; }
+.invitation-table-muted { @apply tw:[font-size:.7rem] tw:[color:#8d9b84]; }
+.student-enrollment-label { @apply tw:block tw:[font-size:.63rem] tw:[margin-top:.2rem] tw:[color:#5d803f]; }
+.status-unregistered { @apply tw:[background:#fff4df] tw:[color:#8d631f] tw:[border:1px_solid_#efdcb7]; }
+.status-expired { @apply tw:[background:#fff0eb] tw:[color:#a84c33] tw:[border:1px_solid_#edc9bc]; }
+.status-registered { @apply tw:[background:#eef7e8] tw:[color:#49702c] tw:[border:1px_solid_#cfe2be]; }
 
 .teacher-page-tour-layer {
   @apply tw:fixed;
