@@ -11,7 +11,7 @@
           <p class="eyebrow">CLASS INVITATION</p>
           <h1 id="registration-title">{{ completed ? 'Welcome to your class' : 'Join your class' }}</h1>
           <p v-if="invitation" class="class-name">{{ invitation.className }}</p>
-          <p v-else class="intro">Use the invitation and registration code your teacher shared with you.</p>
+          <p v-else class="intro">Use the class invitation your teacher shared with you.</p>
         </header>
 
         <div v-if="loadingInvitation" class="loading-state" role="status">
@@ -22,7 +22,7 @@
           <span class="state-icon"><i class="fas fa-envelope-open" aria-hidden="true"></i></span>
           <h2>{{ invitationUnavailable ? 'Invitation unavailable' : 'Unable to open invitation' }}</h2>
           <p role="alert">{{ invitationError }}</p>
-          <p v-if="invitationUnavailable">Ask your teacher for a new invitation link. Your registration code belongs to this class only.</p>
+          <p v-if="invitationUnavailable">Ask your teacher for a new invitation link for your class.</p>
           <button v-else type="button" class="primary-button" @click="loadInvitation">Try again</button>
           <RouterLink to="/auth/login" class="text-link">Return to sign in</RouterLink>
         </div>
@@ -43,20 +43,20 @@
           </ol>
 
           <div v-if="formError" class="form-error" role="alert">{{ formError }}</div>
+          <div v-if="alreadyRegistered" class="registered-guidance">
+            <RouterLink to="/auth/login">Sign in to your account</RouterLink>
+            <RouterLink to="/auth/forgot-password">Reset your password</RouterLink>
+            <p>Ask your teacher for help if you have not created an account.</p>
+          </div>
 
           <form v-if="step === 'verify'" class="registration-form" @submit.prevent="verifyStudent">
-            <p class="form-description">Enter your personal registration code and the full name listed by your teacher.</p>
-            <div class="form-field">
-              <label for="registration-code">Registration code</label>
-              <input id="registration-code" v-model="registrationCode" type="text" required maxlength="100" autocomplete="off" autocapitalize="characters" spellcheck="false" :disabled="verifying" aria-describedby="code-hint" />
-              <small id="code-hint">Each code can be used once. Keep yours private.</small>
-            </div>
+            <p class="form-description">Enter the full name on your teacher’s class list to continue.</p>
             <div class="form-field">
               <label for="student-full-name">Full name</label>
-              <input id="student-full-name" v-model="fullName" type="text" required maxlength="160" autocomplete="name" :disabled="verifying" aria-describedby="name-hint" />
-              <small id="name-hint">Use your complete name as it appears on your teacher’s list.</small>
+              <input id="student-full-name" v-model="fullName" type="text" required maxlength="150" autocomplete="name" :disabled="verifying" aria-describedby="name-hint" />
+              <small id="name-hint">Enter your first and last names together, including any other names listed by your teacher. Spelling must match the class list; capitalization and extra spaces do not matter.</small>
             </div>
-            <button type="submit" class="primary-button" :disabled="verifying || !registrationCode.trim() || !fullName.trim()">
+            <button type="submit" class="primary-button" :disabled="verifying || !fullName.trim()">
               {{ verifying ? 'Verifying…' : 'Verify and continue' }}<i v-if="!verifying" class="fas fa-arrow-right" aria-hidden="true"></i>
             </button>
           </form>
@@ -98,7 +98,7 @@
               <small v-if="confirmPassword && confirmPassword !== password" id="password-match" class="invalid">Passwords do not match.</small>
             </div>
             <p class="enrollment-note"><i class="fas fa-lock" aria-hidden="true"></i> Your account will be assigned to the class and section on your teacher’s list.</p>
-            <button type="submit" class="primary-button" :disabled="submitting || !usernameCheckedAndAvailable">
+            <button type="submit" class="primary-button" :disabled="submitting || alreadyRegistered || !usernameCheckedAndAvailable">
               {{ submitting ? 'Creating your account…' : 'Create account and join class' }}
             </button>
             <button type="button" class="secondary-button" :disabled="submitting" @click="backToVerification">Back to verification</button>
@@ -108,7 +108,7 @@
 
         <footer v-if="!completed && !invitationError" class="registration-footer">Already have an account? <RouterLink to="/auth/login">Sign in</RouterLink></footer>
       </section>
-      <p class="registration-help">Your teacher can help if your code or full name does not match.</p>
+      <p class="registration-help">Your teacher can help if your full name does not match the class list.</p>
     </div>
   </main>
 </template>
@@ -125,7 +125,6 @@ const loadingInvitation = ref(false)
 const invitationError = ref('')
 const invitationUnavailable = ref(false)
 const step = ref('verify')
-const registrationCode = ref('')
 const fullName = ref('')
 const verifiedStudent = ref(null)
 const registeredStudent = ref({})
@@ -138,6 +137,7 @@ const verifying = ref(false)
 const submitting = ref(false)
 const completed = ref(false)
 const formError = ref('')
+const alreadyRegistered = ref(false)
 const usernameStatus = ref('idle')
 const usernameMessage = ref('')
 const checkedUsername = ref('')
@@ -169,6 +169,12 @@ function isUnavailableInvitation(error) {
   return [404, 410].includes(Number(error?.response?.status))
 }
 
+function studentAlreadyRegistered(error) {
+  const data = error?.response?.data
+  const errorCode = data?.code || data?.details?.code
+  return errorCode === 'STUDENT_REGISTERED' || (Number(error?.response?.status) === 409 && /already registered/i.test(String(data?.message || '')))
+}
+
 function expireInvitation(error) {
   invitationUnavailable.value = true
   invitationError.value = responseMessage(error, 'This invitation has expired or is no longer available. Ask your teacher for a new link.')
@@ -190,6 +196,7 @@ function backToVerification() {
   step.value = 'verify'
   verifiedStudent.value = null
   formError.value = ''
+  alreadyRegistered.value = false
   password.value = ''
   confirmPassword.value = ''
   showPassword.value = false
@@ -226,18 +233,18 @@ async function loadInvitation() {
 async function verifyStudent() {
   if (verifying.value || !invitation.value) return
   formError.value = ''
-  const submittedCode = registrationCode.value.trim()
+  alreadyRegistered.value = false
   const submittedName = fullName.value.trim()
-  if (!submittedCode || !submittedName) {
-    formError.value = 'Enter both your registration code and full name.'
+  if (!submittedName) {
+    formError.value = 'Enter your full name as it appears on your teacher’s class list.'
     return
   }
   const requestId = ++verificationRequestId
   const submittedPath = invitationPath.value
   verifying.value = true
   try {
-    const { data } = await axios.post(`${submittedPath}/verify`, { registrationCode: submittedCode, fullName: submittedName }, { timeout: 15000 })
-    if (disposed || requestId !== verificationRequestId || submittedPath !== invitationPath.value || submittedCode !== registrationCode.value.trim() || submittedName !== fullName.value.trim()) return
+    const { data } = await axios.post(`${submittedPath}/verify`, { fullName: submittedName }, { timeout: 15000 })
+    if (disposed || requestId !== verificationRequestId || submittedPath !== invitationPath.value || submittedName !== fullName.value.trim()) return
     if (!data.student?.fullName) throw new Error('Student verification is incomplete')
     verifiedStudent.value = data.student
     step.value = 'account'
@@ -245,7 +252,10 @@ async function verifyStudent() {
   } catch (error) {
     if (disposed || requestId !== verificationRequestId || submittedPath !== invitationPath.value) return
     if (isUnavailableInvitation(error)) expireInvitation(error)
-    else formError.value = responseMessage(error, 'We could not verify your details. Check your connection and try again. If the code was already used, sign in or ask your teacher for help.')
+    else {
+      alreadyRegistered.value = studentAlreadyRegistered(error)
+      formError.value = responseMessage(error, 'We could not verify your name. Check your connection and try again, or ask your teacher to check the spelling on the class list.')
+    }
   } finally {
     if (!disposed && requestId === verificationRequestId) verifying.value = false
   }
@@ -287,7 +297,7 @@ async function checkUsername() {
 }
 
 async function registerStudent() {
-  if (submitting.value || !verifiedStudent.value || step.value !== 'account') return
+  if (submitting.value || alreadyRegistered.value || !verifiedStudent.value || step.value !== 'account') return
   formError.value = ''
   const submittedEmail = email.value.trim()
   if (!gmailPattern.test(submittedEmail) || submittedEmail.length > 254 || submittedEmail.split('@')[0].length > 64) {
@@ -311,7 +321,7 @@ async function registerStudent() {
   const submittedPath = invitationPath.value
   try {
     await axios.post(`${submittedPath}/register`, {
-      registrationCode: registrationCode.value.trim(), fullName: fullName.value.trim(),
+      fullName: fullName.value.trim(),
       email: submittedEmail, username: username.value.trim(), password: password.value, confirmPassword: confirmPassword.value,
     }, { timeout: 25000 })
     if (disposed || submittedPath !== invitationPath.value) return
@@ -325,7 +335,8 @@ async function registerStudent() {
     if (isUnavailableInvitation(error)) expireInvitation(error)
     else {
       formError.value = responseMessage(error, 'We could not confirm registration. If your account was created, you can sign in; otherwise check your connection and try again.')
-      if (error?.response?.status === 409) await checkUsername()
+      alreadyRegistered.value = studentAlreadyRegistered(error)
+      if (error?.response?.status === 409 && !alreadyRegistered.value) await checkUsername()
     }
   } finally {
     if (!disposed && submittedPath === invitationPath.value) submitting.value = false
@@ -338,8 +349,9 @@ function formatExpiry(value) {
 }
 
 watch(username, scheduleUsernameCheck, { flush: 'sync' })
-watch([registrationCode, fullName], () => {
+watch(fullName, () => {
   verificationRequestId += 1
+  alreadyRegistered.value = false
   if (verifiedStudent.value) backToVerification()
 }, { flush: 'sync' })
 watch(() => route.params.token, () => {
@@ -348,13 +360,13 @@ watch(() => route.params.token, () => {
   verifying.value = false
   submitting.value = false
   completed.value = false
-  registrationCode.value = ''
   fullName.value = ''
   email.value = ''
   username.value = ''
   password.value = ''
   confirmPassword.value = ''
   formError.value = ''
+  alreadyRegistered.value = false
   loadInvitation()
 }, { immediate: true })
 
@@ -368,6 +380,9 @@ onBeforeUnmount(() => {
 
 <style scoped>
 @reference "../../styles/tailwind.css";
+.registered-guidance { @apply tw:grid tw:[gap:8px] tw:[margin-bottom:20px] tw:[font-size:12px] tw:[line-height:1.6]; }
+.registered-guidance a { @apply tw:[color:#427433] tw:[font-weight:600] tw:underline tw:[text-underline-offset:3px]; }
+.registered-guidance p { @apply tw:[margin:0] tw:[color:#647267]; }
 .class-registration { @apply tw:[min-height:100dvh]; @apply tw:[padding:40px_20px]; @apply tw:[background:radial-gradient(ellipse_at_top,_#eaf5e7,_#f6f9f4_65%)]; @apply tw:[color:#182b21]; @apply tw:[font-family:'Inter',_'Segoe_UI',_sans-serif]; }
 .class-registration *, .class-registration *::before, .class-registration *::after { @apply tw:box-border; }
 .registration-shell { @apply tw:[max-width:540px]; @apply tw:[margin:0_auto]; }

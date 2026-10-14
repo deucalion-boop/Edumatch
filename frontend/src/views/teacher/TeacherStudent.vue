@@ -302,7 +302,7 @@
             <div v-if="invitationForSubject(subject.id)" class="class-invitation-summary">
               <div class="class-invitation-counts"><span><strong>{{ invitationForSubject(subject.id).registeredCount }}</strong> registered</span><span><strong>{{ invitationForSubject(subject.id).unregisteredCount }}</strong> unregistered</span><span :class="{ 'invitation-expired-copy': isInvitationExpired(invitationForSubject(subject.id)) }">{{ isInvitationExpired(invitationForSubject(subject.id)) ? 'Invitation expired' : 'Enrollment in progress' }}</span></div>
               <progress :value="invitationForSubject(subject.id).registeredCount || 0" :max="invitationForSubject(subject.id).totalCount || 1" :aria-label="`${invitationForSubject(subject.id).registeredCount} of ${invitationForSubject(subject.id).totalCount} invited students registered`"></progress>
-              <div class="class-invitation-tools"><button type="button" @click="openClassInvitation(subject.id)"><i class="fas fa-users" aria-hidden="true"></i>View invitation</button><button type="button" :disabled="isInvitationExpired(invitationForSubject(subject.id))" @click="copyInvitationLink(invitationForSubject(subject.id))"><i class="fas fa-copy" aria-hidden="true"></i>Copy link</button><button type="button" @click="openClassInvitation(subject.id)"><i class="fas fa-file-export" aria-hidden="true"></i>Registration codes</button></div>
+              <div class="class-invitation-tools"><button type="button" @click="openClassInvitation(subject.id)"><i class="fas fa-users" aria-hidden="true"></i>View invitation</button><button type="button" :disabled="isInvitationExpired(invitationForSubject(subject.id))" @click="copyInvitationLink(invitationForSubject(subject.id))"><i class="fas fa-copy" aria-hidden="true"></i>Copy link</button></div>
             </div>
             <p v-else-if="subject.approvedStudentsCount === 0" class="subject-management-waiting">Waiting for students to join with the class code</p>
           </article>
@@ -382,7 +382,7 @@
             </button>
           </div>
         </div>
-        <div v-if="classInvitations.length" class="invitation-queue-summary" aria-live="polite"><strong>Invited student enrollment</strong><span>{{ invitationTotals.registered }} registered · {{ invitationTotals.unregistered }} unregistered</span><small>Students with valid registration codes join automatically. Class-code requests still require your approval.</small></div>
+        <div v-if="classInvitations.length" class="invitation-queue-summary" aria-live="polite"><strong>Invited student enrollment</strong><span>{{ invitationTotals.registered }} registered · {{ invitationTotals.unregistered }} unregistered</span><small>Students who register with matching imported full names join automatically. Class-code requests still require your approval.</small></div>
         <p v-if="invitationLoadError" class="invitation-load-error" role="status">{{ invitationLoadError }} <button type="button" @click="refreshEnrollment">Retry</button></p>
       </section>
 
@@ -1566,7 +1566,7 @@ const handleInvitationImported = async invitation => {
 }
 const copyInvitationLink = async invitation => {
   if (isInvitationExpired(invitation)) { showToast('error', 'This invitation has expired. Open the invitation to renew it.'); return }
-  try { await navigator.clipboard.writeText(invitation.invitationUrl); showToast('success', 'Class invitation link copied. Share each registration code privately.') }
+  try { await navigator.clipboard.writeText(invitation.invitationUrl); showToast('success', 'Class invitation link copied. Students register using their imported full names.') }
   catch { openClassInvitation(invitation.subjectId); showToast('error', 'Copying is unavailable. Select and copy the invitation link in the dialog.') }
 }
 

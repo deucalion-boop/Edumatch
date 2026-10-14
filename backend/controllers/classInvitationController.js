@@ -18,16 +18,9 @@ function rosterUpload(req, res, next) {
 }
 const preview = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Roster preview ready.', await service.previewRoster(req.user._id, req.body.subjectId, req.file.buffer, req.body.sectionId)));
 const create = asyncHandler(async (req, res) => sendSuccess(res, 201, 'Student invitations created.', { invitation: await service.createInvitation(req.user._id, req.body) }));
-const renew = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Invitation renewed. Existing unused codes remain valid.',
+const renew = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Invitation renewed. Unregistered students can use the link again.',
   { invitation: await service.renewInvitation(req.user._id, req.params.id, req.body.expiresInDays) }));
 const list = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Student invitations loaded.', { invitations: await service.listInvitations(req.user._id) }));
-const codes = asyncHandler(async (req, res) => {
-  const buffer = await service.exportCodes(req.user._id, req.params.id);
-  res.set('Cache-Control', 'no-store');
-  res.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.set('Content-Disposition', 'attachment; filename="edumatch-registration-codes.xlsx"');
-  return res.send(Buffer.from(buffer));
-});
 const details = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Invitation available.', { invitation: await service.publicInvitation(req.params.token) }));
 const verify = asyncHandler(async (req, res) => {
   const student = await service.verifyStudent(req.params.token, req.body);
@@ -38,4 +31,4 @@ const register = asyncHandler(async (req, res) => {
   await service.registerStudent(req.params.token, req.body);
   return sendSuccess(res, 201, 'Registration complete. You can now sign in to EduMatch.', { registered: true });
 });
-module.exports = { rosterUpload, preview, create, renew, list, codes, details, verify, username, register };
+module.exports = { rosterUpload, preview, create, renew, list, details, verify, username, register };
