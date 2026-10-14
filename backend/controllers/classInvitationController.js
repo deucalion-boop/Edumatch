@@ -2,9 +2,9 @@ const multer = require('multer');
 const service = require('../services/classInvitationService');
 const { sendSuccess } = require('../utils/responseHelper');
 const asyncHandler = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: service.MAX_FILE_BYTES, files: 1, fields: 1, fieldSize: 256 },
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: service.MAX_FILE_BYTES, files: 1, fields: 2, fieldSize: 256 },
   fileFilter(_req, file, callback) {
-    if (!/\.xlsx$/i.test(file.originalname || '')) return callback(Object.assign(new Error('Upload an Excel .xlsx file with Full Name and Section columns.'), { statusCode: 400 }));
+    if (!/\.xlsx$/i.test(file.originalname || '')) return callback(Object.assign(new Error('Upload an Excel .xlsx file with only First Name and Last Name columns.'), { statusCode: 400 }));
     return callback(null, true);
   },
 }).single('file');
@@ -16,7 +16,7 @@ function rosterUpload(req, res, next) {
     return next();
   });
 }
-const preview = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Roster preview ready.', await service.previewRoster(req.user._id, req.body.subjectId, req.file.buffer)));
+const preview = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Roster preview ready.', await service.previewRoster(req.user._id, req.body.subjectId, req.file.buffer, req.body.sectionId)));
 const create = asyncHandler(async (req, res) => sendSuccess(res, 201, 'Student invitations created.', { invitation: await service.createInvitation(req.user._id, req.body) }));
 const renew = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Invitation renewed. Existing unused codes remain valid.',
   { invitation: await service.renewInvitation(req.user._id, req.params.id, req.body.expiresInDays) }));

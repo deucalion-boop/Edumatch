@@ -8,14 +8,15 @@ const baseUrl = process.env.INVITATION_UI_URL || 'http://127.0.0.1:5173'
 const artifactDirectory = path.resolve(__dirname, '../../.qa/class-invitations')
 const results = []
 const teacher = { id: 'teacher-smoke', name: 'Belle Hesi', role: 'teacher', subject: 'Araling Panlipunan', advisorySectionId: 'section-charity', advisorySection: { id: 'section-charity', name: 'Charity' }, hasCompletedTeacherTour: true }
+const sections = [{ id: 'section-charity', name: 'Charity', isActive: true }, { id: 'section-hope', name: 'Hope', isActive: true }, { id: 'section-inactive', name: 'Inactive section', isActive: false }]
 const subjects = [
   { id: 'class-one', name: 'Araling Panlipunan', className: 'Araling Panlipunan 10', code: 'ARA-SMOKE', approvedStudentsCount: 1, lessonCount: 1, assessmentCount: 2 },
   { id: 'class-two', name: 'Araling Panlipunan', className: 'Grade 10 - Section B', code: 'ARA-CLASS2', approvedStudentsCount: 0, lessonCount: 0, assessmentCount: 1 },
 ]
 const originalStudent = { id: 'student-one', name: 'Eric Cruz', email: 'eric@gmail.com', sectionName: 'Charity', progress: 20, averageScore: 20, completedChallenges: 2, totalChallenges: 3, status: 'active', subjects: [subjects[0]] }
 const preview = { records: [
-  { rowNumber: 2, fullName: 'Sarah Reyes', section: 'Charity', status: 'valid', errors: [] },
-  { rowNumber: 3, fullName: 'Sarah Reyes', section: 'Charity', status: 'invalid', errors: ['This student name appears more than once in this spreadsheet.'] },
+  { rowNumber: 2, firstName: 'Sarah', lastName: 'Reyes', fullName: 'Sarah Reyes', section: 'Charity', sectionId: 'section-charity', status: 'valid', errors: [] },
+  { rowNumber: 3, firstName: 'Sarah', lastName: 'Reyes', fullName: 'Sarah Reyes', section: 'Charity', sectionId: 'section-charity', status: 'invalid', errors: ['This student name appears more than once in this spreadsheet.'] },
 ], validCount: 1, invalidCount: 1 }
 const file = { name: 'student-roster.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: Buffer.from('API-intercepted workbook fixture') }
 
@@ -27,33 +28,38 @@ function newInvitation() {
   ] }
 }
 async function openScenario(browser, options = {}) {
+  const sessionTeacher = options.withoutAdvisory ? { ...teacher, advisorySectionId: '', advisorySection: null } : teacher
   const context = await browser.newContext({ viewport: options.mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, serviceWorkers: 'block', acceptDownloads: true })
   await context.addInitScript(user => {
     localStorage.setItem('edumatch_auth_token', 'intercepted-teacher-smoke-token')
     localStorage.setItem('edumatch_auth_user', JSON.stringify(user))
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async value => { window.__copiedInvitationLink = value } } })
-  }, teacher)
+  }, sessionTeacher)
   const page = await context.newPage()
   await page.clock.install()
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
-  const state = { invitation: options.invitation || null, students: [originalStudent], requests: [{ id: 'request-one', studentId: 'request-student', name: 'Pending Learner', email: 'pending@gmail.com', sectionName: 'Hope', subjectId: 'class-one', className: subjects[0].className, subjectCode: 'ARA-SMOKE', requestedAt: '2026-10-14T07:00:00Z' }], invitationFetches: 0, previewCalls: 0, create: [], renew: [], export: 0, failPreview: false, allInvalid: false }
+  const state = { invitation: options.invitation || null, students: [originalStudent], requests: [{ id: 'request-one', studentId: 'request-student', name: 'Pending Learner', email: 'pending@gmail.com', sectionName: 'Hope', subjectId: 'class-one', className: subjects[0].className, subjectCode: 'ARA-SMOKE', requestedAt: '2026-10-14T07:00:00Z' }], sections: options.noSections ? [] : sections, previewRecords: options.previewRecords || preview.records, failSections: false, invitationFetches: 0, previewCalls: 0, previewSections: [], create: [], renew: [], export: 0, failPreview: false, allInvalid: false }
   await page.route('**/api/**', async route => {
     const request = route.request()
     const endpoint = new URL(request.url()).pathname.replace(/^.*\/api/, '')
-    if (endpoint === '/teacher/profile') return json(route, 200, { user: teacher })
-    if (endpoint === '/teacher/sections') return json(route, 200, { advisorySection: teacher.advisorySection })
+    if (endpoint === '/teacher/profile') return json(route, 200, { user: sessionTeacher })
+    if (endpoint === '/teacher/sections') return state.failSections ? json(route, 503, { message: 'Sections unavailable' }) : json(route, 200, { advisorySection: sessionTeacher.advisorySection, sections: state.sections })
     if (endpoint === '/teacher/subjects') return json(route, 200, { subjects: subjects.map(subject => subject.id === 'class-one' ? { ...subject, approvedStudentsCount: state.students.length } : subject) })
     if (endpoint === '/teacher/students' && request.method() === 'GET') return json(route, 200, { students: state.students })
     if (endpoint === '/teacher/enrollment-requests') return json(route, 200, { requests: state.requests })
     if (endpoint === '/teacher/class-invitations/preview') {
       state.previewCalls += 1
+      const sectionId = request.postData().match(/name="sectionId"\r\n\r\n([^\r\n]+)/)?.[1] || ''
+      state.previewSections.push(sectionId)
       if (state.failPreview) return json(route, 400, { message: 'Unable to read this Excel workbook. Save it as .xlsx and try again.' })
-      return json(route, 200, state.allInvalid ? { records: preview.records.map(record => ({ ...record, status: 'invalid', errors: ['Duplicate name in this spreadsheet.'] })), validCount: 0, invalidCount: 2 } : preview)
+      const records = state.previewRecords.map(record => ({ ...record, sectionId, section: sections.find(section => section.id === sectionId)?.name || '' }))
+      return json(route, 200, state.allInvalid ? { records: records.map(record => ({ ...record, status: 'invalid', errors: ['Duplicate name in this spreadsheet.'] })), validCount: 0, invalidCount: 2 } : { ...preview, records })
     }
     if (endpoint === '/teacher/class-invitations' && request.method() === 'POST') {
-      state.create.push(request.postDataJSON())
-      state.invitation = newInvitation()
+      const body = request.postDataJSON()
+      state.create.push(body)
+      state.invitation = { ...newInvitation(), subjectId: body.subjectId, className: subjects.find(subject => subject.id === body.subjectId)?.className, students: newInvitation().students.map(student => ({ ...student, section: sections.find(section => section.id === body.sectionId)?.name })) }
       return json(route, 201, { invitation: state.invitation })
     }
     if (endpoint === '/teacher/class-invitations') { state.invitationFetches += 1; return json(route, 200, { invitations: state.invitation ? [state.invitation] : [] }) }
@@ -70,6 +76,7 @@ async function openScenario(browser, options = {}) {
   await page.goto(`${baseUrl}/teacher/students`)
   await expect(page.getByRole('heading', { name: 'Class Management', exact: true })).toBeVisible()
   await expect(page.locator('.subject-management-card')).toHaveCount(2)
+  if (options.withoutAdvisory) await page.getByRole('tab', { name: 'Handled Classes' }).click()
   await expect(page.locator('.class-list-table tbody')).toContainText('Eric Cruz')
   return { context, page, state, errors }
 }
@@ -98,12 +105,16 @@ async function main() {
       const { page, state } = scenario
       try {
         const dialog = await openUpload(page)
+        await expect(dialog.getByLabel('Assign section')).toHaveValue('section-charity')
+        await expect(dialog.locator('.invitation-section-context')).toContainText('Assigned section: Charity')
+        await expect(dialog.locator('thead th')).toHaveText(['Row', 'First name', 'Last name', 'Validation'])
         await expect(dialog.getByText('This student name appears more than once in this spreadsheet.')).toBeVisible()
         await expect(dialog.getByRole('button', { name: 'Generate 1 registration codes' })).toBeDisabled()
         await dialog.getByRole('checkbox').check()
         await dialog.getByRole('button', { name: 'Generate 1 registration codes' }).click()
         await expect(dialog.getByText('Your class invitation and private student codes are ready.')).toBeVisible()
-        assert.deepEqual(state.create, [{ subjectId: 'class-one', records: [{ fullName: 'Sarah Reyes', section: 'Charity' }], expiresInDays: 30 }])
+        assert.deepEqual(state.previewSections, ['section-charity'])
+        assert.deepEqual(state.create, [{ subjectId: 'class-one', sectionId: 'section-charity', records: [{ firstName: 'Sarah', lastName: 'Reyes' }], expiresInDays: 30 }])
         await dialog.getByRole('button', { name: 'Copy link', exact: true }).click()
         assert.equal(await page.evaluate(() => window.__copiedInvitationLink), state.invitation.invitationUrl)
         const downloaded = page.waitForEvent('download')
@@ -134,7 +145,7 @@ async function main() {
         assert.deepEqual(scenario.errors, [])
       } finally { await scenario.context.close() }
     })
-    await runCase('corrupt and all-invalid files recover; changing class invalidates preview', async () => {
+    await runCase('corrupt and all-invalid files recover; changing class or section invalidates preview', async () => {
       const scenario = await openScenario(browser)
       try {
         scenario.state.failPreview = true
@@ -146,6 +157,12 @@ async function main() {
         await expect(dialog.getByText('No valid students are available. Correct the spreadsheet and upload it again.')).toBeVisible()
         await expect(dialog.getByRole('button', { name: 'Generate 0 registration codes' })).toBeDisabled()
         assert.equal(scenario.state.create.length, 0)
+        await dialog.getByLabel('Assign section').selectOption('section-hope')
+        await expect(dialog.getByRole('button', { name: 'Preview students' })).toBeVisible()
+        await expect(dialog.locator('.invitation-table-wrap')).toHaveCount(0)
+        scenario.state.allInvalid = false
+        await dialog.getByRole('button', { name: 'Preview students' }).click()
+        await expect(dialog.locator('.invitation-section-context')).toContainText('Assigned section: Hope')
         await dialog.getByLabel('Choose a class').selectOption('class-two')
         await expect(dialog.getByRole('button', { name: 'Preview students' })).toBeVisible()
         await expect(dialog.locator('.invitation-table-wrap')).toHaveCount(0)
@@ -174,6 +191,46 @@ async function main() {
         await scenario.page.getByRole('button', { name: 'Create an individual student account instead' }).click()
         await expect(scenario.page.getByRole('heading', { name: 'Create Student Account' })).toBeVisible()
         await expect(scenario.page.getByRole('button', { name: 'Create Student & Email Credentials' })).toBeVisible()
+        assert.deepEqual(scenario.errors, [])
+      } finally { await scenario.context.close() }
+    })
+    await runCase('section is selected outside the two-column workbook; teachers without advisory choose an active section', async () => {
+      const scenario = await openScenario(browser, { withoutAdvisory: true, previewRecords: [{ rowNumber: 2, firstName: 'Mary Anne', lastName: 'de la Cruz', fullName: 'Mary Anne de la Cruz', status: 'valid', errors: [] }] })
+      try {
+        await scenario.page.getByRole('button', { name: 'Invite Student', exact: true }).click()
+        const dialog = scenario.page.getByRole('dialog', { name: 'Invite Students' })
+        await expect(dialog.getByLabel('Assign section')).toHaveValue('')
+        await expect(dialog.getByLabel('Assign section').locator('option')).toHaveText(['Select a section', 'Charity', 'Hope'])
+        await expect(dialog.getByRole('button', { name: 'Create an individual student account instead' })).toBeDisabled()
+        await dialog.getByLabel('Choose a class').selectOption('class-two')
+        await dialog.locator('input[type="file"]').setInputFiles(file)
+        await expect(dialog.getByRole('button', { name: 'Preview students' })).toBeDisabled()
+        await dialog.getByLabel('Assign section').selectOption('section-hope')
+        await dialog.getByRole('button', { name: 'Preview students' }).click()
+        await expect(dialog.locator('.invitation-section-context')).toContainText('Assigned section: Hope')
+        await expect(dialog.locator('tbody')).toContainText('Mary Anne')
+        await expect(dialog.locator('tbody')).toContainText('de la Cruz')
+        await dialog.getByRole('button', { name: 'Generate 1 registration codes' }).click()
+        await expect(dialog.getByText('Your class invitation and private student codes are ready.')).toBeVisible()
+        assert.deepEqual(scenario.state.previewSections, ['section-hope'])
+        assert.deepEqual(scenario.state.create, [{ subjectId: 'class-two', sectionId: 'section-hope', records: [{ firstName: 'Mary Anne', lastName: 'de la Cruz' }], expiresInDays: 30 }])
+        assert.deepEqual(scenario.errors, [])
+      } finally { await scenario.context.close() }
+    })
+    await runCase('missing active section directory provides inline retry and prevents import', async () => {
+      const scenario = await openScenario(browser, { noSections: true })
+      try {
+        await scenario.page.getByRole('button', { name: 'Invite Student', exact: true }).click()
+        const dialog = scenario.page.getByRole('dialog', { name: 'Invite Students' })
+        await expect(dialog.getByRole('alert')).toContainText('No active sections are available.')
+        await dialog.getByLabel('Choose a class').selectOption('class-one')
+        await dialog.locator('input[type="file"]').setInputFiles(file)
+        await expect(dialog.getByRole('button', { name: 'Preview students' })).toBeDisabled()
+        scenario.state.sections = sections
+        await dialog.getByRole('button', { name: 'Retry sections' }).click()
+        await expect(dialog.getByLabel('Assign section')).toHaveValue('section-charity')
+        await expect(dialog.getByRole('button', { name: 'Preview students' })).toBeEnabled()
+        assert.equal(scenario.state.previewCalls, 0)
         assert.deepEqual(scenario.errors, [])
       } finally { await scenario.context.close() }
     })

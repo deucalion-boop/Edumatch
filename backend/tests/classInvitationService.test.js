@@ -19,9 +19,9 @@ const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
 function fixture(extra = {}) {
   client = createFakeSupabase({
-    users: [{ id: teacherId, name: 'Teacher One', role: 'teacher', status: 'active', archive: {} }],
+    users: [{ id: teacherId, name: 'Teacher One', role: 'teacher', status: 'active', archive: {}, advisory_section_id: 'charity' }],
     subjects: [{ id: subjectId, teacher_id: teacherId, name: 'Science', class_name: 'Science A', track: 'GENERAL', is_active: true }],
-    sections: [{ id: 'charity', name: 'Charity', is_active: true }, { id: 'inactive-section', name: 'Inactive', is_active: false }],
+    sections: [{ id: 'charity', name: 'Charity', is_active: true }, { id: 'hope', name: 'Hope', is_active: true }, { id: 'inactive-section', name: 'Inactive', is_active: false }],
     class_invitations: [{ id: invitationId, teacher_id: teacherId, subject_id: subjectId, status: 'active',
       token_hash: digest(token), expires_at: new Date(Date.now() + 86400000).toISOString() }],
     class_registration_students: [{ id: studentId, invitation_id: invitationId, teacher_id: teacherId,
@@ -32,7 +32,7 @@ function fixture(extra = {}) {
   client.rpc = async () => { assert.fail('An invalid request must not call a mutation RPC'); };
   return client;
 }
-async function workbook(rows, headers = ['Full Name', 'Section']) {
+async function workbook(rows, headers = ['First Name', 'Last Name']) {
   const result = new ExcelJS.Workbook();
   const sheet = result.addWorksheet('Roster');
   sheet.addRow(headers);
@@ -47,55 +47,88 @@ async function rejects(operation, statusCode, pattern) {
   });
 }
 
-test('real XLSX preview normalizes names and matches active school sections without writes', async () => {
+test('real two-column XLSX preview preserves name parts and composes names with the trusted advisory section', async () => {
   fixture({ class_registration_students: [] });
   const preview = await service.previewRoster(teacherId, subjectId,
-    await workbook([['  Maria   Santos ', ' cHaRiTy '], ['Jose Reyes', 'Charity']]));
+    await workbook([['  Maria   Clara ', ' Santos '], ['Jose', 'Reyes']]));
   assert.equal(preview.validCount, 2);
   assert.equal(preview.invalidCount, 0);
-  assert.deepEqual(preview.records.map(row => [row.fullName, row.section, row.sectionId, row.status]),
-    [['Maria Santos', 'Charity', 'charity', 'valid'], ['Jose Reyes', 'Charity', 'charity', 'valid']]);
+  assert.deepEqual(preview.records.map(row => [row.firstName, row.lastName, row.fullName, row.section, row.sectionId, row.status]),
+    [['Maria Clara', 'Santos', 'Maria Clara Santos', 'Charity', 'charity', 'valid'], ['Jose', 'Reyes', 'Jose Reyes', 'Charity', 'charity', 'valid']]);
   assert.equal(client.writes.length, 0);
 });
 
-test('preview marks all duplicate normalized names, imported names, existing students and inactive/unknown sections invalid', async () => {
+test('preview detects duplicate composed names after case, whitespace and Unicode normalization', async () => {
   fixture();
   client.tables.users.push({ id: 'existing', name: 'ANNA   CRUZ', role: 'student', status: 'active' });
   const preview = await service.previewRoster(teacherId, subjectId, await workbook([
-    ['Maria Santos', 'Charity'], ['  ＭＡＲＩＡ   ＳＡＮＴＯＳ ', 'Charity'], ['JUAN DELA CRUZ', 'Charity'],
-    ['Anna Cruz', 'Charity'], ['Jose Reyes', 'Inactive'], ['Pedro Reyes', 'Unknown'],
+    ['Maria', 'Santos'], ['  ＭＡＲＩＡ ', '  ＳＡＮＴＯＳ '], ['JUAN', 'DELA CRUZ'], ['Anna', 'Cruz'],
   ]));
   assert.equal(preview.validCount, 0);
-  assert.equal(preview.invalidCount, 6);
+  assert.equal(preview.invalidCount, 4);
   assert.match(preview.records[0].errors.join(' '), /Duplicate full name/);
   assert.match(preview.records[1].errors.join(' '), /Duplicate full name/);
   assert.match(preview.records[2].errors.join(' '), /already has an account/);
   assert.match(preview.records[3].errors.join(' '), /already has an account/);
-  assert.match(preview.records[4].errors.join(' '), /active section/);
   assert.equal(client.writes.length, 0);
 });
 
-test('Excel headers, formulas, numeric names, invalid archives, file size and row limit are validated', async () => {
+test('one active section selection applies to the whole roster and overrides the server-read advisory fallback', async () => {
   fixture({ class_registration_students: [] });
-  await rejects(service.parseWorkbook(await workbook([['Maria Santos', 'Charity']], ['Name', 'Class'])), 400, /Full Name and Section/);
-  await rejects(service.parseWorkbook(await workbook([['Maria Santos', 'Charity']], ['Full Name', 'Section', 'Section'])), 400, /Duplicate column headers/);
+  const input = await workbook([["Anne-Marie", "O'Connor"], ['José Luis', 'de la Peña'], ['李', '明']]);
+  const preview = await service.previewRoster(teacherId, subjectId, input, 'hope');
+  assert.equal(preview.validCount, 3);
+  assert.ok(preview.records.every(row => row.sectionId === 'hope' && row.section === 'Hope'));
+  assert.deepEqual(preview.records.map(row => row.fullName), ["Anne-Marie O'Connor", 'José Luis de la Peña', '李 明']);
+  const reversed = await service.previewRoster(teacherId, subjectId, await workbook([['Santos', 'Maria']], ['Last Name', 'First Name']));
+  assert.equal(reversed.records[0].fullName, 'Maria Santos');
+  assert.equal(reversed.records[0].sectionId, 'charity');
+  assert.equal(client.writes.length, 0);
+});
+
+test('inactive, unknown or missing advisory sections fail actionably and cannot be replaced by row-supplied sections', async () => {
+  fixture({ class_registration_students: [] });
+  const input = await workbook([['Maria', 'Santos']]);
+  for (const sectionId of ['unknown', 'inactive-section']) {
+    await rejects(service.previewRoster(teacherId, subjectId, input, sectionId), 400, /Choose an active section/);
+    await rejects(service.createInvitation(teacherId, { subjectId, sectionId, records: [{ firstName: 'Maria', lastName: 'Santos', sectionId: 'charity', section: 'Charity' }] }), 400, /Choose an active section/);
+  }
+  await rejects(service.previewRoster(teacherId, subjectId, input, { id: 'charity' }), 400, /valid section/);
+  client.tables.users[0].advisory_section_id = null;
+  await rejects(service.previewRoster(teacherId, subjectId, input), 400, /Choose an active section before uploading/);
+  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Maria', lastName: 'Santos', sectionId: 'charity', section: 'Charity' }] }), 400, /Choose an active section before uploading/);
+  assert.equal((await service.previewRoster(teacherId, subjectId, input, 'hope')).validCount, 1);
+  client.tables.users[0].advisory_section_id = 'inactive-section';
+  await rejects(service.previewRoster(teacherId, subjectId, input), 400, /Choose an active section/);
+  assert.equal(client.writes.length, 0);
+});
+
+test('only First Name and Last Name Excel headers are accepted; formulas, numbers, missing parts and file limits are validated', async () => {
+  fixture({ class_registration_students: [] });
+  await rejects(service.parseWorkbook(await workbook([['Maria', 'Santos']], ['Name', 'Class'])), 400, /First Name and Last Name/);
+  await rejects(service.parseWorkbook(await workbook([['Maria', 'Santos']], ['Full Name', 'Section'])), 400, /First Name and Last Name/);
+  await rejects(service.parseWorkbook(await workbook([['Maria', 'Santos', 'Charity']], ['First Name', 'Last Name', 'Section'])), 400, /Only First Name and Last Name/);
+  await rejects(service.parseWorkbook(await workbook([['Maria', 'Santos']], ['First Name', 'Last Name', 'Last Name'])), 400, /Duplicate column headers/);
+  await rejects(service.parseWorkbook(await workbook([['Maria', 'Santos', 'hidden extra data']])), 400, /extra columns/);
   const preview = await service.previewRoster(teacherId, subjectId, await workbook([
-    [{ formula: '"Maria Santos"', result: 'Maria Santos' }, 'Charity'], [12345, 'Charity'], ['Jose Reyes', { formula: '"Charity"', result: 'Charity' }],
+    [{ formula: '"Maria"', result: 'Maria' }, 'Santos'], [12345, 'Cruz'], ['Jose', { formula: '"Reyes"', result: 'Reyes' }],
+    ['Maria', 12345], ['', 'Reyes'], ['Pedro', ''], ['12345', 'Cruz'], ['Jose', '12345'],
   ]));
-  assert.equal(preview.invalidCount, 3);
-  assert.ok(preview.records.every(row => row.errors.some(error => error.includes('plain text'))));
+  assert.equal(preview.invalidCount, 8);
+  assert.ok(preview.records.slice(0, 4).every(row => row.errors.some(error => error.includes('plain text'))));
+  assert.ok(preview.records.slice(4).every(row => row.errors.some(error => error.includes('required'))));
   await rejects(service.parseWorkbook(Buffer.alloc(service.MAX_FILE_BYTES + 1)), 400, /2 MB/);
   await rejects(service.parseWorkbook(Buffer.from('invalid excel file')), 400, /valid Excel/);
   await rejects(service.parseWorkbook(Buffer.alloc(100)), 400, /damaged|unsupported/);
-  await rejects(service.parseWorkbook(await workbook(Array.from({ length: 1001 }, (_, index) => [`Student Name ${index}`, 'Charity']))), 400, /1000/);
+  await rejects(service.parseWorkbook(await workbook(Array.from({ length: 1001 }, (_, index) => [`Student ${index}`, 'Name']))), 400, /1000/);
   const multipleSheets = new ExcelJS.Workbook();
-  multipleSheets.addWorksheet('First').addRow(['Full Name', 'Section']);
-  multipleSheets.addWorksheet('Second').addRow(['Full Name', 'Section']);
+  multipleSheets.addWorksheet('First').addRow(['First Name', 'Last Name']);
+  multipleSheets.addWorksheet('Second').addRow(['First Name', 'Last Name']);
   await rejects(service.parseWorkbook(Buffer.from(await multipleSheets.xlsx.writeBuffer())), 400, /one non-empty worksheet/);
 });
 
 test('archive validation rejects forged central-directory sizes before ExcelJS decompresses', async () => {
-  const valid = await workbook([['Maria Santos', 'Charity']]);
+  const valid = await workbook([['Maria', 'Santos']]);
   const forged = Buffer.from(valid);
   const central = forged.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
   assert.ok(central >= 0);
@@ -164,14 +197,17 @@ test('used codes, expired invitations, unavailable teachers/classes and inactive
   assert.equal(client.writes.length, 0);
 });
 
-test('tampered create payloads cannot bypass section, duplicate, ownership, expiry or name validation', async () => {
+test('create payloads cannot bypass required name parts, duplicates, ownership or expiry', async () => {
   fixture();
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ fullName: 'Juan dela Cruz', section: 'Charity', status: 'valid', errors: [] }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ fullName: 'Maria Santos', section: 'Unknown', sectionId: 'charity', status: 'valid' }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ fullName: { value: 'Maria Santos' }, section: 'Charity', status: 'valid' }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ fullName: 'Maria Santos', section: 'Charity' }, { fullName: 'MARIA   SANTOS', section: 'Charity' }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation('foreign-teacher', { subjectId, records: [{ fullName: 'Maria Santos', section: 'Charity' }] }), 404, /does not belong/);
-  await rejects(service.createInvitation(teacherId, { subjectId, expiresInDays: 91, records: [{ fullName: 'Maria Santos', section: 'Charity' }] }), 400, /1 and 90/);
+  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Juan', lastName: 'dela Cruz', fullName: 'Other Student', status: 'valid', errors: [] }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ fullName: 'Maria Santos', section: 'Charity', sectionId: 'charity', status: 'valid' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: { value: 'Maria' }, lastName: 'Santos', status: 'valid' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Maria', lastName: 'Santos' }, { firstName: ' MARIA ', lastName: ' SANTOS ' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Maria', lastName: '' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: '123', lastName: 'Santos' }] }), 400, /invalid or duplicate/);
+  client.tables.users.push({ id: 'foreign-teacher', role: 'teacher', status: 'active', advisory_section_id: 'charity' });
+  await rejects(service.createInvitation('foreign-teacher', { subjectId, records: [{ firstName: 'Maria', lastName: 'Santos' }] }), 404, /does not belong/);
+  await rejects(service.createInvitation(teacherId, { subjectId, expiresInDays: 91, records: [{ firstName: 'Maria', lastName: 'Santos' }] }), 400, /1 and 90/);
   assert.equal(client.writes.length, 0);
 });
 
@@ -197,13 +233,15 @@ test('valid creation sends only server-mapped sections and code hashes, then ret
       invitation_id: input.p_invitation_id, section_name: 'Charity', registered_at: null, student_id: null }));
     return { data: input.p_invitation_id, error: null };
   };
-  const invitation = await service.createInvitation(teacherId, { subjectId, records: [{ fullName: ' Maria   Santos ', section: 'CHARITY',
+  const invitation = await service.createInvitation(teacherId, { subjectId, records: [{ firstName: ' Maria ', lastName: ' Santos ', fullName: 'Different Student', section: 'HOPE',
     sectionId: 'tampered', normalizedName: 'tampered', registrationCode: 'tampered', cellErrors: 'tampered', status: 'registered' }], expiresInDays: 7 });
   assert.equal(invitation.totalCount, 1);
   assert.equal(invitation.registeredCount, 0);
   assert.equal(invitation.unregisteredCount, 1);
   assert.equal(rpcInput.p_records[0].section_id, 'charity');
   assert.equal(rpcInput.p_records[0].normalized_name, 'maria santos');
+  assert.equal(rpcInput.p_records[0].full_name, 'Maria Santos');
+  assert.equal(invitation.students[0].fullName, 'Maria Santos');
   assert.equal(rpcInput.p_records[0].code_hash, digest(invitation.students[0].registrationCode));
   assert.equal(rpcInput.p_records[0].registrationCode, undefined);
   assert.equal(rpcInput.p_token_hash, digest(invitation.invitationUrl.split('/').at(-1)));

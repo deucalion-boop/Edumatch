@@ -73,37 +73,52 @@ async function requireClass(teacherId, subjectId) {
   if (!subject) throw fail('The selected class is unavailable or does not belong to you.', 404);
   return subject;
 }
-async function validationContext(teacherId, subjectId) {
-  const [subject, sections, accounts, imported] = await Promise.all([
+async function resolveRosterSection(teacherId, sectionId) {
+  if (sectionId !== undefined && sectionId !== null && typeof sectionId !== 'string') throw fail('Choose a valid section.');
+  const { data: teacher, error: teacherError } = await getSupabaseStorageClient().from('users')
+    .select('id,role,status,archive,advisory_section_id').eq('id', teacherId).maybeSingle();
+  if (teacherError) throw databaseError(teacherError);
+  if (!teacher || teacher.role !== 'teacher' || teacher.status !== 'active' || teacher.archive?.isArchived === true) {
+    throw fail('Student invitations are unavailable for this teacher account.', 403);
+  }
+  const selectedId = String(sectionId || teacher.advisory_section_id || '').trim();
+  if (!selectedId) throw fail('Choose an active section before uploading the roster.');
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(selectedId)) throw fail('Choose a valid section.');
+  const { data: section, error } = await getSupabaseStorageClient().from('sections').select('id,name')
+    .eq('id', selectedId).eq('is_active', true).maybeSingle();
+  if (error) throw databaseError(error);
+  if (!section) throw fail('The selected section is unavailable. Choose an active section from the school directory.');
+  return section;
+}
+async function validationContext(teacherId, subjectId, sectionId) {
+  const [subject, section, accounts, imported] = await Promise.all([
     requireClass(teacherId, subjectId),
-    rows('sections', 'id,name', query => query.eq('is_active', true)),
+    resolveRosterSection(teacherId, sectionId),
     rows('users', 'id,name', query => query.eq('role', 'student')),
     rows('class_registration_students', 'id,normalized_name'),
   ]);
-  const sectionMap = new Map();
-  sections.forEach(section => {
-    const key = normalizeName(section.name);
-    // Ambiguous directory labels must not silently select an arbitrary section.
-    sectionMap.set(key, sectionMap.has(key) ? null : section);
-  });
-  return { subject, sectionMap, existingNames: new Set([...accounts.map(row => normalizeName(row.name)), ...imported.map(row => row.normalized_name)]) };
+  return { subject, section, existingNames: new Set([...accounts.map(row => normalizeName(row.name)), ...imported.map(row => row.normalized_name)]) };
 }
 function validateRecords(records, context) {
   if (!Array.isArray(records) || records.length === 0 || records.length > MAX_ROSTER_ROWS) throw fail(`Import between 1 and ${MAX_ROSTER_ROWS} students.`);
   const counts = new Map();
-  records.forEach(record => { const name = normalizeName(record?.fullName); counts.set(name, (counts.get(name) || 0) + 1); });
+  records.forEach(record => {
+    const name = normalizeName(`${cleanText(record?.firstName)} ${cleanText(record?.lastName)}`);
+    counts.set(name, (counts.get(name) || 0) + 1);
+  });
   return records.map((record, index) => {
-    const fullName = cleanText(record?.fullName);
-    const section = cleanText(record?.section);
+    const firstName = cleanText(record?.firstName);
+    const lastName = cleanText(record?.lastName);
+    const fullName = cleanText(`${firstName} ${lastName}`);
     const normalizedName = normalizeName(fullName);
-    const matchedSection = context.sectionMap.get(normalizeName(section));
     const errors = Array.isArray(record?.cellErrors) ? record.cellErrors.filter(error => typeof error === 'string').slice(0, 5) : [];
+    if (!firstName || firstName.length > 100 || !/\p{L}/u.test(firstName) || /[\x00-\x1f\x7f]/u.test(firstName)) errors.push('First Name is required, must contain letters, and must be no more than 100 characters.');
+    if (!lastName || lastName.length > 100 || !/\p{L}/u.test(lastName) || /[\x00-\x1f\x7f]/u.test(lastName)) errors.push('Last Name is required, must contain letters, and must be no more than 100 characters.');
     if (fullName.length < 3 || fullName.length > 150 || !/\p{L}/u.test(fullName) || /[\x00-\x1f\x7f]/u.test(fullName)) errors.push('Full name must contain letters and be 3–150 characters.');
-    if (!section || !matchedSection) errors.push('Section must match an active section in the school directory.');
     if (counts.get(normalizedName) > 1) errors.push('Duplicate full name in this file. Keep one entry; ask an administrator about students with identical names.');
     if (context.existingNames.has(normalizedName)) errors.push('This full name already has an account or an imported registration code.');
-    return { rowNumber: record?.rowNumber || index + 2, fullName, section: matchedSection?.name || section,
-      sectionId: matchedSection?.id || null, normalizedName, status: errors.length ? 'invalid' : 'valid', errors };
+    return { rowNumber: record?.rowNumber || index + 2, firstName, lastName, fullName, section: context.section.name,
+      sectionId: context.section.id, normalizedName, status: errors.length ? 'invalid' : 'valid', errors };
   });
 }
 // Bound the expanded ZIP before ExcelJS decompresses it (including ZIP bombs).
@@ -118,7 +133,7 @@ function validateWorkbookArchive(buffer) {
   let position = buffer.readUInt32LE(end + 16);
   const directoryStart = position;
   let expanded = 0;
-  if (entries > 200 || position > end || buffer.readUInt32LE(end + 12) > end - position) throw fail('This workbook is too complex. Upload a simple sheet with Full Name and Section.');
+  if (entries > 200 || position > end || buffer.readUInt32LE(end + 12) > end - position) throw fail('This workbook is too complex. Upload a simple sheet with First Name and Last Name.');
   for (let index = 0; index < entries; index += 1) {
     if (position + 46 > end || buffer.readUInt32LE(position) !== 0x02014b50) throw fail('The Excel archive is invalid.');
     const size = buffer.readUInt32LE(position + 24);
@@ -155,32 +170,33 @@ async function parseWorkbook(buffer) {
   const workbook = new ExcelJS.Workbook();
   try { await workbook.xlsx.load(buffer); } catch { throw fail('Unable to read this Excel file. Save it as .xlsx and try again.'); }
   const sheets = workbook.worksheets.filter(sheet => sheet.actualRowCount > 0);
-  if (sheets.length !== 1) throw fail('Upload a workbook with one non-empty worksheet containing Full Name and Section.');
+  if (sheets.length !== 1) throw fail('Upload a workbook with one non-empty worksheet containing only First Name and Last Name.');
   const sheet = sheets[0];
   if (sheet.rowCount > MAX_ROSTER_ROWS + 1 || sheet.columnCount > 50) throw fail(`Use no more than ${MAX_ROSTER_ROWS} student rows and remove unused rows or columns.`);
   const headers = new Map();
   sheet.getRow(1).eachCell((cell, index) => {
     const header = normalizeName(typeof cell.value === 'string' ? cell.value : '');
-    if (headers.has(header)) throw fail('Duplicate column headers found. Use one Full Name and one Section column.');
+    if (headers.has(header)) throw fail('Duplicate column headers found. Use one First Name and one Last Name column.');
     headers.set(header, index);
   });
-  if (!headers.has('full name') || !headers.has('section')) throw fail('The first row must contain the column headers Full Name and Section.');
+  if (!headers.has('first name') || !headers.has('last name')) throw fail('The first row must contain only the column headers First Name and Last Name.');
+  if (headers.size !== 2 || sheet.columnCount > 2) throw fail('Only First Name and Last Name columns are allowed. Remove Section and any other extra columns.');
   const records = [];
   for (let index = 2; index <= sheet.rowCount; index += 1) {
     const row = sheet.getRow(index);
     if (row.actualCellCount === 0) continue;
     const cellErrors = [];
-    const fullName = readCell(row.getCell(headers.get('full name')), 'Full Name', cellErrors);
-    const section = readCell(row.getCell(headers.get('section')), 'Section', cellErrors);
-    if (!cleanText(fullName) && !cleanText(section) && !cellErrors.length) continue;
-    records.push({ rowNumber: index, fullName, section, cellErrors });
+    const firstName = readCell(row.getCell(headers.get('first name')), 'First Name', cellErrors);
+    const lastName = readCell(row.getCell(headers.get('last name')), 'Last Name', cellErrors);
+    if (!cleanText(firstName) && !cleanText(lastName) && !cellErrors.length) continue;
+    records.push({ rowNumber: index, firstName, lastName, cellErrors });
   }
-  if (!records.length) throw fail('No students were found. Add Full Name and Section below the headers.');
+  if (!records.length) throw fail('No students were found. Add First Name and Last Name below the headers.');
   return records;
 }
-async function previewRoster(teacherId, subjectId, buffer) {
+async function previewRoster(teacherId, subjectId, buffer, sectionId) {
   const parsed = await parseWorkbook(buffer);
-  const records = validateRecords(parsed, await validationContext(teacherId, subjectId));
+  const records = validateRecords(parsed, await validationContext(teacherId, subjectId, sectionId));
   return { records, validCount: records.filter(row => row.status === 'valid').length, invalidCount: records.filter(row => row.status === 'invalid').length };
 }
 function mapInvitation(invitation, students, subject) {
@@ -203,13 +219,14 @@ async function listInvitations(teacherId) {
   ]);
   return invitations.map(invitation => mapInvitation(invitation, students.filter(row => row.invitation_id === invitation.id), subjects.find(row => row.id === invitation.subject_id)));
 }
-async function createInvitation(teacherId, { subjectId, records: input, expiresInDays = 30 } = {}) {
+async function createInvitation(teacherId, { subjectId, sectionId, records: input, expiresInDays = 30 } = {}) {
   secret();
   const days = Number(expiresInDays);
   if (!Number.isInteger(days) || days < 1 || days > 90) throw fail('Invitation expiry must be between 1 and 90 days.');
-  // Client-supplied preview statuses/IDs are ignored; all names and sections are revalidated.
-  const records = validateRecords(Array.isArray(input) ? input.map(row => ({ fullName: row?.fullName, section: row?.section })) : input,
-    await validationContext(teacherId, subjectId));
+  // Canonical names come only from the two name parts. A server-read section is
+  // selected once for this import; row fullName/section/IDs cannot override it.
+  const records = validateRecords(Array.isArray(input) ? input.map(row => ({ firstName: row?.firstName, lastName: row?.lastName })) : input,
+    await validationContext(teacherId, subjectId, sectionId));
   if (records.some(row => row.status !== 'valid')) throw fail('The roster has invalid or duplicate entries. Correct the file and preview it again.');
   const id = crypto.randomUUID();
   const prepared = records.map(row => {

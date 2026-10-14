@@ -539,7 +539,7 @@
         </div>
       </section>
 
-      <ClassInvitationModal v-if="isClassInvitationModalOpen" :subjects="subjects" :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" :initial-subject-id="invitationSubjectId" :invitation="selectedClassInvitation" :can-create-individual="hasAdvisorySection" @close="isClassInvitationModalOpen = false" @manual="openManualStudentInvite" @imported="handleInvitationImported" />
+      <ClassInvitationModal v-if="isClassInvitationModalOpen" :subjects="subjects" :sections="teacherSections" :initial-section-id="teacher.advisorySectionId" :sections-load-error="teacherSectionsError" :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" :initial-subject-id="invitationSubjectId" :invitation="selectedClassInvitation" :can-create-individual="hasAdvisorySection" @close="isClassInvitationModalOpen = false" @manual="openManualStudentInvite" @imported="handleInvitationImported" @retry-sections="fetchTeacherSections" />
 
       <div v-if="isCreateClassModalOpen" class="modal-shell" @click.self="closeCreateClassModal">
         <div class="modal-panel">
@@ -870,6 +870,8 @@ const {
   clearAllNotifications,
 } = useUserNotifications({ limit: 8, pollIntervalMs: 60000 })
 const subjects = ref([])
+const teacherSections = ref([])
+const teacherSectionsError = ref('')
 const isLoadingSubjects = ref(false)
 const subjectsError = ref('')
 const students = ref([])
@@ -1308,12 +1310,15 @@ const fetchTeacherSections = async () => {
   const previousSectionName = String(teacher.advisorySectionName || '').trim()
   try {
     if (!authStore.token) {
+      teacherSections.value = []
       teacher.advisorySectionId = ''
       teacher.advisorySectionName = ''
       return previousSectionId !== '' || previousSectionName !== ''
     }
 
     const response = await axios.get(`${resolveApiBaseUrl()}/teacher/sections`, getAuthConfig())
+    teacherSections.value = (Array.isArray(response.data?.sections) ? response.data.sections : []).filter(section => section.isActive === true).map(section => ({ id: String(section.id), name: String(section.name || '').trim() })).filter(section => section.id && section.name)
+    teacherSectionsError.value = ''
     teacher.advisorySectionId = String(response.data?.advisorySection?.id || '').trim()
     teacher.advisorySectionName = String(response.data?.advisorySection?.name || '').trim()
     authStore.setUser({
@@ -1329,6 +1334,7 @@ const fetchTeacherSections = async () => {
       || previousSectionName !== teacher.advisorySectionName
   } catch (error) {
     console.error('Failed to fetch teacher sections:', error)
+    teacherSectionsError.value = 'Unable to load active sections. Please retry before importing students.'
     const authUser = authStore.user || {}
     teacher.advisorySectionId = String(authUser.advisorySectionId || teacher.advisorySectionId || '').trim()
     teacher.advisorySectionName = String(authUser.advisorySection?.name || teacher.advisorySectionName || '').trim()

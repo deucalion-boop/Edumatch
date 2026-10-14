@@ -13,10 +13,14 @@
           <p v-if="notice" class="invitation-feedback success" role="status">{{ notice }}</p>
           <template v-if="step < 3">
             <label class="invitation-field"><span>Choose a class</span><select v-model="subjectId" :disabled="busy"><option value="">Select a class</option><option v-for="subject in subjects" :key="subject.id" :value="String(subject.id)">{{ subject.className || subject.name }}</option></select></label>
+            <label class="invitation-field"><span>Assign section</span><select v-model="sectionId" :disabled="busy || !sections.length"><option value="">Select a section</option><option v-for="section in sections" :key="section.id" :value="String(section.id)">{{ section.name }}</option></select></label>
+            <p v-if="sectionsLoadError" class="invitation-feedback error" role="alert">{{ sectionsLoadError }} <button type="button" class="invitation-retry" :disabled="busy" @click="emit('retry-sections')">Retry sections</button></p>
+            <p v-else-if="!sections.length" class="invitation-feedback error" role="alert">No active sections are available. Ask your Head Teacher to create or activate a section. <button type="button" class="invitation-retry" :disabled="busy" @click="emit('retry-sections')">Retry sections</button></p>
+            <p v-if="selectedSectionName" class="invitation-section-context">Assigned section: <strong>{{ selectedSectionName }}</strong>. All students in this upload will join this section.</p>
           </template>
           <template v-if="step === 1">
             <div class="invitation-upload">
-              <i class="fas fa-file-excel" aria-hidden="true"></i><strong>Upload an Excel class list</strong><p>Use a header row with <b>Full Name</b> and <b>Section</b>. Add one student per row. Student IDs are not required.</p>
+              <i class="fas fa-file-excel" aria-hidden="true"></i><strong>Upload an Excel class list</strong><p>Use only two columns: <b>First Name</b> and <b>Last Name</b>. Add one student per row. Choose the section above; do not include a Section column in the spreadsheet.</p>
               <label class="invitation-file-label"><span>Excel file (.xlsx, up to 2 MB and 1,000 student rows)</span><input ref="fileInputRef" type="file" accept=".xlsx" :disabled="busy" @change="chooseFile"></label>
               <small v-if="file">{{ file.name }}</small>
             </div>
@@ -26,8 +30,8 @@
           </template>
           <template v-else-if="step === 2">
             <div class="invitation-review-summary" aria-live="polite"><span><strong>{{ validRecords.length }}</strong> ready to invite</span><span :class="{ invalid: invalidRecords.length > 0 }"><strong>{{ invalidRecords.length }}</strong> need correction</span></div>
-            <p class="invitation-help">Review names and sections carefully. Students must match these details to register.</p>
-            <div class="invitation-table-wrap" tabindex="0" aria-label="Imported student preview"><table><thead><tr><th>Row</th><th>Full name</th><th>Section</th><th>Validation</th></tr></thead><tbody><tr v-for="(record, index) in records" :key="`${record.rowNumber}-${index}`" :class="{ 'invalid-row': !isValidRecord(record) }"><td>{{ record.rowNumber || index + 2 }}</td><td>{{ record.fullName || 'Missing name' }}</td><td>{{ record.section || 'Missing section' }}</td><td><span v-if="isValidRecord(record)" class="invitation-row-valid"><i class="fas fa-check-circle" aria-hidden="true"></i>Ready</span><ul v-else class="invitation-row-errors"><li v-for="(message, messageIndex) in record.errors?.length ? record.errors : ['This record cannot be imported.']" :key="messageIndex">{{ message }}</li></ul></td></tr></tbody></table></div>
+            <p class="invitation-help">Review each first and last name carefully. We combine them into the full name students verify during registration.</p>
+            <div class="invitation-table-wrap" tabindex="0" aria-label="Imported student preview"><table><thead><tr><th>Row</th><th>First name</th><th>Last name</th><th>Validation</th></tr></thead><tbody><tr v-for="(record, index) in records" :key="`${record.rowNumber}-${index}`" :class="{ 'invalid-row': !isValidRecord(record) }"><td>{{ record.rowNumber || index + 2 }}</td><td>{{ record.firstName || 'Missing first name' }}</td><td>{{ record.lastName || 'Missing last name' }}</td><td><span v-if="isValidRecord(record)" class="invitation-row-valid"><i class="fas fa-check-circle" aria-hidden="true"></i>Ready</span><ul v-else class="invitation-row-errors"><li v-for="(message, messageIndex) in record.errors?.length ? record.errors : ['This record cannot be imported.']" :key="messageIndex">{{ message }}</li></ul></td></tr></tbody></table></div>
             <label v-if="invalidRecords.length > 0 && validRecords.length > 0" class="invitation-discard"><input v-model="discardInvalid" type="checkbox" :disabled="busy"><span>Exclude the {{ invalidRecords.length }} invalid {{ invalidRecords.length === 1 ? 'row' : 'rows' }} and invite only the {{ validRecords.length }} valid {{ validRecords.length === 1 ? 'student' : 'students' }}.</span></label>
             <p v-if="!validRecords.length" class="invitation-feedback error">No valid students are available. Correct the spreadsheet and upload it again.</p>
             <label class="invitation-field invitation-expiry"><span>Invitation expires after</span><select v-model.number="expiresInDays" :disabled="busy"><option :value="7">7 days</option><option :value="30">30 days</option><option :value="90">90 days</option></select></label>
@@ -46,7 +50,7 @@
 
         <footer class="invitation-footer">
           <button type="button" class="invitation-button secondary" :disabled="busy" @click="step === 1 ? requestClose() : resetUpload()">{{ step === 1 ? 'Cancel' : step === 2 ? 'Replace spreadsheet' : 'Import another list' }}</button>
-          <button v-if="step === 1" type="button" class="invitation-button primary" :disabled="busy || !subjectId || !file" @click="previewImport"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-magnifying-glass'" aria-hidden="true"></i>{{ busy ? 'Checking spreadsheet…' : 'Preview students' }}</button>
+          <button v-if="step === 1" type="button" class="invitation-button primary" :disabled="busy || !subjectId || !selectedSectionName || !file" @click="previewImport"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-magnifying-glass'" aria-hidden="true"></i>{{ busy ? 'Checking spreadsheet…' : 'Preview students' }}</button>
           <button v-else-if="step === 2" type="button" class="invitation-button primary" :disabled="busy || !canGenerate" @click="generateInvitation"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-key'" aria-hidden="true"></i>{{ busy ? 'Generating…' : `Generate ${validRecords.length} registration codes` }}</button>
           <div v-else class="invitation-footer-share"><button type="button" class="invitation-button secondary" :disabled="exporting || busy" @click="exportCodes"><i class="fas" :class="exporting ? 'fa-spinner fa-spin' : 'fa-file-export'" aria-hidden="true"></i>{{ exporting ? 'Exporting…' : 'Export codes' }}</button><button type="button" class="invitation-button primary" :disabled="busy" @click="requestClose">Done</button></div>
         </footer>
@@ -61,16 +65,20 @@ import axios from 'axios'
 
 const props = defineProps({
   subjects: { type: Array, default: () => [] },
+  sections: { type: Array, default: () => [] },
+  initialSectionId: { type: String, default: '' },
+  sectionsLoadError: { type: String, default: '' },
   apiBaseUrl: { type: String, required: true },
   authToken: { type: String, required: true },
   initialSubjectId: { type: String, default: '' },
   invitation: { type: Object, default: null },
   canCreateIndividual: { type: Boolean, default: true },
 })
-const emit = defineEmits(['close', 'imported', 'manual'])
+const emit = defineEmits(['close', 'imported', 'manual', 'retry-sections'])
 const dialogRef = ref(null)
 const fileInputRef = ref(null)
 const subjectId = ref(props.initialSubjectId || (props.subjects.length === 1 ? String(props.subjects[0].id) : ''))
+const sectionId = ref(props.initialSectionId)
 const step = ref(props.invitation ? 3 : 1)
 const generatedInvitation = ref(props.invitation)
 const file = ref(null)
@@ -90,7 +98,8 @@ const requestConfig = () => ({ headers: { Authorization: `Bearer ${props.authTok
 const isValidRecord = record => record.status === 'valid' && !(record.errors?.length)
 const validRecords = computed(() => records.value.filter(isValidRecord))
 const invalidRecords = computed(() => records.value.filter(record => !isValidRecord(record)))
-const canGenerate = computed(() => !!subjectId.value && validRecords.value.length > 0 && (!invalidRecords.value.length || discardInvalid.value))
+const selectedSectionName = computed(() => props.sections.find(section => String(section.id) === sectionId.value)?.name || '')
+const canGenerate = computed(() => !!subjectId.value && !!selectedSectionName.value && validRecords.value.length > 0 && (!invalidRecords.value.length || discardInvalid.value))
 const selectedClassName = computed(() => {
   const subject = props.subjects.find(item => String(item.id) === subjectId.value)
   return subject?.className || subject?.name || 'Selected class'
@@ -99,12 +108,15 @@ const isExpired = computed(() => generatedInvitation.value?.status === 'expired'
 const formatExpiry = value => value ? new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'not available'
 const requestClose = () => { if (!busy.value) emit('close') }
 
-watch(subjectId, () => {
+watch([subjectId, sectionId], () => {
   records.value = []
   discardInvalid.value = false
   error.value = ''
   notice.value = ''
   if (step.value === 2) step.value = 1
+})
+watch(() => props.initialSectionId, (value, previousValue) => {
+  if (!sectionId.value || sectionId.value === previousValue) sectionId.value = value
 })
 watch(() => props.invitation, value => {
   if (value && step.value === 3) generatedInvitation.value = value
@@ -134,7 +146,7 @@ function resetUpload() {
   nextTick(() => fileInputRef.value?.focus())
 }
 async function previewImport() {
-  if (busy.value || !file.value || !subjectId.value) return
+  if (busy.value || !file.value || !subjectId.value || !selectedSectionName.value) return
   busy.value = true
   error.value = ''
   notice.value = ''
@@ -142,9 +154,10 @@ async function previewImport() {
     const payload = new FormData()
     payload.append('file', file.value)
     payload.append('subjectId', subjectId.value)
+    payload.append('sectionId', sectionId.value)
     const response = await axios.post(`${props.apiBaseUrl}/teacher/class-invitations/preview`, payload, requestConfig())
     records.value = Array.isArray(response.data?.records) ? response.data.records : []
-    if (!records.value.length) { error.value = 'No student rows were found. Include Full Name and Section headers and at least one student.'; return }
+    if (!records.value.length) { error.value = 'No student rows were found. Include only First Name and Last Name headers and at least one student.'; return }
     discardInvalid.value = false
     step.value = 2
     await nextTick()
@@ -158,7 +171,7 @@ async function generateInvitation() {
   busy.value = true
   error.value = ''
   try {
-    const response = await axios.post(`${props.apiBaseUrl}/teacher/class-invitations`, { subjectId: subjectId.value, records: validRecords.value.map(({ fullName, section }) => ({ fullName, section })), expiresInDays: expiresInDays.value }, requestConfig())
+    const response = await axios.post(`${props.apiBaseUrl}/teacher/class-invitations`, { subjectId: subjectId.value, sectionId: sectionId.value, records: validRecords.value.map(({ firstName, lastName }) => ({ firstName, lastName })), expiresInDays: expiresInDays.value }, requestConfig())
     if (!response.data?.invitation?.id) throw new Error('The invitation could not be confirmed. Refresh enrollment before trying again.')
     generatedInvitation.value = response.data.invitation
     step.value = 3
@@ -271,6 +284,8 @@ onBeforeUnmount(() => {
 .invitation-file-label input { @apply tw:[font:inherit] tw:[max-width:100%] tw:[color:#3e6530]; }
 .invitation-upload small { @apply tw:[font-size:.75rem] tw:break-all tw:[color:#456a32]; }
 .invitation-help { @apply tw:[font-size:.77rem] tw:[line-height:1.6] tw:[color:#687760] tw:[margin:.8rem_0]; }
+.invitation-section-context { @apply tw:[font-size:.77rem] tw:[line-height:1.5] tw:[color:#597148] tw:[margin:0_0_1rem] tw:[padding:.6rem_.75rem] tw:[border-radius:9px] tw:[background:#f3f8ee]; }
+.invitation-retry { @apply tw:[border:0] tw:bg-transparent tw:[color:#42702c] tw:[font:inherit] tw:underline tw:cursor-pointer; }
 .invitation-manual { @apply tw:inline-flex tw:items-center tw:[gap:.4rem] tw:[padding:.6rem_0] tw:[border:0] tw:bg-transparent tw:[color:#407227] tw:[font:inherit] tw:[font-size:.78rem] tw:font-semibold tw:cursor-pointer tw:text-left; }
 .invitation-feedback { @apply tw:[padding:.7rem_.85rem] tw:[border-radius:9px] tw:[font-size:.79rem] tw:[line-height:1.5] tw:[margin:0_0_.9rem]; }
 .invitation-feedback.error { @apply tw:[background:#fff1ef] tw:[color:#a32e26] tw:[border:1px_solid_#f0cec8]; }
