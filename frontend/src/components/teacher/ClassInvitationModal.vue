@@ -11,22 +11,17 @@
         <div class="invitation-body">
           <p v-if="error" class="invitation-feedback error" role="alert">{{ error }}</p>
           <p v-if="notice" class="invitation-feedback success" role="status">{{ notice }}</p>
-          <template v-if="step < 3">
-            <label class="invitation-field"><span>Choose a class</span><select v-model="subjectId" :disabled="busy"><option value="">Select a class</option><option v-for="subject in subjects" :key="subject.id" :value="String(subject.id)">{{ subject.className || subject.name }}</option></select></label>
-            <label class="invitation-field"><span>Assign section</span><select v-model="sectionId" :disabled="busy || !sections.length"><option value="">Select a section</option><option v-for="section in sections" :key="section.id" :value="String(section.id)">{{ section.name }}</option></select></label>
-            <p v-if="sectionsLoadError" class="invitation-feedback error" role="alert">{{ sectionsLoadError }} <button type="button" class="invitation-retry" :disabled="busy" @click="emit('retry-sections')">Retry sections</button></p>
-            <p v-else-if="!sections.length" class="invitation-feedback error" role="alert">No active sections are available. Ask your Head Teacher to create or activate a section. <button type="button" class="invitation-retry" :disabled="busy" @click="emit('retry-sections')">Retry sections</button></p>
-            <p v-if="selectedSectionName" class="invitation-section-context">Assigned section: <strong>{{ selectedSectionName }}</strong>. All students in this upload will join this section.</p>
-          </template>
+          <p v-if="contextLoading" class="invitation-help" role="status">Loading your designated advisory class and section…</p>
+          <p v-else-if="!hasAdvisoryContext" class="invitation-feedback error" role="alert">{{ contextError || 'An active advisory section is required. Ask your Head Teacher to assign your advisory section before inviting students.' }} <button type="button" class="invitation-retry" :disabled="busy" @click="emit('retry-context')">Retry advisory assignment</button></p>
+          <div v-else class="invitation-section-context"><div>Advisory class: <strong>{{ advisoryClassName }}</strong></div><div>Designated section: <strong>{{ advisoryContext.advisorySection.name }}</strong></div><span>All students in this upload automatically join your advisory class and designated section.</span></div>
           <template v-if="step === 1">
             <div class="invitation-upload">
-              <i class="fas fa-file-excel" aria-hidden="true"></i><strong>Upload an Excel class list</strong><p>Use only two columns: <b>First Name</b> and <b>Last Name</b>. Add one student per row. Choose the section above; do not include a Section column in the spreadsheet.</p>
+              <i class="fas fa-file-excel" aria-hidden="true"></i><strong>Upload an Excel class list</strong><p>Use only two columns: <b>First Name</b> and <b>Last Name</b>. Add one student per row. Your designated advisory section is assigned automatically; do not include a Section column.</p>
               <label class="invitation-file-label"><span>Excel file (.xlsx, up to 2 MB and 1,000 student rows)</span><input ref="fileInputRef" type="file" accept=".xlsx" :disabled="busy" @change="chooseFile"></label>
               <small v-if="file">{{ file.name }}</small>
             </div>
             <p class="invitation-help">We check required fields, repeated names, and students already imported or registered before creating the invitation.</p>
-            <button type="button" class="invitation-manual" :disabled="busy || !canCreateIndividual" @click="emit('manual')"><i class="fas fa-user-plus" aria-hidden="true"></i>Create an individual student account instead</button>
-            <p v-if="!canCreateIndividual" class="invitation-help">An advisory section must be assigned before you can create individual accounts.</p>
+            <button type="button" class="invitation-manual" :disabled="busy || !hasAdvisoryContext" @click="emit('manual')"><i class="fas fa-user-plus" aria-hidden="true"></i>Create an individual student account instead</button>
           </template>
           <template v-else-if="step === 2">
             <div class="invitation-review-summary" aria-live="polite"><span><strong>{{ validRecords.length }}</strong> ready to invite</span><span :class="{ invalid: invalidRecords.length > 0 }"><strong>{{ invalidRecords.length }}</strong> need correction</span></div>
@@ -37,20 +32,20 @@
             <label class="invitation-field invitation-expiry"><span>Invitation expires after</span><select v-model.number="expiresInDays" :disabled="busy"><option :value="7">7 days</option><option :value="30">30 days</option><option :value="90">90 days</option></select></label>
           </template>
           <template v-else-if="generatedInvitation">
-            <div class="invitation-success"><i class="fas fa-check-circle" aria-hidden="true"></i><div><h3>{{ generatedInvitation.className || selectedClassName }}</h3><p>{{ generatedInvitation.totalCount }} students · {{ generatedInvitation.registeredCount }} registered · {{ generatedInvitation.unregisteredCount }} unregistered</p></div><span class="invitation-status" :class="{ expired: isExpired }">{{ isExpired ? 'Expired' : 'Ready to share' }}</span></div>
+            <div class="invitation-success"><i class="fas fa-check-circle" aria-hidden="true"></i><div><h3>{{ generatedInvitation.className || advisoryClassName }}</h3><p>{{ generatedInvitation.totalCount }} students · {{ generatedInvitation.registeredCount }} registered · {{ generatedInvitation.unregisteredCount }} unregistered</p></div><span class="invitation-status" :class="{ expired: isExpired }">{{ isExpired ? 'Expired' : 'Ready to share' }}</span></div>
             <progress class="invitation-progress" :value="generatedInvitation.registeredCount || 0" :max="generatedInvitation.totalCount || 1" :aria-label="`${generatedInvitation.registeredCount || 0} of ${generatedInvitation.totalCount || 0} students registered`"></progress>
             <p v-if="isExpired" class="invitation-feedback error">This invitation has expired. Renew it to let unregistered students register using their imported full names.</p>
-            <div v-if="isExpired" class="invitation-renew"><label class="invitation-field"><span>Renew invitation for</span><select v-model.number="expiresInDays" :disabled="busy"><option :value="7">7 days</option><option :value="30">30 days</option><option :value="90">90 days</option></select></label><button type="button" class="invitation-button primary" :disabled="busy" @click="renewInvitation"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-clock-rotate-left'" aria-hidden="true"></i>{{ busy ? 'Renewing…' : 'Renew invitation' }}</button></div>
-            <label class="invitation-field"><span>Class invitation link</span><div class="invitation-link-field"><input :value="generatedInvitation.invitationUrl" type="url" readonly aria-label="Shareable class invitation link" @focus="$event.target.select()"><button type="button" class="invitation-button primary" :disabled="isExpired" @click="copyLink"><i class="fas fa-copy" aria-hidden="true"></i>{{ copied ? 'Copied' : 'Copy link' }}</button></div></label>
+            <div v-if="isExpired" class="invitation-renew"><label class="invitation-field"><span>Renew invitation for</span><select v-model.number="expiresInDays" :disabled="busy"><option :value="7">7 days</option><option :value="30">30 days</option><option :value="90">90 days</option></select></label><button type="button" class="invitation-button primary" :disabled="busy || !hasAdvisoryContext" @click="renewInvitation"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-clock-rotate-left'" aria-hidden="true"></i>{{ busy ? 'Renewing…' : 'Renew invitation' }}</button></div>
+            <label class="invitation-field"><span>Class invitation link</span><div class="invitation-link-field"><input :value="generatedInvitation.invitationUrl" type="url" readonly aria-label="Shareable class invitation link" @focus="$event.target.select()"><button type="button" class="invitation-button primary" :disabled="isExpired || !hasAdvisoryContext" @click="copyLink"><i class="fas fa-copy" aria-hidden="true"></i>{{ copied ? 'Copied' : 'Copy link' }}</button></div></label>
             <p class="invitation-help">Expires {{ formatExpiry(generatedInvitation.expiresAt) }}. Share this link with the class. Students enter their full names as listed below.</p>
-            <div class="invitation-share-instructions"><strong>Students complete their own registration</strong><ol><li>Open the class invitation link.</li><li>Enter their full name to match the imported class list.</li><li>Provide an email, choose an available username, and create a password.</li></ol><p>Successful registration automatically enrolls the student in the selected class and section.</p></div>
+            <div class="invitation-share-instructions"><strong>Students complete their own registration</strong><ol><li>Open the class invitation link.</li><li>Enter their full name to match the imported class list.</li><li>Provide an email, choose an available username, and create a password.</li></ol><p>Successful registration automatically enrolls the student in your designated advisory class and section.</p></div>
             <div class="invitation-table-wrap" tabindex="0" aria-label="Invited student enrollment"><table><thead><tr><th>Full name</th><th>Section</th><th>Enrollment</th></tr></thead><tbody><tr v-for="student in generatedInvitation.students || []" :key="student.id"><td>{{ student.fullName }}</td><td>{{ student.section }}</td><td><span class="invitation-status" :class="{ waiting: student.status !== 'registered' }">{{ student.status === 'registered' ? 'Registered' : 'Unregistered' }}</span></td></tr></tbody></table></div>
           </template>
         </div>
 
         <footer class="invitation-footer">
           <button type="button" class="invitation-button secondary" :disabled="busy" @click="step === 1 ? requestClose() : resetUpload()">{{ step === 1 ? 'Cancel' : step === 2 ? 'Replace spreadsheet' : 'Import another list' }}</button>
-          <button v-if="step === 1" type="button" class="invitation-button primary" :disabled="busy || !subjectId || !selectedSectionName || !file" @click="previewImport"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-magnifying-glass'" aria-hidden="true"></i>{{ busy ? 'Checking spreadsheet…' : 'Preview students' }}</button>
+          <button v-if="step === 1" type="button" class="invitation-button primary" :disabled="busy || !hasAdvisoryContext || !file" @click="previewImport"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-magnifying-glass'" aria-hidden="true"></i>{{ busy ? 'Checking spreadsheet…' : 'Preview students' }}</button>
           <button v-else-if="step === 2" type="button" class="invitation-button primary" :disabled="busy || !canCreateInvitation" @click="createInvitation"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-link'" aria-hidden="true"></i>{{ busy ? 'Creating invitation…' : 'Create invitation' }}</button>
           <div v-else class="invitation-footer-share"><button type="button" class="invitation-button primary" :disabled="busy" @click="requestClose">Done</button></div>
         </footer>
@@ -64,21 +59,16 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
-  subjects: { type: Array, default: () => [] },
-  sections: { type: Array, default: () => [] },
-  initialSectionId: { type: String, default: '' },
-  sectionsLoadError: { type: String, default: '' },
+  advisoryContext: { type: Object, default: null },
+  contextError: { type: String, default: '' },
+  contextLoading: { type: Boolean, default: false },
   apiBaseUrl: { type: String, required: true },
   authToken: { type: String, required: true },
-  initialSubjectId: { type: String, default: '' },
   invitation: { type: Object, default: null },
-  canCreateIndividual: { type: Boolean, default: true },
 })
-const emit = defineEmits(['close', 'imported', 'manual', 'retry-sections'])
+const emit = defineEmits(['close', 'imported', 'manual', 'retry-context'])
 const dialogRef = ref(null)
 const fileInputRef = ref(null)
-const subjectId = ref(props.initialSubjectId || (props.subjects.length === 1 ? String(props.subjects[0].id) : ''))
-const sectionId = ref(props.initialSectionId)
 const step = ref(props.invitation ? 3 : 1)
 const generatedInvitation = ref(props.invitation)
 const file = ref(null)
@@ -97,25 +87,20 @@ const requestConfig = () => ({ headers: { Authorization: `Bearer ${props.authTok
 const isValidRecord = record => record.status === 'valid' && !(record.errors?.length)
 const validRecords = computed(() => records.value.filter(isValidRecord))
 const invalidRecords = computed(() => records.value.filter(record => !isValidRecord(record)))
-const selectedSectionName = computed(() => props.sections.find(section => String(section.id) === sectionId.value)?.name || '')
-const canCreateInvitation = computed(() => !!subjectId.value && !!selectedSectionName.value && validRecords.value.length > 0 && (!invalidRecords.value.length || discardInvalid.value))
-const selectedClassName = computed(() => {
-  const subject = props.subjects.find(item => String(item.id) === subjectId.value)
-  return subject?.className || subject?.name || 'Selected class'
-})
+const hasAdvisoryContext = computed(() => !props.contextLoading && !!props.advisoryContext?.advisoryClass?.id && !!props.advisoryContext?.advisorySection?.id)
+const canCreateInvitation = computed(() => hasAdvisoryContext.value && validRecords.value.length > 0 && (!invalidRecords.value.length || discardInvalid.value))
+const advisoryClassName = computed(() => props.advisoryContext?.advisoryClass?.className || props.advisoryContext?.advisoryClass?.name || 'Advisory class')
+const contextSignature = computed(() => `${props.advisoryContext?.advisoryClass?.id || ''}:${props.advisoryContext?.advisorySection?.id || ''}`)
 const isExpired = computed(() => generatedInvitation.value?.status === 'expired' || new Date(generatedInvitation.value?.expiresAt).getTime() <= Date.now())
 const formatExpiry = value => value ? new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'not available'
 const requestClose = () => { if (!busy.value) emit('close') }
 
-watch([subjectId, sectionId], () => {
+watch(contextSignature, (value, previousValue) => {
   records.value = []
   discardInvalid.value = false
   error.value = ''
-  notice.value = ''
-  if (step.value === 2) step.value = 1
-})
-watch(() => props.initialSectionId, (value, previousValue) => {
-  if (!sectionId.value || sectionId.value === previousValue) sectionId.value = value
+  notice.value = previousValue !== ':' ? 'Your advisory assignment changed. Preview the spreadsheet again before creating an invitation.' : ''
+  if (step.value > 1) { step.value = 1; generatedInvitation.value = null }
 })
 watch(() => props.invitation, value => {
   if (value && step.value === 3) generatedInvitation.value = value
@@ -145,16 +130,16 @@ function resetUpload() {
   nextTick(() => fileInputRef.value?.focus())
 }
 async function previewImport() {
-  if (busy.value || !file.value || !subjectId.value || !selectedSectionName.value) return
+  if (busy.value || !file.value || !hasAdvisoryContext.value) return
+  const previewContext = contextSignature.value
   busy.value = true
   error.value = ''
   notice.value = ''
   try {
     const payload = new FormData()
     payload.append('file', file.value)
-    payload.append('subjectId', subjectId.value)
-    payload.append('sectionId', sectionId.value)
     const response = await axios.post(`${props.apiBaseUrl}/teacher/class-invitations/preview`, payload, requestConfig())
+    if (previewContext !== contextSignature.value) { error.value = 'Your advisory assignment changed. Preview the spreadsheet again.'; return }
     records.value = Array.isArray(response.data?.records) ? response.data.records : []
     if (!records.value.length) { error.value = 'No student rows were found. Include only First Name and Last Name headers and at least one student.'; return }
     discardInvalid.value = false
@@ -170,7 +155,7 @@ async function createInvitation() {
   busy.value = true
   error.value = ''
   try {
-    const response = await axios.post(`${props.apiBaseUrl}/teacher/class-invitations`, { subjectId: subjectId.value, sectionId: sectionId.value, records: validRecords.value.map(({ firstName, lastName }) => ({ firstName, lastName })), expiresInDays: expiresInDays.value }, requestConfig())
+    const response = await axios.post(`${props.apiBaseUrl}/teacher/class-invitations`, { records: validRecords.value.map(({ firstName, lastName }) => ({ firstName, lastName })), expiresInDays: expiresInDays.value }, requestConfig())
     if (!response.data?.invitation?.id) throw new Error('The invitation could not be confirmed. Refresh enrollment before trying again.')
     generatedInvitation.value = response.data.invitation
     step.value = 3
@@ -186,6 +171,7 @@ async function createInvitation() {
   } finally { busy.value = false }
 }
 async function copyLink() {
+  if (!hasAdvisoryContext.value || isExpired.value) return
   error.value = ''
   try {
     if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable')
@@ -197,7 +183,7 @@ async function copyLink() {
   } catch { error.value = 'Copying is unavailable in this browser. Select the invitation link and copy it manually.' }
 }
 async function renewInvitation() {
-  if (busy.value || !generatedInvitation.value?.id) return
+  if (busy.value || !hasAdvisoryContext.value || !generatedInvitation.value?.id) return
   busy.value = true
   error.value = ''
   try {
@@ -261,6 +247,7 @@ onBeforeUnmount(() => {
 .invitation-upload small { @apply tw:[font-size:.75rem] tw:break-all tw:[color:#456a32]; }
 .invitation-help { @apply tw:[font-size:.77rem] tw:[line-height:1.6] tw:[color:#687760] tw:[margin:.8rem_0]; }
 .invitation-section-context { @apply tw:[font-size:.77rem] tw:[line-height:1.5] tw:[color:#597148] tw:[margin:0_0_1rem] tw:[padding:.6rem_.75rem] tw:[border-radius:9px] tw:[background:#f3f8ee]; }
+.invitation-section-context span { @apply tw:block tw:[margin-top:.4rem] tw:[font-size:.72rem]; }
 .invitation-retry { @apply tw:[border:0] tw:bg-transparent tw:[color:#42702c] tw:[font:inherit] tw:underline tw:cursor-pointer; }
 .invitation-manual { @apply tw:inline-flex tw:items-center tw:[gap:.4rem] tw:[padding:.6rem_0] tw:[border:0] tw:bg-transparent tw:[color:#407227] tw:[font:inherit] tw:[font-size:.78rem] tw:font-semibold tw:cursor-pointer tw:text-left; }
 .invitation-feedback { @apply tw:[padding:.7rem_.85rem] tw:[border-radius:9px] tw:[font-size:.79rem] tw:[line-height:1.5] tw:[margin:0_0_.9rem]; }

@@ -18,8 +18,8 @@ const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
 function fixture(extra = {}) {
   client = createFakeSupabase({
-    users: [{ id: teacherId, name: 'Teacher One', role: 'teacher', status: 'active', archive: {}, advisory_section_id: 'charity' }],
-    subjects: [{ id: subjectId, teacher_id: teacherId, name: 'Science', class_name: 'Science A', track: 'GENERAL', is_active: true }],
+    users: [{ id: teacherId, name: 'Teacher One', role: 'teacher', status: 'active', archive: {}, advisory_section_id: 'charity', subject: 'Science', department: 'Science' }],
+    subjects: [{ id: subjectId, teacher_id: teacherId, name: 'Science', class_name: 'Science A', track: 'GENERAL', is_active: true, advisory_section_id: 'charity' }],
     sections: [{ id: 'charity', name: 'Charity', is_active: true }, { id: 'hope', name: 'Hope', is_active: true }, { id: 'inactive-section', name: 'Inactive', is_active: false }],
     class_invitations: [{ id: invitationId, teacher_id: teacherId, subject_id: subjectId, status: 'active',
       token_hash: digest(token), expires_at: new Date(Date.now() + 86400000).toISOString() }],
@@ -48,10 +48,12 @@ async function rejects(operation, statusCode, pattern) {
 
 test('real two-column XLSX preview preserves name parts and composes names with the trusted advisory section', async () => {
   fixture({ class_registration_students: [] });
-  const preview = await service.previewRoster(teacherId, subjectId,
+  const preview = await service.previewRoster(teacherId,
     await workbook([['  Maria   Clara ', ' Santos '], ['Jose', 'Reyes']]));
   assert.equal(preview.validCount, 2);
   assert.equal(preview.invalidCount, 0);
+  assert.equal(preview.advisorySection.id, 'charity');
+  assert.equal(preview.advisoryClass.id, subjectId);
   assert.deepEqual(preview.records.map(row => [row.firstName, row.lastName, row.fullName, row.section, row.sectionId, row.status]),
     [['Maria Clara', 'Santos', 'Maria Clara Santos', 'Charity', 'charity', 'valid'], ['Jose', 'Reyes', 'Jose Reyes', 'Charity', 'charity', 'valid']]);
   assert.equal(client.writes.length, 0);
@@ -60,7 +62,7 @@ test('real two-column XLSX preview preserves name parts and composes names with 
 test('preview detects duplicate composed names after case, whitespace and Unicode normalization', async () => {
   fixture();
   client.tables.users.push({ id: 'existing', name: 'ANNA   CRUZ', role: 'student', status: 'active' });
-  const preview = await service.previewRoster(teacherId, subjectId, await workbook([
+  const preview = await service.previewRoster(teacherId, await workbook([
     ['Maria', 'Santos'], ['  ＭＡＲＩＡ ', '  ＳＡＮＴＯＳ '], ['JUAN', 'DELA CRUZ'], ['Anna', 'Cruz'],
   ]));
   assert.equal(preview.validCount, 0);
@@ -72,33 +74,37 @@ test('preview detects duplicate composed names after case, whitespace and Unicod
   assert.equal(client.writes.length, 0);
 });
 
-test('one active section selection applies to the whole roster and overrides the server-read advisory fallback', async () => {
+test('the designated advisory section applies to the whole roster and cannot be overridden by the request', async () => {
   fixture({ class_registration_students: [] });
   const input = await workbook([["Anne-Marie", "O'Connor"], ['José Luis', 'de la Peña'], ['李', '明']]);
-  const preview = await service.previewRoster(teacherId, subjectId, input, 'hope');
+  const preview = await service.previewRoster(teacherId, input);
   assert.equal(preview.validCount, 3);
-  assert.ok(preview.records.every(row => row.sectionId === 'hope' && row.section === 'Hope'));
+  assert.ok(preview.records.every(row => row.sectionId === 'charity' && row.section === 'Charity'));
   assert.deepEqual(preview.records.map(row => row.fullName), ["Anne-Marie O'Connor", 'José Luis de la Peña', '李 明']);
-  const reversed = await service.previewRoster(teacherId, subjectId, await workbook([['Santos', 'Maria']], ['Last Name', 'First Name']));
+  const reversed = await service.previewRoster(teacherId, await workbook([['Santos', 'Maria']], ['Last Name', 'First Name']));
   assert.equal(reversed.records[0].fullName, 'Maria Santos');
   assert.equal(reversed.records[0].sectionId, 'charity');
+  // Legacy subject/section selections in the create payload are rejected outright.
+  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Maria', lastName: 'Santos' }] }),
+    400, /assigned automatically/);
+  await rejects(service.createInvitation(teacherId, { sectionId: 'hope', records: [{ firstName: 'Maria', lastName: 'Santos' }] }),
+    400, /assigned automatically/);
   assert.equal(client.writes.length, 0);
 });
 
-test('inactive, unknown or missing advisory sections fail actionably and cannot be replaced by row-supplied sections', async () => {
+test('inactive, unknown or missing advisory sections fail actionably before any roster work', async () => {
   fixture({ class_registration_students: [] });
   const input = await workbook([['Maria', 'Santos']]);
-  for (const sectionId of ['unknown', 'inactive-section']) {
-    await rejects(service.previewRoster(teacherId, subjectId, input, sectionId), 400, /Choose an active section/);
-    await rejects(service.createInvitation(teacherId, { subjectId, sectionId, records: [{ firstName: 'Maria', lastName: 'Santos', sectionId: 'charity', section: 'Charity' }] }), 400, /Choose an active section/);
-  }
-  await rejects(service.previewRoster(teacherId, subjectId, input, { id: 'charity' }), 400, /valid section/);
   client.tables.users[0].advisory_section_id = null;
-  await rejects(service.previewRoster(teacherId, subjectId, input), 400, /Choose an active section before uploading/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Maria', lastName: 'Santos', sectionId: 'charity', section: 'Charity' }] }), 400, /Choose an active section before uploading/);
-  assert.equal((await service.previewRoster(teacherId, subjectId, input, 'hope')).validCount, 1);
+  await rejects(service.previewRoster(teacherId, input), 409, /advisory section is not assigned or active/i);
+  client.tables.users[0].advisory_section_id = 'unknown-section';
+  await rejects(service.previewRoster(teacherId, input), 409, /advisory section is not assigned or active/i);
+  await rejects(service.createInvitation(teacherId, { records: [{ firstName: 'Maria', lastName: 'Santos' }] }),
+    409, /advisory section is not assigned or active/i);
   client.tables.users[0].advisory_section_id = 'inactive-section';
-  await rejects(service.previewRoster(teacherId, subjectId, input), 400, /Choose an active section/);
+  await rejects(service.previewRoster(teacherId, input), 409, /advisory section is not assigned or active/i);
+  client.tables.users[0].advisory_section_id = 'charity';
+  assert.equal((await service.previewRoster(teacherId, input)).validCount, 1);
   assert.equal(client.writes.length, 0);
 });
 
@@ -109,7 +115,7 @@ test('only First Name and Last Name Excel headers are accepted; formulas, number
   await rejects(service.parseWorkbook(await workbook([['Maria', 'Santos', 'Charity']], ['First Name', 'Last Name', 'Section'])), 400, /Only First Name and Last Name/);
   await rejects(service.parseWorkbook(await workbook([['Maria', 'Santos']], ['First Name', 'Last Name', 'Last Name'])), 400, /Duplicate column headers/);
   await rejects(service.parseWorkbook(await workbook([['Maria', 'Santos', 'hidden extra data']])), 400, /extra columns/);
-  const preview = await service.previewRoster(teacherId, subjectId, await workbook([
+  const preview = await service.previewRoster(teacherId, await workbook([
     [{ formula: '"Maria"', result: 'Maria' }, 'Santos'], [12345, 'Cruz'], ['Jose', { formula: '"Reyes"', result: 'Reyes' }],
     ['Maria', 12345], ['', 'Reyes'], ['Pedro', ''], ['12345', 'Cruz'], ['Jose', '12345'],
   ]));
@@ -134,7 +140,7 @@ test('a real Student Import Excel table is selected with Instructions before or 
       const sheet = file.addWorksheet('Instructions');
       sheet.addRow(['EduMatch Student Import Instructions']);
       sheet.addRow(['Enter each student in the Student Import tab.']);
-      sheet.addRow(['Use only First Name and Last Name. Select the section in EduMatch.']);
+      sheet.addRow(['Use only First Name and Last Name. Your advisory section is applied automatically.']);
     };
     if (position === 'before') addInstructions();
     const students = file.addWorksheet('Student Import');
@@ -152,9 +158,9 @@ test('a real Student Import Excel table is selected with Instructions before or 
     const parsed = await service.parseWorkbook(Buffer.from(await file.xlsx.writeBuffer()));
     assert.deepEqual(parsed.map(row => [row.rowNumber, row.firstName, row.lastName]),
       [[2, 'Juan Carlos', 'Santos'], [3, 'Maria', 'Dela Cruz']]);
-    const preview = await service.previewRoster(teacherId, subjectId, Buffer.from(await file.xlsx.writeBuffer()), 'hope');
+    const preview = await service.previewRoster(teacherId, Buffer.from(await file.xlsx.writeBuffer()));
     assert.equal(preview.validCount, 2);
-    assert.ok(preview.records.every(row => row.sectionId === 'hope'));
+    assert.ok(preview.records.every(row => row.sectionId === 'charity'));
   }
   assert.equal(client.writes.length, 0);
 });
@@ -262,21 +268,21 @@ test('registered students, expired invitations, unavailable teachers/classes and
   await rejects(service.verifyStudent(token, request), 404, /class is unavailable/);
   fixture();
   client.tables.sections[0].is_active = false;
-  await rejects(service.verifyStudent(token, request), 409, /section is no longer available/);
+  await rejects(service.verifyStudent(token, request), 404, /advisory class/);
   assert.equal(client.writes.length, 0);
 });
 
 test('create payloads cannot bypass required name parts, duplicates, ownership or expiry', async () => {
   fixture();
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Juan', lastName: 'dela Cruz', fullName: 'Other Student', status: 'valid', errors: [] }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ fullName: 'Maria Santos', section: 'Charity', sectionId: 'charity', status: 'valid' }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: { value: 'Maria' }, lastName: 'Santos', status: 'valid' }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Maria', lastName: 'Santos' }, { firstName: ' MARIA ', lastName: ' SANTOS ' }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: 'Maria', lastName: '' }] }), 400, /invalid or duplicate/);
-  await rejects(service.createInvitation(teacherId, { subjectId, records: [{ firstName: '123', lastName: 'Santos' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { records: [{ firstName: 'Juan', lastName: 'dela Cruz', fullName: 'Other Student', status: 'valid', errors: [] }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { records: [{ fullName: 'Maria Santos', section: 'Charity', sectionId: 'charity', status: 'valid' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { records: [{ firstName: { value: 'Maria' }, lastName: 'Santos', status: 'valid' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { records: [{ firstName: 'Maria', lastName: 'Santos' }, { firstName: ' MARIA ', lastName: ' SANTOS ' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { records: [{ firstName: 'Maria', lastName: '' }] }), 400, /invalid or duplicate/);
+  await rejects(service.createInvitation(teacherId, { records: [{ firstName: '123', lastName: 'Santos' }] }), 400, /invalid or duplicate/);
   client.tables.users.push({ id: 'foreign-teacher', role: 'teacher', status: 'active', advisory_section_id: 'charity' });
-  await rejects(service.createInvitation('foreign-teacher', { subjectId, records: [{ firstName: 'Maria', lastName: 'Santos' }] }), 404, /does not belong/);
-  await rejects(service.createInvitation(teacherId, { subjectId, expiresInDays: 91, records: [{ firstName: 'Maria', lastName: 'Santos' }] }), 400, /1 and 90/);
+  await rejects(service.createInvitation('foreign-teacher', { records: [{ firstName: 'Maria', lastName: 'Santos' }] }), 409, /default advisory class is unavailable/);
+  await rejects(service.createInvitation(teacherId, { expiresInDays: 91, records: [{ firstName: 'Maria', lastName: 'Santos' }] }), 400, /1 and 90/);
   assert.equal(client.writes.length, 0);
 });
 
@@ -302,11 +308,12 @@ test('valid creation sends only canonical names and server-mapped sections, then
       invitation_id: input.p_invitation_id, section_name: 'Charity', registered_at: null, student_id: null }));
     return { data: input.p_invitation_id, error: null };
   };
-  const invitation = await service.createInvitation(teacherId, { subjectId, records: [{ firstName: ' Maria ', lastName: ' Santos ', fullName: 'Different Student', section: 'HOPE',
+  const invitation = await service.createInvitation(teacherId, { records: [{ firstName: ' Maria ', lastName: ' Santos ', fullName: 'Different Student', section: 'HOPE',
     sectionId: 'tampered', normalizedName: 'tampered', cellErrors: 'tampered', status: 'registered' }], expiresInDays: 7 });
   assert.equal(invitation.totalCount, 1);
   assert.equal(invitation.registeredCount, 0);
   assert.equal(invitation.unregisteredCount, 1);
+  assert.equal(rpcInput.p_subject_id, subjectId);
   assert.equal(rpcInput.p_records[0].section_id, 'charity');
   assert.equal(rpcInput.p_records[0].normalized_name, 'maria santos');
   assert.equal(rpcInput.p_records[0].full_name, 'Maria Santos');

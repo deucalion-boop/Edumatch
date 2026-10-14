@@ -3,7 +3,7 @@ const { findSupabaseAccount, listSupabaseAccounts } = require('./supabaseAccount
 const { DEFAULT_SECTION_NAMES, normalizeSectionName } = require('../constants/sections');
 const { ROLE_TEACHER, ROLE_STUDENT } = require('../constants/userRoles');
 const { normalizeStrand, getSubjectCategory } = require('../constants/strandSubjects');
-const { ensureTeacherSubject, listTeacherSubjects } = require('./subjectService');
+const { ensureTeacherSubject, listTeacherSubjects, mapSubject } = require('./subjectService');
 
 function normalizeSectionId(value) {
   return String(value?._id || value?.id || value || '').trim();
@@ -175,7 +175,20 @@ async function ensureTeacherAdvisoryClass(teacher, { allowDefault = false, onlyI
   const teacherId = normalizeSectionId(teacher?._id || teacher?.id);
   const sectionId = normalizeSectionId(teacher?.advisorySectionId);
   if (!teacherId || (!sectionId && !allowDefault)) return null;
-  if (onlyIfEmpty && (await listTeacherSubjects(teacherId)).length) return null;
+  const classes = await listTeacherSubjects(teacherId, { includeInactive: true });
+  if (onlyIfEmpty && classes.some(entry => entry.isActive)) return null;
+  const section = sectionId ? await getSectionOrThrow(sectionId) : null;
+  // The trusted marker, rather than a display name, identifies the default
+  // advisory class after a teacher renames it. General class APIs cannot set it.
+  const marked = sectionId ? classes.find(entry => entry.advisorySectionId === sectionId) : null;
+  if (marked) {
+    if (marked.isActive) return marked;
+    const { data, error } = await getSupabaseStorageClient().from('subjects')
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq('id', marked.id).eq('teacher_id', teacherId).eq('advisory_section_id', sectionId).select('*').single();
+    if (error) throw sectionError(error, 'Failed to restore the advisory class');
+    return mapSubject(data);
+  }
 
   const subject = String(teacher.subject || teacher.department || '').trim();
   if (!subject) {
@@ -184,22 +197,31 @@ async function ensureTeacherAdvisoryClass(teacher, { allowDefault = false, onlyI
     throw error;
   }
 
-  const section = sectionId ? await getSectionOrThrow(sectionId) : null;
   const track = normalizeStrand(teacher.strand) || 'GENERAL';
   const className = `${subject} 10 - ${section?.name || 'Advisory'}`;
   const findExistingClass = async () => {
-    const classes = await listTeacherSubjects(teacherId, { includeInactive: true });
-    return classes.find((entry) => (
+    const saved = await listTeacherSubjects(teacherId, { includeInactive: true });
+    return saved.find(entry => sectionId && entry.advisorySectionId === sectionId) || saved.find((entry) => (
       entry.name.toLowerCase() === subject.toLowerCase()
       && entry.track.toLowerCase() === track.toLowerCase()
       && entry.className.toLowerCase() === className.toLowerCase()
+      && (!entry.advisorySectionId || entry.advisorySectionId === sectionId)
     ));
   };
+  const markClass = async (entry) => {
+    if (!sectionId || entry.advisorySectionId === sectionId) return entry;
+    if (entry.advisorySectionId) throw Object.assign(new Error('The default advisory class belongs to a different section. Contact your administrator.'), { statusCode: 409 });
+    const { data, error } = await getSupabaseStorageClient().from('subjects')
+      .update({ advisory_section_id: sectionId, updated_at: new Date().toISOString() })
+      .eq('id', entry.id).eq('teacher_id', teacherId).select('*').single();
+    if (error) throw sectionError(error, 'Failed to identify the default advisory class');
+    return mapSubject(data);
+  };
   const existing = await findExistingClass();
-  if (existing?.isActive) return existing;
+  if (existing?.isActive) return markClass(existing);
 
   try {
-    return await ensureTeacherSubject({
+    const created = await ensureTeacherSubject({
       teacherId,
       name: subject,
       track,
@@ -208,10 +230,11 @@ async function ensureTeacherAdvisoryClass(teacher, { allowDefault = false, onlyI
       department: existing?.department || String(teacher.department || '').trim(),
       description: existing?.description || '',
     });
+    return await markClass(created);
   } catch (error) {
     if (error.code === '23505') {
       const concurrentClass = await findExistingClass();
-      if (concurrentClass?.isActive) return concurrentClass;
+      if (concurrentClass?.isActive) return markClass(concurrentClass);
     }
     throw error;
   }

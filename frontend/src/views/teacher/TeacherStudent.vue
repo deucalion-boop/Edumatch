@@ -208,9 +208,10 @@
               <button
                 type="button"
                 class="btn btn-primary btn-sm create-class-btn student-invite-icon-btn"
+                :disabled="!hasAdvisorySection"
                 @click="openStudentInviteModal"
                 aria-label="Invite Student"
-                title="Import a student list and share a class invitation"
+                :title="hasAdvisorySection ? 'Import students into your designated advisory section' : 'Ask your Head Teacher to assign an advisory section first'"
               >
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 <span>Invite Student</span>
@@ -382,7 +383,7 @@
             </button>
           </div>
         </div>
-        <div v-if="classInvitations.length" class="invitation-queue-summary" aria-live="polite"><strong>Invited student enrollment</strong><span>{{ invitationTotals.registered }} registered · {{ invitationTotals.unregistered }} unregistered</span><small>Students who register with matching imported full names join automatically. Class-code requests still require your approval.</small></div>
+        <div v-if="invitationsByClass.length" class="invitation-queue-summary" aria-live="polite"><strong>Invited student enrollment</strong><span>{{ invitationTotals.registered }} registered · {{ invitationTotals.unregistered }} unregistered</span><small>Students who register with matching imported full names join your advisory class automatically. Class-code requests still require your approval.</small></div>
         <p v-if="invitationLoadError" class="invitation-load-error" role="status">{{ invitationLoadError }} <button type="button" @click="refreshEnrollment">Retry</button></p>
       </section>
 
@@ -452,7 +453,7 @@
             <button type="button" class="toolbar-icon-btn" title="Refresh student list" aria-label="Refresh student list" :disabled="isLoading || isEnrollmentRefreshing" @click="refreshEnrollment"><i class="fas" :class="isLoading || isEnrollmentRefreshing ? 'fa-spinner fa-spin' : 'fa-rotate'"></i><span>Refresh</span></button>
           </div>
         </div>
-        <div v-if="classInvitations.length" class="roster-enrollment-filters"><label>Enrollment status<select v-model="studentEnrollmentFilter" aria-label="Filter by enrollment status"><option value="">All students</option><option value="registered">Registered</option><option value="unregistered">Unregistered</option><option value="expired">Expired invitations</option></select></label><span>{{ invitationTotals.registered }} registered · {{ invitationTotals.unregistered }} unregistered in imported lists</span></div>
+        <div v-if="invitationsByClass.length" class="roster-enrollment-filters"><label>Enrollment status<select v-model="studentEnrollmentFilter" aria-label="Filter by enrollment status"><option value="">All students</option><option value="registered">Registered</option><option value="unregistered">Unregistered</option><option value="expired">Expired invitations</option></select></label><span>{{ invitationTotals.registered }} registered · {{ invitationTotals.unregistered }} unregistered in imported lists</span></div>
 
         <div class="class-list-table-wrap">
           <table class="class-list-table">
@@ -539,7 +540,7 @@
         </div>
       </section>
 
-      <ClassInvitationModal v-if="isClassInvitationModalOpen" :subjects="subjects" :sections="teacherSections" :initial-section-id="teacher.advisorySectionId" :sections-load-error="teacherSectionsError" :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" :initial-subject-id="invitationSubjectId" :invitation="selectedClassInvitation" :can-create-individual="hasAdvisorySection" @close="isClassInvitationModalOpen = false" @manual="openManualStudentInvite" @imported="handleInvitationImported" @retry-sections="fetchTeacherSections" />
+      <ClassInvitationModal v-if="isClassInvitationModalOpen" :advisory-context="advisoryInvitationContext" :context-loading="isAdvisoryContextLoading" :context-error="advisoryContextError" :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" :invitation="selectedClassInvitation" @close="isClassInvitationModalOpen = false" @manual="openManualStudentInvite" @imported="handleInvitationImported" @retry-context="fetchAdvisoryInvitationContext" />
 
       <div v-if="isCreateClassModalOpen" class="modal-shell" @click.self="closeCreateClassModal">
         <div class="modal-panel">
@@ -870,8 +871,9 @@ const {
   clearAllNotifications,
 } = useUserNotifications({ limit: 8, pollIntervalMs: 60000 })
 const subjects = ref([])
-const teacherSections = ref([])
-const teacherSectionsError = ref('')
+const advisoryInvitationContext = ref(null)
+const advisoryContextError = ref('')
+const isAdvisoryContextLoading = ref(false)
 const isLoadingSubjects = ref(false)
 const subjectsError = ref('')
 const students = ref([])
@@ -880,13 +882,13 @@ const classInvitations = ref([])
 const invitationLoadError = ref('')
 const isEnrollmentRefreshing = ref(false)
 const isClassInvitationModalOpen = ref(false)
-const invitationSubjectId = ref('')
 const selectedInvitationId = ref('')
 const studentSearch = ref('')
 const studentClassFilter = ref('')
 const studentSort = ref('name')
 const studentEnrollmentFilter = ref('')
 let invitationsFetchPromise = null
+let advisoryContextFetchPromise = null
 let subjectsFetchPromise = null
 let studentsFetchPromise = null
 let enrollmentRequestsFetchPromise = null
@@ -1150,11 +1152,17 @@ const averageProgress = computed(() => {
 
 const normalizeRosterSectionName = (value) => String(value || '').trim().toLowerCase()
 
-const invitationForSubject = (subjectId) => classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId) && invitation.status === 'active')
-  || classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId))
-const selectedClassInvitation = computed(() => classInvitations.value.find(invitation => String(invitation.id) === selectedInvitationId.value) || null)
+const invitationForSubject = (subjectId) => {
+  if (!advisoryInvitationContext.value || String(subjectId) !== String(advisoryInvitationContext.value.advisoryClass.id)) return null
+  return classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId) && invitation.status === 'active')
+    || classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId))
+}
+const selectedClassInvitation = computed(() => {
+  const invitation = invitationForSubject(advisoryInvitationContext.value?.advisoryClass.id)
+  return String(invitation?.id || '') === selectedInvitationId.value ? invitation : null
+})
 const isInvitationExpired = invitation => invitation?.status === 'expired' || new Date(invitation?.expiresAt).getTime() <= Date.now()
-const invitationsByClass = computed(() => subjects.value.map(subject => invitationForSubject(subject.id)).filter(Boolean))
+const invitationsByClass = computed(() => [invitationForSubject(advisoryInvitationContext.value?.advisoryClass.id)].filter(Boolean))
 const invitationTotals = computed(() => invitationsByClass.value.reduce((totals, invitation) => ({ registered: totals.registered + Number(invitation.registeredCount || 0), unregistered: totals.unregistered + Number(invitation.unregisteredCount || 0) }), { registered: 0, unregistered: 0 }))
 const mergedRosterStudents = computed(() => {
   const registered = students.value.map(student => ({ ...student, subjectIds: [...(student.subjectIds || [])] }))
@@ -1310,15 +1318,12 @@ const fetchTeacherSections = async () => {
   const previousSectionName = String(teacher.advisorySectionName || '').trim()
   try {
     if (!authStore.token) {
-      teacherSections.value = []
       teacher.advisorySectionId = ''
       teacher.advisorySectionName = ''
       return previousSectionId !== '' || previousSectionName !== ''
     }
 
     const response = await axios.get(`${resolveApiBaseUrl()}/teacher/sections`, getAuthConfig())
-    teacherSections.value = (Array.isArray(response.data?.sections) ? response.data.sections : []).filter(section => section.isActive === true).map(section => ({ id: String(section.id), name: String(section.name || '').trim() })).filter(section => section.id && section.name)
-    teacherSectionsError.value = ''
     teacher.advisorySectionId = String(response.data?.advisorySection?.id || '').trim()
     teacher.advisorySectionName = String(response.data?.advisorySection?.name || '').trim()
     authStore.setUser({
@@ -1334,7 +1339,6 @@ const fetchTeacherSections = async () => {
       || previousSectionName !== teacher.advisorySectionName
   } catch (error) {
     console.error('Failed to fetch teacher sections:', error)
-    teacherSectionsError.value = 'Unable to load active sections. Please retry before importing students.'
     const authUser = authStore.user || {}
     teacher.advisorySectionId = String(authUser.advisorySectionId || teacher.advisorySectionId || '').trim()
     teacher.advisorySectionName = String(authUser.advisorySection?.name || teacher.advisorySectionName || '').trim()
@@ -1527,6 +1531,29 @@ const fetchEnrollmentRequests = (options = {}) => {
 }
 
 const invitationSignature = invitations => JSON.stringify(invitations.map(invitation => [invitation.id, invitation.status, invitation.registeredCount, invitation.unregisteredCount, invitation.expiresAt, (invitation.students || []).map(student => [student.id, student.status, student.studentId])]))
+const fetchAdvisoryInvitationContext = (options = {}) => {
+  if (advisoryContextFetchPromise) return advisoryContextFetchPromise
+  const silent = options.silent === true
+  advisoryContextFetchPromise = (async () => {
+    if (!authStore.token) { advisoryInvitationContext.value = null; return false }
+    if (!silent) isAdvisoryContextLoading.value = true
+    const previous = `${advisoryInvitationContext.value?.advisoryClass?.id || ''}:${advisoryInvitationContext.value?.advisorySection?.id || ''}`
+    try {
+      const response = await axios.get(`${resolveApiBaseUrl()}/teacher/class-invitations/advisory`, getAuthConfig())
+      if (!response.data?.advisoryClass?.id || !response.data?.advisorySection?.id) throw new Error('Your active advisory assignment could not be confirmed. Ask your Head Teacher to check it.')
+      advisoryInvitationContext.value = { advisoryClass: response.data.advisoryClass, advisorySection: response.data.advisorySection }
+      teacher.advisorySectionId = String(response.data.advisorySection.id)
+      teacher.advisorySectionName = String(response.data.advisorySection.name || '')
+      advisoryContextError.value = ''
+      return previous !== `${response.data.advisoryClass.id}:${response.data.advisorySection.id}`
+    } catch (error) {
+      advisoryInvitationContext.value = null
+      advisoryContextError.value = error.response?.data?.message || 'Unable to confirm your active advisory section. Retry or ask your Head Teacher to check your assignment.'
+      return previous !== ':'
+    } finally { if (!silent) isAdvisoryContextLoading.value = false }
+  })().finally(() => { advisoryContextFetchPromise = null })
+  return advisoryContextFetchPromise
+}
 const fetchClassInvitations = (options = {}) => {
   if (invitationsFetchPromise) return invitationsFetchPromise
   const silent = options.silent === true
@@ -1549,13 +1576,14 @@ const fetchClassInvitations = (options = {}) => {
 const refreshEnrollment = async () => {
   if (isEnrollmentRefreshing.value) return
   isEnrollmentRefreshing.value = true
-  try { await Promise.allSettled([fetchStudents(), fetchSubjects(), fetchEnrollmentRequests(), fetchClassInvitations()]) }
+  try { await Promise.allSettled([fetchStudents(), fetchSubjects(), fetchEnrollmentRequests(), fetchClassInvitations(), fetchAdvisoryInvitationContext({ silent: true })]) }
   finally { isEnrollmentRefreshing.value = false }
 }
 const openClassInvitation = (subjectId = '') => {
-  invitationSubjectId.value = String(subjectId)
+  if (!invitationForSubject(subjectId)) return
   selectedInvitationId.value = String(invitationForSubject(subjectId)?.id || '')
   isClassInvitationModalOpen.value = true
+  void fetchAdvisoryInvitationContext()
 }
 const handleInvitationImported = async invitation => {
   const index = classInvitations.value.findIndex(item => String(item.id) === String(invitation.id))
@@ -1565,6 +1593,8 @@ const handleInvitationImported = async invitation => {
   await refreshEnrollment()
 }
 const copyInvitationLink = async invitation => {
+  await fetchAdvisoryInvitationContext()
+  if (!advisoryInvitationContext.value || String(invitation.subjectId) !== String(advisoryInvitationContext.value.advisoryClass.id)) { showToast('error', 'Your advisory assignment changed. Refresh your advisory invitation before sharing.'); return }
   if (isInvitationExpired(invitation)) { showToast('error', 'This invitation has expired. Open the invitation to renew it.'); return }
   try { await navigator.clipboard.writeText(invitation.invitationUrl); showToast('success', 'Class invitation link copied. Students register using their imported full names.') }
   catch { openClassInvitation(invitation.subjectId); showToast('error', 'Copying is unavailable. Select and copy the invitation link in the dialog.') }
@@ -1748,17 +1778,17 @@ const resetStudentInviteForm = () => {
 }
 
 const openStudentInviteModal = () => {
-  if (!subjects.value.length) {
-    showToast('error', 'Create or load a class before importing students.')
+  if (!hasAdvisorySection.value) {
+    showToast('error', 'Ask your Head Teacher to assign an advisory section before inviting students.')
     return
   }
-  invitationSubjectId.value = ''
   selectedInvitationId.value = ''
   isClassInvitationModalOpen.value = true
+  void fetchAdvisoryInvitationContext()
 }
 
 const openManualStudentInvite = () => {
-  if (!hasAdvisorySection.value) {
+  if (!hasAdvisorySection.value || !advisoryInvitationContext.value || isAdvisoryContextLoading.value) {
     showToast('error', 'Assign an advisory section first. Student accounts created here belong to your advisory section.')
     return
   }
@@ -2156,13 +2186,14 @@ const refreshTeacherAssignmentState = async () => {
   try {
     const refreshSections = Date.now() - lastTeacherSectionRefreshAt >= 60000
     const refreshRequests = Date.now() - lastEnrollmentRequestRefreshAt >= 60000
-    const [hasAssignmentChanged, hasInvitationChanged] = await Promise.all([
+    const [hasAssignmentChanged, hasInvitationChanged, hasAdvisoryContextChanged] = await Promise.all([
       refreshSections ? fetchTeacherSections() : Promise.resolve(false),
       fetchClassInvitations({ silent: true }),
+      refreshSections ? fetchAdvisoryInvitationContext({ silent: true }) : Promise.resolve(false),
       refreshRequests ? fetchEnrollmentRequests({ silent: true }) : Promise.resolve(),
     ])
     if (refreshSections) lastTeacherSectionRefreshAt = Date.now()
-    if (hasAssignmentChanged || hasInvitationChanged) {
+    if (hasAssignmentChanged || hasInvitationChanged || hasAdvisoryContextChanged) {
       await Promise.allSettled([fetchSubjects({ silent: true }), fetchStudents({ silent: true })])
     }
   } catch (error) {
@@ -2261,6 +2292,7 @@ onMounted(async () => {
   fetchStudents()
   fetchEnrollmentRequests()
   fetchClassInvitations()
+  fetchAdvisoryInvitationContext()
   syncMobileMenuBodyState()
   startTeacherAssignmentRefreshLoop()
 })

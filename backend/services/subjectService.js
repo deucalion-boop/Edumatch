@@ -38,6 +38,7 @@ function mapSubject(row) {
     department: String(row.department || '').trim(),
     description: String(row.description || '').trim(),
     teacherId: String(row.teacher_id || '').trim(),
+    advisorySectionId: String(row.advisory_section_id || '').trim(),
     isActive: row.is_active === true,
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null,

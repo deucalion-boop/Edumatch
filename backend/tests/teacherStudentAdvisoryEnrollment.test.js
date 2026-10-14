@@ -35,6 +35,7 @@ function advisoryClass(changes = {}) {
     is_active: true,
     created_at: '2026-09-01T00:00:00.000Z',
     updated_at: '2026-09-01T00:00:00.000Z',
+    advisory_section_id: sectionId,
     ...changes,
   };
 }
@@ -153,8 +154,8 @@ test('a teacher-created account immediately joins the advisory class and both ac
 
 test('student creation reuses the advisory class code and leaves other handled classes and memberships untouched', async () => {
   const advisory = advisoryClass();
-  const handled = advisoryClass({ id: 'handled-class', class_name: 'MAPEH 10 - Unity', code: 'MAP-OTHER' });
-  const otherTeacherClass = advisoryClass({ id: 'other-teacher-class', teacher_id: 'other-teacher', code: 'MAP-OTHERT' });
+  const handled = advisoryClass({ id: 'handled-class', class_name: 'MAPEH 10 - Unity', code: 'MAP-OTHER', advisory_section_id: null });
+  const otherTeacherClass = advisoryClass({ id: 'other-teacher-class', teacher_id: 'other-teacher', code: 'MAP-OTHERT', advisory_section_id: null });
   const unrelatedEnrollment = {
     id: 'prior-enrollment', student_id: 'existing-student', subject_id: handled.id,
     teacher_id: teacherId, section_id: 'unity-section', section_name: 'Unity', status: 'approved',

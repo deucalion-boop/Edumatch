@@ -13,6 +13,7 @@ const registrationLimiter = buildLimiter({ prefix: 'class-invitation-register', 
   message: 'Too many registration attempts. Please wait a few minutes and try again.' });
 teacher.use((_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 teacher.get('/', controller.list);
+teacher.get('/advisory', controller.advisory);
 teacher.post('/preview', uploadLimiter, controller.rosterUpload, controller.preview);
 teacher.post('/', writeLimiter, controller.create);
 teacher.post('/:id/renew', writeLimiter, controller.renew);

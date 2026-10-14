@@ -3,7 +3,7 @@ const zlib = require('node:zlib');
 const ExcelJS = require('exceljs');
 const bcrypt = require('bcryptjs');
 const { getSupabaseStorageClient } = require('./supabaseStorageService');
-const { findTeacherSubject } = require('./subjectService');
+const { ensureTeacherAdvisoryClass } = require('./sectionService');
 const { assertGmailEmail } = require('../utils/emailPolicy');
 const { assertPasswordMeetsPolicy } = require('../utils/passwordPolicy');
 
@@ -32,6 +32,8 @@ function databaseError(error) {
     ROSTER_DUPLICATE: ['One or more student names already exist or were imported by another teacher. Review the roster and try again.', 409],
     ROSTER_INVALID: ['The roster contains invalid names or sections. Preview the file again.', 400],
     CLASS_UNAVAILABLE: ['The selected class is unavailable. Ask your teacher for help.', 404],
+    ADVISORY_UNAVAILABLE: ['This invitation is no longer available for your teacher’s advisory class. Ask your teacher for a current invitation.', 404],
+    ADVISORY_SECTION_REQUIRED: ['Your advisory section is not assigned or active. Ask your school administrator to update your assignment.', 409],
     SECTION_UNAVAILABLE: ['The student section is no longer available. Ask your teacher for help.', 409],
     USERNAME_TAKEN: ['This username is already taken. Choose another username.', 409],
     EMAIL_TAKEN: ['An account already uses this email address. Sign in or use password reset.', 409],
@@ -58,34 +60,37 @@ async function rows(table, columns, filter = (query) => query) {
     if ((data || []).length < 500) return result;
   }
 }
-async function requireClass(teacherId, subjectId) {
-  if (typeof subjectId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(subjectId)) throw fail('Choose a valid class.');
-  let subject;
-  try { subject = await findTeacherSubject(teacherId, subjectId); } catch (error) { throw databaseError(error); }
-  if (!subject) throw fail('The selected class is unavailable or does not belong to you.', 404);
-  return subject;
-}
-async function resolveRosterSection(teacherId, sectionId) {
-  if (sectionId !== undefined && sectionId !== null && typeof sectionId !== 'string') throw fail('Choose a valid section.');
+async function advisoryContext(teacherId) {
   const { data: teacher, error: teacherError } = await getSupabaseStorageClient().from('users')
-    .select('id,role,status,archive,advisory_section_id').eq('id', teacherId).maybeSingle();
+    .select('*').eq('id', teacherId).maybeSingle();
   if (teacherError) throw databaseError(teacherError);
   if (!teacher || teacher.role !== 'teacher' || teacher.status !== 'active' || teacher.archive?.isArchived === true) {
     throw fail('Student invitations are unavailable for this teacher account.', 403);
   }
-  const selectedId = String(sectionId || teacher.advisory_section_id || '').trim();
-  if (!selectedId) throw fail('Choose an active section before uploading the roster.');
-  if (!/^[A-Za-z0-9_-]{1,128}$/.test(selectedId)) throw fail('Choose a valid section.');
+  const selectedId = String(teacher.advisory_section_id || '').trim();
+  if (!selectedId) throw databaseError({ message: 'ADVISORY_SECTION_REQUIRED' });
   const { data: section, error } = await getSupabaseStorageClient().from('sections').select('id,name')
     .eq('id', selectedId).eq('is_active', true).maybeSingle();
   if (error) throw databaseError(error);
-  if (!section) throw fail('The selected section is unavailable. Choose an active section from the school directory.');
-  return section;
+  if (!section) throw databaseError({ message: 'ADVISORY_SECTION_REQUIRED' });
+  let subject;
+  try {
+    subject = await ensureTeacherAdvisoryClass({ ...teacher, _id: teacher.id, advisorySectionId: selectedId });
+  } catch (error) {
+    if ([400, 404, 409].includes(error.statusCode)) throw fail('Your default advisory class is unavailable. Ask your school administrator to check your subject and advisory assignment.', 409);
+    throw databaseError(error);
+  }
+  if (!subject?.isActive || subject.advisorySectionId !== selectedId) throw databaseError({ message: 'ADVISORY_UNAVAILABLE' });
+  return { subject, section };
 }
-async function validationContext(teacherId, subjectId, sectionId) {
-  const [subject, section, accounts, imported] = await Promise.all([
-    requireClass(teacherId, subjectId),
-    resolveRosterSection(teacherId, sectionId),
+async function getAdvisoryContext(teacherId) {
+  const { subject, section } = await advisoryContext(teacherId);
+  return { advisoryClass: { id: subject.id, className: subject.className, name: subject.name, code: subject.code },
+    advisorySection: { id: section.id, name: section.name } };
+}
+async function validationContext(teacherId) {
+  const [{ subject, section }, accounts, imported] = await Promise.all([
+    advisoryContext(teacherId),
     rows('users', 'id,name', query => query.eq('role', 'student')),
     rows('class_registration_students', 'id,normalized_name'),
   ]);
@@ -195,10 +200,13 @@ async function parseWorkbook(buffer) {
   if (!records.length) throw fail('No students were found. Add First Name and Last Name below the headers.');
   return records;
 }
-async function previewRoster(teacherId, subjectId, buffer, sectionId) {
+async function previewRoster(teacherId, buffer) {
   const parsed = await parseWorkbook(buffer);
-  const records = validateRecords(parsed, await validationContext(teacherId, subjectId, sectionId));
-  return { records, validCount: records.filter(row => row.status === 'valid').length, invalidCount: records.filter(row => row.status === 'invalid').length };
+  const context = await validationContext(teacherId);
+  const records = validateRecords(parsed, context);
+  return { records, validCount: records.filter(row => row.status === 'valid').length, invalidCount: records.filter(row => row.status === 'invalid').length,
+    advisoryClass: { id: context.subject.id, className: context.subject.className, name: context.subject.name, code: context.subject.code },
+    advisorySection: { id: context.section.id, name: context.section.name } };
 }
 function mapInvitation(invitation, students, subject) {
   const expiresAt = invitation.expires_at;
@@ -213,26 +221,33 @@ function mapInvitation(invitation, students, subject) {
     registeredCount, unregisteredCount: mapped.length - registeredCount, totalCount: mapped.length, students: mapped };
 }
 async function listInvitations(teacherId) {
+  const context = await advisoryContext(teacherId);
   const [invitations, students, subjects] = await Promise.all([
-    rows('class_invitations', '*', query => query.eq('teacher_id', teacherId)),
+    rows('class_invitations', '*', query => query.eq('teacher_id', teacherId).eq('subject_id', context.subject.id)),
     rows('class_registration_students', '*', query => query.eq('teacher_id', teacherId)),
     rows('subjects', 'id,name,class_name,is_active', query => query.eq('teacher_id', teacherId)),
   ]);
   return invitations.map(invitation => mapInvitation(invitation, students.filter(row => row.invitation_id === invitation.id), subjects.find(row => row.id === invitation.subject_id)));
 }
-async function createInvitation(teacherId, { subjectId, sectionId, records: input, expiresInDays = 30 } = {}) {
+async function createInvitation(teacherId, body = {}) {
   secret();
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw fail('Upload and preview a student list before creating the invitation.');
+  if (['subjectId', 'classId', 'sectionId', 'advisorySectionId', 'teacherId'].some(key => Object.hasOwn(body, key))) {
+    throw fail('Your advisory class and section are assigned automatically. Remove class or section selections from the request.');
+  }
+  const { records: input, expiresInDays = 30 } = body;
   const days = Number(expiresInDays);
   if (!Number.isInteger(days) || days < 1 || days > 90) throw fail('Invitation expiry must be between 1 and 90 days.');
-  // Canonical names come only from the two name parts. A server-read section is
-  // selected once for this import; row fullName/section/IDs cannot override it.
+  // Canonical names come only from the two name parts. The current teacher's
+  // default advisory class and section are derived again before committing.
+  const context = await validationContext(teacherId);
   const records = validateRecords(Array.isArray(input) ? input.map(row => ({ firstName: row?.firstName, lastName: row?.lastName })) : input,
-    await validationContext(teacherId, subjectId, sectionId));
+    context);
   if (records.some(row => row.status !== 'valid')) throw fail('The roster has invalid or duplicate entries. Correct the file and preview it again.');
   const id = crypto.randomUUID();
   const prepared = records.map(row => ({ full_name: row.fullName, normalized_name: row.normalizedName, section_id: row.sectionId }));
   const { data, error } = await getSupabaseStorageClient().rpc('import_class_invitation', {
-    p_teacher_id: teacherId, p_subject_id: subjectId, p_invitation_id: id,
+    p_teacher_id: teacherId, p_subject_id: context.subject.id, p_invitation_id: id,
     p_token_hash: digest(invitationToken(id)), p_expires_at: new Date(Date.now() + days * 86400000).toISOString(), p_records: prepared,
   });
   if (error) throw databaseError(error);
@@ -243,6 +258,11 @@ async function renewInvitation(teacherId, id, expiresInDays = 30) {
   const days = Number(expiresInDays);
   if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) throw fail('Invitation not found.', 404);
   if (!Number.isInteger(days) || days < 1 || days > 90) throw fail('Invitation expiry must be between 1 and 90 days.');
+  const context = await advisoryContext(teacherId);
+  const { data: existing, error: existingError } = await getSupabaseStorageClient().from('class_invitations')
+    .select('id').eq('id', id).eq('teacher_id', teacherId).eq('subject_id', context.subject.id).maybeSingle();
+  if (existingError) throw databaseError(existingError);
+  if (!existing) throw databaseError({ message: 'ADVISORY_UNAVAILABLE' });
   const { data, error } = await getSupabaseStorageClient().rpc('renew_class_invitation', {
     p_teacher_id: teacherId, p_invitation_id: id, p_expires_at: new Date(Date.now() + days * 86400000).toISOString(),
   });
@@ -256,12 +276,17 @@ async function requireInvitation(token) {
   if (!data || data.status !== 'active') throw fail('This invitation is invalid or unavailable. Ask your teacher for a current invitation.', 404, 'INVITATION_INVALID');
   if (Date.parse(data.expires_at) <= Date.now()) throw fail('This invitation has expired. Ask your teacher for a current invitation.', 410, 'INVITATION_EXPIRED');
   const [{ data: subject, error: subjectError }, { data: teacher, error: teacherError }] = await Promise.all([
-    getSupabaseStorageClient().from('subjects').select('id,name,class_name,is_active,teacher_id').eq('id', data.subject_id).maybeSingle(),
-    getSupabaseStorageClient().from('users').select('id,role,status,archive').eq('id', data.teacher_id).maybeSingle(),
+    getSupabaseStorageClient().from('subjects').select('id,name,class_name,is_active,teacher_id,advisory_section_id').eq('id', data.subject_id).maybeSingle(),
+    getSupabaseStorageClient().from('users').select('id,role,status,archive,advisory_section_id').eq('id', data.teacher_id).maybeSingle(),
   ]);
   if (subjectError || teacherError) throw databaseError(subjectError || teacherError);
   if (!subject?.is_active || subject.teacher_id !== data.teacher_id || teacher?.role !== 'teacher' || teacher.status !== 'active' || teacher.archive?.isArchived === true) throw fail('This class is unavailable. Ask your teacher for help.', 404, 'CLASS_UNAVAILABLE');
-  return { ...data, className: subject.class_name || subject.name };
+  if (!teacher.advisory_section_id || subject.advisory_section_id !== teacher.advisory_section_id) throw databaseError({ message: 'ADVISORY_UNAVAILABLE' });
+  const { data: section, error: sectionError } = await getSupabaseStorageClient().from('sections')
+    .select('id').eq('id', teacher.advisory_section_id).eq('is_active', true).maybeSingle();
+  if (sectionError) throw databaseError(sectionError);
+  if (!section) throw databaseError({ message: 'ADVISORY_UNAVAILABLE' });
+  return { ...data, className: subject.class_name || subject.name, advisorySectionId: section.id };
 }
 async function publicInvitation(token) {
   const invitation = await requireInvitation(token);
@@ -276,6 +301,7 @@ async function verifyStudent(token, { fullName } = {}) {
     .eq('invitation_id', invitation.id).eq('normalized_name', normalizedName).maybeSingle();
   if (error) throw databaseError(error);
   if (!data) throw fail('Your full name was not found on this class invitation. Check the spelling or ask your teacher for help.', 400, 'NAME_NOT_FOUND');
+  if (data.section_id !== invitation.advisorySectionId) throw databaseError({ message: 'ADVISORY_UNAVAILABLE' });
   if (data.registered_at || data.student_id) throw fail('This student has already registered. Sign in to your existing account.', 409, 'STUDENT_REGISTERED');
   const { data: section, error: sectionError } = await getSupabaseStorageClient().from('sections').select('id,is_active').eq('id', data.section_id).maybeSingle();
   if (sectionError) throw databaseError(sectionError);
@@ -315,6 +341,6 @@ async function registerStudent(token, body = {}) {
   if (error) throw databaseError(error);
   return { studentId: data, fullName: student.full_name, section: student.section_name };
 }
-module.exports = { MAX_FILE_BYTES, MAX_ROSTER_ROWS, cleanText, normalizeName, invitationToken,
+module.exports = { MAX_FILE_BYTES, MAX_ROSTER_ROWS, cleanText, normalizeName, invitationToken, getAdvisoryContext,
   validateWorkbookArchive, parseWorkbook, validateRecords, previewRoster, createInvitation, renewInvitation, listInvitations, publicInvitation,
   verifyStudent, usernameAvailability, registerStudent, databaseError };

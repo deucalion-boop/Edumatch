@@ -260,12 +260,17 @@ test('creating a teacher with a section creates its class and synchronizes exist
 test('repeat section assignment reuses the class ID and code without changing manual class details', async () => {
   const subject = existingClass();
   fixture({ teacher: { advisory_section_id: sincerityId }, subjects: [subject] });
-  await assign();
+  const { response: firstAssignment } = await assign();
+  // The first assignment stamps the advisory marker so the class stays stable.
+  assert.equal(firstAssignment.advisoryClass.id, subject.id);
+  assert.equal(client.tables.subjects[0].advisory_section_id, sincerityId);
+  const stamped = structuredClone(client.tables.subjects);
+  const writesAfterStamping = client.writes.length;
   const { response } = await assign();
-  assert.deepEqual(client.tables.subjects, [subject]);
+  assert.deepEqual(client.tables.subjects, stamped);
   assert.equal(response.advisoryClass.id, subject.id);
   assert.equal(response.advisoryClass.code, subject.code);
-  assert.equal(client.writes.some((write) => write.table === 'subjects'), false);
+  assert.equal(client.writes.slice(writesAfterStamping).some((write) => write.table === 'subjects'), false);
 });
 
 test('assigning a section reactivates its existing class while preserving its code and teacher description', async () => {

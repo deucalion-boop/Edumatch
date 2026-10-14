@@ -32,7 +32,8 @@ test.before(async () => {
   db = new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role;');
   for (const migration of ['001_create_users.sql', '002_create_sections.sql', '003_create_learning_content.sql',
-    '006_create_classroom_operations.sql', '014_create_class_invitations.sql', '015_name_based_class_registration.sql']) {
+    '006_create_classroom_operations.sql', '014_create_class_invitations.sql', '015_name_based_class_registration.sql',
+    '016_advisory_class_invitations.sql']) {
     await db.exec(fs.readFileSync(path.join(__dirname, '../supabase/migrations', migration), 'utf8'));
   }
 });
@@ -40,12 +41,12 @@ test.after(async () => { if (db) await db.close(); });
 test.beforeEach(async () => {
   await db.exec(`truncate public.users, public.sections cascade;
     insert into public.sections(id,name) values ('charity','Charity');
-    insert into public.users(id,name,email,username,role,status,advisory_section_id,department)
-      values ('teacher','Teacher One','teacher@gmail.com','teacher','teacher','active','charity','Science'),
-             ('other','Teacher Two','other@gmail.com','other','teacher','active',null,'Science');
-    insert into public.subjects(id,name,class_name,code,track,teacher_id)
-      values ('class-one','Science','Grade 10 Science','SCI-ONE','GENERAL','teacher'),
-             ('class-two','Science','Other Class','SCI-TWO','GENERAL','other');`);
+    insert into public.users(id,name,email,username,role,status,advisory_section_id,department,subject)
+      values ('teacher','Teacher One','teacher@gmail.com','teacher','teacher','active','charity','Science','Science'),
+             ('other','Teacher Two','other@gmail.com','other','teacher','active',null,'Science','Science');
+    insert into public.subjects(id,name,class_name,code,track,teacher_id,advisory_section_id)
+      values ('class-one','Science','Science 10 - Charity','SCI-ONE','GENERAL','teacher','charity'),
+             ('class-two','Science','Other Class','SCI-TWO','GENERAL','other',null);`);
 });
 
 test('name-only registration commits account, correct membership and registered roster entry together', async () => {
@@ -94,11 +95,11 @@ test('case-insensitive username/email conflicts roll back and leave the name ava
   assert.equal(await count('subject_enrollments'), 1);
 });
 
-test('imports reject foreign/inactive classes and inactive sections without saving partial rosters', async () => {
+test('imports reject foreign/inactive classes and inactive advisory sections without saving partial rosters', async () => {
   await assert.rejects(importRoster([record()], 'other'), /CLASS_UNAVAILABLE/);
   await assert.rejects(importRoster([record()], 'teacher', 'class-two'), /CLASS_UNAVAILABLE/);
   await db.exec("update public.sections set is_active=false");
-  await assert.rejects(importRoster(), /ROSTER_INVALID/);
+  await assert.rejects(importRoster(), /ADVISORY_SECTION_REQUIRED/);
   assert.equal(await count('class_invitations'), 0);
   assert.equal(await count('class_registration_students'), 0);
 });
@@ -108,7 +109,7 @@ test('duplicate names within and across imports roll back all records and preser
   assert.equal(await count('class_invitations'), 0);
   assert.equal(await count('class_registration_students'), 0);
   await importRoster();
-  await assert.rejects(importRoster([record('Maria Santos', 'second')], 'other', 'class-two', 'invite-two', 'd'.repeat(64)), /ROSTER_DUPLICATE/);
+  await assert.rejects(importRoster([record('Maria Santos', 'second')], 'teacher', 'class-one', 'invite-two', 'd'.repeat(64)), /ROSTER_DUPLICATE/);
   assert.equal(await count('class_invitations'), 1);
   const id = await importRoster([record('Juan Dela Cruz', 'second')], 'teacher', 'class-one', 'invite-two', 'd'.repeat(64));
   assert.equal(id, 'invite-one');
@@ -123,7 +124,7 @@ test('teacher/class/section changes after import block registration at transacti
     await db.exec("update public.users set status='active'; update public.subjects set is_active=true; update public.sections set is_active=true;");
     if (!await count('class_invitations')) await importRoster();
     await db.exec(update);
-    await assert.rejects(register(), /CLASS_UNAVAILABLE|SECTION_UNAVAILABLE/);
+    await assert.rejects(register(), /CLASS_UNAVAILABLE|ADVISORY_SECTION_REQUIRED/);
     assert.equal(await count('subject_enrollments'), 0);
   }
 });
