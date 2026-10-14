@@ -169,8 +169,17 @@ async function parseWorkbook(buffer) {
   validateWorkbookArchive(buffer);
   const workbook = new ExcelJS.Workbook();
   try { await workbook.xlsx.load(buffer); } catch { throw fail('Unable to read this Excel file. Save it as .xlsx and try again.'); }
-  const sheets = workbook.worksheets.filter(sheet => sheet.actualRowCount > 0);
-  if (sheets.length !== 1) throw fail('Upload a workbook with one non-empty worksheet containing only First Name and Last Name.');
+  // Templates often include an Instructions tab. Select the student sheet by
+  // its required headers rather than rejecting every other populated tab.
+  const sheets = workbook.worksheets.filter(sheet => {
+    const labels = new Set();
+    sheet.getRow(1).eachCell(cell => {
+      labels.add(normalizeName(typeof cell.value === 'string' ? cell.value : ''));
+    });
+    return labels.has('first name') && labels.has('last name');
+  });
+  if (!sheets.length) throw fail('No student worksheet was found. Put First Name and Last Name in the first row of your student sheet.');
+  if (sheets.length > 1) throw fail('More than one worksheet contains First Name and Last Name. Keep one student list or upload each separately.');
   const sheet = sheets[0];
   if (sheet.rowCount > MAX_ROSTER_ROWS + 1 || sheet.columnCount > 50) throw fail(`Use no more than ${MAX_ROSTER_ROWS} student rows and remove unused rows or columns.`);
   const headers = new Map();

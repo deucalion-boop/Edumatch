@@ -34,11 +34,23 @@ test.beforeEach(() => {
     class_registration_students: [],
   });
 });
-async function upload({ sectionId, headers = ['First Name', 'Last Name'], values = ['Maria', 'Santos'] } = {}) {
+async function upload({ sectionId, headers = ['First Name', 'Last Name'], values = ['Maria', 'Santos'], instructions, excelTable = false } = {}) {
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Students');
-  worksheet.addRow(headers);
-  worksheet.addRow(values);
+  const addInstructions = () => {
+    const sheet = workbook.addWorksheet('Instructions');
+    sheet.addRow(['EduMatch Student Import Instructions']);
+    sheet.addRow(['Enter First Name and Last Name on the Student Import tab.']);
+  };
+  if (instructions === 'before') addInstructions();
+  const worksheet = workbook.addWorksheet('Student Import');
+  if (excelTable) worksheet.addTable({ name: 'StudentImport', ref: 'A1', headerRow: true,
+    columns: headers.map(name => ({ name })), rows: [values],
+  });
+  else {
+    worksheet.addRow(headers);
+    worksheet.addRow(values);
+  }
+  if (instructions === 'after') addInstructions();
   const form = new FormData();
   form.append('file', new Blob([await workbook.xlsx.writeBuffer()], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -65,8 +77,20 @@ test('multipart preview defaults to the server-read advisory section when no sec
   assert.equal(client.writes.length, 0);
 });
 
+test('multipart upload accepts an Excel student table plus a separate Instructions tab in either order', async () => {
+  for (const instructions of ['before', 'after']) {
+    const result = await upload({ sectionId: 'hope', instructions, excelTable: true });
+    assert.equal(result.status, 200);
+    assert.equal(result.body.validCount, 1);
+    assert.equal(result.body.invalidCount, 0);
+    assert.deepEqual(result.body.records.map(row => [row.firstName, row.lastName, row.fullName, row.sectionId]),
+      [['Maria', 'Santos', 'Maria Santos', 'hope']]);
+  }
+  assert.equal(client.writes.length, 0);
+});
+
 test('uploaded section columns and nonexistent separately selected sections produce clear HTTP errors', async () => {
-  const extraColumn = await upload({ headers: ['First Name', 'Last Name', 'Section'], values: ['Maria', 'Santos', 'Hope'] });
+  const extraColumn = await upload({ headers: ['First Name', 'Last Name', 'Section'], values: ['Maria', 'Santos', 'Hope'], instructions: 'before' });
   assert.equal(extraColumn.status, 400);
   assert.match(extraColumn.body.message, /First Name|Last Name|only|column/i);
   const badSection = await upload({ sectionId: 'unknown' });

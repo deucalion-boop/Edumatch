@@ -124,7 +124,74 @@ test('only First Name and Last Name Excel headers are accepted; formulas, number
   const multipleSheets = new ExcelJS.Workbook();
   multipleSheets.addWorksheet('First').addRow(['First Name', 'Last Name']);
   multipleSheets.addWorksheet('Second').addRow(['First Name', 'Last Name']);
-  await rejects(service.parseWorkbook(Buffer.from(await multipleSheets.xlsx.writeBuffer())), 400, /one non-empty worksheet/);
+  await rejects(service.parseWorkbook(Buffer.from(await multipleSheets.xlsx.writeBuffer())), 400, /More than one worksheet/);
+});
+
+test('a real Student Import Excel table is selected with Instructions before or after it and blank/formatted tabs ignored', async () => {
+  fixture({ class_registration_students: [] });
+  for (const position of ['before', 'after']) {
+    const file = new ExcelJS.Workbook();
+    const addInstructions = () => {
+      const sheet = file.addWorksheet('Instructions');
+      sheet.addRow(['EduMatch Student Import Instructions']);
+      sheet.addRow(['Enter each student in the Student Import tab.']);
+      sheet.addRow(['Use only First Name and Last Name. Select the section in EduMatch.']);
+    };
+    if (position === 'before') addInstructions();
+    const students = file.addWorksheet('Student Import');
+    students.addTable({ name: 'StudentImport', ref: 'A1', headerRow: true, totalsRow: false,
+      style: { theme: 'TableStyleMedium2', showRowStripes: true },
+      columns: [{ name: 'First Name' }, { name: 'Last Name' }],
+      rows: [['Juan Carlos', 'Santos'], ['Maria', 'Dela Cruz']],
+    });
+    if (position === 'after') addInstructions();
+    file.addWorksheet('Blank');
+    file.addWorksheet('Formatted Blank').getCell('J50').font = { bold: true };
+    const unrelated = file.addWorksheet('School Notes');
+    unrelated.addRow(['Notes', 'Teacher']);
+    unrelated.addRow(['Distribute registration codes privately.', 'Teacher One']);
+    const parsed = await service.parseWorkbook(Buffer.from(await file.xlsx.writeBuffer()));
+    assert.deepEqual(parsed.map(row => [row.rowNumber, row.firstName, row.lastName]),
+      [[2, 'Juan Carlos', 'Santos'], [3, 'Maria', 'Dela Cruz']]);
+    const preview = await service.previewRoster(teacherId, subjectId, Buffer.from(await file.xlsx.writeBuffer()), 'hope');
+    assert.equal(preview.validCount, 2);
+    assert.ok(preview.records.every(row => row.sectionId === 'hope'));
+  }
+  assert.equal(client.writes.length, 0);
+});
+
+test('multiple student worksheets are rejected explicitly rather than importing an arbitrary list', async () => {
+  const file = new ExcelJS.Workbook();
+  file.addWorksheet('Instructions').addRow(['Use one student list per import.']);
+  for (const name of ['Student Import', 'Second Class']) {
+    const sheet = file.addWorksheet(name);
+    sheet.addRow(['First Name', 'Last Name']);
+    sheet.addRow(['Maria', 'Santos']);
+  }
+  await rejects(service.parseWorkbook(Buffer.from(await file.xlsx.writeBuffer())), 400,
+    /More than one worksheet contains First Name and Last Name/);
+});
+
+test('an identified student worksheet still rejects extra or duplicate columns even with separate instruction tabs', async () => {
+  for (const headers of [['First Name', 'Last Name', 'Section'], ['First Name', 'Last Name', 'Last Name']]) {
+    const file = new ExcelJS.Workbook();
+    file.addWorksheet('Instructions').addRow(['Enter your student list in the Student Import tab.']);
+    const students = file.addWorksheet('Student Import');
+    students.addRow(headers);
+    students.addRow(['Maria', 'Santos', 'Charity']);
+    await rejects(service.parseWorkbook(Buffer.from(await file.xlsx.writeBuffer())), 400,
+      headers[2] === 'Section' ? /Only First Name and Last Name|extra columns/ : /Duplicate column headers/);
+  }
+});
+
+test('workbooks without any student header row produce an actionable header error', async () => {
+  const file = new ExcelJS.Workbook();
+  file.addWorksheet('Instructions').addRow(['EduMatch Student Import Instructions']);
+  const notes = file.addWorksheet('Notes');
+  notes.addRow(['Name', 'Class']);
+  notes.addRow(['Maria Santos', 'Charity']);
+  file.addWorksheet('Blank');
+  await rejects(service.parseWorkbook(Buffer.from(await file.xlsx.writeBuffer())), 400, /First Name and Last Name/);
 });
 
 test('archive validation rejects forged central-directory sizes before ExcelJS decompresses', async () => {
