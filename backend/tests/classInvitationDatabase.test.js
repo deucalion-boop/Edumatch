@@ -176,3 +176,49 @@ test('Unicode and whitespace normalization agrees with the backend identity key'
   await assert.rejects(db.query(`insert into public.users(name,email,username,role) values ($1,$2,$3,'student')`,
     [' MARIA    SANTOS ', 'duplicate@gmail.com', 'duplicate']), /users_student_normalized_name_unique/);
 });
+
+test('migration 015 preserves existing invitation links, names and registered accounts while removing private codes', async () => {
+  const upgradeDb = new PGlite();
+  try {
+    await upgradeDb.exec('create role anon; create role authenticated; create role service_role;');
+    for (const migration of ['001_create_users.sql', '002_create_sections.sql', '003_create_learning_content.sql',
+      '006_create_classroom_operations.sql', '014_create_class_invitations.sql']) {
+      await upgradeDb.exec(fs.readFileSync(path.join(__dirname, '../supabase/migrations', migration), 'utf8'));
+    }
+    await upgradeDb.exec(`
+      insert into public.sections(id,name) values ('charity','Charity');
+      insert into public.users(id,name,email,username,role,status,advisory_section_id)
+        values ('teacher','Teacher','teacher@gmail.com','teacher','teacher','active','charity');
+      insert into public.subjects(id,name,class_name,code,track,teacher_id)
+        values ('class-one','Science','Grade 10 Science','SCI-ONE','GENERAL','teacher');
+    `);
+    const legacyRecords = [
+      { ...record('John Cruz', 'already-registered'), code_hash: 'b'.repeat(64) },
+      { ...record(), code_hash: 'c'.repeat(64) },
+    ];
+    await upgradeDb.query('select public.import_class_invitation($1,$2,$3,$4,$5,$6::jsonb)',
+      ['teacher', 'class-one', 'invite-one', token, expiresAt(), JSON.stringify(legacyRecords)]);
+    const oldId = (await upgradeDb.query('select public.register_class_invitation_student($1,$2,$3,$4,$5,$6) as id',
+      [token, 'b'.repeat(64), 'john cruz', 'john@gmail.com', 'JohnCruz', passwordHash])).rows[0].id;
+
+    await upgradeDb.exec(fs.readFileSync(path.join(__dirname, '../supabase/migrations/015_name_based_class_registration.sql'), 'utf8'));
+    const columns = await upgradeDb.query(`select column_name from information_schema.columns
+      where table_schema='public' and table_name='class_registration_students'`);
+    assert.equal(columns.rows.some(row => row.column_name === 'code_hash'), false);
+    assert.equal((await upgradeDb.query('select token_hash from public.class_invitations')).rows[0].token_hash, token);
+    const existing = (await upgradeDb.query("select student_id,registered_at from public.class_registration_students where id='already-registered'")).rows[0];
+    assert.equal(existing.student_id, oldId);
+    assert.ok(existing.registered_at);
+    await assert.rejects(upgradeDb.query('select public.register_class_invitation_student($1,$2,$3,$4,$5)',
+      [token, 'john cruz', 'second@gmail.com', 'second.account', passwordHash]), /STUDENT_REGISTERED/);
+    const newId = (await upgradeDb.query('select public.register_class_invitation_student($1,$2,$3,$4,$5) as id',
+      [token, 'maria santos', 'maria@gmail.com', 'MariaSantos', passwordHash])).rows[0].id;
+    assert.ok(newId);
+    assert.equal(Number((await upgradeDb.query('select count(*) as count from public.subject_enrollments')).rows[0].count), 2);
+    // Running the upgrade twice must not discard the existing roster/account state.
+    await upgradeDb.exec(fs.readFileSync(path.join(__dirname, '../supabase/migrations/015_name_based_class_registration.sql'), 'utf8'));
+    assert.equal(Number((await upgradeDb.query('select count(*) as count from public.class_registration_students')).rows[0].count), 2);
+  } finally {
+    await upgradeDb.close();
+  }
+});

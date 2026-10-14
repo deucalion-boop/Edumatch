@@ -14,7 +14,6 @@ const subjectId = 'class-one';
 const invitationId = 'invitation-one';
 const studentId = 'roster-student-one';
 const token = service.invitationToken(invitationId);
-const code = service.registrationCode(studentId);
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
 function fixture(extra = {}) {
@@ -26,7 +25,7 @@ function fixture(extra = {}) {
       token_hash: digest(token), expires_at: new Date(Date.now() + 86400000).toISOString() }],
     class_registration_students: [{ id: studentId, invitation_id: invitationId, teacher_id: teacherId,
       full_name: 'Juan dela Cruz', normalized_name: 'juan dela cruz', section_id: 'charity', section_name: 'Charity',
-      code_hash: digest(code), registered_at: null, student_id: null }],
+      registered_at: null, student_id: null }],
     ...extra,
   });
   client.rpc = async () => { assert.fail('An invalid request must not call a mutation RPC'); };
@@ -149,7 +148,7 @@ test('a real Student Import Excel table is selected with Instructions before or 
     file.addWorksheet('Formatted Blank').getCell('J50').font = { bold: true };
     const unrelated = file.addWorksheet('School Notes');
     unrelated.addRow(['Notes', 'Teacher']);
-    unrelated.addRow(['Distribute registration codes privately.', 'Teacher One']);
+    unrelated.addRow(['Share the class invitation link with your students.', 'Teacher One']);
     const parsed = await service.parseWorkbook(Buffer.from(await file.xlsx.writeBuffer()));
     assert.deepEqual(parsed.map(row => [row.rowNumber, row.firstName, row.lastName]),
       [[2, 'Juan Carlos', 'Santos'], [3, 'Maria', 'Dela Cruz']]);
@@ -228,24 +227,27 @@ test('username checks are case-insensitive, literal for underscores, and suggest
   assert.equal(client.writes.length, 0);
 });
 
-test('student verification requires code and matching name, hides the public roster and never writes', async () => {
+test('student verification matches only the imported full name, hides the public roster and never writes', async () => {
   fixture();
-  const verified = await service.verifyStudent(token, { registrationCode: code.toLowerCase().replaceAll('-', ' '), fullName: ' JUAN   DELA CRUZ ' });
+  const verified = await service.verifyStudent(token, { fullName: ' ＪＵＡＮ   ＤＥＬＡ ＣＲＵＺ ' });
   assert.equal(verified.id, studentId);
   const invitation = await service.publicInvitation(token);
   assert.deepEqual(Object.keys(invitation).sort(), ['className', 'expiresAt', 'status']);
-  await rejects(service.verifyStudent(token, { registrationCode: code, fullName: 'Wrong Student' }), 400, /do not match/);
-  await rejects(service.verifyStudent(token, { registrationCode: 'AAAA-BBBB-CCCC-DDDD-EEEE-FFFF', fullName: 'Juan dela Cruz' }), 400, /do not match/);
-  await rejects(service.verifyStudent(token, { registrationCode: 'bad', fullName: 'Juan dela Cruz' }), 400, /matching full name/);
-  await rejects(service.verifyStudent('f'.repeat(64), { registrationCode: code, fullName: 'Juan dela Cruz' }), 404, /invalid|unavailable/);
+  await rejects(service.verifyStudent(token, { fullName: 'Wrong Student' }), 400, /not found on this class invitation/);
+  await rejects(service.verifyStudent(token, { fullName: 'Juan dela Crux' }), 400, /not found/);
+  await rejects(service.verifyStudent(token, { fullName: 'Juan' }), 400, /not found/);
+  for (const invalid of ['', 'ab', '12345', { name: 'Juan dela Cruz' }]) {
+    await rejects(service.verifyStudent(token, { fullName: invalid }), 400, /Enter your full name/);
+  }
+  await rejects(service.verifyStudent('f'.repeat(64), { fullName: 'Juan dela Cruz' }), 404, /invalid|unavailable/);
   assert.equal(client.writes.length, 0);
 });
 
-test('used codes, expired invitations, unavailable teachers/classes and inactive sections fail before writes', async () => {
-  const request = { registrationCode: code, fullName: 'Juan dela Cruz' };
+test('registered students, expired invitations, unavailable teachers/classes and inactive sections fail before writes', async () => {
+  const request = { fullName: 'Juan dela Cruz' };
   fixture();
   client.tables.class_registration_students[0].registered_at = new Date().toISOString();
-  await rejects(service.verifyStudent(token, request), 409, /already been used/);
+  await rejects(service.verifyStudent(token, request), 409, /already registered/);
   fixture();
   client.tables.class_invitations[0].expires_at = new Date(Date.now() - 1000).toISOString();
   await rejects(service.verifyStudent(token, request), 410, /expired/);
@@ -280,7 +282,7 @@ test('create payloads cannot bypass required name parts, duplicates, ownership o
 
 test('registration revalidates email, password and username rather than trusting successful verification', async () => {
   fixture();
-  const base = { registrationCode: code, fullName: 'Juan dela Cruz', email: 'juan@gmail.com', username: 'juan.cruz', password: 'StrongPass1', confirmPassword: 'StrongPass1' };
+  const base = { fullName: 'Juan dela Cruz', email: 'juan@gmail.com', username: 'juan.cruz', password: 'StrongPass1', confirmPassword: 'StrongPass1' };
   await rejects(service.registerStudent(token, { ...base, email: 'juan@example.com' }), 400, /Gmail/);
   await rejects(service.registerStudent(token, { ...base, username: 'bad*name' }), 400, /Username/);
   await rejects(service.registerStudent(token, { ...base, confirmPassword: 'Different1' }), 400, /do not match/);
@@ -288,7 +290,7 @@ test('registration revalidates email, password and username rather than trusting
   assert.equal(client.writes.length, 0);
 });
 
-test('valid creation sends only server-mapped sections and code hashes, then returns the teacher invitation', async () => {
+test('valid creation sends only canonical names and server-mapped sections, then returns the teacher invitation', async () => {
   fixture({ class_invitations: [], class_registration_students: [] });
   let rpcInput;
   client.rpc = async (name, input) => {
@@ -296,12 +298,12 @@ test('valid creation sends only server-mapped sections and code hashes, then ret
     rpcInput = input;
     client.tables.class_invitations.push({ id: input.p_invitation_id, subject_id: input.p_subject_id, teacher_id: input.p_teacher_id,
       token_hash: input.p_token_hash, expires_at: input.p_expires_at, status: 'active' });
-    input.p_records.forEach(row => client.tables.class_registration_students.push({ ...row, teacher_id: teacherId,
+    input.p_records.forEach((row, index) => client.tables.class_registration_students.push({ ...row, id: `generated-row-${index}`, teacher_id: teacherId,
       invitation_id: input.p_invitation_id, section_name: 'Charity', registered_at: null, student_id: null }));
     return { data: input.p_invitation_id, error: null };
   };
   const invitation = await service.createInvitation(teacherId, { subjectId, records: [{ firstName: ' Maria ', lastName: ' Santos ', fullName: 'Different Student', section: 'HOPE',
-    sectionId: 'tampered', normalizedName: 'tampered', registrationCode: 'tampered', cellErrors: 'tampered', status: 'registered' }], expiresInDays: 7 });
+    sectionId: 'tampered', normalizedName: 'tampered', cellErrors: 'tampered', status: 'registered' }], expiresInDays: 7 });
   assert.equal(invitation.totalCount, 1);
   assert.equal(invitation.registeredCount, 0);
   assert.equal(invitation.unregisteredCount, 1);
@@ -309,7 +311,9 @@ test('valid creation sends only server-mapped sections and code hashes, then ret
   assert.equal(rpcInput.p_records[0].normalized_name, 'maria santos');
   assert.equal(rpcInput.p_records[0].full_name, 'Maria Santos');
   assert.equal(invitation.students[0].fullName, 'Maria Santos');
-  assert.equal(rpcInput.p_records[0].code_hash, digest(invitation.students[0].registrationCode));
+  assert.deepEqual(Object.keys(rpcInput.p_records[0]).sort(), ['full_name', 'normalized_name', 'section_id']);
+  assert.equal(rpcInput.p_records[0].code_hash, undefined);
+  assert.equal(invitation.students[0].registrationCode, undefined);
   assert.equal(rpcInput.p_records[0].registrationCode, undefined);
   assert.equal(rpcInput.p_token_hash, digest(invitation.invitationUrl.split('/').at(-1)));
 });
@@ -322,16 +326,28 @@ test('registration ignores client enrollment fields and hashes the password befo
     rpcInput = input;
     return { data: 'new-student-id', error: null };
   };
-  const result = await service.registerStudent(token, { registrationCode: code, fullName: 'JUAN DELA CRUZ', email: 'JUAN@gmail.com',
+  const result = await service.registerStudent(token, { fullName: 'JUAN DELA CRUZ', email: 'JUAN@gmail.com',
     username: 'Juan.Cruz', password: 'StrongPass1', confirmPassword: 'StrongPass1', subjectId: 'foreign-class', sectionId: 'foreign-section', role: 'admin' });
   assert.equal(result.studentId, 'new-student-id');
   assert.equal(rpcInput.p_email, 'juan@gmail.com');
   assert.equal(rpcInput.p_username, 'Juan.Cruz');
-  assert.equal(rpcInput.p_code_hash, digest(code));
+  assert.equal(rpcInput.p_code_hash, undefined);
   assert.equal(rpcInput.p_normalized_name, 'juan dela cruz');
   assert.equal(rpcInput.subjectId, undefined);
   assert.equal(rpcInput.role, undefined);
   assert.ok(await bcrypt.compare('StrongPass1', rpcInput.p_password_hash));
+});
+
+test('name verification is scoped to this class invitation and registered names cannot proceed to a registration write', async () => {
+  fixture();
+  client.tables.class_registration_students.push({ id: 'other-roster-entry', invitation_id: 'other-class-invitation',
+    full_name: 'Maria Santos', normalized_name: 'maria santos', section_id: 'hope', section_name: 'Hope', registered_at: null, student_id: null });
+  await rejects(service.verifyStudent(token, { fullName: 'Maria Santos' }), 400, /not found on this class invitation/);
+  client.tables.class_registration_students[0].registered_at = new Date().toISOString();
+  client.tables.class_registration_students[0].student_id = 'registered-student-id';
+  await rejects(service.registerStudent(token, { fullName: 'Juan dela Cruz', email: 'different@gmail.com', username: 'new.username',
+    password: 'StrongPass1', confirmPassword: 'StrongPass1' }), 409, /already registered/);
+  assert.equal(client.writes.length, 0);
 });
 
 test('unknown persistence errors are sanitized and conflict errors have clear messages', () => {

@@ -65,9 +65,9 @@ async function openScenario(browser, token, options = {}) {
   return { context, page, requestLog, errors }
 }
 
-async function verify(page, code = 'ABCD-EFGH-JKLM') {
-  await page.getByLabel('Registration code', { exact: true }).fill(code)
-  await page.getByLabel('Full name', { exact: true }).fill(student.fullName)
+async function verify(page, fullName = student.fullName) {
+  await expect(page.getByLabel('Registration code', { exact: true })).toHaveCount(0)
+  await page.getByLabel('Full name', { exact: true }).fill(fullName)
   await page.getByRole('button', { name: 'Verify and continue' }).click()
 }
 
@@ -95,17 +95,17 @@ async function main() {
     browser = await chromium.launch({ headless: true })
   }
   try {
-    await runCase('verification retry, case-insensitive duplicate suggestions, password validation, and correct enrollment payload', async () => {
+    await runCase('roster name non-match then match, username suggestions, password validation, and name-only enrollment payload', async () => {
       const scenario = await openScenario(browser, 'smoke-success', {
-        verify: (_body, count) => count === 1
-          ? { status: 400, data: { message: 'The registration code and full name do not match.' } }
+        verify: body => body.fullName !== student.fullName
+          ? { status: 400, data: { code: 'NAME_NOT_FOUND', message: 'Your full name was not found on this class list. Check the spelling with your teacher.' } }
           : { status: 200, data: { student } },
       })
       const { page, requestLog } = scenario
       try {
+        await verify(page, 'Sarah Wrong')
+        await expect(page.getByRole('alert')).toContainText('not found on this class list')
         await verify(page)
-        await expect(page.getByRole('alert')).toHaveText('The registration code and full name do not match.')
-        await page.getByRole('button', { name: 'Verify and continue' }).click()
         await expect(page.locator('.verified-student')).toContainText('Sarah Reyes')
         await expect(page.locator('.verified-student')).toContainText('Section Charity')
         await page.getByLabel('Gmail address').fill('sarah.reyes@gmail.com')
@@ -128,7 +128,8 @@ async function main() {
         await page.getByRole('button', { name: 'Create account and join class' }).click()
         await expect(page.getByRole('heading', { name: 'Your account is ready' })).toBeVisible()
         await expect(page.getByRole('link', { name: 'Sign in to EduMatch' })).toHaveAttribute('href', '/auth/login')
-        assert.deepEqual(requestLog.register, [{ registrationCode: 'ABCD-EFGH-JKLM', fullName: 'Sarah Reyes', email: 'sarah.reyes@gmail.com', username: 'sarah.reyes', password: 'Goodpass1', confirmPassword: 'Goodpass1' }])
+        assert.deepEqual(requestLog.verify, [{ fullName: 'Sarah Wrong' }, { fullName: 'Sarah Reyes' }])
+        assert.deepEqual(requestLog.register, [{ fullName: 'Sarah Reyes', email: 'sarah.reyes@gmail.com', username: 'sarah.reyes', password: 'Goodpass1', confirmPassword: 'Goodpass1' }])
         assert.deepEqual(scenario.errors, [])
       } finally { await scenario.context.close() }
     })
@@ -159,42 +160,78 @@ async function main() {
     })
 
     await runCase('editing verified identity requires fresh verification and username checking', async () => {
-      const scenario = await openScenario(browser, 'smoke-identity-change')
+      const scenario = await openScenario(browser, 'smoke-identity-change', {
+        verify: body => ({ status: 200, data: { student: { ...student, fullName: body.fullName } } }),
+      })
       try {
         await verify(scenario.page)
         await accountFields(scenario.page)
         await scenario.page.getByRole('button', { name: 'Change', exact: true }).click()
         await expect(scenario.page.getByLabel('Full name', { exact: true })).toBeVisible()
         await expect(scenario.page.getByRole('button', { name: 'Create account and join class' })).toHaveCount(0)
-        await scenario.page.getByLabel('Registration code', { exact: true }).fill('NEW-PRIVATE-CODE')
+        await scenario.page.getByLabel('Full name', { exact: true }).fill('Jose Santos')
         await scenario.page.getByRole('button', { name: 'Verify and continue' }).click()
         await expect(scenario.page.getByText('This username is available.', { exact: true })).toBeVisible()
         assert.equal(scenario.requestLog.verify.length, 2)
-        assert.equal(scenario.requestLog.verify[1].registrationCode, 'NEW-PRIVATE-CODE')
+        assert.deepEqual(scenario.requestLog.verify[1], { fullName: 'Jose Santos' })
+        await expect(scenario.page.locator('.verified-student')).toContainText('Jose Santos')
         await expect(scenario.page.getByLabel('Password', { exact: true })).toHaveValue('')
       } finally { await scenario.context.close() }
     })
 
-    await runCase('expired invitations and reused registration codes have recoverable guidance', async () => {
+    await runCase('expired invitations and already registered names provide sign-in, reset, and teacher help', async () => {
       const expired = await openScenario(browser, 'smoke-expired', { invitation: () => ({ status: 410, data: { message: 'This invitation has expired. Ask your teacher to renew it.' } }) })
       try {
         await expect(expired.page.getByRole('heading', { name: 'Invitation unavailable' })).toBeVisible()
         await expect(expired.page.getByRole('alert')).toContainText('expired')
         await expect(expired.page.getByLabel('Registration code', { exact: true })).toHaveCount(0)
       } finally { await expired.context.close() }
-      const reused = await openScenario(browser, 'smoke-reused', {
-        verify: body => body.registrationCode === 'USED-CODE'
-          ? { status: 409, data: { message: 'This registration code has already been used. Sign in to your existing account.' } }
+      const registered = await openScenario(browser, 'smoke-already-registered', {
+        verify: body => body.fullName === student.fullName
+          ? { status: 409, data: { code: 'STUDENT_REGISTERED', message: 'This student is already registered. Sign in to your existing account.' } }
+          : { status: 200, data: { student: { ...student, fullName: body.fullName } } },
+      })
+      try {
+        await verify(registered.page)
+        await expect(registered.page.getByRole('alert')).toContainText('already registered')
+        await expect(registered.page.getByRole('link', { name: 'Sign in to your account' })).toHaveAttribute('href', '/auth/login')
+        await expect(registered.page.getByRole('link', { name: 'Reset your password' })).toHaveAttribute('href', '/auth/forgot-password')
+        await expect(registered.page.getByText('Ask your teacher for help if you have not created an account.')).toBeVisible()
+        await expect(registered.page.getByRole('button', { name: 'Verify and continue' })).toBeEnabled()
+        await verify(registered.page, 'Jose Santos')
+        await expect(registered.page.locator('.verified-student')).toContainText('Jose Santos')
+        await expect(registered.page.getByRole('link', { name: 'Reset your password' })).toHaveCount(0)
+      } finally { await registered.context.close() }
+    })
+
+    await runCase('invalid roster names can be corrected without fuzzy matching', async () => {
+      const scenario = await openScenario(browser, 'smoke-name-validation', {
+        verify: body => body.fullName === '.'
+          ? { status: 400, data: { code: 'NAME_INVALID', message: 'Enter your first and last names together as listed by your teacher.' } }
           : { status: 200, data: { student } },
       })
       try {
-        await verify(reused.page, 'USED-CODE')
-        await expect(reused.page.getByRole('alert')).toContainText('already been used')
-        await expect(reused.page.getByRole('button', { name: 'Verify and continue' })).toBeEnabled()
-        await reused.page.getByLabel('Registration code', { exact: true }).fill('UNUSED-CODE')
-        await reused.page.getByRole('button', { name: 'Verify and continue' }).click()
-        await expect(reused.page.locator('.verified-student')).toBeVisible()
-      } finally { await reused.context.close() }
+        await verify(scenario.page, '.')
+        await expect(scenario.page.getByRole('alert')).toContainText('first and last names together')
+        await verify(scenario.page)
+        await expect(scenario.page.locator('.verified-student')).toContainText('Sarah Reyes')
+        assert.equal(scenario.requestLog.register.length, 0)
+      } finally { await scenario.context.close() }
+    })
+
+    await runCase('registration race for a claimed roster name prevents repeat submission', async () => {
+      const scenario = await openScenario(browser, 'smoke-registration-conflict', {
+        register: () => ({ status: 409, data: { code: 'STUDENT_REGISTERED', message: 'This student is already registered. Sign in to your existing account.' } }),
+      })
+      try {
+        await verify(scenario.page)
+        await accountFields(scenario.page)
+        await scenario.page.getByRole('button', { name: 'Create account and join class' }).click()
+        await expect(scenario.page.getByRole('alert')).toContainText('already registered')
+        await expect(scenario.page.getByRole('button', { name: 'Create account and join class' })).toBeDisabled()
+        await expect(scenario.page.getByRole('link', { name: 'Reset your password' })).toBeVisible()
+        assert.equal(scenario.requestLog.register.length, 1)
+      } finally { await scenario.context.close() }
     })
 
     await runCase('invitation retrieval and account creation can recover from temporary failures', async () => {
@@ -219,7 +256,8 @@ async function main() {
     await runCase('390px mobile registration stays within viewport in both steps', async () => {
       const scenario = await openScenario(browser, 'smoke-mobile', { mobile: true })
       try {
-        await expect(scenario.page.getByLabel('Registration code', { exact: true })).toBeVisible()
+        await expect(scenario.page.getByLabel('Full name', { exact: true })).toBeVisible()
+        await expect(scenario.page.getByLabel('Registration code', { exact: true })).toHaveCount(0)
         assert.equal(await scenario.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'Verification overflows mobile viewport')
         await scenario.page.screenshot({ path: path.join(artifactDirectory, 'student-verify-mobile.png'), fullPage: true })
         await verify(scenario.page)

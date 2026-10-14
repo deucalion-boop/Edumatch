@@ -23,13 +23,13 @@ const file = { name: 'student-roster.xlsx', mimeType: 'application/vnd.openxmlfo
 const json = (route, status, body) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
 function newInvitation() {
   return { id: 'invitation-one', subjectId: 'class-one', className: subjects[0].className, invitationUrl: `${baseUrl}/auth/class-register/private-smoke-token`, expiresAt: new Date(Date.now() + 30 * 86400000).toISOString(), status: 'active', registeredCount: 1, unregisteredCount: 1, totalCount: 2, students: [
-    { id: 'entry-one', fullName: 'Eric Cruz', section: 'Charity', status: 'registered', studentId: 'student-one', registrationCode: 'USED-CODE' },
-    { id: 'entry-two', fullName: 'Sarah Reyes', section: 'Charity', status: 'unregistered', studentId: null, registrationCode: 'ABCD-EFGH-JKLM' },
+    { id: 'entry-one', fullName: 'Eric Cruz', section: 'Charity', status: 'registered', studentId: 'student-one' },
+    { id: 'entry-two', fullName: 'Sarah Reyes', section: 'Charity', status: 'unregistered', studentId: null },
   ] }
 }
 async function openScenario(browser, options = {}) {
   const sessionTeacher = options.withoutAdvisory ? { ...teacher, advisorySectionId: '', advisorySection: null } : teacher
-  const context = await browser.newContext({ viewport: options.mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, serviceWorkers: 'block', acceptDownloads: true })
+  const context = await browser.newContext({ viewport: options.mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 }, serviceWorkers: 'block' })
   await context.addInitScript(user => {
     localStorage.setItem('edumatch_auth_token', 'intercepted-teacher-smoke-token')
     localStorage.setItem('edumatch_auth_user', JSON.stringify(user))
@@ -39,7 +39,7 @@ async function openScenario(browser, options = {}) {
   await page.clock.install()
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
-  const state = { invitation: options.invitation || null, students: [originalStudent], requests: [{ id: 'request-one', studentId: 'request-student', name: 'Pending Learner', email: 'pending@gmail.com', sectionName: 'Hope', subjectId: 'class-one', className: subjects[0].className, subjectCode: 'ARA-SMOKE', requestedAt: '2026-10-14T07:00:00Z' }], sections: options.noSections ? [] : sections, previewRecords: options.previewRecords || preview.records, failSections: false, invitationFetches: 0, previewCalls: 0, previewSections: [], create: [], renew: [], export: 0, failPreview: false, allInvalid: false }
+  const state = { invitation: options.invitation || null, students: [originalStudent], requests: [{ id: 'request-one', studentId: 'request-student', name: 'Pending Learner', email: 'pending@gmail.com', sectionName: 'Hope', subjectId: 'class-one', className: subjects[0].className, subjectCode: 'ARA-SMOKE', requestedAt: '2026-10-14T07:00:00Z' }], sections: options.noSections ? [] : sections, previewRecords: options.previewRecords || preview.records, failSections: false, invitationFetches: 0, previewCalls: 0, previewSections: [], create: [], renew: [], failPreview: false, allInvalid: false }
   await page.route('**/api/**', async route => {
     const request = route.request()
     const endpoint = new URL(request.url()).pathname.replace(/^.*\/api/, '')
@@ -68,7 +68,6 @@ async function openScenario(browser, options = {}) {
       state.invitation = { ...state.invitation, status: 'active', expiresAt: new Date(Date.now() + state.renew[state.renew.length - 1].expiresInDays * 86400000).toISOString() }
       return json(route, 200, { invitation: state.invitation })
     }
-    if (endpoint === '/teacher/class-invitations/invitation-one/codes') { state.export += 1; return route.fulfill({ status: 200, contentType: file.mimeType, body: Buffer.from('intercepted registration-code export') }) }
     if (endpoint === '/notifications') return json(route, 200, { notifications: [] })
     // Presence and public configuration are also intercepted to prevent live account access.
     return json(route, 200, {})
@@ -100,7 +99,7 @@ async function main() {
   try { browser = await chromium.launch({ channel: 'chrome', headless: true }) }
   catch { browser = await chromium.launch({ headless: true }) }
   try {
-    await runCase('Excel review requires explicit invalid-row exclusion; generate/share/export preserves selected class', async () => {
+    await runCase('Excel review requires invalid-row exclusion; create and share invitation by full name preserves class', async () => {
       const scenario = await openScenario(browser)
       const { page, state } = scenario
       try {
@@ -109,20 +108,24 @@ async function main() {
         await expect(dialog.locator('.invitation-section-context')).toContainText('Assigned section: Charity')
         await expect(dialog.locator('thead th')).toHaveText(['Row', 'First name', 'Last name', 'Validation'])
         await expect(dialog.getByText('This student name appears more than once in this spreadsheet.')).toBeVisible()
-        await expect(dialog.getByRole('button', { name: 'Generate 1 registration codes' })).toBeDisabled()
+        await expect(dialog.getByRole('button', { name: 'Create invitation', exact: true })).toBeDisabled()
         await dialog.getByRole('checkbox').check()
-        await dialog.getByRole('button', { name: 'Generate 1 registration codes' }).click()
-        await expect(dialog.getByText('Your class invitation and private student codes are ready.')).toBeVisible()
+        await dialog.getByRole('button', { name: 'Create invitation', exact: true }).click()
+        await expect(dialog.getByText('Your class invitation is ready. Share the link so students can register using their full names.')).toBeVisible()
         assert.deepEqual(state.previewSections, ['section-charity'])
         assert.deepEqual(state.create, [{ subjectId: 'class-one', sectionId: 'section-charity', records: [{ firstName: 'Sarah', lastName: 'Reyes' }], expiresInDays: 30 }])
         await dialog.getByRole('button', { name: 'Copy link', exact: true }).click()
         assert.equal(await page.evaluate(() => window.__copiedInvitationLink), state.invitation.invitationUrl)
-        const downloaded = page.waitForEvent('download')
-        await dialog.getByRole('button', { name: 'Export codes' }).click()
-        assert.equal((await downloaded).suggestedFilename(), 'Araling-Panlipunan-10-registration-codes.xlsx')
-        assert.equal(state.export, 1)
+        await expect(dialog.getByRole('columnheader')).toHaveText(['Full name', 'Section', 'Enrollment'])
+        await expect(dialog.getByText('Enter their full name to match the imported class list.')).toBeVisible()
+        await expect(dialog.getByText(/registration code|private code|export codes/i)).toHaveCount(0)
         await page.screenshot({ path: path.join(artifactDirectory, 'teacher-invitation-share-desktop.png'), fullPage: true })
         await dialog.getByRole('button', { name: 'Done', exact: true }).click()
+        await expect(page.getByRole('button', { name: 'Registration codes', exact: true })).toHaveCount(0)
+        const firstClass = page.locator('.subject-management-card').first()
+        await firstClass.getByRole('button', { name: 'Class actions' }).click()
+        await firstClass.getByRole('menuitem', { name: 'Copy Code', exact: true }).click()
+        assert.equal(await page.evaluate(() => window.__copiedInvitationLink), subjects[0].code, 'Existing class-code copying was removed')
         await expect(page.locator('.class-invitation-summary')).toContainText('1 registered')
         await expect(page.locator('.class-invitation-summary')).toContainText('1 unregistered')
         await expect(page.locator('.invitation-queue-summary')).toContainText('1 registered · 1 unregistered')
@@ -155,7 +158,7 @@ async function main() {
         scenario.state.allInvalid = true
         await dialog.getByRole('button', { name: 'Preview students' }).click()
         await expect(dialog.getByText('No valid students are available. Correct the spreadsheet and upload it again.')).toBeVisible()
-        await expect(dialog.getByRole('button', { name: 'Generate 0 registration codes' })).toBeDisabled()
+        await expect(dialog.getByRole('button', { name: 'Create invitation', exact: true })).toBeDisabled()
         assert.equal(scenario.state.create.length, 0)
         await dialog.getByLabel('Assign section').selectOption('section-hope')
         await expect(dialog.getByRole('button', { name: 'Preview students' })).toBeVisible()
@@ -172,7 +175,7 @@ async function main() {
         assert.deepEqual(scenario.errors, [])
       } finally { await scenario.context.close() }
     })
-    await runCase('expired invitation renewal retains codes and share link; individual account flow remains reachable', async () => {
+    await runCase('expired invitation renewal retains roster and share link; individual account flow remains reachable', async () => {
       const expired = { ...newInvitation(), expiresAt: '2020-01-01T00:00:00Z', status: 'expired' }
       const scenario = await openScenario(browser, { invitation: expired })
       try {
@@ -181,10 +184,10 @@ async function main() {
         await expect(dialog.getByRole('button', { name: 'Copy link', exact: true })).toBeDisabled()
         await dialog.getByLabel('Renew invitation for').selectOption('7')
         await dialog.getByRole('button', { name: 'Renew invitation', exact: true }).click()
-        await expect(dialog.getByText('Invitation renewed. Unregistered students can use their existing codes.')).toBeVisible()
+        await expect(dialog.getByText('Invitation renewed. Unregistered students can register using their imported full names.')).toBeVisible()
         await expect(dialog.getByRole('button', { name: 'Copy link', exact: true })).toBeEnabled()
         assert.deepEqual(scenario.state.renew, [{ expiresInDays: 7 }])
-        assert.equal(scenario.state.invitation.students[1].registrationCode, expired.students[1].registrationCode)
+        assert.deepEqual(scenario.state.invitation.students, expired.students)
         assert.equal(scenario.state.invitation.invitationUrl, expired.invitationUrl)
         await dialog.getByRole('button', { name: 'Done', exact: true }).click()
         await scenario.page.getByRole('button', { name: 'Invite Student', exact: true }).click()
@@ -210,8 +213,8 @@ async function main() {
         await expect(dialog.locator('.invitation-section-context')).toContainText('Assigned section: Hope')
         await expect(dialog.locator('tbody')).toContainText('Mary Anne')
         await expect(dialog.locator('tbody')).toContainText('de la Cruz')
-        await dialog.getByRole('button', { name: 'Generate 1 registration codes' }).click()
-        await expect(dialog.getByText('Your class invitation and private student codes are ready.')).toBeVisible()
+        await dialog.getByRole('button', { name: 'Create invitation', exact: true }).click()
+        await expect(dialog.getByText('Your class invitation is ready. Share the link so students can register using their full names.')).toBeVisible()
         assert.deepEqual(scenario.state.previewSections, ['section-hope'])
         assert.deepEqual(scenario.state.create, [{ subjectId: 'class-two', sectionId: 'section-hope', records: [{ firstName: 'Mary Anne', lastName: 'de la Cruz' }], expiresInDays: 30 }])
         assert.deepEqual(scenario.errors, [])
@@ -265,7 +268,7 @@ async function main() {
         assert.equal(await scenario.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'Preview overflows mobile viewport')
         await scenario.page.screenshot({ path: path.join(artifactDirectory, 'teacher-invitation-preview-mobile.png'), fullPage: true })
         await dialog.getByRole('checkbox').check()
-        await dialog.getByRole('button', { name: 'Generate 1 registration codes' }).click()
+        await dialog.getByRole('button', { name: 'Create invitation', exact: true }).click()
         await expect(dialog.getByRole('button', { name: 'Done', exact: true })).toBeVisible()
         assert.equal(await scenario.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false, 'Share overflows mobile viewport')
         await dialog.getByRole('button', { name: 'Done', exact: true }).focus()
