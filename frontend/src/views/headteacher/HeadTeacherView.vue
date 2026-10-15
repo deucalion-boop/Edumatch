@@ -232,10 +232,6 @@
               </div>
             </div>
             <div class="headteacher-analytics-actions">
-              <button type="button" class="headteacher-create-teacher-cta" aria-label="Create teacher account" title="Create Teacher" @click="openCreateModal">
-                <i class="fas fa-user-plus" aria-hidden="true"></i>
-                <span>Create Teacher</span>
-              </button>
               <label class="headteacher-analytics-filter">
                 <span>Range</span>
                 <select v-model="lessonAnalyticsFilter" @change="fetchTeachers()">
