@@ -632,9 +632,14 @@
           <form class="headteacher-form" novalidate @submit.prevent="createTeacher">
             <div class="headteacher-form-grid">
               <label class="headteacher-form-group">
-                <span>Full Name</span>
-                <input v-model.trim="form.name" type="text" required placeholder="Enter teacher name" :aria-invalid="Boolean(teacherErrors.name)" @input="validateTeacherForm" maxlength="100">
-                <small v-if="teacherErrors.name" class="headteacher-field-error" role="alert">{{ teacherErrors.name }}</small>
+                <span>First Name</span>
+                <input v-model.trim="form.firstName" type="text" required autocomplete="given-name" placeholder="Enter teacher first name" :aria-invalid="Boolean(teacherErrors.firstName)" @input="validateTeacherForm" maxlength="100">
+                <small v-if="teacherErrors.firstName" class="headteacher-field-error" role="alert">{{ teacherErrors.firstName }}</small>
+              </label>
+              <label class="headteacher-form-group">
+                <span>Last Name</span>
+                <input v-model.trim="form.lastName" type="text" required autocomplete="family-name" placeholder="Enter teacher last name" :aria-invalid="Boolean(teacherErrors.lastName)" @input="validateTeacherForm" maxlength="100">
+                <small v-if="teacherErrors.lastName" class="headteacher-field-error" role="alert">{{ teacherErrors.lastName }}</small>
               </label>
               <label class="headteacher-form-group">
                 <span>Email</span>
@@ -1006,12 +1011,14 @@ const filters = reactive({
   sort: 'newest',
 })
 const form = reactive({
-  name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   username: '',
   contactNumber: '',
   advisorySectionId: '',
 })
+const teacherName = computed(() => `${form.firstName.trim()} ${form.lastName.trim()}`)
 const studentForm = reactive({
   teacherId: '',
   name: '',
@@ -1296,7 +1303,8 @@ const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.v
 
 const resetForm = () => {
   Object.keys(teacherErrors).forEach((field) => { teacherErrors[field] = '' })
-  form.name = ''
+  form.firstName = ''
+  form.lastName = ''
   form.email = ''
   form.username = ''
   form.contactNumber = ''
@@ -1576,9 +1584,13 @@ const openTeacherStudents = async (teacher) => {
   }
 }
 
-const teacherErrors = reactive({ name: '', username: '', email: '', contactNumber: '' })
+const teacherErrors = reactive({ firstName: '', lastName: '', username: '', email: '', contactNumber: '' })
 const validateTeacherForm = () => {
-  teacherErrors.name = nameError(form.name, 'Full name', 100)
+  teacherErrors.firstName = nameError(form.firstName, 'First name', 100)
+  teacherErrors.lastName = nameError(form.lastName, 'Last name', 100)
+  if (!teacherErrors.firstName && !teacherErrors.lastName && teacherName.value.length > 100) {
+    teacherErrors.lastName = 'First and last name together must be 100 characters or fewer.'
+  }
   teacherErrors.username = !String(form.username || '').trim() ? 'Username is required.'
     : form.username.length > 50 ? 'Username must be 50 characters or fewer.'
       : /\p{N}/u.test(form.username) ? 'Username must not contain numbers.' : ''
@@ -1600,7 +1612,7 @@ const createTeacher = async () => {
     }
 
     const response = await axios.post(`${resolveApiBaseUrl()}/headteacher/teachers`, {
-      name: form.name,
+      name: teacherName.value,
       email: form.email,
       username: form.username,
       subject: departmentLabel.value,
