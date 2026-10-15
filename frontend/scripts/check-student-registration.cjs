@@ -53,7 +53,7 @@ async function main() {
   const scope = effectScope()
   const vm = scope.run(() => component.setup({}, { expose() {} }))
   const flush = async () => { await nextTick(); await Promise.resolve(); await Promise.resolve() }
-  const enterIdentity = () => { vm.registrationCode.value = 'abcd1234 - 1234abcd - abcd1234 - 1234abcd'; vm.fullName.value = 'Juan Dela Cruz' }
+  const enterIdentity = () => { vm.fullName.value = 'Juan Dela Cruz' }
   const prepareIdentity = async () => { enterIdentity(); await vm.verifyStudent() }
   const prepareEmail = async () => {
     vm.email.value = 'juan@school.edu.ph'; await vm.sendEmailCode(); vm.emailCode.value = '123456'; await vm.verifyEmail()
@@ -63,7 +63,6 @@ async function main() {
     assert.equal(vm.step.value, 'identity')
     assert.equal(vm.canRegister.value, false)
     await prepareIdentity()
-    assert.equal(calls.find(call => call.url.endsWith('/verify')).body.registrationCode, 'ABCD12341234ABCDABCD12341234ABCD')
     assert.equal(vm.step.value, 'account')
     assert.equal(vm.hasAssignments.value, false)
     vm.username.value = 'taken'; await vm.checkUsername()
@@ -84,7 +83,7 @@ async function main() {
     assert.equal(payload.verificationToken, emailProof)
     assert.equal(Object.hasOwn(payload, 'sectionId'), false)
     assert.equal(Object.hasOwn(payload, 'role'), false)
-    for (const field of ['registrationCode', 'studentVerificationToken', 'verificationToken', 'emailCode', 'emailChallengeId', 'password', 'confirmPassword']) assert.equal(vm[field].value, '')
+    for (const field of ['studentVerificationToken', 'verificationToken', 'emailCode', 'emailChallengeId', 'password', 'confirmPassword']) assert.equal(vm[field].value, '')
 
     await vm.loadRegistration()
     student.assignments = [{ subjectId: 'math', className: 'Mathematics A', subjectName: 'Mathematics', teacherName: 'Maria Santos', sectionName: 'Charity' },
@@ -114,7 +113,6 @@ async function main() {
     resolveEmail(verifiedEmail('juan@school.edu.ph')); await staleEmail
     assert.equal(vm.step.value, 'identity')
     assert.equal(vm.verificationToken.value, '')
-    assert.equal(vm.registrationCode.value, '')
     overrides.delete('verify-email')
 
     await prepareIdentity(); await prepareEmail()
@@ -129,7 +127,6 @@ async function main() {
     assert.equal(vm.formError.value, 'Verify your school details again.')
     cleanup(); scope.stop(); cleanup = null
     assert.equal(vm.controllers.size, 0)
-    assert.equal(vm.registrationCode.value, '')
     assert.equal(vm.studentVerificationToken.value, '')
     console.log('PASS: student registration SFC and styles; identity/code normalization; trusted assignments and pending signup; username suggestions; email challenge/proofs; signup cleanup; stale identity/token responses; expired session and unmount cleanup.')
   } finally { cleanup?.(); scope.stop() }

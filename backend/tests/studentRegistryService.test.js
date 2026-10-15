@@ -56,7 +56,7 @@ test('import revalidates preview, requires duplicate acknowledgement and sends o
   await assert.rejects(service.importStudents('ht', body), /possible duplicates/);
   behavior = async (name, args) => {
     assert.equal(name, 'student_registry_import'); const row = args.p_records[0];
-    assert.match(row.codeHash, /^[a-f0-9]{64}$/); assert.equal(row.codeHash, service.digest(service.registrationCode({ id: row.id, code_nonce: row.nonce })));
+    assert.equal(row.firstName, 'Jose'); assert.equal(row.lastName, 'Cruz');
     assert.equal(Object.hasOwn(row, 'registrationCode'), false); return { data: 1 };
   };
   assert.equal((await service.importStudents('ht', { ...body, allowPossibleDuplicates: true })).imported, 1);
@@ -64,13 +64,12 @@ test('import revalidates preview, requires duplicate acknowledgement and sends o
 });
 test('code verification normalizes formatting, stores only a ticket hash, and returns proof only after SQL validation', async () => {
   fixture(); behavior = async (name, args) => {
-    assert.equal(name, 'student_registry_verify'); assert.equal(args.p_code_hash, student.code_hash); assert.equal(args.p_full_name, 'Maria Santos');
+    assert.equal(name, 'student_registry_verify'); assert.equal(args.p_full_name, 'Maria Santos');
     assert.match(args.p_ticket_hash, /^[a-f0-9]{64}$/); return { data: { student: { id: student.id, fullName: student.full_name }, expiresAt: future() } };
   };
-  const response = await service.verifyStudent(token, { registrationCode: service.registrationCode(codeRow).toLowerCase().match(/.{8}/g).join(' - '), fullName: ' Maria   Santos ' });
+  const response = await service.verifyStudent(token, { fullName: ' Maria   Santos ' });
   assert.equal(service.digest(response.studentVerificationToken), rpcCalls[0].args.p_ticket_hash);
   assert.equal(response.student.fullName, 'Maria Santos');
-  await assert.rejects(service.verifyStudent(token, { registrationCode: '123', fullName: 'Maria Santos' }), { code: 'CODE_INVALID' });
 });
 test('username availability requires a valid ticket, ignores case and treats underscores literally', async () => {
   fixture(); client.tables.users.push({ id: 'existing', username: 'MARIA_SANTOS' });

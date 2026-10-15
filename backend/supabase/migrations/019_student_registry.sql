@@ -49,7 +49,7 @@ create table if not exists public.student_registry_sessions (
   id text primary key default replace(gen_random_uuid()::text, '-', ''),
   registry_id text not null references public.student_registry(id) on delete cascade,
   link_hash text not null,
-  code_hash text not null,
+  code_hash text,
   ticket_hash text not null unique check (ticket_hash ~ '^[a-f0-9]{64}$'),
   expires_at timestamptz not null default now() + interval '30 minutes',
   email text,
@@ -134,9 +134,6 @@ as $$ declare v_session public.student_registry_sessions%rowtype; v_student publ
   select * into v_student from public.student_registry where id = v_session.registry_id for update;
   if v_student.id is null then raise exception 'REGISTRY_NOT_FOUND'; end if;
   if v_student.student_id is not null or v_student.code_used_at is not null then raise exception 'STUDENT_REGISTERED'; end if;
-  if v_student.code_revoked_at is not null then raise exception 'CODE_REVOKED'; end if;
-  if v_student.code_hash is null or v_student.code_hash is distinct from v_session.code_hash then raise exception 'CODE_INVALID'; end if;
-  if v_student.code_expires_at is null or v_student.code_expires_at <= now() then raise exception 'CODE_EXPIRED'; end if;
   return v_session;
 end; $$;
 
@@ -179,9 +176,7 @@ as $$ declare v_record jsonb; v_first text; v_last text; v_name text; begin
       or char_length(v_first) not between 1 and 100 or char_length(v_last) not between 1 and 100
       or char_length(v_name) not between 3 and 150
       or v_first !~ '[[:alpha:]]' or v_last !~ '[[:alpha:]]' or v_name ~ '[[:cntrl:]]'
-      or coalesce(v_record->>'id', '') !~ '^[A-Za-z0-9_-]{1,128}$'
-      or coalesce(v_record->>'nonce', '') !~ '^[A-Za-z0-9_-]{16,128}$'
-      or coalesce(v_record->>'codeHash', '') !~ '^[a-f0-9]{64}$' then raise exception 'INPUT_INVALID'; end if;
+      or coalesce(v_record->>'id', '') !~ '^[A-Za-z0-9_-]{1,128}$' then raise exception 'INPUT_INVALID'; end if;
     if exists(select 1 from public.student_registry where normalized_name = public.normalize_registration_name(v_name))
       or exists(select 1 from public.users where role = 'student' and public.normalize_registration_name(name) = public.normalize_registration_name(v_name)) then
       raise exception 'REGISTRY_DUPLICATE';
@@ -189,28 +184,26 @@ as $$ declare v_record jsonb; v_first text; v_last text; v_name text; begin
     insert into public.student_registry(id, first_name, last_name, full_name, normalized_name, created_by,
       code_nonce, code_hash, code_expires_at)
       values(v_record->>'id', v_first, v_last, v_name, public.normalize_registration_name(v_name), p_headteacher_id,
-        v_record->>'nonce', v_record->>'codeHash', now() + interval '30 days');
+        nullif(v_record->>'nonce', ''), nullif(v_record->>'codeHash', ''), case when v_record->>'codeHash' is not null then now() + interval '30 days' else null end);
   end loop;
   return jsonb_array_length(p_records);
 end; $$;
 
 create or replace function public.student_registry_verify(
-  p_link_hash text, p_code_hash text, p_full_name text, p_ticket_hash text
+  p_link_hash text, p_full_name text, p_ticket_hash text
 ) returns jsonb language plpgsql security definer set search_path = public, pg_temp
 as $$ declare v_link public.student_registry_links%rowtype; v_student public.student_registry%rowtype;
   v_session public.student_registry_sessions%rowtype; v_assignments jsonb; begin
   perform pg_advisory_xact_lock(hashtextextended('edumatch-class-roster-identity', 0));
   v_link := public.student_registry_check_link(p_link_hash);
   if p_ticket_hash is null or p_ticket_hash !~ '^[a-f0-9]{64}$' then raise exception 'INPUT_INVALID'; end if;
-  select * into v_student from public.student_registry where code_hash = p_code_hash
-    and normalized_name = public.normalize_registration_name(p_full_name) for update;
-  if v_student.id is null then raise exception 'CODE_INVALID'; end if;
+  select * into v_student from public.student_registry
+    where normalized_name = public.normalize_registration_name(p_full_name) for update;
+  if v_student.id is null then raise exception 'NAME_NOT_FOUND'; end if;
   if v_student.student_id is not null or v_student.code_used_at is not null then raise exception 'STUDENT_REGISTERED'; end if;
-  if v_student.code_revoked_at is not null then raise exception 'CODE_REVOKED'; end if;
-  if v_student.code_expires_at is null or v_student.code_expires_at <= now() then raise exception 'CODE_EXPIRED'; end if;
   insert into public.student_registry_sessions(registry_id, link_hash, code_hash, ticket_hash, expires_at)
-    values(v_student.id, p_link_hash, p_code_hash, p_ticket_hash,
-      least(now() + interval '30 minutes', v_student.code_expires_at, v_link.expires_at)) returning * into v_session;
+    values(v_student.id, p_link_hash, null, p_ticket_hash,
+      least(now() + interval '30 minutes', v_link.expires_at)) returning * into v_session;
   select coalesce(jsonb_agg(jsonb_build_object('subjectId', s.id, 'className', coalesce(nullif(s.class_name, ''), s.name),
     'subjectName', s.name, 'teacherName', t.name, 'sectionName', coalesce(sec.name, '')) order by s.class_name, s.id), '[]'::jsonb)
     into v_assignments from public.student_registry_assignments a
@@ -589,7 +582,7 @@ do $$ declare v_signature text; begin
     'public.student_registry_owned_auth(uuid,text,text)',
     'public.student_registry_link(text,text,text,boolean,integer)', 'public.student_registry_import(text,jsonb)',
     'public.student_registry_code(text,text,text,text,boolean)', 'public.student_registry_assign(text,text[],text[])',
-    'public.student_registry_verify(text,text,text,text)', 'public.student_registry_prepare_email(text,text,text,text,text)',
+    'public.student_registry_verify(text,text,text)', 'public.student_registry_prepare_email(text,text,text,text,text)',
     'public.student_registry_verify_email(text,text,text,text,text,text)', 'public.student_registry_begin(text,text,text,text,text,text)',
     'public.student_registry_finish(text,text,uuid)'
   ] loop

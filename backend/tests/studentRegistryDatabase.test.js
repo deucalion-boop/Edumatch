@@ -23,8 +23,8 @@ const records = (overrides = {}) => [{ id: 'maria', firstName: 'Maria', lastName
 const importStudents = input => rpc('import', ['head', JSON.stringify(input || records())]);
 const createLink = (rotate = false, value = link) => rpc('link', ['head', nonce, value, rotate, 30]);
 const verifyStudent = (overrides = {}) => {
-  const value = { link, code, name: 'Maria Santos', ticket, ...overrides };
-  return rpc('verify', [value.link, value.code, value.name, value.ticket]);
+  const value = { link, name: 'Maria Santos', ticket, ...overrides };
+  return rpc('verify', [value.link, value.name, value.ticket]);
 };
 const prepareEmail = (overrides = {}) => {
   const value = { link, ticket, email, otp, challenge: 'email-challenge-0001', ...overrides };
@@ -481,7 +481,7 @@ test('RPC privileges, provider constraints and safe reruns preserve existing reg
   const signatures = ['student_registry_link(text,text,text,boolean,integer)', 'student_registry_import(text,jsonb)',
     'student_registry_owned_auth(uuid,text,text)',
     'student_registry_code(text,text,text,text,boolean)', 'student_registry_assign(text,text[],text[])',
-    'student_registry_verify(text,text,text,text)', 'student_registry_prepare_email(text,text,text,text,text)',
+    'student_registry_verify(text,text,text)', 'student_registry_prepare_email(text,text,text,text,text)',
     'student_registry_verify_email(text,text,text,text,text,text)', 'student_registry_begin(text,text,text,text,text,text)',
     'student_registry_finish(text,text,uuid)'];
   for (const signature of signatures) {

@@ -14,6 +14,7 @@ const messages = {
   REGISTRY_NOT_FOUND: ['Student record not found.', 404],
   STUDENT_REGISTERED: ['This student has already registered. Sign in to the existing account.', 409],
   CODE_INVALID: ['The registration code and full name do not match. Check the details from your school.', 400],
+  NAME_NOT_FOUND: ['Your full name was not found on this school registration. Check the spelling or ask your school for help.', 400],
   CODE_EXPIRED: ['This registration code has expired. Ask your Head Teacher for a new code.', 410],
   CODE_REVOKED: ['This registration code has been revoked. Ask your Head Teacher for help.', 410],
   SESSION_INVALID: ['Verify your registration code and full name again.', 400],
@@ -226,10 +227,10 @@ async function details(token) { const row = await requireLink(token); return { r
 async function verifyStudent(token, body = {}) {
   const link = await requireLink(token);
   body = inputBody(body);
-  const code = typeof body.registrationCode === 'string' ? body.registrationCode.toUpperCase().replace(/[\s-]/g, '') : '';
-  if (!/^[A-F0-9]{32}$/.test(code) || typeof body.fullName !== 'string' || body.fullName.length > 200) throw known('CODE_INVALID');
+  const fullName = typeof body.fullName === 'string' ? body.fullName : '';
+  if (!fullName.trim() || fullName.length > 200) throw known('NAME_NOT_FOUND');
   const ticket = crypto.randomBytes(32).toString('hex');
-  const verified = await rpc('verify', { p_link_hash: link.token_hash, p_code_hash: digest(code), p_full_name: cleanText(body.fullName), p_ticket_hash: digest(ticket) });
+  const verified = await rpc('verify', { p_link_hash: link.token_hash, p_full_name: cleanText(fullName), p_ticket_hash: digest(ticket) });
   return { student: verified.student, studentVerificationToken: ticket, expiresAt: verified.expiresAt };
 }
 async function session(token, ticket, allowComplete = false) {

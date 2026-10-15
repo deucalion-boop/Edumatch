@@ -37,18 +37,13 @@
           </div>
 
           <form v-if="step === 'identity'" class="registration-form" @submit.prevent="verifyStudent">
-            <p class="form-description">Enter the registration code your school gave you and the full name on your school record.</p>
-            <div class="form-field">
-              <label for="student-registration-code">Registration code</label>
-              <input id="student-registration-code" v-model="registrationCode" type="text" required maxlength="64" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" :disabled="verifyingStudent" aria-describedby="registration-code-hint" />
-              <small id="registration-code-hint">Enter your 32-character school registration code. Spaces and hyphens are optional. Keep your code private.</small>
-            </div>
+            <p class="form-description">Enter the full name on your school record.</p>
             <div class="form-field">
               <label for="student-full-name">Full name</label>
               <input id="student-full-name" v-model="fullName" type="text" required maxlength="150" autocomplete="name" :disabled="verifyingStudent" aria-describedby="student-name-hint" />
               <small id="student-name-hint">Include all names recorded by your school. Capitalization and extra spaces do not matter.</small>
             </div>
-            <button type="submit" class="primary-button" :disabled="verifyingStudent || alreadyRegistered || !validRegistrationCode || !fullName.trim()">{{ verifyingStudent ? 'Verifying your details…' : 'Verify and continue' }}<i v-if="!verifyingStudent" class="fas fa-arrow-right" aria-hidden="true"></i></button>
+            <button type="submit" class="primary-button" :disabled="verifyingStudent || alreadyRegistered || !fullName.trim()">{{ verifyingStudent ? 'Verifying your details…' : 'Verify and continue' }}<i v-if="!verifyingStudent" class="fas fa-arrow-right" aria-hidden="true"></i></button>
           </form>
 
           <form v-else class="registration-form" @submit.prevent="registerStudent">
@@ -130,7 +125,6 @@ const loading = ref(false)
 const linkError = ref('')
 const linkUnavailable = ref(false)
 const step = ref('identity')
-const registrationCode = ref('')
 const fullName = ref('')
 const verifiedStudent = ref(null)
 const studentVerificationToken = ref('')
@@ -173,8 +167,6 @@ let resetting = false
 let disposed = false
 const clockTimer = window.setInterval(() => { now.value = Date.now() }, 1000)
 const registrationPath = computed(() => `${resolveApiBaseUrl()}/auth/student-registry/${encodeURIComponent(String(route.params.token || ''))}`)
-const normalizedRegistrationCode = computed(() => registrationCode.value.replace(/[\s-]+/g, '').toUpperCase())
-const validRegistrationCode = computed(() => /^[A-F0-9]{32}$/.test(normalizedRegistrationCode.value))
 const usernamePattern = /^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$/
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,16}$/
 const normalizedEmail = computed(() => email.value.trim().toLowerCase())
@@ -241,7 +233,7 @@ async function loadRegistration() {
   const requestSession = sessionId
   for (const key of controllers.keys()) cancelRequest(key)
   resetting = true
-  resetIdentity(); registrationCode.value = ''; fullName.value = ''; completed.value = false; registeredStudent.value = {}
+  resetIdentity(); fullName.value = ''; completed.value = false; registeredStudent.value = {}
   registration.value = null; linkError.value = ''; linkUnavailable.value = false; loading.value = true
   resetting = false
   try {
@@ -260,12 +252,12 @@ async function loadRegistration() {
 }
 
 async function verifyStudent() {
-  if (!registration.value || verifyingStudent.value || alreadyRegistered.value || !validRegistrationCode.value || !fullName.value.trim()) return
+  if (!registration.value || verifyingStudent.value || alreadyRegistered.value || !fullName.value.trim()) return
   const requestSession = sessionId
   const requestId = ++identityRequestId
   verifyingStudent.value = true; formError.value = ''
   try {
-    const { data } = await axios.post(`${registrationPath.value}/verify`, { registrationCode: normalizedRegistrationCode.value, fullName: fullName.value.trim() }, requestConfig('verify-student'))
+    const { data } = await axios.post(`${registrationPath.value}/verify`, { fullName: fullName.value.trim() }, requestConfig('verify-student'))
     if (!live(requestSession) || requestId !== identityRequestId) return
     const expiresAt = Date.parse(data.expiresAt)
     if (!data.student || !data.studentVerificationToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) throw new Error('Student verification is incomplete')
@@ -273,7 +265,7 @@ async function verifyStudent() {
     step.value = 'account'
   } catch (error) {
     if (!live(requestSession) || requestId !== identityRequestId || axios.isCancel(error)) return
-    if (!handleRegistrationError(error)) formError.value = responseMessage(error, 'We could not verify your details. Check your registration code and the full name on your school record, then try again.')
+    if (!handleRegistrationError(error)) formError.value = responseMessage(error, 'We could not verify your details. Check the full name on your school record, then try again.')
   } finally { if (live(requestSession) && requestId === identityRequestId) verifyingStudent.value = false }
 }
 
@@ -346,7 +338,7 @@ async function checkUsername() {
 async function registerStudent() {
   if (submitting.value || alreadyRegistered.value) return
   formError.value = ''
-  if (!identityVerified.value) { resetIdentity(); formError.value = 'Verify your registration code and full name again to continue.'; return }
+  if (!identityVerified.value) { resetIdentity(); formError.value = 'Verify your full name again to continue.'; return }
   if (!validEmail.value || !emailVerified.value) { formError.value = 'Verify your own email address before creating your account.'; return }
   if (!usernameAvailable.value) { formError.value = 'Choose a username and wait for its availability check.'; return }
   if (!passwordPattern.test(password.value)) { formError.value = 'Use an 8–16 character password with uppercase and lowercase letters and a number.'; return }
@@ -362,7 +354,7 @@ async function registerStudent() {
     if (!live(requestSession) || requestIdentity !== identityRequestId || requestEmail !== emailRequestId) return
     if (typeof data.username !== 'string' || !data.username.trim()) throw new Error('Registration could not be confirmed')
     registeredStudent.value = data.student || data.user || { ...verifiedStudent.value }; completed.value = true; username.value = data.username
-    studentVerificationToken.value = ''; studentVerificationExpiresAt.value = 0; registrationCode.value = ''; clearEmailVerification(); invalidateUsername()
+    studentVerificationToken.value = ''; studentVerificationExpiresAt.value = 0; clearEmailVerification(); invalidateUsername()
   } catch (error) {
     if (!live(requestSession) || requestIdentity !== identityRequestId || requestEmail !== emailRequestId || axios.isCancel(error)) return
     if (handleRegistrationError(error)) return
@@ -374,7 +366,7 @@ async function registerStudent() {
 
 function formatExpiry(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? 'soon' : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date) }
 watch(email, clearEmailVerification, { flush: 'sync' })
-watch([registrationCode, fullName], () => { if (!resetting && !disposed && !completed.value) resetIdentity() }, { flush: 'sync' })
+watch(fullName, () => { if (!resetting && !disposed && !completed.value) resetIdentity() }, { flush: 'sync' })
 watch(username, () => {
   invalidateUsername()
   if (!identityVerified.value || !username.value.trim() || completed.value) return
@@ -385,7 +377,7 @@ watch(now, () => {
   if (completed.value || loading.value || linkError.value || submitting.value) return
   const expiresAt = Date.parse(registration.value?.expiresAt)
   if (Number.isFinite(expiresAt) && expiresAt <= now.value) { linkUnavailable.value = true; linkError.value = 'This registration link has expired. Ask your school for a new link.'; resetIdentity() }
-  else if (studentVerificationToken.value && studentVerificationExpiresAt.value <= now.value) { resetIdentity(); formError.value = 'Your school record verification has expired. Verify your registration code and name again.' }
+  else if (studentVerificationToken.value && studentVerificationExpiresAt.value <= now.value) { resetIdentity(); formError.value = 'Your school record verification has expired. Verify your name again.' }
   else if (verificationToken.value && verificationExpiresAt.value <= now.value) { verificationToken.value = ''; emailMessage.value = ''; emailError.value = 'Your email verification has expired. Request a new code.' }
 })
 watch(() => route.params.token, loadRegistration, { immediate: true })
@@ -393,7 +385,7 @@ onBeforeUnmount(() => {
   disposed = true; sessionId += 1; identityRequestId += 1; emailRequestId += 1; usernameRequestId += 1
   clearTimeout(usernameTimer); window.clearInterval(clockTimer)
   for (const key of controllers.keys()) cancelRequest(key)
-  registrationCode.value = ''; studentVerificationToken.value = ''; verificationToken.value = ''; emailCode.value = ''; emailChallengeId.value = ''; clearPasswords()
+  studentVerificationToken.value = ''; verificationToken.value = ''; emailCode.value = ''; emailChallengeId.value = ''; clearPasswords()
 })
 </script>
 
