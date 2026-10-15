@@ -652,10 +652,6 @@
                 <small v-if="teacherErrors.username" class="headteacher-field-error" role="alert">{{ teacherErrors.username }}</small>
               </label>
               <label class="headteacher-form-group">
-                <span>Department</span>
-                <input :value="departmentLabel" type="text" readonly>
-              </label>
-              <label class="headteacher-form-group">
                 <span>Contact Number</span>
                 <PhilippinePhoneInput id="teacherContactNumber" v-model="form.contactNumber" :aria-invalid="Boolean(teacherErrors.contactNumber)" @input="validateTeacherForm" />
                 <small v-if="teacherErrors.contactNumber" class="headteacher-field-error" role="alert">{{ teacherErrors.contactNumber }}</small>
