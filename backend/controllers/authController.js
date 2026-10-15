@@ -127,6 +127,7 @@ function buildLoginUser(user, req) {
     id: user._id,
     name: user.name,
     email: user.email,
+    authProvider: user.authProvider || 'local',
     username: user.username || '',
     role: user.role,
     status: user.status,
@@ -272,7 +273,7 @@ const login = asyncHandler(async (req, res) => {
     targetLabel: user.name || user.username || user.email,
   };
 
-  if (!user.password) {
+  if (!user.password && !(user.authProvider === 'supabase' && user.authUserId)) {
     await recordLoginAttempt(req, {
       username: normalizedUsername,
       user,
@@ -358,7 +359,7 @@ const login = asyncHandler(async (req, res) => {
   user.lockUntil = null;
   await user.save();
 
-  assertAccountEmail(user.email, user.role);
+  assertAccountEmail(user.email, user.role, user.authProvider);
 
   if (settings.user.emailVerificationRequired === false) {
     await consumeOpenChallenges(user._id);
@@ -412,7 +413,7 @@ const resendLoginOtp = asyncHandler(async (req, res) => {
     error.statusCode = 403;
     throw error;
   }
-  assertAccountEmail(user.email, user.role);
+  assertAccountEmail(user.email, user.role, user.authProvider);
   const { maintenanceModeEnabled, maintenanceMessage } = (await getAppSettings()).maintenance;
   if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
     const error = new Error(maintenanceMessage);
@@ -459,7 +460,7 @@ const verifyLoginOtp = asyncHandler(async (req, res) => {
     error.statusCode = 403;
     throw error;
   }
-  assertAccountEmail(user.email, user.role);
+  assertAccountEmail(user.email, user.role, user.authProvider);
   const { maintenanceModeEnabled, maintenanceMessage } = (await getAppSettings()).maintenance;
   if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
     const error = new Error(maintenanceMessage);

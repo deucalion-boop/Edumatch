@@ -1,0 +1,27 @@
+const express = require('express');
+const controller = require('../controllers/studentRegistryController');
+const { buildLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
+const management = express.Router();
+const publicRoutes = express.Router();
+const limiter = (prefix, limit) => buildLimiter({ prefix: `student-registry-${prefix}`, windowMs: 15 * 60 * 1000, limit,
+  message: 'Too many student registration requests. Please wait a few minutes and try again.' });
+const read = limiter('read', 150), write = limiter('write', 30), verify = limiter('verify', 40), email = limiter('email', 15);
+const noStore = (_req, res, next) => { res.set('Cache-Control', 'no-store'); res.set('Referrer-Policy', 'no-referrer'); next(); };
+management.use(noStore);
+management.get('/', controller.list);
+management.get('/template', controller.template);
+management.get('/export', controller.export);
+management.post('/preview', uploadLimiter, controller.rosterUpload, controller.preview);
+management.post('/import', write, controller.importStudents);
+management.post('/link', write, controller.link);
+management.post('/assign', write, controller.assign);
+management.post('/:id/revoke', write, controller.revoke);
+management.post('/:id/code', write, controller.code);
+publicRoutes.use(noStore);
+publicRoutes.get('/:token', read, controller.details);
+publicRoutes.post('/:token/verify', verify, controller.verify);
+publicRoutes.get('/:token/username', read, controller.username);
+publicRoutes.post('/:token/email-code', email, controller.emailCode);
+publicRoutes.post('/:token/verify-email', verify, controller.verifyEmail);
+publicRoutes.post('/:token/register', verify, controller.register);
+module.exports = { management, publicRoutes };

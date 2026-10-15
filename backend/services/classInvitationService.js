@@ -30,6 +30,7 @@ function databaseError(error) {
     NAME_NOT_FOUND: ['Your full name was not found on this class invitation. Check the spelling or ask your teacher for help.', 400],
     STUDENT_REGISTERED: ['This student has already registered. Sign in to your existing account.', 409],
     ROSTER_DUPLICATE: ['One or more student names already exist or were imported by another teacher. Review the roster and try again.', 409],
+    REGISTRY_DUPLICATE: ['One or more student names already exist in the school registry. Ask your Head Teacher to assign those students to your class.', 409],
     ROSTER_INVALID: ['The roster contains invalid names or sections. Preview the file again.', 400],
     CLASS_UNAVAILABLE: ['The selected class is unavailable. Ask your teacher for help.', 404],
     ADVISORY_UNAVAILABLE: ['This invitation is no longer available for your teacher’s advisory class. Ask your teacher for a current invitation.', 404],

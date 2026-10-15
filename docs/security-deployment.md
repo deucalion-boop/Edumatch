@@ -5,7 +5,7 @@ and administrator security settings. Existing administrator accounts are preserv
 on startup. A first administrator requires an explicit `ADMIN_PASSWORD` meeting
 the existing password policy and must change that password after signing in.
 
-Apply migrations `001` through `008` in order on a new database. Migration `007`
+Apply all migrations through `019` in order on a new database. Student registry setup is documented in [student-registry.md](student-registry.md); shared teacher links require both `017` and `018`. Migration `007`
 adds assessment submission settings, including `allow_late_submissions`, to
 databases created before those fields were added to migration `003`. Migration
 `008` adds lesson progress and recommendation fields. The existing connected

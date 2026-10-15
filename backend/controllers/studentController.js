@@ -155,6 +155,7 @@ function studentProfileResponse(user, req) {
     id: String(user._id),
     name: user.name,
     email: user.email,
+    authProvider: user.authProvider || 'local',
     role: user.role,
     strand: user.strand || '',
     gradeLevel: user.gradeLevel || '',
@@ -1761,6 +1762,9 @@ const updateStudentProfile = asyncHandler(async (req, res) => {
   }
 
   if (email !== String(req.user.email || '').toLowerCase()) {
+    if (req.user.authProvider === 'supabase') {
+      throw Object.assign(new Error('Your email is your verified sign-in identity. Contact your administrator to change it.'), { statusCode: 400 });
+    }
     const existing = await User.findOne({ email, _id: { $ne: req.user._id } }).select('_id');
     if (existing) {
       const error = new Error('Email already exists');

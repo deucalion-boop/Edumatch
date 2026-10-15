@@ -50,9 +50,10 @@ function toRow(account, passwordHash) {
   return {
     ...(account._id || account.id ? { id: String(account._id || account.id) } : {}),
     name: String(account.name || '').trim(),
-    email: assertAccountEmail(account.email, role),
+    email: assertAccountEmail(account.email, role, account.authProvider),
     username: String(account.username || '').trim(),
-    password_hash: passwordHash || null,
+    password_hash: account.authProvider === 'supabase' ? null : passwordHash || null,
+    ...(account.authProvider === 'supabase' || account.authUserId ? { auth_provider: account.authProvider || 'local', auth_user_id: account.authUserId || null } : {}),
     role,
     status,
     strand: String(account.strand || ''),
@@ -90,6 +91,8 @@ function fromRow(row) {
     email: row.email,
     username: row.username,
     password: row.password_hash || '',
+    authProvider: row.auth_provider || 'local',
+    authUserId: row.auth_user_id || null,
     role: row.role,
     status: row.status,
     strand: row.strand || '',
@@ -124,18 +127,32 @@ function fromRow(row) {
   });
   Object.defineProperty(account, 'comparePassword', {
     enumerable: false,
-    value: (plainPassword) => bcrypt.compare(String(plainPassword || ''), String(account.password || '')),
+    value: (plainPassword) => account.authProvider === 'supabase'
+      ? require('./studentAuthService').verifyStudentPassword(account, String(plainPassword || ''))
+      : bcrypt.compare(String(plainPassword || ''), String(account.password || '')),
   });
   return account;
 }
 
 async function saveSupabaseAccount(account) {
+  const accountId = account._id || account.id;
+  const existing = accountId ? await findSupabaseAccount('id', accountId) : null;
+  if (existing?.authProvider === 'supabase' && (existing.email !== String(account.email || '').trim().toLowerCase()
+    || existing.authUserId !== account.authUserId || account.authProvider !== 'supabase')) {
+    throw Object.assign(new Error('The verified student sign-in identity cannot be changed through profile editing. Contact your administrator.'), { statusCode: 400 });
+  }
   let passwordHash = String(account.password || '').trim();
-  if (passwordHash && !/^\$2[aby]\$\d{2}\$/.test(passwordHash)) {
+  if (account.authProvider === 'supabase') {
+    if (passwordHash) {
+      assertPasswordMeetsPolicy(passwordHash);
+      await require('./studentAuthService').updateStudentPassword(account, passwordHash);
+    }
+    passwordHash = '';
+    account.password = '';
+  } else if (passwordHash && !/^\$2[aby]\$\d{2}\$/.test(passwordHash)) {
     passwordHash = await bcrypt.hash(passwordHash, 10);
   }
   const row = toRow(account, passwordHash);
-  const existing = row.id ? await findSupabaseAccount('id', row.id) : null;
   if (existing && existing.email !== row.email) {
     row.token_version = Math.max(row.token_version, existing.tokenVersion) + 1;
     await Promise.all([revokeUserSessions(row.id, 'Email address changed; verification required'), consumeOpenChallenges(row.id)]);

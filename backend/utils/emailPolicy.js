@@ -39,8 +39,9 @@ function assertTeacherEmail(value) {
   return String(value).trim().toLowerCase();
 }
 
-function assertAccountEmail(value, role) {
+function assertAccountEmail(value, role, authProvider) {
   return String(role || '').trim().toLowerCase() === 'teacher'
+    || (role === 'student' && authProvider === 'supabase')
     ? assertTeacherEmail(value)
     : assertGmailEmail(value);
 }

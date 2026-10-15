@@ -24,6 +24,7 @@ const router = express.Router();
 const teacherInvitation = require('../controllers/teacherInvitationController');
 
 router.use(authMiddleware, roleMiddleware('headteacher'));
+router.use('/student-registry', require('./studentRegistryRoutes').management);
 
 router.get('/teacher-invitations', teacherInvitation.list);
 router.post('/teacher-invitations', inviteLimiter, teacherInvitation.create);

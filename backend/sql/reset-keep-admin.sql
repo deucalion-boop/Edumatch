@@ -2,6 +2,7 @@
 -- Back up first and stop the backend while running in Supabase SQL Editor.
 -- Admin accounts/passwords and the database schema are preserved.
 -- Supabase Storage files are not deleted. This does not apply migrations.
+-- Supabase Auth identities are not deleted by this application-data reset.
 
 begin;
 set local lock_timeout = '10s';
@@ -18,6 +19,11 @@ begin
   -- Child records come first, including the roster's RESTRICT references.
   -- Skip tables absent from installations with older migrations.
   foreach table_name in array array[
+    'student_registry_sessions',
+    'student_registry_claims',
+    'student_registry_assignments',
+    'student_registry_links',
+    'student_registry',
     'teacher_invitation_registrations',
     'teacher_invitations',
     'class_registration_students',

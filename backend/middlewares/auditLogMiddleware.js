@@ -4,7 +4,7 @@ const redactRequestPath = require('../utils/redactRequestPath');
 const AUDITED_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const SENSITIVE_KEYS = new Set([
   'password', 'newPassword', 'currentPassword', 'confirmPassword', 'captchaToken', 'token',
-  'answer', 'challengeId', 'previousChallengeId', 'code', 'verificationToken',
+  'answer', 'challengeId', 'previousChallengeId', 'code', 'verificationToken', 'studentVerificationToken', 'registrationCode',
 ]);
 const CATEGORY_LABELS = {
   auth: 'Authentication',
@@ -77,6 +77,12 @@ const ACTION_LABELS = {
   'POST /api/headteacher/teacher-invitations/:id/revoke': 'Teacher invitation revoked',
   'POST /api/auth/teacher-invitations/:token/register': 'Teacher invitation accepted',
   'POST /api/headteacher/students': 'Student account created',
+  'POST /api/headteacher/student-registry/import': 'Student registry imported',
+  'POST /api/headteacher/student-registry/assign': 'Student class assignments updated',
+  'POST /api/headteacher/student-registry/link': 'Student registration link updated',
+  'POST /api/headteacher/student-registry/:id/revoke': 'Student registration code revoked',
+  'POST /api/headteacher/student-registry/:id/code': 'Student registration code renewed',
+  'POST /api/auth/student-registry/:token/register': 'Student registry registration completed',
   'PUT /api/headteacher/teachers/:id': 'Managed teacher updated',
   'POST /api/secretary/students/archived/export-requests': 'Archived PDF export requested',
   'POST /api/secretary/students/archived/export-requests/:id/consume': 'Archived PDF approval consumed',

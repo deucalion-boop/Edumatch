@@ -67,6 +67,7 @@ const route = useRoute()
 const navigationItems = [
   { path: '/headteacher/dashboard', label: 'Dashboard', icon: 'fa-home' },
   { path: '/headteacher/management', label: 'Teacher Management', icon: 'fa-users-cog' },
+  { path: '/headteacher/students', label: 'Student Management', icon: 'fa-user-graduate' },
   { path: '/headteacher/lessons', label: 'Lessons & Exams', icon: 'fa-book-open' },
   { path: '/headteacher/announcements', label: 'Announcements', icon: 'fa-bullhorn' },
 ]

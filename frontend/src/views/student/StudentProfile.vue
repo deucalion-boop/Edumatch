@@ -156,8 +156,9 @@
                       type="email" 
                       id="email" 
                       v-model="formData.email"
-                      :readonly="!isEditing"
+                      :readonly="!isEditing || user.authProvider === 'supabase'"
                     >
+                    <small v-if="user.authProvider === 'supabase'">Verified sign-in email. Contact your administrator to change it.</small>
                   </div>
 
                   <div class="form-group">
@@ -201,6 +202,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
+import { isValidTeacherEmail } from '../../utils/emailPolicy.js'
 import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 export default {
@@ -333,6 +335,7 @@ export default {
         displayName: fullName,
         username: apiUser.username || this.authStore?.user?.username || '',
         email: apiUser.email || '',
+        authProvider: apiUser.authProvider || this.authStore?.user?.authProvider || 'local',
         role,
         status: statusValue,
         statusLabel,
@@ -453,7 +456,7 @@ export default {
           return
         }
         const emailRegex = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i
-        if (!emailRegex.test(email)) {
+        if (this.user.authProvider === 'supabase' ? !isValidTeacherEmail(email) : !emailRegex.test(email)) {
           this.showToast('error', 'Please enter a valid Gmail address (e.g., user@gmail.com)')
           return
         }
