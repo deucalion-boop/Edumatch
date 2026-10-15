@@ -80,15 +80,6 @@
             </div>
             <div class="detail-item">
               <div class="detail-icon">
-                <i class="fas fa-phone icon-sem-analytics"></i>
-              </div>
-              <div class="detail-content">
-                <div class="detail-label">Phone</div>
-                <div class="detail-value">{{ user.contactNumber || 'Not provided' }}</div>
-              </div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-icon">
                 <i class="fas fa-user-check icon-sem-profile"></i>
               </div>
               <div class="detail-content">
@@ -172,15 +163,6 @@
                   </div>
                 </div>
 
-                <div class="profile-form-section">
-                  <h4 class="form-section-title">Contact Details</h4>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="phone">Phone Number</label>
-                      <PhilippinePhoneInput id="phone" v-model="formData.phone" :readonly="!isEditing" />
-                    </div>
-                  </div>
-                </div>
 
                 <div v-if="isEditing" class="form-actions">
                   <button type="button" class="btn btn-secondary" @click="cancelEdit">
@@ -201,13 +183,10 @@
 <script>
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 import { isValidTeacherEmail } from '../../utils/emailPolicy.js'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 export default {
   name: 'StudentProfile',
-  components: { PhilippinePhoneInput },
   data() {
     return {
       authStore: null,
@@ -218,14 +197,12 @@ export default {
         role: 'student',
         status: 'active',
         statusLabel: 'Active',
-        contactNumber: '',
         gradeLevel: '',
         strand: '',
         profileImage: '',
         createdAt: null,
         profile: {
           fullName: '',
-          phone: '',
           address: '',
           bio: '',
           school: '',
@@ -243,7 +220,6 @@ export default {
         firstName: '',
         lastName: '',
         email: '',
-        phone: '',
         address: '',
         gradeLevel: ''
       },
@@ -339,7 +315,6 @@ export default {
         role,
         status: statusValue,
         statusLabel,
-        contactNumber: normalizePhilippinePhone(apiUser.contactNumber),
         strand: apiUser.strand || '',
         profileImage,
         gradeLevel: apiUser.gradeLevel || '',
@@ -347,7 +322,6 @@ export default {
         profile: {
           ...this.user.profile,
           fullName,
-          phone: normalizePhilippinePhone(apiUser.contactNumber),
           avatar: profileImage || null
         }
       }
@@ -444,7 +418,6 @@ export default {
 
         const fullName = `${this.formData.firstName} ${this.formData.lastName}`.trim()
         const email = String(this.formData.email || '').trim()
-        const contactNumber = normalizePhilippinePhone(this.formData.phone)
         const gradeLevel = String(this.formData.gradeLevel || this.user.gradeLevel || '').trim()
 
         if (!fullName) {
@@ -460,10 +433,6 @@ export default {
           this.showToast('error', 'Please enter a valid Gmail address (e.g., user@gmail.com)')
           return
         }
-        if (!isValidPhilippinePhone(contactNumber)) {
-          this.showToast('error', 'Please enter a valid Philippine contact number beginning with +63')
-          return
-        }
         const allowedGradeLevels = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12']
         if (this.isStudentRole && gradeLevel && !allowedGradeLevels.includes(gradeLevel)) {
           this.showToast('error', 'Please select a valid grade level')
@@ -472,7 +441,6 @@ export default {
         const payload = new FormData()
         payload.append('name', fullName)
         payload.append('email', email)
-        payload.append('contactNumber', contactNumber)
         if (gradeLevel) {
           payload.append('gradeLevel', gradeLevel)
         }
@@ -484,7 +452,6 @@ export default {
           hasToken: Boolean(token),
           name: fullName,
           email,
-          contactNumber,
           gradeLevel,
           hasProfileImage: Boolean(this.selectedAvatarFile),
           profileImageName: this.selectedAvatarFile?.name || '',
@@ -580,7 +547,6 @@ export default {
         firstName: nameParts.firstName || '',
         lastName: nameParts.lastName || '',
         email: this.user.email || '',
-        phone: this.user.contactNumber || this.user.profile?.phone || '',
         address: this.user.profile?.address || '',
         gradeLevel: this.user.gradeLevel || ''
       }

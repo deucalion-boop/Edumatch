@@ -692,11 +692,6 @@
                 <small v-if="studentErrors.username" class="headteacher-field-error" role="alert">{{ studentErrors.username }}</small>
               </label>
               <label class="headteacher-form-group">
-                <span>Contact Number</span>
-                <PhilippinePhoneInput id="studentContactNumber" v-model="studentForm.contactNumber" :aria-invalid="Boolean(studentErrors.contactNumber)" @input="validateStudentForm" />
-                <small v-if="studentErrors.contactNumber" class="headteacher-field-error" role="alert">{{ studentErrors.contactNumber }}</small>
-              </label>
-              <label class="headteacher-form-group">
                 <span>Grade Level</span>
                 <input value="Grade 10" type="text" readonly>
               </label>
@@ -859,14 +854,12 @@
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import TeacherInvitationManager from '../../components/headteacher/TeacherInvitationManager.vue'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
-import { nameError, phoneError } from '../../utils/teacherValidation.js'
+import { nameError } from '../../utils/teacherValidation.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import gsap from 'gsap'
 import { useAuthStore } from '../../stores/auth.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -932,7 +925,6 @@ const studentForm = reactive({
   name: '',
   email: '',
   username: '',
-  contactNumber: '',
 })
 const announcementForm = reactive({
   subject: '',
@@ -1209,7 +1201,7 @@ watch(totalPages, (value) => {
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
 const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.value }
 
-const studentErrors = reactive({ teacherId: '', name: '', email: '', username: '', contactNumber: '' })
+const studentErrors = reactive({ teacherId: '', name: '', email: '', username: '' })
 
 const resetStudentForm = (teacherId = '') => {
   Object.keys(studentErrors).forEach((field) => { studentErrors[field] = '' })
@@ -1217,7 +1209,6 @@ const resetStudentForm = (teacherId = '') => {
   studentForm.name = ''
   studentForm.email = ''
   studentForm.username = ''
-  studentForm.contactNumber = ''
   studentFormMessage.value = ''
   studentFormMessageType.value = 'success'
 }
@@ -1480,7 +1471,6 @@ const validateStudentForm = () => {
   studentErrors.username = !String(studentForm.username || '').trim()
     ? 'Username is required.'
     : studentForm.username.length > 50 ? 'Username must be 50 characters or fewer.' : ''
-  studentErrors.contactNumber = phoneError(studentForm.contactNumber)
   studentErrors.email = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(studentForm.email)
     ? '' : 'Enter a valid Gmail address (e.g., user@gmail.com).'
   return !Object.values(studentErrors).some(Boolean)
@@ -1491,19 +1481,12 @@ const createStudent = async () => {
   isSubmittingStudent.value = true
   studentFormMessage.value = ''
   try {
-    const contactNumber = normalizePhilippinePhone(studentForm.contactNumber)
-    if (!isValidPhilippinePhone(contactNumber)) {
-      studentFormMessage.value = 'Please enter a valid Philippine contact number beginning with +63.'
-      studentFormMessageType.value = 'error'
-      return
-    }
 
     const response = await axios.post(`${resolveApiBaseUrl()}/headteacher/students`, {
       teacherId: studentForm.teacherId,
       name: studentForm.name,
       email: studentForm.email,
       username: studentForm.username,
-      contactNumber,
     }, getAuthConfig())
 
     const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()

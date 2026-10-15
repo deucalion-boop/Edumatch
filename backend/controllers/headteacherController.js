@@ -1,4 +1,4 @@
-const { nameError, phoneError } = require('../utils/teacherValidation');
+const { nameError } = require('../utils/teacherValidation');
 const User = require('../models/User');
 const Lesson = require('../models/Lesson');
 const Assessment = require('../models/Assessment');
@@ -23,7 +23,6 @@ const {
   getSubjectCategory,
 } = require('../constants/strandSubjects');
 const {
-  normalizeContactNumber,
   mapUserResponse,
   issueInviteForUser,
   applyRoleScopedFields,
@@ -408,7 +407,6 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     username,
     status,
     subject,
-    contactNumber,
     advisorySectionId,
   } = req.body || {};
 
@@ -418,7 +416,7 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const validationMessage = nameError(name, 'Full name', 100) || phoneError(contactNumber)
+  const validationMessage = nameError(name, 'Full name', 100)
     || (/\p{N}/u.test(String(username)) ? 'Username must not contain numbers.' : '');
   if (validationMessage) throw Object.assign(new Error(validationMessage), { statusCode: 400 });
   const normalizedEmail = String(email).toLowerCase().trim();
@@ -470,7 +468,6 @@ const createTeacherAccount = asyncHandler(async (req, res) => {
     advisorySectionId: advisorySection?._id,
     strand: '',
     gradeLevel: '',
-    contactNumber: normalizeContactNumber(contactNumber),
     managedBy: req.user._id,
     invite: {
       tokenHash: '',
@@ -500,7 +497,6 @@ const createStudentAccount = asyncHandler(async (req, res) => {
     name,
     email,
     username,
-    contactNumber,
   } = req.body || {};
 
   if (!teacherId || !name || !email || !username) {
@@ -509,7 +505,7 @@ const createStudentAccount = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const validationMessage = nameError(name, 'Full name', 100) || phoneError(contactNumber);
+  const validationMessage = nameError(name, 'Full name', 100);
   if (validationMessage) throw Object.assign(new Error(validationMessage), { statusCode: 400 });
 
   const teacher = await findManagedTeacherForHeadTeacher(req, teacherId, { department });
@@ -557,7 +553,6 @@ const createStudentAccount = asyncHandler(async (req, res) => {
     sectionId: advisorySectionId,
     department,
     gradeLevel: 'Grade 10',
-    contactNumber: normalizeContactNumber(contactNumber),
     managedBy: normalizedTeacherId,
     enrollment: {
       teacherId: normalizedTeacherId,
@@ -588,7 +583,7 @@ const createStudentAccount = asyncHandler(async (req, res) => {
 const updateManagedTeacher = asyncHandler(async (req, res) => {
   const department = ensureHeadTeacher(req);
   const { id } = req.params;
-  const { name, email, status, subject, contactNumber, advisorySectionId } = req.body || {};
+  const { name, email, status, subject, advisorySectionId } = req.body || {};
 
   const teacher = await findManagedTeacherForHeadTeacher(req, id, { department });
 
@@ -612,7 +607,6 @@ const updateManagedTeacher = asyncHandler(async (req, res) => {
     }
     teacher.status = normalizedStatus;
   }
-  if (contactNumber !== undefined) teacher.contactNumber = normalizeContactNumber(contactNumber);
 
   if (subject !== undefined) {
     const scopedFields = applyRoleScopedFields({

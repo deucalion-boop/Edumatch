@@ -375,14 +375,13 @@
 
 <script setup>
 import axios from 'axios'
-import { nameError, phoneError, passwordLengthError } from '../../utils/teacherValidation.js'
+import { nameError, passwordLengthError } from '../../utils/teacherValidation.js'
 import { isValidTeacherEmail } from '../../utils/emailPolicy.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -417,7 +416,6 @@ const {
 const settings = reactive({
   fullName: '',
   email: '',
-  contactNumber: '',
   emailAlerts: true,
   inAppAlerts: true,
   twoFactor: false,
@@ -449,7 +447,6 @@ const settingsSections = [
 const profileForm = reactive({
   displayName: '',
   email: '',
-  contactNumber: ''
 })
 const securityForm = reactive({
   currentPassword: '',
@@ -743,13 +740,8 @@ const saveProfileInfo = async () => {
     showToast('error', 'Please resolve the highlighted profile fields.')
     return
   }
-  if (phoneError(profileForm.contactNumber)) {
-    showToast('error', 'Please enter a valid Philippine contact number beginning with +63.')
-    return
-  }
   settings.fullName = String(profileForm.displayName || '').trim() || settings.fullName
   settings.email = String(profileForm.email || '').trim()
-  settings.contactNumber = normalizePhilippinePhone(profileForm.contactNumber)
   showToast('success', 'Profile information updated.')
 }
 const validateSecurityFields = () => {
@@ -1050,10 +1042,8 @@ onMounted(() => {
   const authUser = authStore.user || {}
   settings.fullName = authUser.name || authUser.displayName || authUser.username || 'Teacher'
   settings.email = authUser.email || ''
-  settings.contactNumber = normalizePhilippinePhone(authUser.contactNumber || authUser.profile?.contactNumber)
   profileForm.displayName = settings.fullName
   profileForm.email = settings.email
-  profileForm.contactNumber = settings.contactNumber
   loadPreferences()
   loadActiveSessions()
   maybeAutoStartTour()

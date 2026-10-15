@@ -177,11 +177,6 @@ const userSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
-    contactNumber: {
-      type: String,
-      default: '',
-      trim: true,
-    },
     gradeLevel: {
       type: String,
       enum: ['', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'],

@@ -170,10 +170,6 @@
                 <span>Username</span>
                 <strong>{{ usernameLabel }}</strong>
               </div>
-              <div class="profile-detail-item">
-                <span>Contact Number</span>
-                <strong>{{ profileForm.contactNumber || 'Not provided' }}</strong>
-              </div>
             </div>
           </article>
 
@@ -205,11 +201,6 @@
                   <small v-if="errors.username" class="profile-field-error">{{ errors.username }}</small>
                 </label>
 
-                <label class="profile-field profile-field--wide">
-                  <span>Contact Number</span>
-                  <PhilippinePhoneInput id="contactNumber" v-model="profileForm.contactNumber" />
-                  <small v-if="errors.contactNumber" class="profile-field-error">{{ errors.contactNumber }}</small>
-                </label>
               </div>
 
               <div class="profile-form-actions">
@@ -229,8 +220,6 @@ import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -249,13 +238,11 @@ const profileForm = reactive({
   name: '',
   email: '',
   username: '',
-  contactNumber: '',
 })
 const errors = reactive({
   name: '',
   email: '',
   username: '',
-  contactNumber: '',
 })
 
 const resolveProfileImageUrl = (value) => {
@@ -315,7 +302,6 @@ const syncProfileForm = () => {
   profileForm.name = String(authStore.user?.name || authStore.user?.displayName || '').trim()
   profileForm.email = String(authStore.user?.email || '').trim()
   profileForm.username = String(authStore.user?.username || '').trim()
-  profileForm.contactNumber = normalizePhilippinePhone(authStore.user?.contactNumber)
   profileImageDraft.value = resolveProfileImageUrl(authStore.user?.profileImage || authStore.user?.avatar || '')
   selectedPhotoName.value = ''
   if (profilePhotoInput.value) {
@@ -385,7 +371,6 @@ const validateProfile = () => {
   errors.name = ''
   errors.email = ''
   errors.username = ''
-  errors.contactNumber = ''
 
   if (!String(profileForm.name || '').trim()) {
     errors.name = 'Display name is required.'
@@ -402,11 +387,7 @@ const validateProfile = () => {
     errors.username = 'Username is required.'
   }
 
-  if (!isValidPhilippinePhone(profileForm.contactNumber)) {
-    errors.contactNumber = 'Enter a valid Philippine number beginning with +63.'
-  }
-
-  return !errors.name && !errors.email && !errors.username && !errors.contactNumber
+  return !errors.name && !errors.email && !errors.username
 }
 
 const saveProfile = async () => {
@@ -431,7 +412,6 @@ const saveProfile = async () => {
     payload.append('name', String(profileForm.name || '').trim())
     payload.append('email', String(profileForm.email || '').trim())
     payload.append('username', String(profileForm.username || '').trim())
-    payload.append('contactNumber', normalizePhilippinePhone(profileForm.contactNumber))
     if (selectedProfilePhoto.value) payload.append('profileImage', selectedProfilePhoto.value)
 
     const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
@@ -470,7 +450,6 @@ const resetProfile = () => {
   errors.name = ''
   errors.email = ''
   errors.username = ''
-  errors.contactNumber = ''
 }
 
 watch(

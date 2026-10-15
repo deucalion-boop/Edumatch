@@ -42,7 +42,6 @@ const { evaluateAssessmentAnswers, validateEssayWordCounts } = require('../servi
 const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
 const ALLOWED_STUDENT_GRADE_LEVELS = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
 const GRADE_TEN_LEVEL = 'Grade 10';
 const PASSING_PERCENTAGE = 50;
@@ -161,7 +160,6 @@ function studentProfileResponse(user, req) {
     gradeLevel: user.gradeLevel || '',
     sectionId: String(user.sectionId || '').trim(),
     status: user.status || 'active',
-    contactNumber: user.contactNumber || '',
     profileImage: userProfileImageToUrl(user, req),
     hasCompletedStudentTour: user.hasCompletedStudentTour === true,
     createdAt: user.createdAt || null,
@@ -1723,7 +1721,6 @@ const getStudentProfile = asyncHandler(async (req, res) => {
 const updateStudentProfile = asyncHandler(async (req, res) => {
   const name = String(req.body?.name || req.body?.fullName || '').trim();
   const email = String(req.body?.email || '').trim().toLowerCase();
-  const contactNumberRaw = String(req.body?.contactNumber || req.body?.phone || '').trim();
   const gradeLevel = String(req.body?.gradeLevel || '').trim();
   const existingGradeLevel = String(req.user?.gradeLevel || '').trim();
   const resolvedGradeLevel = gradeLevel || existingGradeLevel;
@@ -1734,7 +1731,6 @@ const updateStudentProfile = asyncHandler(async (req, res) => {
     role: req.user?.role || '',
     name,
     email,
-    contactNumberRaw,
     gradeLevel,
     hasProfileImage: Boolean(uploadedImage),
     profileImageMeta: uploadedImage
@@ -1773,23 +1769,6 @@ const updateStudentProfile = asyncHandler(async (req, res) => {
     }
   }
 
-  if (contactNumberRaw) {
-    const normalizedContact = contactNumberRaw.replace(/\s+/g, ' ');
-    if (normalizedContact.length > 30) {
-      const error = new Error('Contact number must be 30 characters or fewer');
-      error.statusCode = 400;
-      throw error;
-    }
-    if (!CONTACT_NUMBER_REGEX.test(normalizedContact)) {
-      const error = new Error('Contact number format is invalid');
-      error.statusCode = 400;
-      throw error;
-    }
-    req.user.contactNumber = normalizedContact;
-  } else {
-    req.user.contactNumber = '';
-  }
-
   req.user.name = name;
   req.user.email = email;
   if (req.user.role === 'student') {
@@ -1817,7 +1796,6 @@ const updateStudentProfile = asyncHandler(async (req, res) => {
     name: req.user.name,
     email: req.user.email,
     gradeLevel: req.user.gradeLevel,
-    contactNumber: req.user.contactNumber || '',
     profileImage: req.user.profileImage || '',
   });
 

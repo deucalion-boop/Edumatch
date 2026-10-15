@@ -136,7 +136,6 @@ function buildLoginUser(user, req) {
     department: user.department || '',
     gradeLevel: user.gradeLevel || '',
     profileImage: normalizeProfileImageUrl(user, req),
-    contactNumber: user.contactNumber || '',
     hasCompletedTeacherTour: user.hasCompletedTeacherTour === true,
     hasCompletedStudentTour: user.hasCompletedStudentTour === true,
     forcePasswordChange: user.forcePasswordChange === true,
@@ -587,7 +586,6 @@ const completeInvite = asyncHandler(async (req, res) => {
       subject: user.subject || '',
       department: user.department || '',
       gradeLevel: user.gradeLevel || '',
-      contactNumber: user.contactNumber || '',
     },
   });
 });

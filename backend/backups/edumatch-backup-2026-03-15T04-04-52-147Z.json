@@ -380,7 +380,6 @@
         "department": "",
         "dateOfBirth": null,
         "profileImage": "",
-        "contactNumber": "",
         "gradeLevel": "",
         "enrollment": {
           "teacherId": null,
@@ -436,7 +435,6 @@
         "department": "Mathematics",
         "managedBy": null,
         "profileImage": "",
-        "contactNumber": "09123456789",
         "gradeLevel": "",
         "enrollment": {
           "progress": {
@@ -487,7 +485,6 @@
         "department": "Mathematics",
         "managedBy": "69b5c28e8a1bd882141f64e8",
         "profileImage": "",
-        "contactNumber": "09123456789",
         "gradeLevel": "",
         "enrollment": {
           "progress": {
@@ -542,7 +539,6 @@
         "department": "Mathematics",
         "managedBy": "69b5c2f28a1bd882141f6501",
         "profileImage": "",
-        "contactNumber": "09123456789",
         "gradeLevel": "Grade 10",
         "enrollment": {
           "teacherId": "69b5c2f28a1bd882141f6501",
@@ -596,7 +592,6 @@
         "department": "",
         "managedBy": null,
         "profileImage": "",
-        "contactNumber": "09123456789",
         "gradeLevel": "",
         "enrollment": {
           "progress": {

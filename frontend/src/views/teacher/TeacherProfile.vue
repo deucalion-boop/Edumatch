@@ -156,15 +156,6 @@
               </div>
               <div class="detail-item">
                 <div class="detail-icon">
-                  <i class="fas fa-phone icon-sem-analytics"></i>
-                </div>
-                <div class="detail-content">
-                  <div class="detail-label">Phone</div>
-                  <div class="detail-value">{{ user.contactNumber || 'Not provided' }}</div>
-                </div>
-              </div>
-              <div class="detail-item">
-                <div class="detail-icon">
                   <i class="fas fa-book-open icon-sem-profile"></i>
                 </div>
                 <div class="detail-content">
@@ -249,23 +240,6 @@
                     </div>
                   </div>
 
-                  <div class="profile-form-section">
-                    <h4 class="form-section-title">Contact Details</h4>
-                    <div class="form-row">
-                      <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <PhilippinePhoneInput
-                          id="phone"
-                          v-model="formData.phone"
-                          :readonly="!isEditing"
-                          :aria-invalid="Boolean(fieldErrors.phone)"
-                          :aria-describedby="fieldErrors.phone ? 'phone-error' : undefined"
-                          @input="validateCommonFields"
-                        />
-                        <small v-if="fieldErrors.phone" id="phone-error" class="field-error" role="alert">{{ fieldErrors.phone }}</small>
-                      </div>
-                    </div>
-                  </div>
 
                   <div v-if="isEditing" class="form-actions">
                     <button type="button" class="btn btn-secondary" @click="cancelEdit">
@@ -309,16 +283,14 @@
 </template>
 
 <script setup>
-import { nameError, phoneError } from '../../utils/teacherValidation.js'
+import { nameError } from '../../utils/teacherValidation.js'
 import { isValidTeacherEmail } from '../../utils/emailPolicy.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -393,7 +365,6 @@ const user = reactive({
   status: 'active',
   statusLabel: 'Active',
   subject: '',
-  contactNumber: '',
   profileImage: '',
   createdAt: null,
 })
@@ -402,7 +373,6 @@ const formData = reactive({
   firstName: '',
   lastName: '',
   email: '',
-  phone: '',
   address: '',
 })
 
@@ -468,7 +438,6 @@ const applyUserProfile = (apiUser = {}) => {
   user.status = statusValue
   user.statusLabel = statusLabel
   user.subject = apiUser.subject || authStore.user?.subject || ''
-  user.contactNumber = normalizePhilippinePhone(apiUser.contactNumber)
   user.profileImage = profileImage
   user.createdAt = apiUser.createdAt || null
 }
@@ -478,7 +447,6 @@ const initializeFormData = () => {
   formData.firstName = nameParts.firstName || ''
   formData.lastName = nameParts.lastName || ''
   formData.email = user.email || ''
-  formData.phone = user.contactNumber || ''
   formData.address = ''
   saveOriginalData()
 }
@@ -539,15 +507,13 @@ const handleAvatarUpload = (event) => {
   showToast('success', 'Profile picture ready. Click Save Changes to apply.')
 }
 
-const fieldErrors = reactive({ firstName: '', lastName: '', email: '', phone: '' })
+const fieldErrors = reactive({ firstName: '', lastName: '', email: '' })
 const validateCommonFields = () => {
   const fullName = `${formData.firstName} ${formData.lastName}`.trim()
   const email = String(formData.email || '').trim()
-  const contactNumber = normalizePhilippinePhone(formData.phone)
 
   fieldErrors.firstName = nameError(formData.firstName, 'First name')
   fieldErrors.lastName = nameError(formData.lastName, 'Last name')
-  fieldErrors.phone = phoneError(formData.phone)
   fieldErrors.email = ''
   if (!email) fieldErrors.email = 'Email is required'
 
@@ -555,7 +521,7 @@ const validateCommonFields = () => {
 
   if (Object.values(fieldErrors).some(Boolean)) return { error: 'Please correct the highlighted fields.' }
 
-  return { fullName, email, contactNumber }
+  return { fullName, email }
 }
 
 const saveProfile = async (successMessage) => {
@@ -576,7 +542,6 @@ const saveProfile = async (successMessage) => {
     const payload = new FormData()
     payload.append('name', validation.fullName)
     payload.append('email', validation.email)
-    payload.append('contactNumber', validation.contactNumber)
     if (selectedAvatarFile.value) {
       payload.append('profileImage', selectedAvatarFile.value)
     }

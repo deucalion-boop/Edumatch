@@ -93,10 +93,6 @@
             <strong>{{ authStore.user?.username || 'Not provided' }}</strong>
           </div>
           <div class="secretary-detail-item">
-            <span>Contact Number</span>
-            <strong>{{ profileForm.contactNumber || 'Not provided' }}</strong>
-          </div>
-          <div class="secretary-detail-item">
             <span>Role</span>
             <strong>Secretary</strong>
           </div>
@@ -129,11 +125,6 @@
               <small v-if="errors.email" class="secretary-field-error">{{ errors.email }}</small>
             </label>
 
-            <label class="secretary-field secretary-field-wide">
-              <span>Contact Number</span>
-              <PhilippinePhoneInput id="contactNumber" v-model="profileForm.contactNumber" />
-              <small v-if="errors.contactNumber" class="secretary-field-error">{{ errors.contactNumber }}</small>
-            </label>
           </div>
 
           <div class="secretary-form-actions">
@@ -151,8 +142,6 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -169,12 +158,10 @@ const banner = reactive({
 const profileForm = reactive({
   name: '',
   email: '',
-  contactNumber: '',
 })
 const errors = reactive({
   name: '',
   email: '',
-  contactNumber: '',
 })
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
@@ -207,7 +194,6 @@ const handleAccountMenuClickOutside = (event) => {
 const syncProfileForm = () => {
   profileForm.name = String(authStore.user?.name || authStore.user?.displayName || '').trim()
   profileForm.email = String(authStore.user?.email || '').trim()
-  profileForm.contactNumber = normalizePhilippinePhone(authStore.user?.contactNumber)
 }
 
 const clearBanner = () => {
@@ -217,7 +203,6 @@ const clearBanner = () => {
 const validateProfile = () => {
   errors.name = ''
   errors.email = ''
-  errors.contactNumber = ''
 
   if (!String(profileForm.name || '').trim()) {
     errors.name = 'Display name is required.'
@@ -230,11 +215,7 @@ const validateProfile = () => {
     errors.email = 'Enter a valid Gmail address (e.g., user@gmail.com).'
   }
 
-  if (!isValidPhilippinePhone(profileForm.contactNumber)) {
-    errors.contactNumber = 'Enter a valid Philippine number beginning with +63.'
-  }
-
-  return !errors.name && !errors.email && !errors.contactNumber
+  return !errors.name && !errors.email
 }
 
 const saveProfile = () => {
@@ -249,7 +230,6 @@ const saveProfile = () => {
     name: String(profileForm.name || '').trim(),
     displayName: String(profileForm.name || '').trim(),
     email: String(profileForm.email || '').trim(),
-    contactNumber: normalizePhilippinePhone(profileForm.contactNumber),
   })
 
   banner.type = 'success'
@@ -261,7 +241,6 @@ const resetProfile = () => {
   syncProfileForm()
   errors.name = ''
   errors.email = ''
-  errors.contactNumber = ''
 }
 
 syncProfileForm()

@@ -114,7 +114,6 @@
             <label class="secretary-field"><span>Full name *</span><input v-model.trim="form.name" required maxlength="100"></label>
             <label class="secretary-field"><span>Username *</span><input v-model.trim="form.username" required maxlength="50"></label>
             <label class="secretary-field"><span>Gmail address *</span><input v-model.trim="form.email" type="email" required placeholder="user@gmail.com"></label>
-            <label class="secretary-field"><span>Contact number</span><PhilippinePhoneInput id="contactNumber" v-model="form.contactNumber"></PhilippinePhoneInput></label>
             <label class="secretary-field"><span>Role *</span><select v-model="form.role" required @change="onRoleChange"><option value="headteacher">Head Teacher</option><option value="teacher">Teacher</option><option value="student">Student</option></select></label>
             <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Status *</span><select v-model="form.status"><option v-for="status in statuses" :key="status" :value="status">{{ capitalize(status) }}</option></select></label>
             <label v-if="['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required :disabled="selectableDepartments.length === 0"><option value="" disabled>{{ selectableDepartments.length ? (form.role === 'teacher' ? 'Select department with a Head Teacher' : 'Select department') : 'No department available' }}</option><option v-for="department in selectableDepartments" :key="department" :value="department">{{ department }}</option></select></label>
@@ -130,7 +129,7 @@
       <button type="button" class="secretary-modal-backdrop" aria-label="Close dialog" @click="detailsModal = null"></button>
       <section class="secretary-modal-card compact">
         <header><div><h2 id="account-details-title">Account details</h2><p>Current profile and access information.</p></div><button type="button" class="secretary-icon-btn" @click="detailsModal = null"><i class="fas fa-times"></i></button></header>
-        <div class="secretary-details-grid"><div><span>Name</span><strong>{{ detailsModal.name }}</strong></div><div><span>Role</span><strong>{{ roleLabel(detailsModal.role) }}</strong></div><div><span>Email</span><strong>{{ detailsModal.email }}</strong></div><div><span>Username</span><strong>{{ detailsModal.username || 'N/A' }}</strong></div><div><span>Status</span><strong>{{ capitalize(detailsModal.status) }}</strong></div><div><span>Assignment</span><strong>{{ assignmentLabel(detailsModal) }}</strong></div><div><span>Contact</span><strong>{{ detailsModal.contactNumber || 'N/A' }}</strong></div><div><span>Joined</span><strong>{{ formatDate(detailsModal.createdAt) }}</strong></div></div>
+        <div class="secretary-details-grid"><div><span>Name</span><strong>{{ detailsModal.name }}</strong></div><div><span>Role</span><strong>{{ roleLabel(detailsModal.role) }}</strong></div><div><span>Email</span><strong>{{ detailsModal.email }}</strong></div><div><span>Username</span><strong>{{ detailsModal.username || 'N/A' }}</strong></div><div><span>Status</span><strong>{{ capitalize(detailsModal.status) }}</strong></div><div><span>Assignment</span><strong>{{ assignmentLabel(detailsModal) }}</strong></div><div><span>Joined</span><strong>{{ formatDate(detailsModal.createdAt) }}</strong></div></div>
       </section>
     </div>
 
@@ -148,8 +147,6 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -202,7 +199,7 @@ const selectableDepartments = computed(() => {
 })
 const statuses = ['pending', 'active', 'inactive', 'suspended']
 const managedRoles = ['headteacher', 'teacher', 'student']
-const emptyForm = () => ({ id: '', name: '', email: '', username: '', contactNumber: '', role: 'headteacher', status: 'active', department: '', sectionId: '' })
+const emptyForm = () => ({ id: '', name: '', email: '', username: '', role: 'headteacher', status: 'active', department: '', sectionId: '' })
 const form = reactive(emptyForm())
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
@@ -222,7 +219,7 @@ const sectionAssignment = (user) => {
   return user.sectionName || ''
 }
 const assignmentLabel = (user) => user.role === 'student' ? [user.gradeLevel, sectionAssignment(user)].filter(Boolean).join(' · ') || 'Not assigned' : user.role === 'teacher' ? (user.subject && user.subject !== user.department ? [user.department, user.subject] : [user.department]).filter(Boolean).join(' · ') || 'Not assigned' : [user.department, ''].filter(Boolean).join(' · ') || 'Not assigned'
-const mapUser = (user) => ({ id: user.id || user._id, name: user.name || '', email: user.email || '', username: user.username || '', contactNumber: normalizePhilippinePhone(user.contactNumber), role: String(user.role || '').toLowerCase(), status: String(user.status || 'active').toLowerCase(), department: user.department || '', subject: user.subject || '', gradeLevel: user.gradeLevel || 'Grade 10', sectionId: user.sectionId || user.section?.id || '', sectionName: user.section?.name || '', createdAt: user.createdAt || null, lastLoginAt: user.lastLoginAt || null, lastActivityAt: user.lastActivityAt || null })
+const mapUser = (user) => ({ id: user.id || user._id, name: user.name || '', email: user.email || '', username: user.username || '', role: String(user.role || '').toLowerCase(), status: String(user.status || 'active').toLowerCase(), department: user.department || '', subject: user.subject || '', gradeLevel: user.gradeLevel || 'Grade 10', sectionId: user.sectionId || user.section?.id || '', sectionName: user.section?.name || '', createdAt: user.createdAt || null, lastLoginAt: user.lastLoginAt || null, lastActivityAt: user.lastActivityAt || null })
 
 const filteredUsers = computed(() => {
   const query = search.value.toLowerCase()
@@ -276,14 +273,12 @@ const validateForm = () => {
   if (form.role === 'headteacher' && !selectableDepartments.value.includes(form.department)) return 'Select an available department for the Head Teacher.'
   if (form.role === 'teacher' && !selectableDepartments.value.includes(form.department)) return 'Select a department that has a Head Teacher.'
   if (form.role === 'student' && !form.sectionId) return 'Select the teacher to assign this student to.'
-  const phone = normalizePhilippinePhone(form.contactNumber)
-  if (phone && !isValidPhilippinePhone(phone)) return 'Enter a valid Philippine contact number beginning with +63.'
   return ''
 }
 const submitForm = async () => {
   formError.value = validateForm()
   if (formError.value) return
-  const payload = { name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role, status: formModal.mode === 'create' ? 'active' : form.status, contactNumber: normalizePhilippinePhone(form.contactNumber), department: ['headteacher', 'teacher'].includes(form.role) ? form.department : '', subject: '', gradeLevel: form.role === 'student' ? 'Grade 10' : '', strand: '', sectionId: form.role === 'student' ? form.sectionId : '' }
+  const payload = { name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role, status: formModal.mode === 'create' ? 'active' : form.status, department: ['headteacher', 'teacher'].includes(form.role) ? form.department : '', subject: '', gradeLevel: form.role === 'student' ? 'Grade 10' : '', strand: '', sectionId: form.role === 'student' ? form.sectionId : '' }
   isSaving.value = true
   try {
     const response = formModal.mode === 'create'

@@ -640,10 +640,6 @@
                 <input v-model.trim="studentInviteForm.username" type="text" required maxlength="50" placeholder="Enter username">
               </label>
               <label class="class-form-group">
-                <span>Contact Number</span>
-                <PhilippinePhoneInput id="contactNumber" v-model="studentInviteForm.contactNumber" />
-              </label>
-              <label class="class-form-group">
                 <span>Advisory Section</span>
                 <input :value="teacherAdvisorySectionName || 'Not assigned'" type="text" readonly>
                 <small class="invite-helper-copy">The student automatically joins your advisory class with approved access. They can join additional classes later with a class code.</small>
@@ -824,8 +820,6 @@ import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 import ClassInvitationModal from '../../components/teacher/ClassInvitationModal.vue'
 
 const router = useRouter()
@@ -1013,7 +1007,6 @@ const studentInviteForm = reactive({
   name: '',
   email: '',
   username: '',
-  contactNumber: '',
 })
 const isLoading = ref(false)
 const studentRosterView = ref('advisory')
@@ -1772,7 +1765,6 @@ const resetStudentInviteForm = () => {
   studentInviteForm.name = ''
   studentInviteForm.email = ''
   studentInviteForm.username = ''
-  studentInviteForm.contactNumber = ''
   studentInviteMessage.value = ''
   studentInviteMessageType.value = 'success'
 }
@@ -1818,18 +1810,11 @@ const submitStudentInvite = async () => {
       return
     }
 
-    const contactNumber = normalizePhilippinePhone(studentInviteForm.contactNumber)
-    if (!isValidPhilippinePhone(contactNumber)) {
-      studentInviteMessage.value = 'Please enter a valid Philippine contact number beginning with +63.'
-      studentInviteMessageType.value = 'error'
-      return
-    }
 
     const response = await axios.post(`${resolveApiBaseUrl()}/teacher/students`, {
       name: studentInviteForm.name,
       email: studentInviteForm.email,
       username: normalizedUsername,
-      contactNumber,
     }, getAuthConfig())
 
     const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()

@@ -97,7 +97,6 @@ function createStudent(body = {}) {
       name: 'Juan Dela Cruz',
       email: 'juan.delacruz@gmail.com',
       username: 'juan.delacruz',
-      contactNumber: '09123456789',
       ...body,
     },
   });
@@ -242,17 +241,6 @@ test('an advisory class storage failure prevents student account creation and cr
   await assert.rejects(createStudent(), { statusCode: 500, message: 'Advisory class storage unavailable' });
   assert.equal(client.tables.users.length, 1);
   assert.deepEqual(client.tables.subject_enrollments, []);
-  assert.deepEqual(emails, []);
-  assert.deepEqual(responses, []);
-});
-
-test('an invalid student contact number rejects before creating the advisory class or account', async () => {
-  fixture({ classes: [] });
-  await assert.rejects(createStudent({ contactNumber: 'invalid-contact' }), {
-    statusCode: 400,
-    message: 'Contact number format is invalid',
-  });
-  assert.deepEqual(client.writes, []);
   assert.deepEqual(emails, []);
   assert.deepEqual(responses, []);
 });

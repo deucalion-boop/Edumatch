@@ -237,13 +237,11 @@ test('admin self profile edits preserve their picture and other admin accounts r
     user: { _id: id, role: 'admin' },
     body: {
       name: 'Updated self', email: 'updated.self@gmail.com', username: 'updated.self',
-      contactNumber: '09123456789',
     },
   });
   assert.equal(result.user.name, 'Updated self');
   assert.equal(result.user.email, 'updated.self@gmail.com');
   assert.equal(result.user.username, 'updated.self');
-  assert.equal(result.user.contactNumber, '09123456789');
   assert.equal(client.tables.users[0].profile_image, original.profile_image);
   assert.deepEqual(profileUploads, []);
 });

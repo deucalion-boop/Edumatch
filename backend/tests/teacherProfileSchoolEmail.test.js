@@ -29,12 +29,11 @@ async function invoke(handler, body) {
 test('a school-email teacher can save profile and tour changes without changing or invalidating its email', async () => {
   fixture();
   const response = await invoke(updateTeacherProfile, {
-    name: 'Maria Clara Santos', email: ' Maria.Santos@School.edu.ph ', contactNumber: '09123456789',
+    name: 'Maria Clara Santos', email: ' Maria.Santos@School.edu.ph ',
   });
   assert.equal(response.statusCode, 200);
   assert.equal(response.user.email, 'maria.santos@school.edu.ph');
   assert.equal(client.tables.users[0].name, 'Maria Clara Santos');
-  assert.equal(client.tables.users[0].contact_number, '+639123456789');
   assert.equal(client.tables.users[0].token_version, 2);
   await invoke(updateTeacherTourPreference, { hasCompletedTeacherTour: true });
   assert.equal(client.tables.users[0].has_completed_teacher_tour, true);

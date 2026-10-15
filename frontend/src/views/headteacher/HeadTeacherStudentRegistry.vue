@@ -430,7 +430,7 @@ onBeforeUnmount(() => {
 .registry-row-actions { @apply tw:flex tw:flex-wrap tw:[gap:.3rem] tw:[min-width:165px]; }
 .registry-action { @apply tw:[min-height:36px] tw:[padding:.35rem_.5rem] tw:[border:1px_solid_#d5e0cb] tw:[border-radius:6px] tw:bg-white tw:[color:#456b30] tw:[font-size:.69rem] tw:font-semibold tw:cursor-pointer; }
 .registry-danger-text { @apply tw:[color:#b91c1c]; }
-.registry-dialog { @apply tw:[width:min(540px,_calc(100vw_-_24px))] tw:[max-width:calc(100vw_-_24px)] tw:[max-height:calc(100dvh_-_32px)] tw:[padding:0] tw:[border:1px_solid_#d9e6d0] tw:[border-radius:16px] tw:bg-white tw:[box-shadow:0_24px_80px_rgba(18,_43,_5,_.25)] tw:overflow-y-auto tw:box-border; }
+.registry-dialog { @apply tw:fixed tw:[inset:0] tw:m-auto tw:[width:min(540px,_calc(100vw_-_24px))] tw:[max-width:calc(100vw_-_24px)] tw:[max-height:calc(100dvh_-_32px)] tw:[padding:0] tw:[border:1px_solid_#d9e6d0] tw:[border-radius:16px] tw:bg-white tw:[box-shadow:0_24px_80px_rgba(18,_43,_5,_.25)] tw:overflow-y-auto tw:box-border; }
 .registry-dialog-wide { @apply tw:[width:min(960px,_calc(100vw_-_24px))]; }
 .registry-dialog::backdrop { @apply tw:[background:rgba(12,_30,_5,_.5)]; }
 .registry-dialog-content { @apply tw:[padding:1.4rem]; }

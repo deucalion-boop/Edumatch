@@ -307,11 +307,6 @@
                 <span>Department</span>
                 <input :value="departmentLabel" type="text" readonly>
               </label>
-              <label class="headteacher-form-group">
-                <span>Contact Number</span>
-                <PhilippinePhoneInput id="contactNumber" v-model="form.contactNumber" :aria-invalid="Boolean(teacherErrors.contactNumber)" @input="validateTeacherForm" />
-                <small v-if="teacherErrors.contactNumber" class="headteacher-field-error" role="alert">{{ teacherErrors.contactNumber }}</small>
-              </label>
             </div>
 
             <p v-if="formMessage" class="headteacher-form-feedback" :class="formMessageType">{{ formMessage }}</p>
@@ -333,14 +328,12 @@
 <script setup>
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
-import { nameError, phoneError } from '../../utils/teacherValidation.js'
+import { nameError } from '../../utils/teacherValidation.js'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Chart from 'chart.js/auto'
 import { useAuthStore } from '../../stores/auth.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -514,7 +507,6 @@ const form = reactive({
   name: '',
   email: '',
   username: '',
-  contactNumber: '',
 })
 
 const resolveApiBaseUrl = () => {
@@ -618,7 +610,6 @@ const resetForm = () => {
   form.name = ''
   form.email = ''
   form.username = ''
-  form.contactNumber = ''
   formMessage.value = ''
   formMessageType.value = 'success'
 }
@@ -845,13 +836,12 @@ const fetchTeachers = async ({ silent = false } = {}) => {
   }
 }
 
-const teacherErrors = reactive({ name: '', username: '', email: '', contactNumber: '' })
+const teacherErrors = reactive({ name: '', username: '', email: '' })
 const validateTeacherForm = () => {
   teacherErrors.name = nameError(form.name, 'Full name', 100)
   teacherErrors.username = !String(form.username || '').trim() ? 'Username is required.'
     : form.username.length > 50 ? 'Username must be 50 characters or fewer.'
       : /\p{N}/u.test(form.username) ? 'Username must not contain numbers.' : ''
-  teacherErrors.contactNumber = phoneError(form.contactNumber)
   teacherErrors.email = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(form.email)
     ? '' : 'Enter a valid Gmail address (e.g., user@gmail.com).'
   return !Object.values(teacherErrors).some(Boolean)
@@ -861,19 +851,12 @@ const createTeacher = async () => {
   isSubmitting.value = true
   formMessage.value = ''
   try {
-    const contactNumber = normalizePhilippinePhone(form.contactNumber)
-    if (!isValidPhilippinePhone(contactNumber)) {
-      formMessage.value = 'Please enter a valid Philippine contact number beginning with +63.'
-      formMessageType.value = 'error'
-      return
-    }
 
     const response = await axios.post(`${resolveApiBaseUrl()}/headteacher/teachers`, {
       name: form.name,
       email: form.email,
       username: form.username,
       subject: departmentLabel.value,
-      contactNumber,
     }, getAuthConfig())
 
     const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()

@@ -4,32 +4,12 @@ const { DEPARTMENTS, ROLE_HEADTEACHER, ROLE_TEACHER } = require('../constants/us
 const { generateTemporaryPassword } = require('../utils/passwordPolicy');
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
 
-const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
 const MIN_INVITE_EXPIRY_HOURS = 24;
 const MAX_INVITE_EXPIRY_HOURS = 72;
 const ONLINE_ACTIVITY_WINDOW_MS = 10 * 1000;
 
 function normalizeTeacherSubject(input) {
   return String(input || '').trim().replace(/\s+/g, ' ');
-}
-
-function normalizeContactNumber(input) {
-  const normalizedContact = String(input || '').trim().replace(/\s+/g, ' ');
-  if (!normalizedContact) return '';
-
-  if (normalizedContact.length > 30) {
-    const error = new Error('Contact number must be 30 characters or fewer');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (!CONTACT_NUMBER_REGEX.test(normalizedContact)) {
-    const error = new Error('Contact number format is invalid');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  return normalizedContact;
 }
 
 function normalizeDepartment(input, { required = false } = {}) {
@@ -309,7 +289,6 @@ function applyRoleScopedFields(userPayload) {
 module.exports = {
   DEPARTMENTS,
   normalizeTeacherSubject,
-  normalizeContactNumber,
   normalizeDepartment,
   normalizeProfileImageUrl,
   mapUserResponse,

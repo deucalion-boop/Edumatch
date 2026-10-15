@@ -1,7 +1,7 @@
 const { subjectStudents, removeSubjectStudent, requireTeacherSubject, saveStudentProgress } = require('../services/supabaseTeacherStudentsService');
 const { readProfileRows } = require('../services/supabaseUserProfileService');
 const { teacherRequests, decideTeacherRequest, teacherResultData } = require('../services/supabaseTeacherRecordsService');
-const { nameError, phoneError } = require('../utils/teacherValidation');
+const { nameError } = require('../utils/teacherValidation');
 const { assertGmailEmail, assertTeacherEmail } = require('../utils/emailPolicy');
 const path = require('path');
 const crypto = require('crypto');
@@ -32,7 +32,7 @@ const {
 const { uploadFile, uploadFiles } = require('../services/storageService');
 const { ROLE_STUDENT } = require('../constants/userRoles');
 const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
-const { normalizeContactNumber, issueInviteForUser, mapUserResponse } = require('../services/userManagementService');
+const { issueInviteForUser, mapUserResponse } = require('../services/userManagementService');
 const { getSectionOrThrow, ensureTeacherAdvisoryClass } = require('../services/sectionService');
 const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
 const { buildExcludeArchivedStudentsFilter, isArchivedStudent } = require('../utils/studentArchive');
@@ -71,7 +71,6 @@ const { getSupabaseStorageClient } = require('../services/supabaseStorageService
 const { syncStudentSubjectGradeRecords } = require('../services/supabaseGradeRecordService');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-const CONTACT_NUMBER_REGEX = /^\+?[0-9()\-. ]{7,30}$/;
 const ALLOWED_TEACHER_STRANDS = ['', 'STEM', 'HUMSS', 'ABM', 'TVL'];
 const PASSING_PERCENTAGE = 50;
 const SUBJECT_CATEGORIES = ['Math', 'Science', 'English', 'AP', 'Business', 'Technical'];
@@ -279,7 +278,6 @@ function teacherProfileResponse(user, req) {
     department: user.department || '',
     advisorySectionId: String(user.advisorySectionId || '').trim(),
     profileImage: userProfileImageToUrl(user, req),
-    contactNumber: user.contactNumber || '',
     hasCompletedTeacherTour: user.hasCompletedTeacherTour === true,
     createdAt: user.createdAt || null,
     updatedAt: user.updatedAt || null,
@@ -291,7 +289,6 @@ const createStudentInvite = asyncHandler(async (req, res) => {
     name,
     email,
     username,
-    contactNumber,
   } = req.body || {};
 
   if (!name || !email) {
@@ -335,7 +332,6 @@ const createStudentInvite = asyncHandler(async (req, res) => {
   }
 
   const advisorySection = await getSectionOrThrow(advisorySectionId);
-  const normalizedContactNumber = normalizeContactNumber(contactNumber);
   const advisoryClass = await ensureTeacherAdvisoryClass(req.user);
   const now = new Date();
 
@@ -348,7 +344,6 @@ const createStudentInvite = asyncHandler(async (req, res) => {
     sectionId: advisorySection.id,
     department: String(req.user?.department || '').trim(),
     gradeLevel: 'Grade 10',
-    contactNumber: normalizedContactNumber,
     managedBy: req.user._id,
     enrollment: {
       teacherId: req.user._id,
@@ -2546,7 +2541,6 @@ const getTeacherProfile = asyncHandler(async (req, res) => {
 const updateTeacherProfile = asyncHandler(async (req, res) => {
   const name = String(req.body?.name || req.body?.fullName || '').trim();
   const email = String(req.body?.email || '').trim().toLowerCase();
-  const contactNumberRaw = String(req.body?.contactNumber || req.body?.phone || '').trim();
   const strandRaw = String(req.body?.strand || '').trim().toUpperCase();
   const uploadedImage = req.file || null;
 
@@ -2555,7 +2549,6 @@ const updateTeacherProfile = asyncHandler(async (req, res) => {
     role: req.user?.role || '',
     name,
     email,
-    contactNumberRaw,
     strandRaw,
     hasProfileImage: Boolean(uploadedImage),
     profileImageMeta: uploadedImage
@@ -2563,7 +2556,7 @@ const updateTeacherProfile = asyncHandler(async (req, res) => {
       : null,
   });
 
-  const profileError = nameError(name, 'Name', 101) || phoneError(contactNumberRaw);
+  const profileError = nameError(name, 'Name', 101);
   if (profileError) throw Object.assign(new Error(profileError), { statusCode: 400 });
   if (!name) {
     const error = new Error('Name is required');
@@ -2591,23 +2584,6 @@ const updateTeacherProfile = asyncHandler(async (req, res) => {
   req.user.name = name;
   req.user.email = email;
 
-  if (contactNumberRaw) {
-    const normalizedContact = contactNumberRaw.replace(/\s+/g, ' ');
-    if (normalizedContact.length > 30) {
-      const error = new Error('Contact number must be 30 characters or fewer');
-      error.statusCode = 400;
-      throw error;
-    }
-    if (!CONTACT_NUMBER_REGEX.test(normalizedContact)) {
-      const error = new Error('Contact number format is invalid');
-      error.statusCode = 400;
-      throw error;
-    }
-    req.user.contactNumber = normalizedContact.startsWith('09') ? '+63' + normalizedContact.slice(1) : normalizedContact;
-  } else {
-    req.user.contactNumber = '';
-  }
-
   if (!ALLOWED_TEACHER_STRANDS.includes(strandRaw)) {
     const error = new Error(`Strand must be one of: ${ALLOWED_TEACHER_STRANDS.filter(Boolean).join(', ')}`);
     error.statusCode = 400;
@@ -2630,7 +2606,6 @@ const updateTeacherProfile = asyncHandler(async (req, res) => {
     email: req.user.email,
     strand: req.user.strand || '',
     subject: req.user.subject || '',
-    contactNumber: req.user.contactNumber || '',
     profileImage: req.user.profileImage || '',
   });
 

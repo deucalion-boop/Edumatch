@@ -10,7 +10,6 @@ create table if not exists public.users (
   subject text not null default '',
   department text not null default '',
   grade_level text not null default '',
-  contact_number text not null default '',
   profile_image text not null default '',
   section_id text,
   advisory_section_id text,

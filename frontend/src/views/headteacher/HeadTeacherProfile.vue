@@ -81,10 +81,6 @@
               <span>Department</span>
               <strong>{{ departmentLabel }}</strong>
             </div>
-            <div class="headteacher-detail-item">
-              <span>Contact Number</span>
-              <strong>{{ profileForm.contactNumber || 'Not provided' }}</strong>
-            </div>
           </div>
         </article>
 
@@ -108,11 +104,6 @@
                 <input v-model.trim="profileForm.email" type="email" placeholder="Enter email address">
                 <small v-if="errors.email" class="headteacher-form-feedback error">{{ errors.email }}</small>
               </label>
-              <label class="headteacher-form-group headteacher-form-group-full">
-                <span>Contact Number</span>
-                <PhilippinePhoneInput id="contactNumber" v-model="profileForm.contactNumber" />
-                <small v-if="errors.contactNumber" class="headteacher-form-feedback error">{{ errors.contactNumber }}</small>
-              </label>
             </div>
 
             <div class="headteacher-modal-actions">
@@ -132,8 +123,6 @@ import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -145,12 +134,10 @@ const banner = reactive({ type: 'success', message: '' })
 const profileForm = reactive({
   name: '',
   email: '',
-  contactNumber: '',
 })
 const errors = reactive({
   name: '',
   email: '',
-  contactNumber: '',
 })
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'HeadTeacher').trim())
@@ -161,7 +148,6 @@ const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.v
 const syncProfileForm = () => {
   profileForm.name = String(authStore.user?.name || authStore.user?.displayName || '').trim()
   profileForm.email = String(authStore.user?.email || '').trim()
-  profileForm.contactNumber = normalizePhilippinePhone(authStore.user?.contactNumber)
 }
 
 const clearBanner = () => { banner.message = '' }
@@ -191,7 +177,6 @@ const handleAccountMenuClickOutside = (event) => {
 const validateProfile = () => {
   errors.name = ''
   errors.email = ''
-  errors.contactNumber = ''
   if (!String(profileForm.name || '').trim()) errors.name = 'Display name is required.'
   const emailValue = String(profileForm.email || '').trim()
   if (!emailValue) {
@@ -199,10 +184,7 @@ const validateProfile = () => {
   } else if (!/^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(emailValue)) {
     errors.email = 'Enter a valid Gmail address (e.g., user@gmail.com).'
   }
-  if (!isValidPhilippinePhone(profileForm.contactNumber)) {
-    errors.contactNumber = 'Enter a valid Philippine number beginning with +63.'
-  }
-  return !errors.name && !errors.email && !errors.contactNumber
+  return !errors.name && !errors.email
 }
 
 const saveProfile = () => {
@@ -216,7 +198,6 @@ const saveProfile = () => {
     name: String(profileForm.name || '').trim(),
     displayName: String(profileForm.name || '').trim(),
     email: String(profileForm.email || '').trim(),
-    contactNumber: normalizePhilippinePhone(profileForm.contactNumber),
   })
   banner.type = 'success'
   banner.message = 'HeadTeacher profile updated successfully.'
@@ -227,7 +208,6 @@ const resetProfile = () => {
   syncProfileForm()
   errors.name = ''
   errors.email = ''
-  errors.contactNumber = ''
 }
 
 onMounted(() => {

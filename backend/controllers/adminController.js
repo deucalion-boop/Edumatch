@@ -20,7 +20,6 @@ const {
   ROLE_STUDENT,
 } = require('../constants/userRoles');
 const {
-  normalizeContactNumber: normalizeManagedContactNumber,
   normalizeDepartment,
   mapUserResponse: mapManagedUserResponse,
   issueInviteForUser,
@@ -223,10 +222,6 @@ function normalizeStrand(input) {
 
 function normalizeTeacherSubject(input) {
   return String(input || '').trim().replace(/\s+/g, ' ');
-}
-
-function normalizeContactNumber(input) {
-  return normalizeManagedContactNumber(input);
 }
 
 function pctGrowth(current, previous) {
@@ -913,7 +908,7 @@ const getAuditLogs = asyncHandler(async (req, res) => {
 });
 
 const createAndInviteUser = asyncHandler(async (req, res) => {
-  const { name, email, username, role, contactNumber, department, subject, strand, gradeLevel } = req.body || {};
+  const { name, email, username, role, department, subject, strand, gradeLevel } = req.body || {};
 
   if (!name || !email || !username || !role) {
     const error = new Error('name, email, username, and role are required');
@@ -944,7 +939,6 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
   const normalizedRole = normalizeAdminManagedRole(role);
   ensureAdminManagedRole(normalizedRole);
   ensureUserManagementPermission(req, normalizedRole);
-  const normalizedContactNumber = normalizeContactNumber(contactNumber);
   const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
   const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
   await ensureSingleHeadTeacherPerDepartment({
@@ -963,7 +957,6 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
     department: scopedFields.department,
     gradeLevel: studentFields.gradeLevel,
     managedBy: req.user._id,
-    contactNumber: normalizedContactNumber,
     invite: {
       tokenHash: '',
       expiresAt: null,
@@ -986,7 +979,6 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
       role: created.role,
       status: created.status,
       department: created.department || '',
-      contactNumber: created.contactNumber || '',
       inviteExpiresAt: inviteResult.inviteExpiresAt || null,
       inviteSentAt: inviteResult.inviteSentAt || null,
       createdAt: created.createdAt || null,
@@ -1002,7 +994,6 @@ const createUser = asyncHandler(async (req, res) => {
     username,
     role,
     status,
-    contactNumber,
     department,
     subject,
     strand,
@@ -1027,7 +1018,6 @@ const createUser = asyncHandler(async (req, res) => {
   ensureAdminManagedRole(normalizedRole);
   ensureUserManagementPermission(req, normalizedRole);
   const normalizedUsername = String(username).trim();
-  const normalizedContactNumber = normalizeContactNumber(contactNumber);
   const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
   const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
   const studentSection = await resolveStudentSection(normalizedRole, sectionId);
@@ -1068,7 +1058,6 @@ const createUser = asyncHandler(async (req, res) => {
       gradeLevel: studentFields.gradeLevel,
       sectionId: studentSection.sectionId,
       managedBy: studentSection.adviserId || req.user._id,
-      contactNumber: normalizedContactNumber,
       invite: {
         tokenHash: '',
         expiresAt: null,
@@ -1105,7 +1094,6 @@ const createUser = asyncHandler(async (req, res) => {
       subject: created.subject || '',
       strand: created.strand || '',
       gradeLevel: created.gradeLevel || '',
-      contactNumber: created.contactNumber || '',
       inviteExpiresAt: created?.invite?.expiresAt || null,
       inviteSentAt: created?.invite?.sentAt || null,
       inviteUsedAt: created?.invite?.usedAt || null,
@@ -1229,7 +1217,7 @@ const getUserById = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, email, username, password, role, status, subject, contactNumber, department, strand, gradeLevel, sectionId } = req.body || {};
+  const { name, email, username, password, role, status, subject, department, strand, gradeLevel, sectionId } = req.body || {};
 
   const user = await findSupabaseAccount('id', id);
   if (!user) {
@@ -1295,7 +1283,6 @@ const updateUser = asyncHandler(async (req, res) => {
     user.role = normalizedRole;
   }
   if (status !== undefined) user.status = status;
-  if (contactNumber !== undefined) user.contactNumber = normalizeContactNumber(contactNumber);
   if (department !== undefined || role !== undefined || subject !== undefined) {
     const scopedFields = applyRoleScopedFields({
       role: user.role,
@@ -1360,7 +1347,6 @@ const updateUser = asyncHandler(async (req, res) => {
       subject: user.subject || '',
       department: user.department || '',
       gradeLevel: user.gradeLevel || '',
-      contactNumber: user.contactNumber || '',
       profileImage: normalizeProfileImageUrl(user, req),
       avatar: normalizeProfileImageUrl(user, req),
       updatedAt: user.updatedAt,

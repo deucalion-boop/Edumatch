@@ -576,10 +576,6 @@
 
             <div class="tab-content" :class="{ active: addUserTab === 'additional' }" id="additionalTab">
               <div class="form-group">
-                <label for="contactNumber">Contact Number</label>
-                <PhilippinePhoneInput id="contactNumber" v-model="newUser.contactNumber" />
-              </div>
-              <div class="form-group">
                 <label>Security</label>
                 <p class="hint-text">
                   Temporary passwords are automatically generated, hashed before storage, and marked for mandatory password change after the first successful sign-in.
@@ -745,10 +741,6 @@
                   <label for="editUsername">Username</label>
                   <input type="text" id="editUsername" v-model="editUserData.username">
                 </div>
-                <div class="form-group">
-                  <label for="editContactNumber">Contact Number</label>
-                  <PhilippinePhoneInput id="editContactNumber" v-model="editUserData.contactNumber" />
-                </div>
               </div>
             </div>
 
@@ -868,10 +860,6 @@
                   <div v-if="['teacher', 'headteacher', 'secretary'].includes(selectedUser.role)" class="info-item">
                     <span class="info-label">Username</span>
                     <span class="info-value">{{ selectedUser.username || 'N/A' }}</span>
-                  </div>
-                  <div class="info-item">
-                    <span class="info-label">Contact number</span>
-                    <span class="info-value">{{ selectedUser.contactNumber || 'N/A' }}</span>
                   </div>
                 </div>
                 
@@ -1312,12 +1300,9 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { debounce } from 'lodash'
 import { useAuthStore } from '../../stores/auth.js'
-import { isValidPhilippinePhone, normalizePhilippinePhone } from '../../utils/phone.js'
-import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 
 export default {
   name: 'AdminUserManagement',
-  components: { PhilippinePhoneInput },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -1385,7 +1370,6 @@ export default {
       gradeLevel: 'Grade 10',
       sectionId: '',
       strand: '',
-      contactNumber: '',
     })
     const departmentOptions = [
       'Mathematics',
@@ -1419,7 +1403,6 @@ export default {
       subject: '',
       gradeLevel: 'Grade 10',
       strand: '',
-      contactNumber: '',
       avatar: ''
     })
     
@@ -1848,7 +1831,6 @@ export default {
         advisorySection: firstDefined(user?.advisorySection, fallback?.advisorySection, null),
         strand: firstDefined(user?.strand, fallback?.strand, ''),
         gradeLevel: firstDefined(user?.gradeLevel, fallback?.gradeLevel, 'Grade 10'),
-        contactNumber: normalizePhilippinePhone(firstDefined(user?.contactNumber, fallback?.contactNumber, '')),
         profileImage: firstDefined(user?.profileImage, fallback?.profileImage, ''),
         avatar: resolvedAvatar,
         isOnline: firstDefined(user?.isOnline, fallback?.isOnline, false),
@@ -2283,7 +2265,6 @@ export default {
         gradeLevel: 'Grade 10',
         sectionId: '',
         strand: '',
-        contactNumber: '',
       })
     }
     
@@ -2313,7 +2294,6 @@ export default {
         subject: user.subject || '',
         gradeLevel: user.gradeLevel || 'Grade 10',
         strand: user.strand || '',
-        contactNumber: normalizePhilippinePhone(user.contactNumber),
         avatar: resolveUserAvatarUrl(user)
       }
       modals.editUser = true
@@ -2379,11 +2359,6 @@ export default {
         showToastMessage('You do not have permission to create that role', 'error')
         return
       }
-      const contactNumber = normalizePhilippinePhone(newUser.contactNumber)
-      if (!isValidPhilippinePhone(contactNumber)) {
-        showToastMessage('Please enter a valid Philippine contact number beginning with +63', 'error')
-        return
-      }
       if (['headteacher', 'teacher'].includes(newUser.role) && !String(newUser.department || '').trim()) {
         showToastMessage('Department is required for Head Teacher and Teacher accounts', 'error')
         return
@@ -2407,7 +2382,6 @@ export default {
           gradeLevel: newUser.role === 'student' ? 'Grade 10' : '',
           sectionId: newUser.role === 'student' ? newUser.sectionId : '',
           strand: newUser.role === 'student' ? newUser.strand : '',
-          contactNumber,
         }
         const response = await axios.post(`${managementApiPath.value}/users`, createPayload, getAuthConfig())
         const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()
@@ -2449,7 +2423,6 @@ export default {
       const subject = String(editUserData.value.subject || '').trim()
       const gradeLevel = String(editUserData.value.gradeLevel || 'Grade 10').trim()
       const strand = String(editUserData.value.strand || '').trim()
-      const contactNumber = normalizePhilippinePhone(editUserData.value.contactNumber)
 
       if (!editUserData.value.id) {
         showToastMessage('Invalid user record. Please reopen Edit User.', 'error')
@@ -2482,11 +2455,6 @@ export default {
         showToastMessage('This department already has a Head Teacher assigned', 'error')
         return
       }
-      if (!isValidPhilippinePhone(contactNumber)) {
-        showToastMessage('Please enter a valid Philippine contact number beginning with +63', 'error')
-        return
-      }
-
       const payload = new FormData()
       payload.append('name', fullName)
       payload.append('email', email)
@@ -2496,7 +2464,6 @@ export default {
       payload.append('subject', role === 'teacher' ? subject : '')
       payload.append('gradeLevel', role === 'student' ? gradeLevel : '')
       payload.append('strand', role === 'student' ? strand : '')
-      payload.append('contactNumber', contactNumber)
 
       try {
         isSavingEdit.value = true
@@ -5487,7 +5454,7 @@ body.admin-dashboard .btn.btn-primary.edit-user-btn i {
   @apply tw:[line-height:1.4];
 }
 
-.modal.edit-user-modal .form-group input:not(.philippine-phone-input__number),
+.modal.edit-user-modal .form-group input,
 .modal.edit-user-modal .form-group select {
   @apply tw:[min-height:44px];
   @apply tw:[border:1px_solid_#dce3ea];
@@ -5498,7 +5465,7 @@ body.admin-dashboard .btn.btn-primary.edit-user-btn i {
   @apply tw:[transition:border-color_0.18s_ease,_box-shadow_0.18s_ease,_background_0.18s_ease];
 }
 
-.modal.edit-user-modal .form-group input:not(.philippine-phone-input__number):focus,
+.modal.edit-user-modal .form-group input:focus,
 .modal.edit-user-modal .form-group select:focus {
   @apply tw:[border-color:#69aa47];
   @apply tw:[outline:none];
