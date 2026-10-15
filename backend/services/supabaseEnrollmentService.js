@@ -96,6 +96,18 @@ async function listStudentEnrollments(studentId, status = '') {
   return (data || []).map(mapEnrollment);
 }
 
+async function listSubjectEnrollments(subjectId, teacherId, status = '') {
+  const normalizedSubjectId = referenceId(subjectId);
+  const normalizedTeacherId = referenceId(teacherId);
+  if (!normalizedSubjectId || !normalizedTeacherId) return [];
+  let query = getSupabaseStorageClient().from('subject_enrollments').select('*')
+    .eq('subject_id', normalizedSubjectId).eq('teacher_id', normalizedTeacherId);
+  if (String(status || '').trim()) query = query.eq('status', String(status).trim());
+  const { data, error } = await query;
+  if (error) throw enrollmentError(error, 'Failed to list class enrollments from Supabase');
+  return (data || []).map(mapEnrollment);
+}
+
 async function listHydratedStudentEnrollments(studentId, status = '') {
   const enrollments = await listStudentEnrollments(studentId, status);
   if (enrollments.length === 0) return [];
@@ -117,6 +129,7 @@ async function listHydratedStudentEnrollments(studentId, status = '') {
 module.exports = {
   findEnrollment,
   listHydratedStudentEnrollments,
+  listSubjectEnrollments,
   listStudentEnrollments,
   mapEnrollment,
   saveApprovedEnrollment,

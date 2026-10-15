@@ -47,6 +47,7 @@ const { generateAssessmentWithAi } = require('../controllers/aiController');
 const headteacherId = 'science-headteacher';
 const teacherId = 'biology-teacher';
 const lessonId = 'legacy-general-lesson';
+const subjectId = 'biology-class';
 
 function fixture({ teacher = {}, lesson = null } = {}) {
   uploads = [];
@@ -80,6 +81,14 @@ function fixture({ teacher = {}, lesson = null } = {}) {
       ...lesson,
     }] : [],
     assessments: [],
+    subjects: [{
+      id: subjectId,
+      name: 'Biology',
+      class_name: 'Grade 11 Biology',
+      code: 'BIO-11',
+      teacher_id: teacherId,
+      is_active: true,
+    }],
   });
 }
 
@@ -115,6 +124,7 @@ function createAssessment(body = {}) {
     body: {
       teacherId,
       lessonId,
+      subjectId,
       title: 'Cell structure quiz',
       examType: 'multiple_choice',
       difficulty: 'medium',

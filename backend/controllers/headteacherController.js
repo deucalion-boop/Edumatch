@@ -6,7 +6,8 @@ const Submission = require('../models/Submission');
 const { sendSuccess } = require('../utils/responseHelper');
 const { ROLE_HEADTEACHER, ROLE_TEACHER, ROLE_STUDENT } = require('../constants/userRoles');
 const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
-const { ensureTeacherSubject } = require('../services/subjectService');
+const { ensureTeacherSubject, findTeacherSubject, listTeacherSubjects } = require('../services/subjectService');
+const { listSubjectEnrollments } = require('../services/supabaseEnrollmentService');
 const { inferSubjectCategory, normalizeSubjectCategory } = require('../services/recommendationService');
 const {
   buildAssessmentPolicy,
@@ -327,9 +328,18 @@ const getManagedTeachers = asyncHandler(async (req, res) => {
   const lessonAnalyticsBuckets = buildMonthlyCreationAnalytics(lessons, teacherAccountIdSet, analyticsMonthCount);
   const assessmentAnalyticsBuckets = buildMonthlyCreationAnalytics(assessments, teacherAccountIdSet, analyticsMonthCount);
 
-  const teachersPayload = teachers.map((teacher) => {
+  const teacherClasses = await Promise.all(teachers.map((teacher) => listTeacherSubjects(teacher._id)));
+  const teachersPayload = teachers.map((teacher, index) => {
     const mappedTeacher = mapUserResponse(teacher, req);
-    return mappedTeacher;
+    return {
+      ...mappedTeacher,
+      classes: teacherClasses[index].map((subject) => ({
+        id: String(subject.id || subject._id || ''),
+        name: subject.name,
+        className: subject.className,
+        code: subject.code,
+      })),
+    };
   });
   const activeTeachers = teachersPayload.filter((teacher) => String(teacher.status || '').trim().toLowerCase() === 'active').length;
   const now = new Date();
@@ -852,6 +862,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
   const {
     teacherId,
     lessonId,
+    subjectId,
     title,
     examType,
     subject,
@@ -869,13 +880,19 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     deadlineAt: deadlineAtRaw,
   } = req.body || {};
 
-  if (!teacherId || !lessonId || !title || !examType || !difficulty || !numberOfItems) {
-    const error = new Error('teacherId, lessonId, title, examType, difficulty, and numberOfItems are required');
+  if (!teacherId || !lessonId || !subjectId || !title || !examType || !difficulty || !numberOfItems) {
+    const error = new Error('teacherId, lessonId, subjectId, title, examType, difficulty, and numberOfItems are required');
     error.statusCode = 400;
     throw error;
   }
 
   const teacher = await findManagedTeacherForHeadTeacher(req, teacherId, { department });
+  const selectedClass = await findTeacherSubject(teacher._id, subjectId);
+  if (!selectedClass) {
+    const error = new Error('Class not found for the selected teacher');
+    error.statusCode = 404;
+    throw error;
+  }
   const lesson = await findSupabaseLesson(lessonId, teacher._id);
   if (!lesson) {
     const error = new Error('Lesson not found for the selected teacher');
@@ -884,7 +901,8 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
   }
 
   const normalizedTitle = String(title || '').trim();
-  const normalizedSubject = ensureManagedTeacherSubject(teacher, subject);
+  ensureManagedTeacherSubject(teacher, selectedClass.name);
+  const normalizedSubject = ensureManagedTeacherSubject(teacher, subject || selectedClass.name);
   const lessonStrand = normalizeStrand(lesson.track);
   if (!isSubjectAllowedForStrand({ strand: lessonStrand, subject: normalizedSubject })) {
     const allowedSubjects = STRANDS.includes(lessonStrand) ? [normalizedSubject] : [];
@@ -930,7 +948,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
   if (assessmentPolicy.countsTowardRecommendation) {
     const duplicateGradingAssessment = existingAssessments.find((item) => (
       item.countsTowardRecommendation === true
-      && String(item.subjectId || '') === String(lesson.subjectId || '')
+      && String(item.subjectId || '') === String(selectedClass.id || '')
       && String(item.gradingPeriod || '') === String(assessmentPolicy.gradingPeriod || '')
     ));
     if (duplicateGradingAssessment) {
@@ -940,15 +958,17 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     }
   }
 
-  const assignedStudentIds = Array.isArray(req.body?.assignedStudentIds) ? req.body.assignedStudentIds : [];
+  const assignedStudentIds = (await listSubjectEnrollments(selectedClass.id, teacher._id, 'approved'))
+    .map((enrollment) => String(enrollment.studentId || '').trim())
+    .filter(Boolean);
 
   const assessment = await createSupabaseAssessment({
     lessonId,
     title: normalizedTitle,
     examType,
     subject: normalizedSubject,
-    subjectId: lesson.subjectId || null,
-    subjectCode: lesson.subjectCode || '',
+    subjectId: selectedClass.id,
+    subjectCode: selectedClass.code || '',
     subjectCategory: resolveAssessmentSubjectCategory({
       subjectCategory: subjectCategory || getSubjectCategory(normalizedSubject),
       examType,
@@ -963,7 +983,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     assessmentMode: assessmentPolicy.assessmentMode,
     gradingPeriod: assessmentPolicy.gradingPeriod,
     countsTowardRecommendation: assessmentPolicy.countsTowardRecommendation,
-    assignmentScope: assessmentPolicy.assignmentScope,
+    assignmentScope: 'handled_class',
     assignedStudentIds,
     questions: Array.isArray(questions) ? questions : [],
     createdBy: teacher._id,

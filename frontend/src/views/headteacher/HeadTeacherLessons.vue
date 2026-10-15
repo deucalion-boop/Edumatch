@@ -353,10 +353,12 @@
             </label>
 
             <label class="headteacher-form-group">
-              <span>Assign To</span>
-              <select v-model="assessmentForm.assignmentScope">
-                <option value="handled_class">Handled Class</option>
-                <option value="advisory_class">Advisory Class</option>
+              <span>Class</span>
+              <select v-model="assessmentForm.subjectId" required :disabled="!assessmentForm.teacherId || selectedAssessmentTeacherClasses.length === 0">
+                <option value="">{{ assessmentForm.teacherId && selectedAssessmentTeacherClasses.length === 0 ? 'No classes available' : 'Select class' }}</option>
+                <option v-for="teacherClass in selectedAssessmentTeacherClasses" :key="teacherClass.id" :value="teacherClass.id">
+                  {{ teacherClass.className || teacherClass.name }}{{ teacherClass.code ? ` (${teacherClass.code})` : '' }}
+                </option>
               </select>
             </label>
           </div>
@@ -375,7 +377,7 @@
               <strong>{{ assessmentModeSummaryLabel }}</strong>
             </div>
             <div class="headteacher-context-card">
-              <span>Assign To</span>
+              <span>Class</span>
               <strong>{{ assessmentAssignmentSummary }}</strong>
             </div>
           </div>
@@ -549,7 +551,7 @@
             </div>
 
             <div class="headteacher-assessment-meta">
-              <span><i class="fas fa-users"></i> {{ assessment.assignmentScope === 'advisory_class' ? 'Advisory class' : 'Handled class' }}</span>
+              <span><i class="fas fa-users"></i> {{ getAssessmentClassLabel(assessment) }}</span>
               <span><i class="fas fa-list-ol"></i> {{ assessment.numberOfItems }} items</span>
               <span><i class="fas fa-user-check"></i> {{ assessment.assignedStudentsCount }} students</span>
               <span><i class="fas fa-calendar-alt"></i> {{ formatDate(assessment.submissionDeadline) }}</span>
@@ -610,7 +612,7 @@ const assessmentForm = reactive({
   title: '',
   assessmentMode: 'activity',
   gradingPeriod: '',
-  assignmentScope: 'handled_class',
+  subjectId: '',
   examType: '',
   difficulty: '',
   numberOfItems: 10,
@@ -637,6 +639,8 @@ const displayName = computed(() => authStore.user?.name || 'HeadTeacher')
 const departmentLabel = computed(() => authStore.user?.department || 'Department')
 const selectedTeacher = computed(() => teachers.value.find((teacher) => teacher.id === form.teacherId) || null)
 const selectedAssessmentTeacher = computed(() => teachers.value.find((teacher) => teacher.id === assessmentForm.teacherId) || null)
+const selectedAssessmentTeacherClasses = computed(() => selectedAssessmentTeacher.value?.classes || [])
+const selectedAssessmentClass = computed(() => selectedAssessmentTeacherClasses.value.find((teacherClass) => teacherClass.id === assessmentForm.subjectId) || null)
 const selectedTeacherInitials = computed(() => {
   const name = String(selectedTeacher.value?.name || '').trim()
   if (!name) return 'HT'
@@ -687,9 +691,12 @@ const assessmentModeSummaryLabel = computed(() => {
     ? `Exam · ${assessmentForm.gradingPeriod} Grading`
     : 'Exam'
 })
-const assessmentAssignmentSummary = computed(() => (
-  assessmentForm.assignmentScope === 'advisory_class' ? 'Advisory Class' : 'Handled Class'
-))
+const assessmentAssignmentSummary = computed(() => selectedAssessmentClass.value?.className || selectedAssessmentClass.value?.name || 'Select class')
+const getAssessmentClassLabel = (assessment) => {
+  const teacher = teachers.value.find((item) => item.id === assessment?.teacherId)
+  const teacherClass = teacher?.classes?.find((item) => item.id === assessment?.subjectId)
+  return teacherClass?.className || teacherClass?.name || assessment?.subject || 'Class'
+}
 const assessmentGenerateButtonTitle = computed(() => {
   if (canGenerateAssessment.value) return ''
   return assessmentGenerationWarning.value || AI_CONFIG_WARNING_MESSAGE
@@ -865,7 +872,7 @@ const resetAssessmentDraft = () => {
   assessmentForm.title = ''
   assessmentForm.assessmentMode = 'activity'
   assessmentForm.gradingPeriod = ''
-  assessmentForm.assignmentScope = 'handled_class'
+  assessmentForm.subjectId = ''
   assessmentForm.examType = ''
   assessmentForm.difficulty = ''
   assessmentForm.numberOfItems = 10
@@ -889,8 +896,8 @@ const onOptionsInput = (index, value) => {
 
 const validateAssessmentForm = () => {
   const submissionDeadline = buildSubmissionDeadlineIso(assessmentForm.deadlineDate, assessmentForm.deadlineTime)
-  if (!assessmentForm.teacherId || !assessmentForm.lessonId || !assessmentForm.title || !assessmentResolvedSubject.value || !assessmentForm.examType || !assessmentForm.difficulty) {
-    throw new Error('Complete the teacher, lesson, title, subject, exam type, and difficulty before continuing.')
+  if (!assessmentForm.teacherId || !assessmentForm.lessonId || !assessmentForm.subjectId || !assessmentForm.title || !assessmentResolvedSubject.value || !assessmentForm.examType || !assessmentForm.difficulty) {
+    throw new Error('Complete the teacher, class, lesson, title, subject, exam type, and difficulty before continuing.')
   }
   if (!Number.isInteger(Number(assessmentForm.numberOfItems)) || Number(assessmentForm.numberOfItems) <= 0) {
     throw new Error('Number of items must be greater than zero.')
@@ -923,6 +930,7 @@ const generateAssessmentWithAi = async () => {
     const payload = {
       teacherId: assessmentForm.teacherId,
       lessonId: assessmentForm.lessonId,
+      subjectId: assessmentForm.subjectId,
       title: String(assessmentForm.title || '').trim(),
       examType: assessmentForm.examType,
       subject: assessmentResolvedSubject.value,
@@ -930,7 +938,7 @@ const generateAssessmentWithAi = async () => {
       numberOfItems: Number(assessmentForm.numberOfItems),
       assessmentMode: assessmentForm.assessmentMode,
       gradingPeriod: assessmentForm.gradingPeriod,
-      assignmentScope: assessmentForm.assignmentScope,
+      assignmentScope: 'handled_class',
       examDurationMinutes: Number(assessmentForm.examDurationMinutes),
       submissionDeadline,
     }
@@ -956,7 +964,7 @@ const generateAssessmentWithAi = async () => {
       submissionDeadline: draftAssessment.submissionDeadline || submissionDeadline,
       assessmentMode: String(draftAssessment.assessmentMode || assessmentForm.assessmentMode || 'activity'),
       gradingPeriod: String(draftAssessment.gradingPeriod || assessmentForm.gradingPeriod || ''),
-      assignmentScope: String(draftAssessment.assignmentScope || assessmentForm.assignmentScope || 'handled_class'),
+      subjectId: assessmentForm.subjectId,
     }
     showCorrectAnswers.value = false
     setBanner('success', isEditingAssessment.value ? 'New AI draft ready. Review it, then update the assessment.' : 'Assessment draft generated successfully.')
@@ -978,6 +986,7 @@ const saveManagedAssessment = async () => {
     const payload = {
       teacherId: assessmentForm.teacherId,
       lessonId: assessmentForm.lessonId,
+      subjectId: assessmentForm.subjectId,
       title: String((generatedDraftMeta.value?.title || assessmentForm.title) || '').trim(),
       examType: generatedDraftMeta.value?.examType || assessmentForm.examType,
       subject: assessmentResolvedSubject.value || generatedDraftMeta.value?.subject,
@@ -988,7 +997,7 @@ const saveManagedAssessment = async () => {
       submissionDeadline: generatedDraftMeta.value?.submissionDeadline || submissionDeadline,
       assessmentMode: String(assessmentForm.assessmentMode || generatedDraftMeta.value?.assessmentMode || 'activity').trim(),
       gradingPeriod: String(assessmentForm.gradingPeriod || generatedDraftMeta.value?.gradingPeriod || '').trim(),
-      assignmentScope: String(assessmentForm.assignmentScope || generatedDraftMeta.value?.assignmentScope || 'handled_class').trim(),
+      assignmentScope: 'handled_class',
       challengeDescription: String(assessmentForm.challengeDescription || '').trim(),
       questions: generatedQuestions.value.map((question, index) => ({
         questionText: String(question.prompt || '').trim() || `Question ${index + 1}`,
@@ -1027,7 +1036,7 @@ const startEditingAssessment = (assessment) => {
   assessmentForm.title = String(assessment?.title || '')
   assessmentForm.assessmentMode = String(assessment?.assessmentMode || 'activity')
   assessmentForm.gradingPeriod = String(assessment?.gradingPeriod || '')
-  assessmentForm.assignmentScope = String(assessment?.assignmentScope || 'handled_class')
+  assessmentForm.subjectId = String(assessment?.subjectId || '')
   assessmentForm.examType = String(assessment?.examType || '')
   assessmentForm.difficulty = String(assessment?.difficulty || '')
   assessmentForm.numberOfItems = Number(assessment?.numberOfItems || 10)
@@ -1045,7 +1054,7 @@ const startEditingAssessment = (assessment) => {
     submissionDeadline: assessment?.submissionDeadline || null,
     assessmentMode: String(assessment?.assessmentMode || 'activity'),
     gradingPeriod: String(assessment?.gradingPeriod || ''),
-    assignmentScope: String(assessment?.assignmentScope || 'handled_class'),
+    subjectId: String(assessment?.subjectId || ''),
   }
   generatedQuestions.value = (Array.isArray(assessment?.questions) ? assessment.questions : []).map((question) => ({
     prompt: question.questionText || '',
@@ -1086,6 +1095,9 @@ watch(
   () => {
     if (!filteredAssessmentLessons.value.some((lesson) => lesson.id === assessmentForm.lessonId)) {
       assessmentForm.lessonId = ''
+    }
+    if (!selectedAssessmentTeacherClasses.value.some((teacherClass) => teacherClass.id === assessmentForm.subjectId)) {
+      assessmentForm.subjectId = ''
     }
   }
 )
