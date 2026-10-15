@@ -357,6 +357,10 @@ export default {
   @apply tw:[box-shadow:0_8px_18px_rgba(63,_127,_42,_0.22)];
 }
 
+.password-change-page i.fa-shield-halved {
+  @apply tw:text-white;
+}
+
 .password-change-eyebrow {
   @apply tw:[margin-bottom:0.2rem];
   @apply tw:[color:#3f7f2a];
