@@ -12,7 +12,7 @@ const handler = fn => (req, res, next) => Promise.resolve().then(() => {
   return next(error);
 });
 const list = handler(async (req, res) => sendSuccess(res, 200, 'Teacher invitations loaded.', { invitations: await service.listInvitations(req.user._id) }));
-const create = handler(async (req, res) => sendSuccess(res, 201, 'Teacher invitation created.', await service.createInvitation(req.user._id, req.body)));
+const create = handler(async (req, res) => sendSuccess(res, 201, 'Your department registration link is ready to share in your group chat.', await service.createGroupInvitation(req.user._id, req.body)));
 const resend = handler(async (req, res) => sendSuccess(res, 200, 'Teacher invitation renewed. Previous links are no longer valid.', await service.resendInvitation(req.user._id, req.params.id, req.body)));
 const revoke = handler(async (req, res) => sendSuccess(res, 200, 'Teacher invitation revoked.', { invitation: await service.revokeInvitation(req.user._id, req.params.id) }));
 const details = handler(async (req, res) => sendSuccess(res, 200, 'Teacher invitation verified.', { invitation: await service.publicInvitation(req.params.token) }));

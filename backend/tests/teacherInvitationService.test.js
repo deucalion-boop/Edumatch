@@ -26,7 +26,7 @@ function fixture(extra = {}, rpcBehavior) {
   client = createFakeSupabase({
     users: [{ id: headTeacherId, name: 'Head Teacher', role: 'headteacher', status: 'active', archive: {}, department: 'Mathematics' }],
     teacher_invitations: [{ id: invitationId, headteacher_id: headTeacherId, token_nonce: nonce, token_hash: tokenHash,
-      name: 'Maria Santos', email: 'maria@school.edu.ph', department: 'Mathematics', status: 'pending',
+      name: 'Maria Santos', email: 'maria@school.edu.ph', department: 'Mathematics', status: 'pending', is_group: false,
       created_at: new Date().toISOString(), expires_at: future(), email_challenge_id: 'challenge-one',
       email_code_hash: 'private-code-hash', verification_hash: 'private-proof-hash' }],
     ...extra,
@@ -46,6 +46,19 @@ function createdRow(input) {
   return { ...client.tables.teacher_invitations[0], id: input.p_id || input.p_invitation_id,
     token_nonce: input.p_nonce, token_hash: input.p_token_hash, name: input.p_name || '', email: input.p_email || '',
     expires_at: future(input.p_expires_hours * 3600000) };
+}
+
+function groupFixture(rpcBehavior) {
+  fixture({}, rpcBehavior);
+  Object.assign(client.tables.teacher_invitations[0], { is_group: true, name: '', email: '', registration_count: 0 });
+  client.tables.teacher_invitation_registrations = [];
+  return client;
+}
+
+function claim(email, id, extra = {}) {
+  return { id, invitation_id: invitationId, email, token_hash: tokenHash, status: 'pending',
+    email_challenge_id: `${id}-challenge`, email_code_hash: `${id}-private-code`, email_code_sent_at: new Date().toISOString(),
+    email_code_expires_at: future(600000), ...extra };
 }
 
 async function rejects(promise, status, code, pattern) {
@@ -146,7 +159,8 @@ test('public metadata exposes only the addressed invitation and no token, challe
   fixture();
   client.tables.teacher_invitations.push({ ...client.tables.teacher_invitations[0], id: 'other', token_hash: service.digest('other'), email: 'private@other.edu', name: 'Other Teacher' });
   const metadata = await service.publicInvitation(token);
-  assert.deepEqual(Object.keys(metadata).sort(), ['department', 'email', 'expiresAt', 'name', 'schoolName', 'status']);
+  assert.deepEqual(Object.keys(metadata).sort(), ['department', 'email', 'expiresAt', 'isGroup', 'name', 'schoolName', 'status']);
+  assert.equal(metadata.isGroup, false);
   assert.equal(metadata.name, 'Maria Santos');
   assert.equal(metadata.email, 'maria@school.edu.ph');
   assert.equal(JSON.stringify(metadata).includes('private'), false);
@@ -402,4 +416,147 @@ test('controller preserves resend metadata when code delivery fails', async () =
   assert.equal(res.body.code, 'EMAIL_DELIVERY_FAILED');
   assert.equal(res.body.verification.expiresAt, null);
   assert.ok(Date.parse(res.body.verification.resendAvailableAt) > Date.now());
+});
+
+test('shared department link creation requires no teacher details and reuses a returned active group link', async () => {
+  groupFixture(async (name) => {
+    assert.equal(name, 'create_teacher_group_invitation');
+    return { data: client.tables.teacher_invitations[0] };
+  });
+  const first = await service.createGroupInvitation(headTeacherId, { expiresInHours: 48 });
+  const again = await service.createGroupInvitation(headTeacherId, {});
+  assert.equal(first.invitation.isGroup, true);
+  assert.equal(first.invitation.invitationUrl, again.invitation.invitationUrl);
+  assert.equal(first.invitation.name, '');
+  assert.equal(first.invitation.email, '');
+  assert.equal(first.invitation.registrationCount, 0);
+  assert.equal(mailCalls.length, 0);
+  for (const { input } of rpcCalls) {
+    assert.equal(input.p_headteacher_id, headTeacherId);
+    assert.equal(input.p_expires_hours, 48);
+    assert.equal(Object.hasOwn(input, 'p_name'), false);
+    assert.equal(Object.hasOwn(input, 'p_email'), false);
+    assert.match(input.p_token_hash, /^[a-f0-9]{64}$/);
+  }
+  for (const body of [{ name: 'Teacher Name' }, { email: 'teacher@school.edu.ph' }]) {
+    await rejects(service.createGroupInvitation(headTeacherId, body), 400);
+  }
+  assert.equal(rpcCalls.length, 2);
+});
+
+test('shared public metadata exposes department context without any registered teacher identity', async () => {
+  groupFixture();
+  client.tables.teacher_invitation_registrations.push(claim('private-one@school.edu.ph', 'claim-one'), claim('private-two@school.edu.ph', 'claim-two'));
+  const publicData = await service.publicInvitation(token);
+  assert.equal(publicData.isGroup, true);
+  assert.equal(publicData.name, '');
+  assert.equal(publicData.email, '');
+  assert.equal(publicData.department, 'Mathematics');
+  assert.equal(publicData.status, 'Pending');
+  assert.equal(JSON.stringify(publicData).includes('private-'), false);
+  assert.equal(Object.hasOwn(publicData, 'registrationCount'), false);
+});
+
+test('simultaneous shared-link email challenges use independent email-bound hashes and claim records', async () => {
+  groupFixture(async (name, input) => {
+    assert.equal(name, 'prepare_teacher_group_email');
+    const record = claim(input.p_email, `claim-${client.tables.teacher_invitation_registrations.length + 1}`, {
+      email_challenge_id: input.p_challenge_id, email_code_hash: input.p_code_hash,
+    });
+    client.tables.teacher_invitation_registrations.push(record);
+    return { data: record };
+  });
+  const emails = ['maria@school.edu.ph', 'jose@school.edu.ph'];
+  const results = await Promise.all(emails.map(email => service.sendEmailCode(token, { email })));
+  assert.equal(results.length, 2);
+  assert.equal(rpcCalls.length, 2);
+  assert.equal(client.tables.teacher_invitation_registrations.length, 2);
+  assert.notEqual(rpcCalls[0].input.p_challenge_id, rpcCalls[1].input.p_challenge_id);
+  assert.notEqual(rpcCalls[0].input.p_code_hash, rpcCalls[1].input.p_code_hash);
+  for (const { input } of rpcCalls) {
+    const mail = mailCalls.find(message => message.to.email === input.p_email);
+    const code = mail.text.match(/code is (\d{6})/)[1];
+    assert.equal(input.p_code_hash, service.codeHash(tokenHash, input.p_email, input.p_challenge_id, code));
+    assert.equal(input.p_token_hash, tokenHash);
+    assert.equal(Object.values(input).includes(code), false);
+  }
+  assert.equal(client.tables.teacher_invitations[0].email_code_hash, 'private-code-hash');
+  assert.equal(client.writes.length, 0);
+});
+
+test('shared-link delivery cleanup affects only the prepared claim and preserves another email and newer challenge', async () => {
+  groupFixture(async (_name, input) => {
+    const own = claim(input.p_email, 'claim-own', { email_challenge_id: input.p_challenge_id, email_code_hash: input.p_code_hash });
+    client.tables.teacher_invitation_registrations.push(own, claim('other@school.edu.ph', 'claim-other'));
+    return { data: own };
+  });
+  mailBehavior = async () => ({ sent: false });
+  await rejects(service.sendEmailCode(token, { email: 'maria@school.edu.ph' }), 502, 'EMAIL_DELIVERY_FAILED');
+  assert.equal(client.tables.teacher_invitation_registrations.find(row => row.id === 'claim-own').email_code_hash, null);
+  assert.equal(client.tables.teacher_invitation_registrations.find(row => row.id === 'claim-other').email_code_hash, 'claim-other-private-code');
+  assert.equal(client.writes.at(-1).table, 'teacher_invitation_registrations');
+  assert.deepEqual(client.writes.at(-1).ids, ['claim-own']);
+  assert.equal(client.tables.teacher_invitations[0].email_code_hash, 'private-code-hash');
+
+  groupFixture(async (_name, input) => {
+    const own = claim(input.p_email, 'claim-own', { email_challenge_id: input.p_challenge_id, email_code_hash: input.p_code_hash });
+    client.tables.teacher_invitation_registrations.push(own);
+    return { data: own };
+  });
+  mailBehavior = async () => {
+    Object.assign(client.tables.teacher_invitation_registrations[0], { email_challenge_id: 'newer-challenge', email_code_hash: 'newer-private-code' });
+    return { sent: false };
+  };
+  await rejects(service.sendEmailCode(token, { email: 'maria@school.edu.ph' }), 502, 'EMAIL_DELIVERY_FAILED');
+  assert.equal(client.tables.teacher_invitation_registrations[0].email_code_hash, 'newer-private-code');
+  assert.deepEqual(client.writes.at(-1).ids, []);
+});
+
+test('shared-link verification reads only its email and token-bound claim and hashes each independent proof', async () => {
+  groupFixture(async (name) => {
+    assert.equal(name, 'verify_teacher_group_email');
+    return { data: { verified: true, expiresAt: future() } };
+  });
+  client.tables.teacher_invitation_registrations.push(claim('maria@school.edu.ph', 'claim-maria'), claim('jose@school.edu.ph', 'claim-jose'),
+    claim('maria@school.edu.ph', 'claim-other-invitation', { invitation_id: 'another-invitation' }),
+    claim('maria@school.edu.ph', 'claim-old-token', { token_hash: 'retired-token-hash' }));
+  const results = await Promise.all(['maria@school.edu.ph', 'jose@school.edu.ph'].map(email => service.verifyEmail(token, { email, code: '123456' })));
+  assert.notEqual(results[0].verificationToken, results[1].verificationToken);
+  assert.equal(rpcCalls.length, 2);
+  for (const { input } of rpcCalls) {
+    const expectedChallenge = input.p_email.startsWith('maria') ? 'claim-maria-challenge' : 'claim-jose-challenge';
+    const proof = results.find(result => result.verifiedEmail === input.p_email).verificationToken;
+    assert.equal(input.p_challenge_id, expectedChallenge);
+    assert.equal(input.p_verification_hash, service.digest(proof));
+    assert.equal(input.p_code_hash, service.codeHash(tokenHash, input.p_email, expectedChallenge, '123456'));
+    assert.equal(Object.values(input).includes(proof), false);
+  }
+  assert.equal(client.writes.length, 0);
+});
+
+test('shared-link registration dispatches per teacher and leaves the invitation usable for another visitor', async () => {
+  groupFixture(async (name, input) => {
+    assert.equal(name, 'register_teacher_group_invitation');
+    const id = `teacher-${client.tables.users.length}`;
+    client.tables.users.push({ id, name: input.p_name, email: input.p_email, username: input.p_username, role: 'teacher', department: 'Mathematics', status: 'active' });
+    client.tables.teacher_invitations[0].registration_count += 1;
+    return { data: id };
+  });
+  const body = { fullName: 'Maria Santos', email: 'maria@school.edu.ph', username: 'maria.santos', password: 'Password123', confirmPassword: 'Password123', verificationToken: 'a'.repeat(64), role: 'admin', department: 'Science' };
+  const results = await Promise.all([service.registerTeacher(token, body), service.registerTeacher(token, {
+    ...body, fullName: 'Jose Reyes', email: 'jose@school.edu.ph', username: 'jose.reyes', verificationToken: 'b'.repeat(64),
+  })]);
+  assert.ok(results.every(result => result.registered && result.user.role === 'teacher' && result.user.department === 'Mathematics'));
+  assert.equal(client.tables.teacher_invitations[0].status, 'pending');
+  assert.equal(client.tables.teacher_invitations[0].registration_count, 2);
+  assert.equal((await service.publicInvitation(token)).status, 'Pending');
+  assert.equal((await service.publicInvitation(token)).isGroup, true);
+  for (const { input } of rpcCalls) {
+    assert.equal(input.p_token_hash, tokenHash);
+    assert.equal(Object.hasOwn(input, 'p_role'), false);
+    assert.equal(Object.hasOwn(input, 'p_department'), false);
+    assert.equal(Object.hasOwn(input, 'p_headteacher_id'), false);
+    assert.match(input.p_password_hash, /^\$2[aby]\$/);
+  }
+  assert.notEqual(rpcCalls[0].input.p_verification_hash, rpcCalls[1].input.p_verification_hash);
 });

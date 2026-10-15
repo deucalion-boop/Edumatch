@@ -127,6 +127,7 @@ function mapInvitation(row) {
     : Date.parse(row.expires_at) <= Date.now() ? 'Expired' : 'Pending';
   return { id: row.id, name: row.name || '', email: row.email || '', createdAt: row.created_at,
     expiresAt: row.expires_at, acceptedAt: row.accepted_at || null, status,
+    isGroup: row.is_group === true, registrationCount: Number(row.registration_count || 0),
     invitationUrl: status === 'Pending' ? invitationUrl(row) : '', delivery: delivery(row) };
 }
 function html(value) { return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]); }
@@ -173,29 +174,62 @@ async function createInvitation(headTeacherId, body = {}) {
   }));
   return deliverInvitation(row);
 }
+async function createGroupInvitation(headTeacherId, body = {}) {
+  const issuer = await requireHeadTeacher(headTeacherId);
+  body = inputBody(body);
+  if (Object.hasOwn(body, 'name') || Object.hasOwn(body, 'email')) {
+    throw fail('Teachers enter their own name and email when they open the shared registration link.');
+  }
+  const existing = await result(client().from('teacher_invitations').select('id')
+    .eq('headteacher_id', headTeacherId).eq('department', issuer.department).eq('is_group', true).eq('status', 'pending').maybeSingle());
+  const id = existing?.id || crypto.randomUUID();
+  const nonce = crypto.randomUUID();
+  invitationUrl({ id, token_nonce: nonce });
+  const row = await result(client().rpc('create_teacher_group_invitation', {
+    p_headteacher_id: headTeacherId, p_id: id, p_nonce: nonce,
+    p_token_hash: digest(invitationToken(id, nonce)), p_expires_hours: expiresHours(body.expiresInHours),
+  }));
+  // An existing active department link is returned unchanged by the RPC.
+  // No teacher details or invitation emails are needed for group sharing.
+  return { invitation: mapInvitation(row) };
+}
+async function ownedInvitation(headTeacherId, id) {
+  const row = await result(client().from('teacher_invitations').select('id,is_group')
+    .eq('id', id).eq('headteacher_id', headTeacherId).maybeSingle());
+  if (!row) throw knownError('INVITATION_INVALID');
+  return row;
+}
 async function resendInvitation(headTeacherId, id, body = {}) {
   await requireHeadTeacher(headTeacherId);
   body = inputBody(body);
   invitationId(id);
+  const current = await ownedInvitation(headTeacherId, id);
   const nonce = crypto.randomUUID();
   invitationUrl({ id, token_nonce: nonce });
-  const row = await result(client().rpc('renew_teacher_invitation', {
+  const row = await result(client().rpc(current.is_group ? 'renew_teacher_group_invitation' : 'renew_teacher_invitation', {
     p_headteacher_id: headTeacherId, p_invitation_id: id, p_nonce: nonce,
     p_token_hash: digest(invitationToken(id, nonce)), p_expires_hours: expiresHours(body.expiresInHours),
   }));
-  return deliverInvitation(row);
+  return current.is_group ? { invitation: mapInvitation(row) } : deliverInvitation(row);
 }
 async function revokeInvitation(headTeacherId, id) {
   await requireHeadTeacher(headTeacherId);
-  const row = await result(client().rpc('revoke_teacher_invitation', {
-    p_headteacher_id: headTeacherId, p_invitation_id: invitationId(id),
+  invitationId(id);
+  const current = await ownedInvitation(headTeacherId, id);
+  const row = await result(client().rpc(current.is_group ? 'revoke_teacher_group_invitation' : 'revoke_teacher_invitation', {
+    p_headteacher_id: headTeacherId, p_invitation_id: id,
   }));
   return mapInvitation(row);
 }
 async function publicInvitation(token) {
   const row = await requireInvitation(token);
   return { name: row.name || '', email: row.email || '', department: row.department,
-    schoolName: String(process.env.SCHOOL_NAME || 'EduMatch'), expiresAt: row.expires_at, status: 'Pending' };
+    schoolName: String(process.env.SCHOOL_NAME || 'EduMatch'), expiresAt: row.expires_at, status: 'Pending', isGroup: row.is_group === true };
+}
+async function emailState(invitation, email) {
+  if (!invitation.is_group) return invitation;
+  return result(client().from('teacher_invitation_registrations').select('*')
+    .eq('invitation_id', invitation.id).eq('email', email).eq('token_hash', invitation.token_hash).maybeSingle());
 }
 async function usernameExists(username) {
   const pattern = username.replace(/[\\%_]/g, '\\$&');
@@ -220,14 +254,15 @@ async function sendEmailCode(token, body = {}) {
   const challengeId = crypto.randomUUID();
   let prepared;
   try {
-    prepared = await result(client().rpc('prepare_teacher_invitation_email', {
+    prepared = await result(client().rpc(row.is_group ? 'prepare_teacher_group_email' : 'prepare_teacher_invitation_email', {
       p_token_hash: row.token_hash, p_email: email, p_code_hash: codeHash(row.token_hash, email, challengeId, code), p_challenge_id: challengeId,
     }));
   } catch (error) {
     if (error.code === 'INVITATION_COOLDOWN') {
-      const sentAt = Date.parse(row.email_code_sent_at);
+      const state = await emailState(row, email);
+      const sentAt = Date.parse(state?.email_code_sent_at);
       const resendAt = Number.isFinite(sentAt) ? sentAt + 60000 : Date.now() + 60000;
-      error.verification = { expiresAt: row.email_code_expires_at || null,
+      error.verification = { expiresAt: state?.email_code_expires_at || null,
         resendAvailableAt: new Date(Math.max(Date.now() + 1000, resendAt)).toISOString() };
     }
     throw error;
@@ -243,8 +278,11 @@ async function sendEmailCode(token, body = {}) {
     sent = response?.sent === true;
   } catch { /* A failed delivery must not leave a usable verification code. */ }
   if (!sent) {
-    await result(client().from('teacher_invitations').update({ email_code_hash: null, email_code_expires_at: null })
-      .eq('id', row.id).eq('email_challenge_id', challengeId));
+    let cleanup = client().from(row.is_group ? 'teacher_invitation_registrations' : 'teacher_invitations')
+      .update({ email_code_hash: null, email_code_expires_at: null })
+      .eq('id', row.is_group ? prepared.id : row.id).eq('email_challenge_id', challengeId);
+    if (row.is_group) cleanup = cleanup.eq('invitation_id', row.id).eq('email', email).eq('token_hash', row.token_hash);
+    await result(cleanup);
     const error = fail('Unable to send the verification code. Please try again when the resend timer ends.', 502, 'EMAIL_DELIVERY_FAILED');
     error.verification = { expiresAt: null,
       resendAvailableAt: new Date(Date.parse(prepared.email_code_sent_at) + 60000).toISOString() };
@@ -259,11 +297,12 @@ async function verifyEmail(token, body = {}) {
   const email = assertTeacherEmail(body.email);
   if (row.email && row.email !== email) throw knownError('EMAIL_MISMATCH');
   if (typeof body.code !== 'string' || !/^\d{6}$/.test(body.code)) throw fail('Enter the 6-digit code from your email.');
-  if (!row.email_challenge_id) throw knownError('EMAIL_CODE_EXPIRED');
+  const state = await emailState(row, email);
+  if (!state?.email_challenge_id) throw knownError('EMAIL_CODE_EXPIRED');
   const verificationToken = crypto.randomBytes(32).toString('hex');
-  const verified = await result(client().rpc('verify_teacher_invitation_email', {
-    p_token_hash: row.token_hash, p_email: email, p_challenge_id: row.email_challenge_id,
-    p_code_hash: codeHash(row.token_hash, email, row.email_challenge_id, body.code), p_verification_hash: digest(verificationToken),
+  const verified = await result(client().rpc(row.is_group ? 'verify_teacher_group_email' : 'verify_teacher_invitation_email', {
+    p_token_hash: row.token_hash, p_email: email, p_challenge_id: state.email_challenge_id,
+    p_code_hash: codeHash(row.token_hash, email, state.email_challenge_id, body.code), p_verification_hash: digest(verificationToken),
   }));
   if (verified?.verified !== true) throw knownError(INVITATION_ERRORS[verified?.code] ? verified.code : 'EMAIL_CODE_INVALID');
   return { verificationToken, verifiedEmail: email, expiresAt: verified.expiresAt };
@@ -280,12 +319,12 @@ async function registerTeacher(token, body = {}) {
   assertPasswordMeetsPolicy(body.password);
   if (typeof body.verificationToken !== 'string' || !TOKEN_PATTERN.test(body.verificationToken)) throw knownError('EMAIL_VERIFICATION_REQUIRED');
   const passwordHash = await bcrypt.hash(body.password, 12);
-  const userId = await result(client().rpc('register_teacher_invitation', {
+  const userId = await result(client().rpc(row.is_group ? 'register_teacher_group_invitation' : 'register_teacher_invitation', {
     p_token_hash: row.token_hash, p_name: fullName, p_email: email, p_username: username,
     p_password_hash: passwordHash, p_verification_hash: digest(body.verificationToken),
   }));
   return { registered: true, user: { id: userId, name: fullName, role: 'teacher', department: row.department } };
 }
 
-module.exports = { createInvitation, listInvitations, resendInvitation, revokeInvitation, publicInvitation,
+module.exports = { createInvitation, createGroupInvitation, listInvitations, resendInvitation, revokeInvitation, publicInvitation,
   usernameAvailability, sendEmailCode, verifyEmail, registerTeacher, invitationToken, codeHash, digest, databaseError };

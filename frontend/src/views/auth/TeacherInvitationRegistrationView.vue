@@ -8,9 +8,9 @@
 
       <section class="registration-card" aria-labelledby="teacher-registration-title" :aria-busy="loadingInvitation || submitting">
         <header>
-          <p class="eyebrow">TEACHER INVITATION</p>
-          <h1 id="teacher-registration-title">{{ completed ? 'Welcome to EduMatch' : 'Create your teacher account' }}</h1>
-          <p class="intro">{{ completed ? 'Your invitation has been accepted.' : 'Join your department with a secure invitation from your Head Teacher.' }}</p>
+          <p class="eyebrow">{{ isGroupInvitation ? 'DEPARTMENT INVITATION' : 'TEACHER INVITATION' }}</p>
+          <h1 id="teacher-registration-title">{{ completed ? 'Welcome to EduMatch' : isGroupInvitation ? 'Join your department' : 'Create your teacher account' }}</h1>
+          <p class="intro">{{ completed ? (isGroupInvitation ? 'Your teacher account is active.' : 'Your invitation has been accepted.') : (isGroupInvitation ? 'Create your own teacher account using the department link shared by your Head Teacher.' : 'Join your department with a secure invitation from your Head Teacher.') }}</p>
         </header>
 
         <div v-if="loadingInvitation" class="loading-state" role="status">
@@ -38,7 +38,7 @@
           <div class="assignment-card">
             <span class="assignment-icon"><i class="fas fa-chalkboard-user" aria-hidden="true"></i></span>
             <div><strong>{{ invitation.schoolName || 'EduMatch' }}</strong><small>{{ invitation.department }} · Teacher account</small></div>
-            <span class="verified-invitation"><i class="fas fa-circle-check" aria-hidden="true"></i> Valid invitation</span>
+            <span class="verified-invitation"><i class="fas fa-circle-check" aria-hidden="true"></i> {{ isGroupInvitation ? 'Shared by your Head Teacher' : 'Valid invitation' }}</span>
           </div>
 
           <div v-if="formError" class="form-error" role="alert">{{ formError }}</div>
@@ -51,8 +51,8 @@
 
             <div class="form-field">
               <label for="teacher-email">School email</label>
-              <input id="teacher-email" v-model="email" type="email" required maxlength="254" autocomplete="email" :readonly="Boolean(invitation.email)" :disabled="submitting || sendingCode || verifyingEmail" :aria-invalid="Boolean(email && !validEmail)" aria-describedby="teacher-email-hint" />
-              <small id="teacher-email-hint">{{ invitation.email ? 'This invitation is assigned to this email address. Verify it to continue.' : 'Use an email address you can access. We will send a verification code.' }}</small>
+              <input id="teacher-email" v-model="email" type="email" required maxlength="254" autocomplete="email" :readonly="emailIsBound" :disabled="submitting || sendingCode || verifyingEmail" :aria-invalid="Boolean(email && !validEmail)" aria-describedby="teacher-email-hint" />
+              <small id="teacher-email-hint">{{ emailIsBound ? 'This invitation is assigned to this email address. Verify it to continue.' : 'Enter your own school email address. We will send you a verification code.' }}</small>
             </div>
 
             <section class="email-verification" aria-labelledby="email-verification-title" :aria-busy="sendingCode || verifyingEmail">
@@ -116,7 +116,7 @@
             </button>
             <p v-if="!emailVerified" class="verification-reminder">Verify your email to enable account creation.</p>
           </form>
-          <p v-if="invitation.expiresAt" class="invitation-expiry"><i class="fas fa-clock" aria-hidden="true"></i> Invitation expires {{ formatExpiry(invitation.expiresAt) }}</p>
+          <p v-if="invitation.expiresAt" class="invitation-expiry"><i class="fas fa-clock" aria-hidden="true"></i> {{ isGroupInvitation ? 'Department link expires' : 'Invitation expires' }} {{ formatExpiry(invitation.expiresAt) }}</p>
         </template>
 
         <footer v-if="!completed && !invitationError" class="registration-footer">Already have an account? <RouterLink to="/auth/login">Sign in</RouterLink></footer>
@@ -174,6 +174,8 @@ const clockTimer = window.setInterval(() => { now.value = Date.now() }, 1000)
 const namePattern = /^[\p{L}\p{M} '’\-]+$/u
 const usernamePattern = /^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$/
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,16}$/
+const isGroupInvitation = computed(() => invitation.value?.isGroup === true)
+const emailIsBound = computed(() => !isGroupInvitation.value && Boolean(invitation.value?.email))
 const normalizedEmail = computed(() => email.value.trim().toLowerCase())
 const validEmail = computed(() => isValidTeacherEmail(email.value))
 const validName = computed(() => Boolean(fullName.value.trim()) && fullName.value.trim().length <= 100 && namePattern.test(fullName.value.trim()) && /\p{L}/u.test(fullName.value))
@@ -293,8 +295,8 @@ async function loadInvitation() {
       return
     }
     invitation.value = data.invitation
-    fullName.value = String(data.invitation.name || '')
-    email.value = String(data.invitation.email || '')
+    fullName.value = data.invitation.isGroup ? '' : String(data.invitation.name || '')
+    email.value = data.invitation.isGroup ? '' : String(data.invitation.email || '')
   } catch (error) {
     if (!live(requestSession) || axios.isCancel(error)) return
     invitationUnavailable.value = [404, 409, 410].includes(Number(error?.response?.status)) || error?.response?.data?.code === 'ISSUER_UNAVAILABLE'
