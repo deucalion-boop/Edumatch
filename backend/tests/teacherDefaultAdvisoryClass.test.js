@@ -5,7 +5,7 @@ const storage = require('../services/supabaseStorageService');
 
 let client;
 storage.getSupabaseStorageClient = () => client;
-const { getTeacherSubjects, getTeacherStudents } = require('../controllers/teacherController');
+const { createTeacherClass, getTeacherSubjects, getTeacherStudents } = require('../controllers/teacherController');
 
 const teacherId = 'mapeh-teacher';
 const sectionId = 'sincerity-section';
@@ -62,6 +62,7 @@ function existingClass(changes = {}) {
     department: 'MAPEH',
     code: 'MAP-STABLE',
     description: 'Teacher-written advisory description',
+    advisory_section_id: null,
     is_active: true,
     created_at: '2026-09-01T00:00:00.000Z',
     updated_at: '2026-09-01T00:00:00.000Z',
@@ -69,10 +70,10 @@ function existingClass(changes = {}) {
   };
 }
 
-async function invoke(handler, user) {
+async function invoke(handler, user, request = {}) {
   let statusCode;
   let response;
-  await handler({ user, query: {}, params: {} }, {
+  await handler({ user, query: {}, params: {}, body: {}, ...request }, {
     status(value) { statusCode = value; return this; },
     json(value) { response = value; return this; },
   }, (error) => { throw error; });
@@ -83,28 +84,34 @@ function loadClasses(user) {
   return invoke(getTeacherSubjects, user);
 }
 
-test('opening Class Management creates a persisted default advisory class and enrollment code', async () => {
+test('opening Class Management leaves an unassigned teacher with no classes', async () => {
   const user = fixture();
   const { statusCode, response } = await loadClasses(user);
   assert.equal(statusCode, 200);
-  assert.equal(client.tables.subjects.length, 1);
-  const created = client.tables.subjects[0];
-  assert.equal(created.teacher_id, teacherId);
-  assert.equal(created.name, 'MAPEH');
-  assert.equal(created.class_name, 'MAPEH 10 - Advisory');
-  assert.equal(created.track, 'GENERAL');
-  assert.equal(created.is_active, true);
-  assert.match(created.code, /^MAP-[A-Z2-9]{5}$/);
-  assert.equal(response.subjects.length, 1);
-  assert.equal(response.subjects[0].id, created.id);
-  assert.equal(response.subjects[0].className, created.class_name);
-  assert.equal(response.subjects[0].code, created.code);
-  assert.equal(response.subjects[0].lessonCount, 0);
-  assert.equal(response.subjects[0].assessmentCount, 0);
-  assert.equal(response.subjects[0].approvedStudentsCount, 0);
-  assert.equal(response.subjects[0].canDelete, true);
+  assert.deepEqual(client.tables.subjects, []);
+  assert.deepEqual(response.subjects, []);
   assert.equal(client.tables.users[0].advisory_section_id, null);
-  assert.equal(client.writes.some((write) => write.table === 'users' || write.table === 'sections'), false);
+  assert.deepEqual(client.writes, []);
+});
+
+test('an unassigned teacher can create handled classes without receiving a fallback advisory class', async () => {
+  const user = fixture();
+  const { statusCode, response } = await invoke(createTeacherClass, user, {
+    body: {
+      subject: 'MAPEH',
+      className: 'MAPEH 10 - Unity',
+      description: 'Teacher-created handled class',
+    },
+  });
+  assert.equal(statusCode, 201);
+  assert.equal(client.tables.subjects.length, 1);
+  assert.equal(client.tables.subjects[0].advisory_section_id, undefined);
+  assert.equal(response.subject.classType, 'teacher_created');
+  assert.equal(response.subject.advisorySectionId, '');
+  const loaded = await loadClasses(user);
+  assert.equal(loaded.response.subjects.length, 1);
+  assert.equal(loaded.response.subjects[0].classType, 'teacher_created');
+  assert.equal(loaded.response.subjects[0].canDelete, true);
 });
 
 test('existing teachers with a section receive its named class without requiring a reassignment', async () => {
@@ -112,6 +119,9 @@ test('existing teachers with a section receive its named class without requiring
   const { response } = await loadClasses(user);
   assert.equal(response.subjects.length, 1);
   assert.equal(response.subjects[0].className, 'MAPEH 10 - Sincerity');
+  assert.equal(response.subjects[0].classType, 'advisory');
+  assert.equal(response.subjects[0].advisorySectionId, sectionId);
+  assert.equal(response.subjects[0].canDelete, false);
   assert.equal(client.tables.subjects[0].class_name, 'MAPEH 10 - Sincerity');
   assert.equal(client.tables.users[0].advisory_section_id, sectionId);
   assert.equal(client.writes.some((write) => write.table === 'users'), false);
@@ -129,9 +139,9 @@ test('repeat class loads retain the default advisory ID, code and teacher-writte
   assert.deepEqual(client.writes, []);
 });
 
-test('an inactive default advisory class is restored with its existing ID, code and description', async () => {
-  const saved = existingClass({ is_active: false });
-  const user = fixture({ subjects: [saved] });
+test('an inactive assigned advisory class is restored with its existing ID, code and description', async () => {
+  const saved = existingClass({ is_active: false, advisory_section_id: sectionId });
+  const user = fixture({ teacher: { advisory_section_id: sectionId }, subjects: [saved] });
   const { response } = await loadClasses(user);
   assert.equal(client.tables.subjects.length, 1);
   assert.equal(client.tables.subjects[0].is_active, true);
@@ -175,8 +185,11 @@ test('existing handled classes and their records remain intact without an extra 
 });
 
 for (const advisorySectionId of [null, sectionId]) {
-  test(`a renamed advisory class is retained without creating another class (section: ${advisorySectionId})`, async () => {
-    const saved = existingClass({ class_name: 'Maria Clara Advisory Class' });
+  test(`a renamed class is retained without creating another class (section: ${advisorySectionId})`, async () => {
+    const saved = existingClass({
+      class_name: 'Maria Clara Advisory Class',
+      advisory_section_id: advisorySectionId,
+    });
     const user = fixture({ teacher: { advisory_section_id: advisorySectionId }, subjects: [saved] });
     const { response } = await loadClasses(user);
     assert.equal(response.subjects.length, 1);
@@ -187,24 +200,24 @@ for (const advisorySectionId of [null, sectionId]) {
   });
 }
 
-test('the default class uses the teacher department when the legacy profile has no subject', async () => {
-  const user = fixture({ teacher: { subject: '' } });
+test('the assigned advisory class uses the teacher department when the legacy profile has no subject', async () => {
+  const user = fixture({ teacher: { subject: '', advisory_section_id: sectionId } });
   const { response } = await loadClasses(user);
   assert.equal(response.subjects[0].name, 'MAPEH');
-  assert.equal(response.subjects[0].className, 'MAPEH 10 - Advisory');
+  assert.equal(response.subjects[0].className, 'MAPEH 10 - Sincerity');
 });
 
-test('a teacher without an assigned subject or department receives an actionable error without writes', async () => {
-  const user = fixture({ teacher: { subject: '', department: '' } });
+test('an assigned teacher without a subject or department receives an actionable error without writes', async () => {
+  const user = fixture({ teacher: { subject: '', department: '', advisory_section_id: sectionId } });
   await assert.rejects(loadClasses(user), { statusCode: 400 });
   assert.deepEqual(client.tables.subjects, []);
   assert.deepEqual(client.writes, []);
-  assert.equal(client.tables.users[0].advisory_section_id, null);
+  assert.equal(client.tables.users[0].advisory_section_id, sectionId);
 });
 
 test('the default advisory class belongs only to the requesting teacher', async () => {
   const foreign = existingClass({ id: 'other-advisory', teacher_id: 'other-teacher', code: 'MAP-OTHER' });
-  const user = fixture({ subjects: [foreign] });
+  const user = fixture({ teacher: { advisory_section_id: sectionId }, subjects: [foreign] });
   const { response } = await loadClasses(user);
   assert.equal(client.tables.subjects.length, 2);
   assert.deepEqual(client.tables.subjects.find((subject) => subject.id === foreign.id), foreign);
@@ -215,12 +228,12 @@ test('the default advisory class belongs only to the requesting teacher', async 
 
 test('a literal custom subject does not reuse a similar wildcard-matching advisory class', async () => {
   const similar = existingClass({ id: 'similar-subject', name: 'MAPEH', class_name: 'MAPEH 10 - Advisory', is_active: false });
-  const user = fixture({ teacher: { subject: 'M%PEH' }, subjects: [similar] });
+  const user = fixture({ teacher: { subject: 'M%PEH', advisory_section_id: sectionId }, subjects: [similar] });
   const { response } = await loadClasses(user);
   assert.equal(client.tables.subjects.length, 2);
   assert.deepEqual(client.tables.subjects.find((subject) => subject.id === similar.id), similar);
   const created = response.subjects.find((subject) => subject.name === 'M%PEH');
-  assert.equal(created.className, 'M%PEH 10 - Advisory');
+  assert.equal(created.className, 'M%PEH 10 - Sincerity');
   assert.notEqual(created.id, similar.id);
 });
 
@@ -235,15 +248,15 @@ for (const invalidSectionId of ['missing-section', 'inactive-section']) {
 }
 
 test('class provisioning failures are surfaced instead of returning a successful empty class list', async () => {
-  const user = fixture();
+  const user = fixture({ teacher: { advisory_section_id: sectionId } });
   client.failures.push({ table: 'subjects', operation: 'insert', error: { message: 'Class storage unavailable' } });
   await assert.rejects(loadClasses(user), { statusCode: 500, message: 'Class storage unavailable' });
   assert.deepEqual(client.tables.subjects, []);
-  assert.equal(client.tables.users[0].advisory_section_id, null);
+  assert.equal(client.tables.users[0].advisory_section_id, sectionId);
 });
 
 test('concurrent creation uses the class committed by the other request after a uniqueness conflict', async () => {
-  const user = fixture();
+  const user = fixture({ teacher: { advisory_section_id: sectionId } });
   client.failures.push({ table: 'subjects', operation: 'insert', error: { code: '23505', message: 'duplicate class' } });
   const originalFrom = client.from;
   let committed = false;
@@ -258,6 +271,7 @@ test('concurrent creation uses the class committed by the other request after a 
             ...structuredClone(values),
             id: 'concurrently-created-advisory',
             code: 'MAP-WINNER',
+            advisory_section_id: sectionId,
             created_at: '2026-10-11T00:00:00.000Z',
           });
         }

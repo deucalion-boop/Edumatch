@@ -201,7 +201,7 @@
           <div class="class-management-header-copy">
             <span class="dashboard-panel-eyebrow">Teaching spaces</span>
             <h3 class="section-title">Class Management</h3>
-            <p class="class-list-subtitle">Your advisory class is created automatically. Share its code or create additional classes.</p>
+            <p class="class-list-subtitle">Assigned advisory classes appear automatically. You can also create classes that you handle.</p>
           </div>
           <div class="results-controls class-management-controls">
             <div class="tour-button-anchor" data-tour="students-invite-button">
@@ -226,7 +226,7 @@
 
         <div v-if="isLoadingSubjects" class="dashboard-empty-state" role="status">
           <span class="dashboard-empty-icon"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i></span>
-          <div><strong>Loading classes</strong><p>Preparing your advisory class.</p></div>
+          <div><strong>Loading classes</strong><p>Checking your assigned and teacher-created classes.</p></div>
         </div>
 
         <div v-else-if="subjectsError" class="dashboard-empty-state" role="alert">
@@ -236,13 +236,17 @@
 
         <div v-else-if="subjects.length === 0" class="dashboard-empty-state">
           <span class="dashboard-empty-icon"><i class="fas fa-chalkboard"></i></span>
-          <div><strong>No classes available</strong><p>Your advisory class will appear here automatically.</p></div>
+          <div><strong>No classes yet</strong><p>Create a class you handle, or wait for your Head Teacher to assign an advisory class.</p></div>
         </div>
 
         <div v-else class="subject-management-grid">
           <article v-for="subject in subjects" :key="subject.id" class="subject-management-card" :class="{ 'menu-open': subjectActionsMenuId === subject.id }">
             <div class="subject-management-head">
               <div class="subject-management-title-block">
+                <span class="subject-management-label" :class="{ 'is-advisory': subject.classType === 'advisory' }">
+                  <i class="fas" :class="subject.classType === 'advisory' ? 'fa-user-shield' : 'fa-chalkboard-teacher'" aria-hidden="true"></i>
+                  {{ subject.classType === 'advisory' ? 'Head Teacher assigned advisory' : 'Teacher-created class' }}
+                </span>
                 <h4>{{ subject.className || subject.name }}</h4>
                 <p>{{ subject.track || 'General' }} · {{ subject.code }}</p>
               </div>
@@ -1368,6 +1372,8 @@ const fetchSubjects = (options = {}) => {
       code: subject.code || '',
       track: subject.track || '',
       description: subject.description || '',
+      advisorySectionId: String(subject.advisorySectionId || '').trim(),
+      classType: subject.classType === 'advisory' || subject.advisorySectionId ? 'advisory' : 'teacher_created',
       lessonCount: Number(subject.lessonCount || 0),
       assessmentCount: Number(subject.assessmentCount || 0),
       approvedStudentsCount: Number(subject.approvedStudentsCount || 0),
@@ -2529,6 +2535,10 @@ onBeforeUnmount(() => {
   @apply tw:[letter-spacing:0.08em];
   @apply tw:uppercase;
   @apply tw:[color:#0f766e];
+}
+
+.subject-management-label.is-advisory {
+  @apply tw:[color:#315f15];
 }
 
 .subject-management-head h4 {

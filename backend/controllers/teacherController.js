@@ -406,6 +406,7 @@ function getEnrollmentTrackId(enrollment) {
 }
 
 function subjectToResponse(subject) {
+  const advisorySectionId = String(subject?.advisorySectionId || '').trim();
   return {
     id: String(subject?._id || ''),
     name: String(subject?.name || '').trim(),
@@ -416,6 +417,8 @@ function subjectToResponse(subject) {
     department: String(subject?.department || '').trim(),
     description: String(subject?.description || '').trim(),
     teacherId: String(subject?.teacherId || ''),
+    advisorySectionId,
+    classType: advisorySectionId ? 'advisory' : 'teacher_created',
     createdAt: subject?.createdAt || null,
     updatedAt: subject?.updatedAt || null,
   };
@@ -548,6 +551,12 @@ const deleteTeacherClass = asyncHandler(async (req, res) => {
   if (!subject) {
     const error = new Error('Class not found');
     error.statusCode = 404;
+    throw error;
+  }
+
+  if (subject.advisorySectionId) {
+    const error = new Error('An advisory class assigned by your Head Teacher cannot be deleted. Ask your Head Teacher to update the advisory assignment.');
+    error.statusCode = 409;
     throw error;
   }
 
@@ -1059,7 +1068,10 @@ const copyTeacherLessonToClasses = asyncHandler(async (req, res) => {
 });
 
 const getTeacherSubjects = asyncHandler(async (req, res) => {
-  await ensureTeacherAdvisoryClass(req.user, { allowDefault: true, onlyIfEmpty: true });
+  // Reading Class Management must not create a class for an unassigned teacher.
+  // A real advisory assignment is provisioned by the Head Teacher workflow and
+  // this call repairs it if an older assignment is missing its marked class.
+  await ensureTeacherAdvisoryClass(req.user);
   const subjects = await syncTeacherSubjects(req.user._id);
   const counts = await getTeacherSubjectCounts(req.user._id);
 
@@ -1071,6 +1083,8 @@ const getTeacherSubjects = asyncHandler(async (req, res) => {
       const pendingRequestsCount = counts.pendingEnrollments.get(String(subject._id)) || 0;
       const attendanceRecordCount = counts.attendance.get(String(subject._id)) || 0;
       const deletionBlockers = [];
+
+      if (subject.advisorySectionId) deletionBlockers.push('a Head Teacher advisory assignment');
 
       if (lessonCount > 0) deletionBlockers.push(formatCountLabel(lessonCount, 'lesson'));
       if (assessmentCount > 0) deletionBlockers.push(formatCountLabel(assessmentCount, 'assessment'));
