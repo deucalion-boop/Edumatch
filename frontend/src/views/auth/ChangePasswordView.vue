@@ -387,6 +387,10 @@ export default {
   @apply tw:[letter-spacing:0.03em];
 }
 
+.password-change-page .password-change-badge > i.fa-circle-exclamation {
+  @apply tw:[color:#9a3412]!;
+}
+
 .password-change-page .password-change-card .auth-card-title {
   @apply tw:[margin:0];
   @apply tw:[color:#172111]!;
