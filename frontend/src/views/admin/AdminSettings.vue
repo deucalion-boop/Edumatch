@@ -327,7 +327,7 @@
       </div>
     </div>
 
-    <div class="modal" :class="{ active: showConfirmModal }">
+    <div class="modal confirmation-modal" :class="{ active: showConfirmModal }">
       <div class="modal-overlay" @click="closeConfirmModal"></div>
       <div class="modal-content small">
         <div class="modal-header">

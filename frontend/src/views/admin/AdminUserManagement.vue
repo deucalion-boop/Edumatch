@@ -1250,7 +1250,7 @@
     </div>
 
     <!-- Confirmation Modal -->
-    <div class="modal" :class="{ active: modals.confirmation }">
+    <div class="modal confirmation-modal" :class="{ active: modals.confirmation }">
       <div class="modal-overlay" @click="closeConfirmationModal"></div>
       <div class="modal-content small">
         <div class="modal-header">

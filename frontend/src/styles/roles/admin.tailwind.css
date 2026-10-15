@@ -13568,6 +13568,10 @@ body.admin-dashboard .modal-content {
     @apply tw:[box-shadow:var(--admin-shadow-lg)]!;
 }
 
+body.admin-dashboard .confirmation-modal .modal-content {
+    @apply tw:[border-right:0]!;
+}
+
 body.admin-dashboard .sidebar-backdrop {
     @apply tw:[background:rgba(15,_23,_42,_0.42)]!;
     @apply tw:[-webkit-backdrop-filter:blur(3px)]!;
