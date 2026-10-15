@@ -357,6 +357,31 @@ test('name verification is scoped to this class invitation and registered names 
   assert.equal(client.writes.length, 0);
 });
 
+test('missing invitation schema returns an actionable error without exposing database details', async () => {
+  for (const code of ['42P01', '42703', '42883', 'PGRST202', 'PGRST204', 'PGRST205']) {
+    const failure = service.databaseError({ code, message: 'Missing public.subjects.advisory_section_id or import_class_invitation' });
+    assert.equal(failure.statusCode, 503);
+    assert.equal(failure.code, 'INVITATION_SCHEMA_REQUIRED');
+    assert.match(failure.message, /database update/);
+    assert.doesNotMatch(failure.message, /public|subjects|advisory_section_id|import_class_invitation/);
+  }
+
+  // Without migration 016 the advisory class can be read, but its trusted
+  // section marker cannot be saved. Exercise that real provisioning path.
+  fixture();
+  delete client.tables.subjects[0].advisory_section_id;
+  client.tables.subjects[0].class_name = 'Science 10 - Charity';
+  client.failures.push({ table: 'subjects', operation: 'update',
+    error: { code: 'PGRST204', message: 'Could not find advisory_section_id in subjects in the schema cache' } });
+  await assert.rejects(service.getAdvisoryContext(teacherId), error => {
+    assert.equal(error.statusCode, 503);
+    assert.equal(error.code, 'INVITATION_SCHEMA_REQUIRED');
+    assert.match(error.message, /database update/);
+    return true;
+  });
+  assert.equal(client.writes.length, 0);
+});
+
 test('unknown persistence errors are sanitized and conflict errors have clear messages', () => {
   const failure = service.databaseError({ message: 'database password secret / sql internal' });
   assert.equal(failure.statusCode, 503);

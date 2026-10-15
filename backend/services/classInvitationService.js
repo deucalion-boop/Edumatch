@@ -47,6 +47,12 @@ function databaseError(error) {
     if (message.includes('email')) return fail(...messages.EMAIL_TAKEN, 'EMAIL_TAKEN');
     return fail(...messages.ROSTER_DUPLICATE, 'ROSTER_DUPLICATE');
   }
+  // An incomplete deployment needs a migration, not repeated client retries.
+  // Keep database identifiers and raw PostgREST details out of the response.
+  if (['42P01', '42703', '42883', 'PGRST202', 'PGRST204', 'PGRST205'].includes(error?.code)) {
+    return fail('Student invitations need a database update. Ask your administrator to complete the invitation database setup.',
+      503, 'INVITATION_SCHEMA_REQUIRED');
+  }
   // Never expose table names, SQL statements, tokens or database details publicly.
   return fail('Student invitations are temporarily unavailable. Please try again later.', 503, 'INVITATION_UNAVAILABLE');
 }
