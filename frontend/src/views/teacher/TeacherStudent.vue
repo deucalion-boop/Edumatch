@@ -2322,8 +2322,12 @@ onBeforeUnmount(() => {
 .class-invitation-counts { @apply tw:flex tw:flex-wrap tw:justify-between tw:[gap:.4rem] tw:[font-size:.7rem] tw:[color:#5c7550]; }
 .class-invitation-counts strong { @apply tw:[color:#356020]; }
 .class-invitation-summary progress { @apply tw:w-full tw:[height:7px] tw:[margin:.4rem_0] tw:[accent-color:#5a8e3d]; }
-.class-invitation-tools { @apply tw:flex tw:flex-wrap tw:[gap:.7rem]; }
-.class-invitation-tools button { @apply tw:inline-flex tw:items-center tw:[gap:.3rem] tw:[border:0] tw:bg-transparent tw:[padding:.2rem_0] tw:[font:inherit] tw:[font-size:.7rem] tw:font-semibold tw:[color:#426f2e] tw:cursor-pointer; }
+.class-invitation-tools { @apply tw:flex tw:flex-wrap tw:[gap:.45rem] tw:[margin-top:.15rem]; }
+.class-invitation-tools button { @apply tw:inline-flex tw:items-center tw:[gap:.35rem] tw:[border:1px_solid_#d9e7cf] tw:rounded-full tw:bg-white tw:[padding:.26rem_.6rem] tw:[font-size:.7rem] tw:[line-height:1.25] tw:font-semibold tw:[letter-spacing:.01em] tw:[color:#3f6a2d] tw:cursor-pointer tw:[transition:background-color_.15s_ease,border-color_.15s_ease,box-shadow_.15s_ease]; }
+.class-invitation-tools button i { @apply tw:[font-size:.64rem] tw:[color:#5f8e4a] tw:[transition:color_.15s_ease]; }
+.class-invitation-tools button:hover:not(:disabled) { @apply tw:[background:#f1f8ec] tw:[border-color:#bcd8ac] tw:[box-shadow:0_1px_2px_rgba(21,52,15,0.06)]; }
+.class-invitation-tools button:hover:not(:disabled) i { @apply tw:[color:#3f6a2d]; }
+.class-invitation-tools button:active:not(:disabled) { @apply tw:[background:#e8f3e1]; }
 .class-invitation-tools button:disabled { @apply tw:opacity-50 tw:cursor-not-allowed; }
 .class-invitation-tools button:focus-visible { @apply tw:[outline:2px_solid_#87b765] tw:[outline-offset:2px]; }
 .invitation-expired-copy { @apply tw:[color:#a3482d]; }
