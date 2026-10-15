@@ -8,10 +8,6 @@
     </div>
 
     <div class="auth-container">
-      <RouterLink to="/auth/login" class="auth-logo">
-        <img src="/logo.png" alt="EduMatch Logo" class="auth-logo-img" />EduMatch
-      </RouterLink>
-
       <div class="auth-card-wrapper">
         <div class="auth-card password-change-card">
           <header class="auth-card-header">
@@ -316,8 +312,6 @@ export default {
 }
 
 .password-change-page .auth-container { @apply tw:[padding-block:1rem]; }
-.password-change-page .auth-logo { @apply tw:[margin-bottom:0.65rem]; @apply tw:[color:#203018]; }
-.password-change-page .auth-logo-img { @apply tw:[height:36px]; }
 .password-change-page .auth-card-wrapper { @apply tw:[width:min(100%,_700px)]; @apply tw:[max-width:700px]; @apply tw:[margin-bottom:0.65rem]; }
 
 .password-change-page .password-change-card {
@@ -591,7 +585,6 @@ export default {
 
 @media (max-width: 640px) {
   .password-change-page .auth-container { @apply tw:justify-start; @apply tw:[padding:1.25rem_0.75rem]; }
-  .password-change-page .auth-logo { @apply tw:[margin-bottom:1rem]; }
   .password-change-page .password-change-card { @apply tw:[padding:1.3rem_1rem]!; @apply tw:[border-radius:22px]!; }
   .password-change-page .password-change-card .auth-card-header { @apply tw:[margin-bottom:1.25rem]; }
   .password-change-page .password-change-card .auth-card-subtitle { @apply tw:[max-width:330px]; }
