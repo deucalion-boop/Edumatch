@@ -337,6 +337,7 @@
         </div>
       </div>
 
+      <DashboardFooter />
     </main>
 
     <div v-if="isTourActive" class="teacher-tour-layer" aria-live="polite">
@@ -365,6 +366,7 @@
 </template>
 
 <script>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, reactive, ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
@@ -381,6 +383,7 @@ const SIDEBAR_WIDTH = 280
 export default {
   name: 'TeacherView',
   components: {
+    DashboardFooter,
     UserNotificationList,
   },
   setup() {

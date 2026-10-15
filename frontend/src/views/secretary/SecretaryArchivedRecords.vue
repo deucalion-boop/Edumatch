@@ -250,11 +250,13 @@
           </table>
         </div>
       </section>
+      <DashboardFooter />
     </main>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'

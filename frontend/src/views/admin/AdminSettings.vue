@@ -309,6 +309,7 @@
             </div>
           </div>
         </section>
+        <DashboardFooter />
       </main>
     </div>
 
@@ -364,6 +365,7 @@
 </template>
 
 <script>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
@@ -407,6 +409,7 @@ function formatDateTime(value) {
 }
 
 export default {
+  components: { DashboardFooter },
   name: 'AdminSettings',
   setup() {
     const route = useRoute()

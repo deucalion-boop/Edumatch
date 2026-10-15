@@ -3084,6 +3084,10 @@ body.headteacher-dashboard .headteacher-sidebar .headteacher-sidebar-nav .headte
     @apply tw:overflow-y-auto;
   }
 
+  .headteacher-overview-page .headteacher-main > .edumatch-dashboard-footer {
+    @apply tw:[margin-top:0] tw:[padding-top:0.65rem];
+  }
+
   .headteacher-content-page .headteacher-matched-page-header {
     @apply tw:[margin-bottom:0.85rem];
   }
@@ -3973,6 +3977,7 @@ body.headteacher-dashboard .headteacher-overview-page .headteacher-main {
 
 .headteacher-overview-page .headteacher-dashboard-overview {
   @apply tw:grid;
+  @apply tw:shrink-0;
   @apply tw:[grid-template-columns:minmax(0,_3fr)_minmax(0,_5fr)];
   @apply tw:[align-items:start];
   @apply tw:[gap:clamp(1rem,_1.5vw,_1.5rem)];

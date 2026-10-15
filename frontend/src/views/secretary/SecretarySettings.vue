@@ -152,11 +152,13 @@
         </form>
       </article>
     </section>
+      <DashboardFooter />
     </main>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'

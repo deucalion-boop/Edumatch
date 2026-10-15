@@ -21,10 +21,12 @@
         </div>
       </header>
       <StudentAnnouncements />
+      <DashboardFooter />
     </main>
   </div>
 </template>
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'

@@ -1854,11 +1854,13 @@
           </div>
         </section>
       </div>
+      <DashboardFooter />
     </main>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'

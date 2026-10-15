@@ -167,11 +167,13 @@
           </form>
         </article>
       </section>
+      <DashboardFooter />
     </main>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'

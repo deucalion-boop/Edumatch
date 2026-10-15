@@ -470,6 +470,7 @@
           </div>
         </section>
 
+        <DashboardFooter />
       </main>
     </div>
 
@@ -513,6 +514,7 @@
 </template>
 
 <script>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import axios from 'axios'
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -520,6 +522,7 @@ import Chart from 'chart.js/auto'
 import { useAuthStore } from '../../stores/auth.js'
 
 export default {
+  components: { DashboardFooter },
   name: 'AdminView',
   setup() {
     const route = useRoute()

@@ -226,6 +226,7 @@
       <template v-else>
         <router-view />
       </template>
+      <DashboardFooter />
     </main>
 
     <div v-if="isTourActive" class="student-tour-layer" aria-live="polite">
@@ -255,6 +256,7 @@
 </template>
 
 <script>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, reactive, ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
@@ -268,6 +270,7 @@ const STUDENT_TOUR_START_ROUTE = '/student/dashboard'
 export default {
   name: 'StudentView',
   components: {
+    DashboardFooter,
     UserNotificationList
   },
   setup() {

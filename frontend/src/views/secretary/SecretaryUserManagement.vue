@@ -103,6 +103,7 @@
           </table>
         </div>
       </section>
+      <DashboardFooter />
     </main>
 
     <div v-if="formModal.open" class="secretary-modal" role="dialog" aria-modal="true" :aria-labelledby="formModal.mode + '-account-title'">
@@ -143,6 +144,7 @@
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'

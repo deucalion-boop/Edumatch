@@ -408,6 +408,7 @@
             </div>
           </div>
         </section>
+        <DashboardFooter />
       </main>
     </div>
 
@@ -1295,6 +1296,7 @@
 </template>
 
 <script>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import axios from 'axios'
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -1302,6 +1304,7 @@ import { debounce } from 'lodash'
 import { useAuthStore } from '../../stores/auth.js'
 
 export default {
+  components: { DashboardFooter },
   name: 'AdminUserManagement',
   setup() {
     const route = useRoute()

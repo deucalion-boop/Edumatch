@@ -60,12 +60,14 @@
           <p v-else class="history-state">No school announcements have been posted yet.</p>
         </section>
       </div>
+      <DashboardFooter />
     </main>
     </div>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'

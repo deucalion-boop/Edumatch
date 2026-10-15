@@ -278,11 +278,13 @@
           </div>
         </section>
       </div>
+      <DashboardFooter />
     </main>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { nameError } from '../../utils/teacherValidation.js'
 import { isValidTeacherEmail } from '../../utils/emailPolicy.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'

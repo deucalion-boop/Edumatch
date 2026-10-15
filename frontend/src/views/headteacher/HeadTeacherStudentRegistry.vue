@@ -74,11 +74,13 @@
           <footer class="registry-dialog-footer"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="closeDialog">Cancel</button><button v-if="dialogMode === 'import'" type="button" class="registry-button registry-primary" :disabled="!selectedImportSubjectId || !validPreviewRecords.length || Boolean(busy) || (possibleDuplicates > 0 && !allowPossibleDuplicates)" @click="commitImport">{{ busy === 'import' ? 'Importing…' : `Import ${validPreviewRecords.length} Valid Students` }}</button><button v-else-if="dialogMode === 'assign'" type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || (requiresAssignmentConfirmation && !assignmentConfirmed)" @click="saveAssignments">{{ busy === 'assign' ? 'Saving…' : 'Save Class Assignments' }}</button><button v-else type="button" class="registry-button" :class="['revoke', 'link'].includes(dialogMode) ? 'registry-danger' : 'registry-primary'" :disabled="Boolean(busy)" @click="confirmAction">{{ busy ? 'Saving…' : dialogMode === 'revoke' ? 'Revoke Code' : dialogMode === 'code' ? 'Issue New Code' : 'Replace Shared Link' }}</button></footer>
         </div>
       </dialog></Teleport>
+      <DashboardFooter />
     </main>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import axios from 'axios'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'

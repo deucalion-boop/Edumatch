@@ -369,11 +369,13 @@
           </div>
         </section>
       </div>
+      <DashboardFooter />
     </main>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import axios from 'axios'
 import { nameError, passwordLengthError } from '../../utils/teacherValidation.js'
 import { isValidTeacherEmail } from '../../utils/emailPolicy.js'

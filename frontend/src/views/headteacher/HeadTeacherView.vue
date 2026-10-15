@@ -321,11 +321,13 @@
           </form>
         </div>
       </div>
+      <DashboardFooter />
     </main>
   </div>
 </template>
 
 <script setup>
+import DashboardFooter from '../../components/DashboardFooter.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import { nameError } from '../../utils/teacherValidation.js'
