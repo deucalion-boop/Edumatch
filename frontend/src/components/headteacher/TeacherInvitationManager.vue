@@ -362,7 +362,7 @@ onBeforeUnmount(() => {
 .invitation-history ul { @apply tw:list-none tw:p-0 tw:m-0; }
 .invitation-history li { @apply tw:flex tw:justify-between tw:flex-wrap tw:[gap:.5rem] tw:[padding:.45rem_0] tw:[overflow-wrap:anywhere]; }
 .invitation-sr-only { @apply tw:sr-only; }
-.teacher-invitation-dialog { @apply tw:[width:min(520px,_calc(100vw_-_24px))] tw:[max-width:calc(100vw_-_24px)] tw:[max-height:calc(100dvh_-_32px)] tw:[padding:0] tw:[border:1px_solid_#d9e6d1] tw:[border-radius:18px] tw:bg-white tw:[box-shadow:0_24px_80px_rgba(18,_43,_5,_.22)] tw:overflow-y-auto tw:box-border; }
+.teacher-invitation-dialog { @apply tw:[margin:auto] tw:[width:min(520px,_calc(100vw_-_24px))] tw:[max-width:calc(100vw_-_24px)] tw:[max-height:calc(100dvh_-_32px)] tw:[padding:0] tw:[border:1px_solid_#d9e6d1] tw:[border-radius:18px] tw:bg-white tw:[box-shadow:0_24px_80px_rgba(18,_43,_5,_.22)] tw:overflow-y-auto tw:box-border; }
 .teacher-invitation-dialog::backdrop { @apply tw:[background:rgba(12,_30,_5,_.5)]; }
 .invitation-dialog-content { @apply tw:[padding:1.4rem]; }
 .invitation-dialog-header { @apply tw:flex tw:items-start tw:justify-between tw:[gap:1rem]; }
