@@ -182,14 +182,17 @@ async function importStudents(id, body = {}) {
   await requireHeadTeacher(id);
   body = inputBody(body);
   const records = validateRecords(body.records, await importContext());
+  if (typeof body.subjectId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(body.subjectId)) {
+    throw fail('Select an active teacher class before importing students.', 400, 'CLASS_REQUIRED');
+  }
   if (records.some(r => r.errors.length)) throw fail('Resolve all invalid records before importing.', 400, 'REGISTRY_IMPORT_INVALID');
   if (records.some(r => r.warnings.length) && body.allowPossibleDuplicates !== true) throw fail('Review and confirm the possible duplicates before importing.');
   const payload = records.map(row => {
     const item = { id: crypto.randomUUID().replace(/-/g, ''), code_nonce: crypto.randomBytes(24).toString('hex') };
     return { id: item.id, firstName: row.firstName, lastName: row.lastName, nonce: item.code_nonce, codeHash: digest(registrationCode(item)) };
   });
-  const imported = await rpc('import', { p_headteacher_id: id, p_records: payload });
-  return { imported, message: `${imported} students imported. Export their registration codes and share the registration link.` };
+  const imported = await rpc('import_assigned', { p_headteacher_id: id, p_records: payload, p_subject_id: body.subjectId });
+  return { imported, message: `${imported} students imported and assigned to the selected teacher class. Export their registration codes and share the registration link.` };
 }
 async function changeCode(id, registryId, revoke = false) {
   await requireHeadTeacher(id);

@@ -69,15 +69,18 @@ test('import enforces missing fields, Unicode/case duplicates and possible dupli
 });
 test('import revalidates preview, requires duplicate acknowledgement and sends only secure code hashes', async () => {
   fixture({ student_registry: [{ ...student, full_name: 'José Cruz' }] });
-  const body = { records: [{ firstName: 'Jose', lastName: 'Cruz' }] };
+  const body = { subjectId: 'math-class', records: [{ firstName: 'Jose', lastName: 'Cruz' }] };
+  await assert.rejects(service.importStudents('ht', { records: [{ firstName: 'Ana', lastName: 'Reyes' }] }), /Select an active teacher class/);
   await assert.rejects(service.importStudents('ht', body), /possible duplicates/);
   behavior = async (name, args) => {
-    assert.equal(name, 'student_registry_import'); const row = args.p_records[0];
+    assert.equal(name, 'student_registry_import_assigned');
+    assert.equal(args.p_subject_id, 'math-class');
+    const row = args.p_records[0];
     assert.equal(row.firstName, 'Jose'); assert.equal(row.lastName, 'Cruz');
     assert.equal(Object.hasOwn(row, 'registrationCode'), false); return { data: 1 };
   };
   assert.equal((await service.importStudents('ht', { ...body, allowPossibleDuplicates: true })).imported, 1);
-  await assert.rejects(service.importStudents('ht', { records: [{ firstName: 'José', lastName: 'Cruz' }] }), /invalid records/);
+  await assert.rejects(service.importStudents('ht', { subjectId: 'math-class', records: [{ firstName: 'José', lastName: 'Cruz' }] }), /invalid records/);
 });
 test('code verification normalizes formatting, stores only a ticket hash, and returns proof only after SQL validation', async () => {
   fixture(); behavior = async (name, args) => {

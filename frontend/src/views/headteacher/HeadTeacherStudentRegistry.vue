@@ -50,7 +50,12 @@
         <div class="registry-dialog-content"><header class="registry-section-heading"><div><span class="registry-eyebrow">Student management</span><h2 id="registry-dialog-title">{{ dialogTitle }}</h2></div><button type="button" class="registry-icon-button" aria-label="Close student management dialog" :disabled="Boolean(busy)" @click="closeDialog"><i class="fas fa-xmark" aria-hidden="true"></i></button></header><p id="registry-dialog-description" class="registry-dialog-description">{{ dialogDescription }}</p>
           <p v-if="dialogError" class="registry-notice is-error" role="alert">{{ dialogError }}</p>
           <template v-if="dialogMode === 'import'">
-            <div class="registry-upload"><label class="registry-field" for="registry-import-file"><span>Excel student list</span><input id="registry-import-file" ref="fileInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" :disabled="Boolean(busy)" @change="selectFile"><small>Use only First Name and Last Name headers, with one student per row. Maximum 2 MB.</small></label><div class="registry-button-row"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="downloadWorkbook('template')">Download Template</button><button type="button" class="registry-button registry-primary" :disabled="!importFile || Boolean(busy)" @click="previewImport">{{ busy === 'preview' ? 'Checking names…' : 'Preview Students' }}</button></div></div>
+            <p v-if="!classes.length" class="registry-notice is-error" role="alert">No active teacher class is available in your department. Create or assign an active teacher class before importing students.</p>
+            <div class="registry-upload">
+              <label class="registry-field" for="registry-import-class"><span>Assign teacher class</span><select id="registry-import-class" v-model="selectedImportSubjectId" :disabled="!classes.length || Boolean(busy)"><option value="" disabled>{{ classes.length ? 'Select a teacher class' : 'No active teacher class available' }}</option><option v-for="teacherClass in classes" :key="teacherClass.id" :value="teacherClass.id">{{ teacherClass.teacherName }} — {{ teacherClass.className || teacherClass.name }}</option></select><small>Every student in this Excel file will be assigned to the selected teacher class.</small></label>
+              <label class="registry-field" for="registry-import-file"><span>Excel student list</span><input id="registry-import-file" ref="fileInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" :disabled="!classes.length || Boolean(busy)" @change="selectFile"><small>Use only First Name and Last Name headers, with one student per row. Maximum 2 MB.</small></label>
+              <div class="registry-button-row"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="downloadWorkbook('template')">Download Template</button><button type="button" class="registry-button registry-primary" :disabled="!importFile || !selectedImportSubjectId || Boolean(busy)" @click="previewImport">{{ busy === 'preview' ? 'Checking names…' : 'Preview Students' }}</button></div>
+            </div>
             <div v-if="previewRecords.length" class="registry-preview">
               <div class="registry-preview-summary"><strong>{{ validPreviewRecords.length }} ready to import</strong><span>{{ previewRecords.length - validPreviewRecords.length }} invalid</span><span v-if="possibleDuplicates">{{ possibleDuplicates }} possible duplicates</span></div>
               <p class="registry-help">Only valid rows will be imported. Correct missing or duplicate names in the file and upload it again to include excluded rows.</p>
@@ -66,7 +71,7 @@
             <label v-if="requiresAssignmentConfirmation" class="registry-check-label"><input v-model="assignmentConfirmed" type="checkbox"><span>{{ !assignmentClassIds.length ? 'Remove all class assignments from the selected students.' : 'Replace every selected student’s current classes with this class list.' }}</span></label>
           </template>
           <div v-else-if="selectedStudent" class="registry-student-context"><strong>{{ studentName(selectedStudent) }}</strong><span>{{ statusLabel(selectedStudent.status) }}</span></div>
-          <footer class="registry-dialog-footer"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="closeDialog">Cancel</button><button v-if="dialogMode === 'import'" type="button" class="registry-button registry-primary" :disabled="!validPreviewRecords.length || Boolean(busy) || (possibleDuplicates > 0 && !allowPossibleDuplicates)" @click="commitImport">{{ busy === 'import' ? 'Importing…' : `Import ${validPreviewRecords.length} Valid Students` }}</button><button v-else-if="dialogMode === 'assign'" type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || (requiresAssignmentConfirmation && !assignmentConfirmed)" @click="saveAssignments">{{ busy === 'assign' ? 'Saving…' : 'Save Class Assignments' }}</button><button v-else type="button" class="registry-button" :class="['revoke', 'link'].includes(dialogMode) ? 'registry-danger' : 'registry-primary'" :disabled="Boolean(busy)" @click="confirmAction">{{ busy ? 'Saving…' : dialogMode === 'revoke' ? 'Revoke Code' : dialogMode === 'code' ? 'Issue New Code' : 'Replace Shared Link' }}</button></footer>
+          <footer class="registry-dialog-footer"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="closeDialog">Cancel</button><button v-if="dialogMode === 'import'" type="button" class="registry-button registry-primary" :disabled="!selectedImportSubjectId || !validPreviewRecords.length || Boolean(busy) || (possibleDuplicates > 0 && !allowPossibleDuplicates)" @click="commitImport">{{ busy === 'import' ? 'Importing…' : `Import ${validPreviewRecords.length} Valid Students` }}</button><button v-else-if="dialogMode === 'assign'" type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || (requiresAssignmentConfirmation && !assignmentConfirmed)" @click="saveAssignments">{{ busy === 'assign' ? 'Saving…' : 'Save Class Assignments' }}</button><button v-else type="button" class="registry-button" :class="['revoke', 'link'].includes(dialogMode) ? 'registry-danger' : 'registry-primary'" :disabled="Boolean(busy)" @click="confirmAction">{{ busy ? 'Saving…' : dialogMode === 'revoke' ? 'Revoke Code' : dialogMode === 'code' ? 'Issue New Code' : 'Replace Shared Link' }}</button></footer>
         </div>
       </dialog></Teleport>
     </main>
@@ -111,6 +116,7 @@ const selectedStudent = ref(null)
 const linkInput = ref(null)
 const fileInput = ref(null)
 const importFile = ref(null)
+const selectedImportSubjectId = ref('')
 const previewRecords = ref([])
 const previewSummary = ref({})
 const allowPossibleDuplicates = ref(false)
@@ -184,6 +190,7 @@ async function openDialog(mode, student = null) {
   dialogError.value = ''
   if (mode === 'import') {
     importFile.value = null
+    selectedImportSubjectId.value = ''
     previewRecords.value = []
     previewSummary.value = {}
     allowPossibleDuplicates.value = false
@@ -222,7 +229,7 @@ function selectFile(event) {
   importFile.value = file
 }
 async function previewImport() {
-  if (!importFile.value || busy.value) return
+  if (!importFile.value || !selectedImportSubjectId.value || busy.value) return
   busy.value = 'preview'
   dialogError.value = ''
   previewRecords.value = []
@@ -240,11 +247,11 @@ async function previewImport() {
   finally { if (!disposed) busy.value = '' }
 }
 async function commitImport() {
-  if (busy.value || !validPreviewRecords.value.length || (possibleDuplicates.value && !allowPossibleDuplicates.value)) return
+  if (busy.value || !selectedImportSubjectId.value || !validPreviewRecords.value.length || (possibleDuplicates.value && !allowPossibleDuplicates.value)) return
   busy.value = 'import'
   dialogError.value = ''
   try {
-    const response = await axios.post(`${endpoint}/import`, { records: validPreviewRecords.value.map(item => ({ firstName: item.firstName, lastName: item.lastName })), allowPossibleDuplicates: allowPossibleDuplicates.value }, authConfig())
+    const response = await axios.post(`${endpoint}/import`, { records: validPreviewRecords.value.map(item => ({ firstName: item.firstName, lastName: item.lastName })), subjectId: selectedImportSubjectId.value, allowPossibleDuplicates: allowPossibleDuplicates.value }, authConfig())
     if (disposed) return
     notice.type = 'success'
     notice.message = response.data?.message || 'Students imported. Export the registry to distribute their registration codes.'
