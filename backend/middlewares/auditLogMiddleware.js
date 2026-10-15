@@ -1,9 +1,10 @@
 const { createAuditLog } = require('../services/supabaseAuditLogService');
+const redactRequestPath = require('../utils/redactRequestPath');
 
 const AUDITED_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const SENSITIVE_KEYS = new Set([
   'password', 'newPassword', 'currentPassword', 'confirmPassword', 'captchaToken', 'token',
-  'answer', 'challengeId', 'previousChallengeId',
+  'answer', 'challengeId', 'previousChallengeId', 'code', 'verificationToken',
 ]);
 const CATEGORY_LABELS = {
   auth: 'Authentication',
@@ -71,6 +72,10 @@ const ACTION_LABELS = {
   'PUT /api/headteacher/assessments/:id': 'Managed assessment updated',
   'POST /api/headteacher/assessments/ai-generate': 'Managed AI assessment generated',
   'POST /api/headteacher/teachers': 'Teacher account created',
+  'POST /api/headteacher/teacher-invitations': 'Teacher invitation created',
+  'POST /api/headteacher/teacher-invitations/:id/resend': 'Teacher invitation renewed',
+  'POST /api/headteacher/teacher-invitations/:id/revoke': 'Teacher invitation revoked',
+  'POST /api/auth/teacher-invitations/:token/register': 'Teacher invitation accepted',
   'POST /api/headteacher/students': 'Student account created',
   'PUT /api/headteacher/teachers/:id': 'Managed teacher updated',
   'POST /api/secretary/students/archived/export-requests': 'Archived PDF export requested',
@@ -91,19 +96,29 @@ function normalizeClientIpAddress(req) {
   return truncate(String(req.ip || req.socket?.remoteAddress || '').replace(/^::ffff:/, ''), 120);
 }
 
+function joinRequestPath(baseUrl, routePath) {
+  if (!baseUrl || routePath === baseUrl || routePath.startsWith(`${baseUrl}/`)) return routePath;
+  return `${baseUrl}${routePath.startsWith('/') ? '' : '/'}${routePath}`;
+}
+
 function normalizeRoutePath(req) {
-  if (typeof req.route?.path === 'string') return req.route.path;
-  return String(req.path || req.originalUrl || '')
-    .split('?')[0]
-    .trim();
+  if (typeof req.route?.path === 'string') return redactRequestPath(req.route.path);
+  const baseUrl = String(req.baseUrl || '').trim();
+  const routePath = String(req.path || req.originalUrl || '').split('?')[0].trim();
+  // req.path can be relative to a nested invitation router. Redact using the
+  // complete path, then retain the route-relative shape in audit records.
+  const fullPath = joinRequestPath(baseUrl, routePath);
+  const safePath = redactRequestPath(fullPath);
+  const safeBaseUrl = redactRequestPath(baseUrl);
+  return baseUrl && fullPath.startsWith(baseUrl) ? safePath.slice(safeBaseUrl.length) || '/' : safePath;
 }
 
 function normalizeEndpoint(req) {
   const baseUrl = String(req.baseUrl || '').trim();
   const routePath = normalizeRoutePath(req);
-  const normalizedPath = `${baseUrl}${routePath}`.trim();
-  if (normalizedPath) return normalizedPath;
-  return String(req.originalUrl || '').split('?')[0].trim();
+  const normalizedPath = joinRequestPath(baseUrl, routePath).trim();
+  if (normalizedPath) return redactRequestPath(normalizedPath);
+  return redactRequestPath(req.originalUrl).trim();
 }
 
 function normalizeCategory(endpoint) {

@@ -376,6 +376,7 @@
 <script setup>
 import axios from 'axios'
 import { nameError, phoneError, passwordLengthError } from '../../utils/teacherValidation.js'
+import { isValidTeacherEmail } from '../../utils/emailPolicy.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
@@ -732,12 +733,11 @@ const resetValidationErrors = () => {
   validationErrors.newPassword = ''
   validationErrors.confirmPassword = ''
 }
-const isValidEmail = (value) => /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(String(value || '').trim())
 const saveProfileInfo = async () => {
   resetValidationErrors()
   validationErrors.displayName = nameError(profileForm.displayName, 'Display name', 101)
-  if (!isValidEmail(profileForm.email)) {
-    validationErrors.email = 'Enter a valid Gmail address (e.g., user@gmail.com).'
+  if (!isValidTeacherEmail(profileForm.email)) {
+    validationErrors.email = 'Enter a valid school or Gmail email address.'
   }
   if (validationErrors.displayName || validationErrors.email) {
     showToast('error', 'Please resolve the highlighted profile fields.')

@@ -2,7 +2,7 @@ const { subjectStudents, removeSubjectStudent, requireTeacherSubject, saveStuden
 const { readProfileRows } = require('../services/supabaseUserProfileService');
 const { teacherRequests, decideTeacherRequest, teacherResultData } = require('../services/supabaseTeacherRecordsService');
 const { nameError, phoneError } = require('../utils/teacherValidation');
-const { assertGmailEmail } = require('../utils/emailPolicy');
+const { assertGmailEmail, assertTeacherEmail } = require('../utils/emailPolicy');
 const path = require('path');
 const crypto = require('crypto');
 const Lesson = require('../models/Lesson');
@@ -2577,12 +2577,7 @@ const updateTeacherProfile = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    const error = new Error('Please provide a valid email');
-    error.statusCode = 400;
-    throw error;
-  }
+  assertTeacherEmail(req.body?.email);
 
   if (email !== String(req.user.email || '').toLowerCase()) {
     const existing = await findSupabaseAccountByEmail(email);

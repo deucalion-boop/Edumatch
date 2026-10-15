@@ -21,8 +21,14 @@ const { getSectionDirectory } = require('../controllers/sectionController');
 const { aiLimiter, inviteLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
 
 const router = express.Router();
+const teacherInvitation = require('../controllers/teacherInvitationController');
 
 router.use(authMiddleware, roleMiddleware('headteacher'));
+
+router.get('/teacher-invitations', teacherInvitation.list);
+router.post('/teacher-invitations', inviteLimiter, teacherInvitation.create);
+router.post('/teacher-invitations/:id/resend', inviteLimiter, teacherInvitation.resend);
+router.post('/teacher-invitations/:id/revoke', inviteLimiter, teacherInvitation.revoke);
 
 router.get('/teachers', getManagedTeachers);
 router.get('/sections', getSectionDirectory);

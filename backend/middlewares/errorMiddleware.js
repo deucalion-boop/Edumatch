@@ -1,5 +1,7 @@
+const redactRequestPath = require('../utils/redactRequestPath');
+
 function notFoundMiddleware(req, _res, next) {
-  const error = new Error(`Route not found: ${req.originalUrl}`);
+  const error = new Error(`Route not found: ${redactRequestPath(req.originalUrl)}`);
   error.statusCode = 404;
   next(error);
 }

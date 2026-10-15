@@ -113,6 +113,7 @@ async function sendEmailViaGmail(options) {
 
   const response = await fetch(validation.mailApiUrl, {
     method: 'POST',
+    signal: options.signal,
     headers: {
       'Content-Type': 'application/json',
       'X-API-Key': validation.mailApiKey,

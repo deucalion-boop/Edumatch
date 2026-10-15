@@ -310,6 +310,7 @@
 
 <script setup>
 import { nameError, phoneError } from '../../utils/teacherValidation.js'
+import { isValidTeacherEmail } from '../../utils/emailPolicy.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
@@ -550,8 +551,7 @@ const validateCommonFields = () => {
   fieldErrors.email = ''
   if (!email) fieldErrors.email = 'Email is required'
 
-  const emailRegex = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i
-  if (!emailRegex.test(email)) fieldErrors.email = 'Please enter a valid Gmail address (e.g., user@gmail.com)'
+  if (!isValidTeacherEmail(formData.email)) fieldErrors.email = 'Please enter a valid school or Gmail email address.'
 
   if (Object.values(fieldErrors).some(Boolean)) return { error: 'Please correct the highlighted fields.' }
 

@@ -18,6 +18,7 @@ begin
   -- Child records come first, including the roster's RESTRICT references.
   -- Skip tables absent from installations with older migrations.
   foreach table_name in array array[
+    'teacher_invitations',
     'class_registration_students',
     'class_invitations',
     'student_subject_grades',

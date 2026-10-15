@@ -18,6 +18,7 @@ const { createCaptchaChallenge, verifyCaptchaChallenge } = require('../controlle
 
 const router = express.Router();
 router.use('/class-invitations', require('./classInvitationRoutes').publicRoutes);
+router.use('/teacher-invitations', require('./teacherInvitationRoutes').publicRoutes);
 
 router.post('/captcha/challenge', captchaChallengeLimiter, createCaptchaChallenge);
 router.post('/captcha/verify', captchaVerifyLimiter, verifyCaptchaChallenge);

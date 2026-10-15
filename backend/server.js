@@ -34,6 +34,7 @@ const storageRoutes = require('./routes/storageRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const auditLogMiddleware = require('./middlewares/auditLogMiddleware');
+const redactRequestPath = require('./utils/redactRequestPath');
 const { notFoundMiddleware, errorMiddleware } = require('./middlewares/errorMiddleware');
 const { validateMailApiEnvironment } = require('./services/gmailService');
 const { ensureDefaultSections } = require('./services/sectionService');
@@ -99,8 +100,7 @@ app.use((_req, _res, next) => {
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use((req, _res, next) => {
-  const safePath = String(req.path || '')
-    .replace(/\/(invite|reset)\/[^/]+/gi, '/$1/[REDACTED]');
+  const safePath = redactRequestPath(req.path);
   console.log(`[HTTP] ${req.method} ${safePath}`);
   next();
 });

@@ -1,4 +1,4 @@
-const { assertGmailEmail } = require('../utils/emailPolicy');
+const { assertAccountEmail } = require('../utils/emailPolicy');
 const { revokeUserSessions, consumeOpenChallenges } = require('./supabaseAuthPersistenceService');
 const bcrypt = require('bcryptjs');
 const { getSupabaseStorageClient } = require('./supabaseStorageService');
@@ -50,7 +50,7 @@ function toRow(account, passwordHash) {
   return {
     ...(account._id || account.id ? { id: String(account._id || account.id) } : {}),
     name: String(account.name || '').trim(),
-    email: assertGmailEmail(account.email),
+    email: assertAccountEmail(account.email, role),
     username: String(account.username || '').trim(),
     password_hash: passwordHash || null,
     role,

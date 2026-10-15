@@ -170,6 +170,7 @@ const routes = [
   { path: '/auth/forgot-password', name: 'forgot-password', component: ForgotPasswordView },
   { path: '/auth/reset-password/:token', name: 'reset-password', component: ResetPasswordView },
   { path: '/auth/class-register/:token', name: 'class-register', component: () => import('../views/auth/ClassRegistrationView.vue') },
+  { path: '/auth/teacher-register/:token', name: 'teacher-register', component: () => import('../views/auth/TeacherInvitationRegistrationView.vue') },
   { path: '/auth/change-password', name: 'change-password', component: ChangePasswordView, meta: { requiresAuth: true } },
   { path: '/auth/invite/:token', name: 'invite-activation', component: LoginView },
   { path: '/error', redirect: '/auth/login' },

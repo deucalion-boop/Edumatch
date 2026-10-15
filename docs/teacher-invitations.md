@@ -1,0 +1,33 @@
+# Teacher invitations
+
+Teacher Management now includes invitation creation and tracking alongside the existing manual account creation. The Head Teacher can optionally enter a name and email, choose a 12-, 24-, or 48-hour link lifetime, copy the link, resend it with a fresh expiry, or revoke it. The backend accepts integer lifetimes from 1 to 48 hours, defaulting to 48. Resending invalidates the previous link and all outstanding email codes and verification proofs. Accepted and revoked invitations cannot be renewed. Creation does not create an account or reserve a username.
+
+## Deployment
+
+This installation uses Supabase Postgres for accounts and authentication. Apply `backend/supabase/migrations/017_teacher_invitations.sql` to the same project as the backend, after the existing migrations through 016, then deploy the backend and frontend together. No MongoDB connection or parallel account store is introduced. The database migration creates a private invitation table, indexes and transactional lifecycle/registration functions; it does not remove existing accounts or invitations. Run the complete migration, rather than creating only its table. The browser roles cannot access the table or execute its functions.
+
+Set `TEACHER_INVITATION_SECRET` to a stable random secret of at least 32 characters and configure `FRONTEND_URL` with the public Vue app URL. `CLASS_INVITATION_SECRET` and then `JWT_SECRET` are compatibility fallbacks. Keep the dedicated invitation secret stable across restarts and deployments. Links are derived using HMAC with a fresh random invitation identifier and nonce; only their SHA-256 hashes are used for lookup. A resend rotates the nonce and hash. Secrets, email codes, password hashes and verification proofs are never returned in management metadata. The backend service-role key must stay on the server.
+
+The existing mail API (`MAIL_API_URL` and `MAIL_API_KEY`) delivers invitations and email codes. An invitation with no email is shared by copying its link. If invitation delivery fails, the invitation remains available for copying or later resending. Email-code delivery failure invalidates the undelivered code. Verification and resending each enforce a 60-second cooldown, with additional public request limits. Configure `REDIS_URL` for shared request limits across backend instances.
+
+## Registration and access
+
+The public route is `/auth/teacher-register/:token`. Its API validates the invitation before exposing its details or checking a username. The teacher enters a full name, email, username and password. A specified invitation email is fixed; all registrations, including invitations without a specified email, require an emailed six-digit code. Codes expire in 10 minutes or when the invitation expires, whichever comes first. Five incorrect attempts lock the challenge. A successful check returns a separate 15-minute verification proof held in the registration page's memory; possessing the invitation link alone cannot reuse another browser's completed email verification. Requesting a new code invalidates the old code and proof.
+
+Username checks are debounced and case-insensitive, treat underscores literally, and return only suggestions checked for availability. Usernames use 3–30 letters, numbers, dots, underscores or hyphens, starting with a letter or number. The database's case-insensitive unique indexes remain authoritative when registration commits. Names support Unicode letters, spaces, apostrophes and hyphens up to 100 characters. Passwords follow the existing 8–16 character uppercase/lowercase/number policy and are hashed with bcrypt cost 12.
+
+Registration locks the invitation and checks its current status, expiry, email binding, verification proof, and the issuing account's active Head Teacher role and department again. Account creation and marking the invitation Accepted occur in one transaction. Failed and simultaneous submissions cannot partly create an account or accept a token twice. The new account is active with the Teacher role, the issuing Head Teacher as `managed_by`, and that Head Teacher's department and subject. It uses the existing sign-in flow. Head Teachers can subsequently assign an advisory section in Teacher Management.
+
+EduMatch currently has one school per deployment, with departments managed by Head Teachers; it has no school/tenant table. Invitations preserve that existing school association and derive all permissions from the issuer. `SCHOOL_NAME`, if set, changes the public display name only and is not an authorization boundary. A future multi-school installation would need an explicit tenant model and corresponding access rules.
+
+Teacher accounts accept valid school email addresses as well as Gmail throughout account persistence, sign-in and their profile. Other roles retain their existing email policy. Existing manual teacher/student creation, class invitations and other management features remain available. The invitation table refreshes while visible and refreshes the teacher directory when an invitation is accepted. The application reset script `reset-keep-admin.sql` also removes teacher invitations; uploaded files are managed separately.
+
+## API
+
+Authenticated Head Teachers use `GET` and `POST /api/headteacher/teacher-invitations`, `POST /:id/resend`, and `POST /:id/revoke`. Creation accepts optional `name` and `email` plus optional `expiresInHours`; resend accepts only the expiry setting. Each Head Teacher can see and manage only invitations they issued for their current department. Role and department are never accepted from registration input.
+
+Public APIs under `/api/auth/teacher-invitations/:token` are `GET /` for invitation details, `GET /username?username=...`, `POST /email-code` with `{email}`, `POST /verify-email` with `{email,code}`, and `POST /register` with `{fullName,email,username,password,confirmPassword,verificationToken}`. Sensitive responses use `Cache-Control: no-store` and `Referrer-Policy: no-referrer`. Operational database errors are sanitized; a missing migration reports that teacher invitation setup needs a database update.
+
+## Verification
+
+Run `npm test` in `backend` and `npm run build` in `frontend`. The teacher invitation database tests execute the actual migration/functions in disposable PGlite PostgreSQL, including ownership, expiry, revocation, rotation, email attempts, replay and rollback. Service tests mock persistence and mail delivery to exercise request validation, metadata, hashing, username suggestions and mail failures. Email-policy/security tests cover school-email teacher accounts and preserve the policies for other roles. These tests do not send real emails or modify the school database.

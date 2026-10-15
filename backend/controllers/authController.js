@@ -1,4 +1,4 @@
-const { assertGmailEmail } = require('../utils/emailPolicy');
+const { assertAccountEmail } = require('../utils/emailPolicy');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
@@ -358,7 +358,7 @@ const login = asyncHandler(async (req, res) => {
   user.lockUntil = null;
   await user.save();
 
-  assertGmailEmail(user.email);
+  assertAccountEmail(user.email, user.role);
 
   if (settings.user.emailVerificationRequired === false) {
     await consumeOpenChallenges(user._id);
@@ -412,7 +412,7 @@ const resendLoginOtp = asyncHandler(async (req, res) => {
     error.statusCode = 403;
     throw error;
   }
-  assertGmailEmail(user.email);
+  assertAccountEmail(user.email, user.role);
   const { maintenanceModeEnabled, maintenanceMessage } = (await getAppSettings()).maintenance;
   if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
     const error = new Error(maintenanceMessage);
@@ -459,7 +459,7 @@ const verifyLoginOtp = asyncHandler(async (req, res) => {
     error.statusCode = 403;
     throw error;
   }
-  assertGmailEmail(user.email);
+  assertAccountEmail(user.email, user.role);
   const { maintenanceModeEnabled, maintenanceMessage } = (await getAppSettings()).maintenance;
   if (maintenanceModeEnabled && String(user.role || '').toLowerCase() !== 'admin') {
     const error = new Error(maintenanceMessage);

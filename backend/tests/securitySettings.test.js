@@ -623,6 +623,53 @@ test('sample admin email cannot bypass Gmail verification', async (t) => {
   assert.equal(fixture.events.some(([name]) => name === 'session'), false);
 });
 
+test('teacher school email supports password login, OTP resend and verified OTP login', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  fixture.user.role = 'teacher';
+  fixture.user.email = 'maria.santos@school.edu.ph';
+  const direct = await callController(fixture.controller.login, fixture.request());
+  assert.equal(direct.failure, undefined);
+  assert.equal(direct.response.statusCode, 200);
+  assert.equal(direct.response.body.user.email, fixture.user.email);
+  await fixture.service.saveAppSettings({ user: { emailVerificationRequired: true } }, 'admin');
+  const challenge = await callController(fixture.controller.login, fixture.request());
+  assert.equal(challenge.failure, undefined);
+  assert.equal(challenge.response.statusCode, 202);
+  assert.equal(challenge.response.body.requiresOtp, true);
+  const resent = await callController(fixture.controller.resendLoginOtp, {
+    ...fixture.request(), body: { challengeToken: 'a'.repeat(64) },
+  });
+  assert.equal(resent.failure, undefined);
+  assert.equal(resent.response.statusCode, 202);
+  const verified = await callController(fixture.controller.verifyLoginOtp, {
+    ...fixture.request(), body: { challengeToken: 'a'.repeat(64), otpCode: '123456' },
+  });
+  assert.equal(verified.failure, undefined);
+  assert.equal(verified.response.statusCode, 200);
+  assert.equal(verified.response.body.user.role, 'teacher');
+  assert.equal(fixture.events.filter(([name]) => name === 'email').length, 2);
+  assert.equal(fixture.events.filter(([name]) => name === 'session').length, 2);
+});
+
+test('non-teacher school emails remain blocked by password and OTP login checks', async (t) => {
+  const fixture = loginFixture(t, { user: { emailVerificationRequired: false } });
+  fixture.user.email = 'staff@school.edu.ph';
+  for (const role of ['student', 'admin', 'headteacher']) {
+    fixture.user.role = role;
+    const password = await callController(fixture.controller.login, fixture.request());
+    assert.equal(password.failure.statusCode, 400, role);
+    const resend = await callController(fixture.controller.resendLoginOtp, {
+      ...fixture.request(), body: { challengeToken: 'a'.repeat(64) },
+    });
+    assert.equal(resend.failure.statusCode, 400, role);
+    const otp = await callController(fixture.controller.verifyLoginOtp, {
+      ...fixture.request(), body: { challengeToken: 'a'.repeat(64), otpCode: '123456' },
+    });
+    assert.equal(otp.failure.statusCode, 400, role);
+  }
+  assert.equal(fixture.events.some(([name]) => name === 'session' || name === 'email'), false);
+});
+
 test('a correct email code completes login without CAPTCHA and cannot be reused', async (t) => {
   const fixture = loginFixture(t);
   const request = (otpCode) => ({ ...fixture.request(), body: { challengeToken: 'challenge', otpCode } });

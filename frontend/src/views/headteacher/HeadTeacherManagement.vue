@@ -46,6 +46,8 @@
         </div>
       </header>
 
+      <TeacherInvitationManager :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" @accepted="fetchTeachers" />
+
       <section
         ref="directorySectionRef"
         class="headteacher-section-card headteacher-panel headteacher-content-card headteacher-directory-section headteacher-directory-enterprise"
@@ -934,6 +936,7 @@
 <script setup>
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
+import TeacherInvitationManager from '../../components/headteacher/TeacherInvitationManager.vue'
 import PhilippinePhoneInput from '../../components/PhilippinePhoneInput.vue'
 import { nameError, phoneError } from '../../utils/teacherValidation.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
