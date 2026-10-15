@@ -78,8 +78,9 @@ function url(row) {
   return { url: `${base}/auth/student-register/${linkToken(row.token_nonce)}`, expiresAt: row.expires_at };
 }
 async function requireHeadTeacher(id) {
-  const user = await result(client().from('users').select('id,role,status,archive').eq('id', String(id)).maybeSingle());
+  const user = await result(client().from('users').select('id,role,status,archive,department').eq('id', String(id)).maybeSingle());
   if (!user || user.role !== 'headteacher' || user.status !== 'active' || user.archive?.isArchived === true) throw known('ISSUER_UNAVAILABLE');
+  return user;
 }
 async function all(table, columns = '*', filter = q => q) {
   const records = [];
@@ -116,15 +117,16 @@ function matches(row, filters) {
     && (!search || [row.fullName, row.email, row.username, ...row.assignments.flatMap(a => [a.teacherName, a.className, a.subjectName])].join(' ').toLowerCase().includes(search));
 }
 async function list(id, filters = {}) {
-  await requireHeadTeacher(id);
+  const headTeacher = await requireHeadTeacher(id);
   if (filters.status && !['pending', 'registered', 'revoked', 'expired'].includes(filters.status)) throw known('INPUT_INVALID');
   const [registry, membership, subjects, users, link] = await Promise.all([
-    all('student_registry'), assignments(), all('subjects'), all('users', 'id,name,role,status,archive,username,email'), manageLink(id),
+    all('student_registry'), assignments(), all('subjects'), all('users', 'id,name,role,status,archive,username,email,department'), manageLink(id),
   ]);
   const people = new Map(users.map(u => [u.id, u]));
   const subjectMap = new Map(subjects.map(s => [s.id, s]));
   const classes = subjects.filter(s => s.is_active && people.get(s.teacher_id)?.role === 'teacher'
-    && people.get(s.teacher_id)?.status === 'active' && people.get(s.teacher_id)?.archive?.isArchived !== true)
+    && people.get(s.teacher_id)?.status === 'active' && people.get(s.teacher_id)?.archive?.isArchived !== true
+    && people.get(s.teacher_id)?.department === headTeacher.department)
     .map(s => ({ id: s.id, teacherId: s.teacher_id, teacherName: people.get(s.teacher_id).name, className: s.class_name || s.name, name: s.name }));
   const byRegistry = new Map();
   for (const item of membership) {

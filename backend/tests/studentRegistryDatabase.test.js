@@ -90,6 +90,7 @@ test.before(async () => {
     insert into public.class_registration_students(id,invitation_id,teacher_id,full_name,normalized_name,section_id,section_name)
       values('old-roster','old-invite','old-teacher','Pending Dela Cruz','pending dela cruz','old-section','Old Section');`);
   await db.exec(migration('019_student_registry.sql'));
+  await db.exec(migration('020_student_registry_department_assignments.sql'));
   backfill = {
     users: (await db.query('select * from public.users order by id')).rows,
     registry: (await db.query('select * from public.student_registry order by full_name')).rows,
@@ -143,6 +144,20 @@ test('management RPCs reject unauthorized roles and invalid names without mutati
   await assert.rejects(assign(['missing']), /REGISTRY_NOT_FOUND/);
   await assert.rejects(assign(['maria'], ['missing']), /CLASS_UNAVAILABLE/);
   assert.equal(await count('student_registry_assignments'), 0);
+});
+
+test('Head Teachers can change only their department assignments and preserve other departments', async () => {
+  await importStudents();
+  await assert.rejects(assign(['maria'], ['science']), /CLASS_UNAVAILABLE/);
+  await db.exec("update public.users set department='Science' where id='head'");
+  await assign(['maria'], ['science']);
+  await db.exec("update public.users set department='Mathematics' where id='head'");
+  await assign(['maria'], ['math']);
+  assert.deepEqual((await db.query('select subject_id from public.student_registry_assignments order by subject_id')).rows,
+    [{ subject_id: 'math' }, { subject_id: 'science' }]);
+  await assign(['maria'], []);
+  assert.deepEqual((await db.query('select subject_id from public.student_registry_assignments order by subject_id')).rows,
+    [{ subject_id: 'science' }]);
 });
 
 test('code and exact normalized full name verification are both required and do not create an account', async () => {

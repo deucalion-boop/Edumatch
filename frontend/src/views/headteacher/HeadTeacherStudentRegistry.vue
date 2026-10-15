@@ -6,7 +6,7 @@
         <div class="headteacher-header-content">
           <div class="headteacher-header-copy">
             <button type="button" class="headteacher-mobile-menu-toggle" aria-label="Open sidebar" aria-controls="headteacher-sidebar-drawer" :aria-expanded="isSidebarOpen" @click="isSidebarOpen = !isSidebarOpen"><i class="fas fa-bars" aria-hidden="true"></i></button>
-            <div class="headteacher-matched-header-copy"><h1>Student Management</h1><p class="headteacher-header-subtitle">One school student registry. Import names, share registration codes, and assign teacher classes.</p></div>
+            <div class="headteacher-matched-header-copy"><h1>Student Management</h1><p class="headteacher-header-subtitle">One school student registry. Import names, share registration codes, and assign classes in your department.</p></div>
           </div>
           <div class="headteacher-header-tools"><HeadTeacherNotifications /><RouterLink to="/headteacher/settings" class="headteacher-header-settings-button" aria-label="Head Teacher settings"><i class="fas fa-cog" aria-hidden="true"></i></RouterLink></div>
         </div>
@@ -28,7 +28,7 @@
       </section>
 
       <section class="registry-panel" aria-labelledby="registry-directory-title">
-        <div class="registry-section-heading"><div><span class="registry-eyebrow">Central student registry</span><h2 id="registry-directory-title">Student directory</h2><p>Students can join several teacher classes. Class assignments also apply when a pending student registers.</p></div><div class="registry-button-row"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="downloadWorkbook('export')"><i class="fas fa-file-excel" aria-hidden="true"></i> Export Excel</button><button type="button" class="registry-button registry-primary" :disabled="Boolean(busy)" @click="openDialog('import')"><i class="fas fa-file-import" aria-hidden="true"></i> Import Students</button></div></div>
+        <div class="registry-section-heading"><div><span class="registry-eyebrow">Central student registry</span><h2 id="registry-directory-title">Student directory</h2><p>Assign students only to teachers in your department. Pending students join those classes after registration.</p></div><div class="registry-button-row"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="downloadWorkbook('export')"><i class="fas fa-file-excel" aria-hidden="true"></i> Export Excel</button><button type="button" class="registry-button registry-primary" :disabled="Boolean(busy)" @click="openDialog('import')"><i class="fas fa-file-import" aria-hidden="true"></i> Import Students</button></div></div>
         <div class="registry-toolbar">
           <label class="registry-field registry-search" for="registry-search"><span>Search students</span><input id="registry-search" v-model="filters.search" type="search" placeholder="Search name, username or email"></label>
           <label class="registry-field" for="registry-status"><span>Registration status</span><select id="registry-status" v-model="filters.status"><option value="">All statuses</option><option value="pending">Pending</option><option value="registered">Registered</option><option value="expired">Expired code</option><option value="revoked">Revoked code</option></select></label>
@@ -127,7 +127,7 @@ const filteredClasses = computed(() => {
 const now = ref(Date.now())
 const linkExpired = computed(() => Date.parse(registrationLink.value?.expiresAt || '') <= now.value)
 const dialogTitle = computed(() => ({ import: 'Import students from Excel', assign: 'Assign teacher classes', revoke: 'Revoke registration code?', code: 'Issue a new registration code?', link: 'Replace shared school link?' })[dialogMode.value])
-const dialogDescription = computed(() => ({ import: 'Upload First Name and Last Name columns. Preview missing, duplicate and similar names before importing valid students.', assign: 'This class list replaces each selected student’s current assignments. Pending students join these classes after they register.', revoke: 'This unused code will stop working. You can issue a new code later if the student still needs to register.', code: 'The student receives a fresh code that expires in 30 days. Their previous code will stop working.', link: 'All students will need the new shared school link. Existing unused student codes remain separate; share the replacement link with your school.' })[dialogMode.value])
+const dialogDescription = computed(() => ({ import: 'Upload First Name and Last Name columns. Preview missing, duplicate and similar names before importing valid students.', assign: 'Choose classes handled by teachers in your department. Saving replaces only this department’s assignments; assignments from other departments stay unchanged.', revoke: 'This unused code will stop working. You can issue a new code later if the student still needs to register.', code: 'The student receives a fresh code that expires in 30 days. Their previous code will stop working.', link: 'All students will need the new shared school link. Existing unused student codes remain separate; share the replacement link with your school.' })[dialogMode.value])
 let controller
 let loadVersion = 0
 let filterTimer
@@ -261,7 +261,7 @@ async function saveAssignments() {
     await axios.post(`${endpoint}/assign`, { registryIds: [...selectedIds.value], subjectIds: [...assignmentClassIds.value] }, authConfig())
     if (disposed) return
     notice.type = 'success'
-    notice.message = 'Class assignments saved. Pending students join their assigned classes when they register.'
+    notice.message = 'Department class assignments saved. Pending students join these classes when they register.'
     dialog.value?.close()
     selectedIds.value = []
     await loadRegistry({ force: true })

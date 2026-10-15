@@ -17,7 +17,7 @@ const proof = 'c'.repeat(64);
 const codeRow = { id: 'registry-one', code_nonce: 'secure-code-nonce' };
 const student = { ...codeRow, first_name: 'Maria', last_name: 'Santos', full_name: 'Maria Santos', code_hash: service.digest(service.registrationCode(codeRow)), code_expires_at: future(), created_at: new Date().toISOString() };
 function fixture(extra = {}) {
-  client = createFakeSupabase({ users: [{ id: 'ht', role: 'headteacher', status: 'active', archive: {} }], subjects: [], student_registry: [student],
+  client = createFakeSupabase({ users: [{ id: 'ht', role: 'headteacher', status: 'active', archive: {}, department: 'Mathematics' }], subjects: [], student_registry: [student],
     student_registry_assignments: [], student_registry_links: [{ id: 'school', token_nonce: 'school-nonce', token_hash: service.digest(token), expires_at: future() }],
     student_registry_sessions: [{ id: 'session-one', registry_id: student.id, link_hash: service.digest(token), ticket_hash: service.digest(ticket), expires_at: future(1800000) }], ...extra });
   rpcCalls = []; mailCalls = []; delivery = { sent: true };
@@ -34,6 +34,23 @@ test('school registry management rejects inactive and non Head Teacher accounts 
     await assert.rejects(service.importStudents('ht', { records: [{ firstName: 'Maria', lastName: 'Santos' }] }), { statusCode: 403 });
     assert.equal(rpcCalls.length, 0);
   }
+});
+test('class choices are limited to active teachers in the Head Teacher department', async () => {
+  fixture({
+    users: [
+      { id: 'ht', role: 'headteacher', status: 'active', archive: {}, department: 'Mathematics' },
+      { id: 'math-teacher', name: 'Math Teacher', role: 'teacher', status: 'active', archive: {}, department: 'Mathematics' },
+      { id: 'science-teacher', name: 'Science Teacher', role: 'teacher', status: 'active', archive: {}, department: 'Science' },
+    ],
+    subjects: [
+      { id: 'math', name: 'Mathematics', class_name: 'Math Class', teacher_id: 'math-teacher', is_active: true },
+      { id: 'science', name: 'Science', class_name: 'Science Class', teacher_id: 'science-teacher', is_active: true },
+    ],
+    student_registry_assignments: [{ registry_id: student.id, subject_id: 'science' }],
+  });
+  const response = await service.list('ht');
+  assert.deepEqual(response.classes.map(row => row.id), ['math']);
+  assert.deepEqual(response.students[0].assignments.map(row => row.subjectId), ['science']);
 });
 test('public shared link exposes no student names, codes, hashes or nonces', async () => {
   fixture(); const response = await service.details(token);
