@@ -7,46 +7,56 @@
       </RouterLink>
 
       <section class="registration-card" aria-labelledby="teacher-registration-title" :aria-busy="loadingInvitation || submitting">
-        <header>
-          <p class="eyebrow">{{ isGroupInvitation ? 'DEPARTMENT INVITATION' : 'TEACHER INVITATION' }}</p>
-          <h1 id="teacher-registration-title">{{ completed ? 'Welcome to EduMatch' : isGroupInvitation ? 'Join your department' : 'Create your teacher account' }}</h1>
-          <p class="intro">{{ completed ? (isGroupInvitation ? 'Your teacher account is active.' : 'Your invitation has been accepted.') : (isGroupInvitation ? 'Create your own teacher account using the department link shared by your Head Teacher.' : 'Join your department with a secure invitation from your Head Teacher.') }}</p>
-        </header>
-
-        <div v-if="loadingInvitation" class="loading-state" role="status">
-          <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Checking your invitation…
+        <div class="registration-aside">
+          <header>
+            <p class="eyebrow">{{ isGroupInvitation ? 'DEPARTMENT INVITATION' : 'TEACHER INVITATION' }}</p>
+            <h1 id="teacher-registration-title">{{ completed ? 'Welcome to EduMatch' : isGroupInvitation ? 'Join your department' : 'Create your teacher account' }}</h1>
+            <p class="intro">{{ completed ? (isGroupInvitation ? 'Your teacher account is active.' : 'Your invitation has been accepted.') : (isGroupInvitation ? 'Create your own teacher account using the department link shared by your Head Teacher.' : 'Join your department with a secure invitation from your Head Teacher.') }}</p>
+          </header>
+          <template v-if="invitation && !loadingInvitation && !invitationError && !completed">
+            <div class="assignment-card">
+              <span class="assignment-icon"><i class="fas fa-chalkboard-user" aria-hidden="true"></i></span>
+              <div><strong>{{ invitation.schoolName || 'EduMatch' }}</strong><small>{{ invitation.department }} · Teacher account</small></div>
+              <span class="verified-invitation"><i class="fas fa-circle-check" aria-hidden="true"></i> {{ isGroupInvitation ? 'Shared by your Head Teacher' : 'Valid invitation' }}</span>
+            </div>
+            <p class="assignment-note"><i class="fas fa-lock" aria-hidden="true"></i> Your Head Teacher has assigned your school, department, and Teacher role.</p>
+            <p v-if="invitation.expiresAt" class="invitation-expiry"><i class="fas fa-clock" aria-hidden="true"></i> {{ isGroupInvitation ? 'Department link expires' : 'Invitation expires' }} {{ formatExpiry(invitation.expiresAt) }}</p>
+          </template>
         </div>
-
-        <div v-else-if="invitationError" class="invitation-error">
-          <span class="state-icon"><i class="fas fa-envelope-open" aria-hidden="true"></i></span>
-          <h2>{{ invitationUnavailable ? 'Invitation unavailable' : 'Unable to open invitation' }}</h2>
-          <p role="alert">{{ invitationError }}</p>
-          <p v-if="invitationUnavailable">Ask your Head Teacher for a new invitation link.</p>
-          <button v-else type="button" class="primary-button" @click="loadInvitation">Try again</button>
-          <RouterLink to="/auth/login" class="text-link">Return to sign in</RouterLink>
-        </div>
-
-        <div v-else-if="completed" class="success-state" role="status">
-          <span class="state-icon success-icon"><i class="fas fa-check" aria-hidden="true"></i></span>
-          <h2>Your teacher account is ready</h2>
-          <p><strong>{{ registeredTeacher.name }}</strong>, your account is active{{ registeredTeacher.department ? ` in ${registeredTeacher.department}` : '' }}.</p>
-          <p>Sign in with <strong>{{ username.trim() }}</strong> and your new password.</p>
-          <RouterLink to="/auth/login" class="primary-button">Sign in to EduMatch</RouterLink>
-        </div>
-
-        <template v-else-if="invitation">
-          <div class="assignment-card">
-            <span class="assignment-icon"><i class="fas fa-chalkboard-user" aria-hidden="true"></i></span>
-            <div><strong>{{ invitation.schoolName || 'EduMatch' }}</strong><small>{{ invitation.department }} · Teacher account</small></div>
-            <span class="verified-invitation"><i class="fas fa-circle-check" aria-hidden="true"></i> {{ isGroupInvitation ? 'Shared by your Head Teacher' : 'Valid invitation' }}</span>
+        <div class="registration-main">
+          <div v-if="loadingInvitation" class="loading-state" role="status">
+            <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Checking your invitation…
           </div>
 
-          <div v-if="formError" class="form-error" role="alert">{{ formError }}</div>
-          <form class="registration-form" @submit.prevent="registerTeacher">
-            <div class="form-field">
-              <label for="teacher-full-name">Full name</label>
-              <input id="teacher-full-name" v-model="fullName" type="text" required maxlength="100" autocomplete="name" :disabled="submitting" :aria-invalid="Boolean(fullName && !validName)" aria-describedby="teacher-name-hint" />
-              <small id="teacher-name-hint" :class="{ invalid: fullName && !validName }">Enter your full name using letters, spaces, hyphens, or apostrophes.</small>
+          <div v-else-if="invitationError" class="invitation-error">
+            <span class="state-icon"><i class="fas fa-envelope-open" aria-hidden="true"></i></span>
+            <h2>{{ invitationUnavailable ? 'Invitation unavailable' : 'Unable to open invitation' }}</h2>
+            <p role="alert">{{ invitationError }}</p>
+            <p v-if="invitationUnavailable">Ask your Head Teacher for a new invitation link.</p>
+            <button v-else type="button" class="primary-button" @click="loadInvitation">Try again</button>
+            <RouterLink to="/auth/login" class="text-link">Return to sign in</RouterLink>
+          </div>
+
+          <div v-else-if="completed" class="success-state" role="status">
+            <span class="state-icon success-icon"><i class="fas fa-check" aria-hidden="true"></i></span>
+            <h2>Your teacher account is ready</h2>
+            <p><strong>{{ registeredTeacher.name }}</strong>, your account is active{{ registeredTeacher.department ? ` in ${registeredTeacher.department}` : '' }}.</p>
+            <p>Sign in with <strong>{{ username.trim() }}</strong> and your new password.</p>
+            <RouterLink to="/auth/login" class="primary-button">Sign in to EduMatch</RouterLink>
+          </div>
+
+          <form v-else-if="invitation" class="registration-form" @submit.prevent="registerTeacher">
+            <div v-if="formError" class="form-error" role="alert">{{ formError }}</div>
+            <div class="name-grid">
+              <div class="form-field">
+                <label for="teacher-first-name">First name</label>
+                <input id="teacher-first-name" v-model="firstName" type="text" required maxlength="50" autocomplete="given-name" :disabled="submitting" :aria-invalid="Boolean(firstName && !validFirstName)" aria-describedby="teacher-name-hint" />
+              </div>
+              <div class="form-field">
+                <label for="teacher-last-name">Last name</label>
+                <input id="teacher-last-name" v-model="lastName" type="text" required maxlength="50" autocomplete="family-name" :disabled="submitting" :aria-invalid="Boolean(lastName && !validLastName)" aria-describedby="teacher-name-hint" />
+              </div>
+              <small id="teacher-name-hint" class="name-hint" :class="{ invalid: nameHintInvalid }">Each name uses letters, spaces, hyphens, or apostrophes.</small>
             </div>
 
             <div class="form-field">
@@ -110,14 +120,12 @@
               <small id="teacher-password-hint" class="password-hint">8–16 characters, with uppercase and lowercase letters and a number.</small>
             </div>
 
-            <p class="assignment-note"><i class="fas fa-lock" aria-hidden="true"></i> Your Head Teacher has assigned your school, department, and Teacher role.</p>
             <button type="submit" class="primary-button create-account" :disabled="!canRegister">
               {{ submitting ? 'Creating your account…' : 'Create teacher account' }}<i v-if="!submitting" class="fas fa-arrow-right" aria-hidden="true"></i>
             </button>
             <p v-if="!emailVerified" class="verification-reminder">Verify your email to enable account creation.</p>
           </form>
-          <p v-if="invitation.expiresAt" class="invitation-expiry"><i class="fas fa-clock" aria-hidden="true"></i> {{ isGroupInvitation ? 'Department link expires' : 'Invitation expires' }} {{ formatExpiry(invitation.expiresAt) }}</p>
-        </template>
+        </div>
 
         <footer v-if="!completed && !invitationError" class="registration-footer">Already have an account? <RouterLink to="/auth/login">Sign in</RouterLink></footer>
       </section>
@@ -138,7 +146,8 @@ const invitation = ref(null)
 const loadingInvitation = ref(false)
 const invitationError = ref('')
 const invitationUnavailable = ref(false)
-const fullName = ref('')
+const firstName = ref('')
+const lastName = ref('')
 const email = ref('')
 const username = ref('')
 const password = ref('')
@@ -178,7 +187,11 @@ const isGroupInvitation = computed(() => invitation.value?.isGroup === true)
 const emailIsBound = computed(() => !isGroupInvitation.value && Boolean(invitation.value?.email))
 const normalizedEmail = computed(() => email.value.trim().toLowerCase())
 const validEmail = computed(() => isValidTeacherEmail(email.value))
-const validName = computed(() => Boolean(fullName.value.trim()) && fullName.value.trim().length <= 100 && namePattern.test(fullName.value.trim()) && /\p{L}/u.test(fullName.value))
+const validFirstName = computed(() => Boolean(firstName.value.trim()) && firstName.value.trim().length <= 50 && namePattern.test(firstName.value.trim()) && /\p{L}/u.test(firstName.value))
+const validLastName = computed(() => Boolean(lastName.value.trim()) && lastName.value.trim().length <= 50 && namePattern.test(lastName.value.trim()) && /\p{L}/u.test(lastName.value))
+const fullName = computed(() => `${firstName.value.trim()} ${lastName.value.trim()}`.replace(/\s+/g, ' ').trim())
+const validName = computed(() => validFirstName.value && validLastName.value && fullName.value.length <= 100)
+const nameHintInvalid = computed(() => (Boolean(firstName.value) && !validFirstName.value) || (Boolean(lastName.value) && !validLastName.value))
 const invitationPath = computed(() => `${resolveApiBaseUrl()}/auth/teacher-invitations/${encodeURIComponent(String(route.params.token || ''))}`)
 const usernameAvailable = computed(() => usernameStatus.value === 'available' && checkedUsername.value === username.value.trim().toLowerCase())
 const emailVerified = computed(() => Boolean(verificationToken.value) && verifiedEmail.value === normalizedEmail.value && verificationExpiresAt.value > now.value)
@@ -283,7 +296,8 @@ async function loadInvitation() {
   submitting.value = false
   registeredTeacher.value = {}
   formError.value = ''
-  fullName.value = ''
+  firstName.value = ''
+  lastName.value = ''
   email.value = ''
   username.value = ''
   try {
@@ -295,7 +309,9 @@ async function loadInvitation() {
       return
     }
     invitation.value = data.invitation
-    fullName.value = data.invitation.isGroup ? '' : String(data.invitation.name || '')
+    const invitedName = data.invitation.isGroup ? '' : String(data.invitation.name || '').trim()
+    firstName.value = invitedName.split(/\s+/)[0] || ''
+    lastName.value = invitedName.split(/\s+/).slice(1).join(' ') || ''
     email.value = data.invitation.isGroup ? '' : String(data.invitation.email || '')
   } catch (error) {
     if (!live(requestSession) || axios.isCancel(error)) return
@@ -400,7 +416,7 @@ async function checkUsername() {
 async function registerTeacher() {
   if (submitting.value) return
   formError.value = ''
-  if (!validName.value) { formError.value = 'Enter a valid full name of up to 100 characters.'; return }
+  if (!validName.value) { formError.value = 'Enter a valid first and last name (up to 100 characters in total).'; return }
   if (!validEmail.value) { formError.value = 'Enter a valid school email address.'; return }
   if (!emailVerified.value) { formError.value = 'Verify your email address before creating your account.'; return }
   if (!usernameAvailable.value) { formError.value = 'Choose a username and wait for its availability check.'; return }
@@ -484,11 +500,14 @@ onBeforeUnmount(() => {
 @reference "../../styles/tailwind.css";
 .teacher-registration { @apply tw:[min-height:100dvh] tw:[padding:40px_20px] tw:[background:radial-gradient(ellipse_at_top,_#eaf5e7,_#f6f9f4_65%)] tw:[color:#182b21] tw:[font-family:'Inter',_'Segoe_UI',_sans-serif]; }
 .teacher-registration *, .teacher-registration *::before, .teacher-registration *::after { @apply tw:box-border; }
-.registration-shell { @apply tw:[max-width:660px] tw:[margin:0_auto]; }
+.registration-shell { @apply tw:[max-width:1000px] tw:[margin:0_auto]; }
 .registration-brand { @apply tw:flex tw:items-center tw:w-fit tw:[gap:12px] tw:[margin:0_auto_26px] tw:[font-size:23px] tw:[font-weight:750] tw:[text-decoration:none] tw:[color:#1d3826]; }
 .registration-brand small { @apply tw:block tw:[margin-top:2px] tw:[font-size:12px] tw:[font-weight:500] tw:[color:#657869]; }
 .brand-mark { @apply tw:grid tw:place-items-center tw:[width:49px] tw:[height:49px] tw:[border:1px_solid_#cbdcc7] tw:[background:#fff] tw:[border-radius:16px] tw:[font-size:24px] tw:[color:#4e873e]; }
-.registration-card { @apply tw:[padding:32px] tw:[background:#fff] tw:[border:1px_solid_#d9e7d5] tw:[border-radius:20px] tw:[box-shadow:0_18px_45px_#2448200b]; }
+.registration-card { @apply tw:[padding:32px] tw:[background:#fff] tw:[border:1px_solid_#d9e7d5] tw:[border-radius:20px] tw:[box-shadow:0_18px_45px_#2448200b]; @apply tw:grid tw:[grid-template-columns:minmax(260px,0.85fr)_minmax(0,1.3fr)] tw:[gap:0_2.4rem]; }
+.registration-aside { @apply tw:[padding-top:6px] tw:[border-right:1px_solid_#eaf0e6] tw:[padding-right:2.4rem]; }
+.registration-main { @apply tw:[min-width:0]; }
+.registration-card > .registration-footer { @apply tw:[grid-column:1/-1]; }
 .eyebrow { @apply tw:[margin:0_0_8px] tw:[color:#4a7b36] tw:[font-size:10px] tw:[font-weight:800] tw:[letter-spacing:1.5px]; }
 h1 { @apply tw:[margin:0] tw:[font-size:27px] tw:[line-height:1.3] tw:[font-weight:750]; }
 h2 { @apply tw:[font-size:20px] tw:[margin:18px_0_12px]; }
@@ -500,6 +519,8 @@ h2 { @apply tw:[font-size:20px] tw:[margin:18px_0_12px]; }
 .assignment-card small { @apply tw:block tw:[margin-top:5px] tw:[font-size:12px] tw:[line-height:1.5] tw:[color:#677960] tw:[overflow-wrap:anywhere]; }
 .verified-invitation { @apply tw:flex tw:items-center tw:[gap:5px] tw:[font-size:10px] tw:[font-weight:650] tw:[color:#416d34]; }
 .registration-form { @apply tw:grid tw:[gap:20px]; }
+.name-grid { @apply tw:grid tw:[grid-template-columns:1fr_1fr] tw:[gap:10px_16px]; }
+.name-grid .name-hint { @apply tw:[grid-column:1/-1] tw:[margin-top:-4px]; }
 .form-field { @apply tw:grid tw:[gap:7px] tw:content-start; }
 .form-field label { @apply tw:[font-size:13px] tw:[color:#263d2c] tw:[font-weight:650]; }
 .form-field input { @apply tw:block tw:w-full tw:[min-width:0] tw:[min-height:46px] tw:[padding:11px_13px] tw:[border:1px_solid_#cddccb] tw:[border-radius:9px] tw:[background:#fff] tw:[color:#203127] tw:[font:inherit] tw:[font-size:14px]; }
@@ -554,13 +575,18 @@ h2 { @apply tw:[font-size:20px] tw:[margin:18px_0_12px]; }
 @media (max-width: 540px) {
   .teacher-registration { @apply tw:[padding:24px_12px]; }
   .registration-brand { @apply tw:[margin-bottom:20px]; }
-  .registration-card { @apply tw:[padding:25px_20px] tw:[border-radius:16px]; }
+  .registration-card { @apply tw:[padding:25px_20px] tw:[border-radius:16px] tw:[grid-template-columns:1fr]; }
+  .registration-aside { @apply tw:[border-right:0] tw:[padding-right:0] tw:[padding-bottom:4px]; }
   h1 { @apply tw:[font-size:24px]; }
   .assignment-card { @apply tw:[padding:14px]; }
   .verified-invitation { @apply tw:[flex-basis:100%] tw:[padding-left:50px]; }
-  .password-grid { @apply tw:[grid-template-columns:1fr] tw:[gap:18px]; }
-  .password-hint { @apply tw:[margin-top:-8px]; }
+  .name-grid, .password-grid { @apply tw:[grid-template-columns:1fr] tw:[gap:18px]; }
+  .password-hint, .name-grid .name-hint { @apply tw:[margin-top:-8px]; }
   .email-verification { @apply tw:[padding:15px]; }
+}
+@media (min-width: 541px) and (max-width: 860px) {
+  .registration-card { @apply tw:[grid-template-columns:1fr]; }
+  .registration-aside { @apply tw:[border-right:0] tw:[border-bottom:1px_solid_#eaf0e6] tw:[padding-right:0] tw:[padding-bottom:20px]; }
 }
 @media (prefers-reduced-motion: reduce) { .fa-spin { @apply tw:animate-none; } }
 </style>
