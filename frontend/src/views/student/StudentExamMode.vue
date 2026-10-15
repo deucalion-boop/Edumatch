@@ -68,9 +68,6 @@
       </aside>
 
       <section class="question-workspace" aria-live="polite">
-        <div class="exam-watermark" aria-hidden="true">
-          <span v-for="watermarkIndex in 12" :key="`watermark-${watermarkIndex}`">{{ watermarkLabel }}</span>
-        </div>
         <article v-if="currentQuestion" class="exam-question">
           <header class="question-header">
             <div><span class="question-kicker">Question {{ currentQuestionIndex + 1 }} of {{ assessment.questions.length }}</span><span class="question-type">{{ formatLabel(currentQuestion.type || 'Written response') }}</span></div>
@@ -248,14 +245,6 @@ export default {
       const min = Number(this.currentQuestion?.minWords || 0)
       const max = Number(this.currentQuestion?.maxWords || 0)
       return this.currentEssayWordCount >= min && (!max || this.currentEssayWordCount <= max)
-    },
-    watermarkLabel() {
-      const user = this.authStore?.user || {}
-      const studentId = String(user.studentId || user.lrn || user.id || user._id || '').trim()
-      const timeLabel = new Intl.DateTimeFormat('en-US', {
-        month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
-      }).format(new Date(this.nowMs))
-      return [studentId ? `ID ${studentId.slice(-8)}` : '', timeLabel].filter(Boolean).join(' • ')
     },
   },
   methods: {
@@ -1317,40 +1306,6 @@ textarea {
   @apply tw:[grid-template-rows:minmax(0,_1fr)_auto];
   @apply tw:[background:#fff];
   @apply tw:[box-shadow:0_14px_38px_rgba(15,_23,_42,_0.065)];
-}
-
-.exam-watermark {
-  @apply tw:absolute;
-  @apply tw:[inset:0];
-  @apply tw:[z-index:1];
-  @apply tw:overflow-hidden;
-  @apply tw:[border-radius:inherit];
-  @apply tw:grid;
-  @apply tw:[grid-template-columns:repeat(3,_1fr)];
-  @apply tw:[grid-auto-rows:minmax(120px,_1fr)];
-  @apply tw:items-center;
-  @apply tw:justify-items-center;
-  @apply tw:pointer-events-none;
-  @apply tw:[user-select:none];
-  @apply tw:[animation:watermark-drift_18s_ease-in-out_infinite_alternate];
-}
-
-.exam-watermark span {
-  @apply tw:[max-width:260px];
-  @apply tw:[transform:rotate(-24deg)];
-  @apply tw:[color:rgba(37,_99,_235,_0.075)];
-  @apply tw:[font-size:0.63rem];
-  @apply tw:[font-weight:800];
-  @apply tw:[letter-spacing:0.06em];
-  @apply tw:[line-height:1.5];
-  @apply tw:text-center;
-  @apply tw:uppercase;
-  @apply tw:whitespace-nowrap;
-}
-
-@keyframes watermark-drift {
-  from { transform: translate3d(-0.7rem, -0.45rem, 0); }
-  to { transform: translate3d(0.8rem, 0.55rem, 0); }
 }
 
 .exam-question {
