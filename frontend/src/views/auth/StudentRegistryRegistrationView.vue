@@ -37,13 +37,19 @@
           </div>
 
           <form v-if="step === 'identity'" class="registration-form" @submit.prevent="verifyStudent">
-            <p class="form-description">Enter the full name on your school record.</p>
-            <div class="form-field">
-              <label for="student-full-name">Full name</label>
-              <input id="student-full-name" v-model="fullName" type="text" required maxlength="150" autocomplete="name" :disabled="verifyingStudent" aria-describedby="student-name-hint" />
-              <small id="student-name-hint">Include all names recorded by your school. Capitalization and extra spaces do not matter.</small>
+            <p class="form-description">Enter your first name and last name exactly as they appear on your school record.</p>
+            <div class="name-grid">
+              <div class="form-field">
+                <label for="student-first-name">First name</label>
+                <input id="student-first-name" v-model="firstName" type="text" required maxlength="100" autocomplete="given-name" :disabled="verifyingStudent" aria-describedby="student-name-hint" />
+              </div>
+              <div class="form-field">
+                <label for="student-last-name">Last name</label>
+                <input id="student-last-name" v-model="lastName" type="text" required maxlength="100" autocomplete="family-name" :disabled="verifyingStudent" aria-describedby="student-name-hint" />
+              </div>
             </div>
-            <button type="submit" class="primary-button" :disabled="verifyingStudent || alreadyRegistered || !fullName.trim()">{{ verifyingStudent ? 'Verifying your details…' : 'Verify and continue' }}<i v-if="!verifyingStudent" class="fas fa-arrow-right" aria-hidden="true"></i></button>
+            <small id="student-name-hint" class="field-hint">Capitalization and extra spaces do not matter.</small>
+            <button type="submit" class="primary-button" :disabled="verifyingStudent || alreadyRegistered || !firstName.trim() || !lastName.trim()">{{ verifyingStudent ? 'Verifying your details…' : 'Verify and continue' }}<i v-if="!verifyingStudent" class="fas fa-arrow-right" aria-hidden="true"></i></button>
           </form>
 
           <form v-else class="registration-form" @submit.prevent="registerStudent">
@@ -125,7 +131,9 @@ const loading = ref(false)
 const linkError = ref('')
 const linkUnavailable = ref(false)
 const step = ref('identity')
-const fullName = ref('')
+const firstName = ref('')
+const lastName = ref('')
+const fullName = computed(() => `${firstName.value.trim()} ${lastName.value.trim()}`.trim())
 const verifiedStudent = ref(null)
 const studentVerificationToken = ref('')
 const studentVerificationExpiresAt = ref(0)
@@ -233,7 +241,7 @@ async function loadRegistration() {
   const requestSession = sessionId
   for (const key of controllers.keys()) cancelRequest(key)
   resetting = true
-  resetIdentity(); fullName.value = ''; completed.value = false; registeredStudent.value = {}
+  resetIdentity(); firstName.value = ''; lastName.value = ''; completed.value = false; registeredStudent.value = {}
   registration.value = null; linkError.value = ''; linkUnavailable.value = false; loading.value = true
   resetting = false
   try {
@@ -252,7 +260,7 @@ async function loadRegistration() {
 }
 
 async function verifyStudent() {
-  if (!registration.value || verifyingStudent.value || alreadyRegistered.value || !fullName.value.trim()) return
+  if (!registration.value || verifyingStudent.value || alreadyRegistered.value || !firstName.value.trim() || !lastName.value.trim()) return
   const requestSession = sessionId
   const requestId = ++identityRequestId
   verifyingStudent.value = true; formError.value = ''
@@ -265,7 +273,7 @@ async function verifyStudent() {
     step.value = 'account'
   } catch (error) {
     if (!live(requestSession) || requestId !== identityRequestId || axios.isCancel(error)) return
-    if (!handleRegistrationError(error)) formError.value = responseMessage(error, 'We could not verify your details. Check the full name on your school record, then try again.')
+    if (!handleRegistrationError(error)) formError.value = responseMessage(error, 'We could not verify your details. Check the first name and last name on your school record, then try again.')
   } finally { if (live(requestSession) && requestId === identityRequestId) verifyingStudent.value = false }
 }
 
@@ -366,7 +374,7 @@ async function registerStudent() {
 
 function formatExpiry(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? 'soon' : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date) }
 watch(email, clearEmailVerification, { flush: 'sync' })
-watch(fullName, () => { if (!resetting && !disposed && !completed.value) resetIdentity() }, { flush: 'sync' })
+watch([firstName, lastName], () => { if (!resetting && !disposed && !completed.value) resetIdentity() }, { flush: 'sync' })
 watch(username, () => {
   invalidateUsername()
   if (!identityVerified.value || !username.value.trim() || completed.value) return
@@ -400,6 +408,8 @@ h1 { @apply tw:[margin:0] tw:[font-size:27px] tw:[line-height:1.3] tw:[font-weig
 h2 { @apply tw:[font-size:20px] tw:[margin:18px_0_12px]; }
 .intro, .form-description { @apply tw:[margin:10px_0_0] tw:[color:#647368] tw:[font-size:14px] tw:[line-height:1.6]; }
 .form-description { @apply tw:[margin:0]; }
+.name-grid { @apply tw:grid tw:grid-cols-2 tw:gap-4; }
+.field-hint { @apply tw:[margin-top:-8px] tw:[color:#647368] tw:[font-size:12px] tw:[line-height:1.5]; }
 .registration-steps { @apply tw:flex tw:[list-style:none] tw:[gap:14px] tw:[padding:19px_0] tw:[margin:23px_0] tw:[border-top:1px_solid_#edf2ea] tw:[border-bottom:1px_solid_#edf2ea]; }
 .registration-steps li { @apply tw:flex tw:items-center tw:[flex:1] tw:[gap:8px] tw:[color:#67706b] tw:[font-size:12px] tw:[line-height:1.4]; }
 .registration-steps li span { @apply tw:grid tw:place-items-center tw:shrink-0 tw:[width:26px] tw:[height:26px] tw:[border-radius:50%] tw:[background:#f1f4ef] tw:[color:#626d60] tw:[font-size:11px] tw:[font-weight:700]; }
@@ -475,6 +485,7 @@ h2 { @apply tw:[font-size:20px] tw:[margin:18px_0_12px]; }
   .student-registration { @apply tw:[padding:24px_12px]; }
   .registration-card { @apply tw:[padding:25px_20px] tw:[border-radius:16px]; }
   h1 { @apply tw:[font-size:24px]; }
+  .name-grid { @apply tw:grid-cols-1; }
   .password-grid { @apply tw:[grid-template-columns:1fr] tw:[gap:18px]; }
   .password-hint { @apply tw:[margin-top:-8px]; }
   .email-verification { @apply tw:[padding:15px]; }

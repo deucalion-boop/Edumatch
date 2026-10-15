@@ -53,7 +53,7 @@ async function main() {
   const scope = effectScope()
   const vm = scope.run(() => component.setup({}, { expose() {} }))
   const flush = async () => { await nextTick(); await Promise.resolve(); await Promise.resolve() }
-  const enterIdentity = () => { vm.fullName.value = 'Juan Dela Cruz' }
+  const enterIdentity = () => { vm.firstName.value = 'Juan'; vm.lastName.value = 'Dela Cruz' }
   const prepareIdentity = async () => { enterIdentity(); await vm.verifyStudent() }
   const prepareEmail = async () => {
     vm.email.value = 'juan@school.edu.ph'; await vm.sendEmailCode(); vm.emailCode.value = '123456'; await vm.verifyEmail()
@@ -64,6 +64,7 @@ async function main() {
     assert.equal(vm.canRegister.value, false)
     await prepareIdentity()
     assert.equal(vm.step.value, 'account')
+    assert.equal(calls.find(call => call.url.endsWith('/verify')).body.fullName, 'Juan Dela Cruz')
     assert.equal(vm.hasAssignments.value, false)
     vm.username.value = 'taken'; await vm.checkUsername()
     assert.equal(vm.usernameStatus.value, 'unavailable')
@@ -98,7 +99,8 @@ async function main() {
     overrides.set('verify', () => new Promise(resolve => { resolveIdentity = resolve }))
     enterIdentity()
     const staleIdentity = vm.verifyStudent()
-    vm.fullName.value = 'Different Name'
+    vm.firstName.value = 'Different'
+    vm.lastName.value = 'Name'
     resolveIdentity(identity()); await staleIdentity
     assert.equal(vm.step.value, 'identity')
     assert.equal(vm.studentVerificationToken.value, '')
