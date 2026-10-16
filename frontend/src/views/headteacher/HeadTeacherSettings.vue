@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
 .headteacher-password-wrap {
   @apply tw:flex;
   @apply tw:items-center;
-  @apply tw:[border:1px_solid_#cbd5e1];
+  @apply tw:[border:1px_solid_#b8d5a8];
   @apply tw:[border-radius:14px];
   @apply tw:[background:#fff];
   @apply tw:overflow-hidden;
@@ -347,7 +347,7 @@ onBeforeUnmount(() => {
   @apply tw:[border:0];
   @apply tw:[outline:none];
   @apply tw:[background:transparent];
-  @apply tw:[color:#0f172a];
+  @apply tw:[color:#1e4307];
 }
 
 .headteacher-password-toggle {
@@ -356,26 +356,26 @@ onBeforeUnmount(() => {
   @apply tw:[height:48px];
   @apply tw:[border:0];
   @apply tw:[background:transparent];
-  @apply tw:[color:#64748b];
+  @apply tw:[color:#4d7c36];
 }
 
 .headteacher-password-rules {
   @apply tw:[padding:1rem_1.1rem];
-  @apply tw:[border:1px_solid_#dbe4ec];
+  @apply tw:[border:1px_solid_#c5dab8];
   @apply tw:[border-radius:16px];
-  @apply tw:[background:linear-gradient(180deg,_#ffffff,_#f8fbfb)];
+  @apply tw:[background:linear-gradient(180deg,_#f8fcf5,_#edf6e7)];
 }
 
 .headteacher-password-rules p {
   @apply tw:[margin:0_0_0.6rem];
-  @apply tw:[color:#334155];
+  @apply tw:[color:#1e4307];
   @apply tw:[font-weight:700];
 }
 
 .headteacher-password-rules ul {
   @apply tw:[margin:0];
   @apply tw:[padding-left:1.1rem];
-  @apply tw:[color:#64748b];
+  @apply tw:[color:#53664a];
 }
 
 .headteacher-password-rules li + li {
@@ -386,6 +386,33 @@ onBeforeUnmount(() => {
   @apply tw:[color:#15803d];
   @apply tw:[font-weight:700];
 }
+
+.headteacher-profile-hero {
+  border: 1px solid #c5dab8;
+  background: linear-gradient(135deg, #f4faef, #e6f3db);
+}
+.headteacher-settings-icon { background: #e1efcf; color: #3e7c2b; box-shadow: 0 12px 24px rgb(62 124 43 / 14%); }
+.headteacher-settings-icon i { color: #3e7c2b; }
+.headteacher-profile-copy h2,
+.headteacher-section-title,
+.headteacher-form-group > span { color: #1e4307; }
+.headteacher-profile-copy p,
+.headteacher-section-subtitle { color: #53664a; }
+.headteacher-eyebrow { color: #4d7c36; }
+.headteacher-content-card { border-color: #c5dab8; }
+.headteacher-password-wrap:focus-within {
+  border-color: #639c48;
+  box-shadow: 0 0 0 3px rgb(99 156 72 / 15%);
+}
+.headteacher-password-toggle:focus-visible { outline: 2px solid #639c48; outline-offset: -3px; }
+.headteacher-password-input::placeholder { color: #6c7f62; }
+.headteacher-modal-actions .headteacher-button-primary {
+  background: #3e7c2b;
+  border-color: #3e7c2b;
+  color: #fff;
+}
+.headteacher-modal-actions .headteacher-button-primary:hover:not(:disabled) { background: #2e601e; border-color: #2e601e; }
+.headteacher-modal-actions .headteacher-button-primary:focus-visible { outline: 3px solid #a2c78a; outline-offset: 3px; }
 
 @media (max-width: 768px) {
   .headteacher-modal-actions .headteacher-button {
