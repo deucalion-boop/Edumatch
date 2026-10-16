@@ -153,16 +153,6 @@
             <i class="fas fa-search"></i>
             <input v-model.trim="searchTerm" type="search" placeholder="Search by student, section, adviser, department, or grade level" aria-label="Search student records">
           </label>
-          <div class="secretary-export-actions">
-            <button type="button" class="secretary-export-btn" @click="exportStudentsCsv">
-              <i class="fas fa-file-csv"></i>
-              <span>Export CSV</span>
-            </button>
-            <button type="button" class="secretary-export-btn secretary-export-btn-excel" @click="exportStudentsExcel">
-              <i class="fas fa-file-excel"></i>
-              <span>Export Excel</span>
-            </button>
-          </div>
         </div>
 
         <div class="secretary-filter-bar secretary-student-filter-bar">
