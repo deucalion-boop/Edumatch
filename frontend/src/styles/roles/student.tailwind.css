@@ -8145,19 +8145,24 @@ body.student-dashboard .nav-submenu-leave-to {
 
 /* Keep the drawer close icon legible over the global student icon theme. */
 body.student-dashboard .student-sidebar .sidebar-close {
-    color: #ffffff !important;
-    background: #4f8a35 !important;
-    border-color: #4f8a35 !important;
+    color: rgb(51, 65, 85) !important;
+    background: rgb(248, 250, 252) !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+    border-color: rgb(226, 232, 240) !important;
+    border-image: none !important;
+    border-radius: 12px !important;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s !important;
     box-shadow: none !important;
 }
 body.student-dashboard .student-sidebar .sidebar-close i,
 body.student-dashboard .student-sidebar .sidebar-close i::before {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+    color: rgb(51, 65, 85) !important;
+    -webkit-text-fill-color: rgb(51, 65, 85) !important;
     opacity: 1 !important;
 }
 body.student-dashboard .student-sidebar .sidebar-close:hover {
-    background: #3e7028 !important;
+    background: #f1f5f9 !important;
 }
 body.student-dashboard .student-sidebar .sidebar-close:focus-visible {
     outline: 2px solid #4f8a35;
