@@ -289,6 +289,44 @@ onBeforeUnmount(() => {
 .secretary-header-copy > div { min-width: 0; }
 @media (max-width: 768px) {
   .secretary-header-copy > div { display: none; }
+  .secretary-top-header { padding: .75rem .9rem !important; border-radius: 16px !important; }
+  .secretary-header-content {
+    display: grid !important;
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    align-items: center !important;
+    gap: .75rem !important;
+    width: 100%;
+  }
+  .secretary-header-copy {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    grid-column: 1;
+    flex: none !important;
+    min-width: 0;
+    width: auto;
+  }
+  .secretary-header-tools {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: .75rem !important;
+    grid-column: 3;
+    margin-left: 0 !important;
+    flex: none !important;
+    min-width: 0;
+  }
+  .secretary-header-copy .mobile-menu-toggle,
+  .secretary-header-tools .account-menu-trigger {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 12px;
+  }
+  .secretary-header-copy .mobile-menu-toggle { margin: 0 !important; align-self: flex-start !important; }
+  .secretary-header-tools .account-menu,
+  .secretary-header-tools .account-menu-trigger { margin-left: auto !important; }
 }
 .secretary-header-copy h1 { margin: 0; font-size: 1.35rem; line-height: 1.15; }
 .secretary-header-copy .header-subtitle { margin-top: .2rem; font-size: .86rem; line-height: 1.45; }
