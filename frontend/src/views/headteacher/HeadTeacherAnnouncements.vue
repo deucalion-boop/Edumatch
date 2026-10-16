@@ -21,7 +21,7 @@
           </div>
         </div>
       </header>
-      <StudentAnnouncements />
+      <StudentAnnouncements class="headteacher-announcement-content" />
       <DashboardFooter />
     </main>
   </div>
@@ -38,3 +38,38 @@ const authStore = useAuthStore()
 const isSidebarOpen = ref(false)
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'HeadTeacher').trim())
 </script>
+<style scoped>
+.headteacher-announcement-content {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  margin: 0;
+  color: #1e4307;
+}
+.headteacher-announcement-content :deep(.page-header h1),
+.headteacher-announcement-content :deep(.empty-state h2) { color: #1e4307; }
+.headteacher-announcement-content :deep(.eyebrow) { color: #3b7a2a !important; }
+.headteacher-announcement-content :deep(.announcement-subject),
+.headteacher-announcement-content :deep(.card-arrow) { color: #3b7a2a; }
+.headteacher-announcement-content :deep(.announcement-icon) {
+  background: #e6f3df;
+  color: #3b7a2a;
+}
+.headteacher-announcement-content :deep(.announcement-card),
+.headteacher-announcement-content :deep(.announcement-detail),
+.headteacher-announcement-content :deep(.state-card) { border-color: #b8d5a8; }
+.headteacher-announcement-content :deep(.announcement-card:hover) {
+  border-color: #639c48;
+  box-shadow: 0 10px 24px rgb(30 67 7 / 8%);
+}
+.headteacher-announcement-content :deep(.empty-state) {
+  background: linear-gradient(135deg, #f4faef, #e8f4e1);
+  color: #48633d;
+}
+.headteacher-announcement-content :deep(.empty-state > i) { color: #4d8a35; }
+.headteacher-announcement-content :deep(.back-button),
+.headteacher-announcement-content :deep(.state-card button) {
+  border-color: #b8d5a8;
+  color: #356b24;
+}
+</style>
