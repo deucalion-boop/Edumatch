@@ -300,7 +300,7 @@
               <span class="trend-pill" :class="`trend-pill--${trendTone(metrics.studentGrowth)}`">Students {{ formatGrowth(metrics.studentGrowth) }}</span>
               <span class="trend-pill" :class="`trend-pill--${trendTone(metrics.teacherGrowth)}`">Teachers {{ formatGrowth(metrics.teacherGrowth) }}</span>
               <span class="trend-pill" :class="`trend-pill--${trendTone(metrics.headTeacherGrowth)}`">Head Teachers {{ formatGrowth(metrics.headTeacherGrowth) }}</span>
-              <span class="trend-pill" :class="`trend-pill--${trendTone(metrics.secretaryGrowth)}`">Secretaries {{ formatGrowth(metrics.secretaryGrowth) }}</span>
+              <span class="trend-pill" :class="`trend-pill--${trendTone(metrics.secretaryGrowth)}`">Secreatary {{ formatGrowth(metrics.secretaryGrowth) }}</span>
             </div>
           </article>
 
@@ -943,7 +943,7 @@ export default {
             fillGradient.addColorStop(1, colorSet.fillEnd)
 
             return {
-              label: series.label,
+              label: series.label === 'Secretarys' ? 'Secretary' : series.label,
               data: Array.isArray(series.data) ? series.data : [],
               borderColor: borderGradient,
               backgroundColor: fillGradient,
