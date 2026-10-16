@@ -61,10 +61,6 @@
             <i class="fas fa-user-graduate"></i>
             <span>Students</span>
           </router-link>
-          <router-link to="/teacher/announcements" class="nav-link" :class="{ active: isActiveRoute('/teacher/announcements') }" @click="closeSidebar">
-            <i class="fas fa-bullhorn"></i>
-            <span>Announcements</span>
-          </router-link>
           <div class="nav-dropdown">
             <button
               type="button"
@@ -105,6 +101,10 @@
               </router-link>
             </div>
           </div>
+          <router-link to="/teacher/announcements" class="nav-link" :class="{ active: isActiveRoute('/teacher/announcements') }" @click="closeSidebar">
+            <i class="fas fa-bullhorn"></i>
+            <span>Announcements</span>
+          </router-link>
         </div>
       </nav>
 
