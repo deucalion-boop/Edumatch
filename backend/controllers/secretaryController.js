@@ -4,6 +4,7 @@ const { mapUserResponse } = require('../services/userManagementService');
 const { formatRecommendationPayload } = require('../services/recommendationService');
 const { listSupabaseAccounts } = require('../services/supabaseAccountService');
 const { readProfileRows } = require('../services/supabaseUserProfileService');
+const { buildFacultyMonitoring } = require('../services/facultyMonitoringService');
 const {
   buildDefaultSchoolYearLabel,
   isArchivedStudent,
@@ -219,7 +220,9 @@ async function findLatestArchivedPdfExportRequest(requesterId, requestSignature)
 const getDirectory = asyncHandler(async (req, res) => {
   assertSecretaryAccess(req, 'Only Secretaries can access this directory');
 
-  const users = (await listSupabaseAccounts())
+  const accounts = await listSupabaseAccounts();
+  const monitoring = await buildFacultyMonitoring(accounts);
+  const users = accounts
     .filter((user) => [ROLE_HEADTEACHER, ROLE_TEACHER].includes(String(user?.role || '').trim()))
     .sort((left, right) => (
       String(left?.role || '').localeCompare(String(right?.role || ''))
@@ -228,7 +231,7 @@ const getDirectory = asyncHandler(async (req, res) => {
     ));
 
   return sendSuccess(res, 200, 'Directory fetched successfully', {
-    users: users.map((user) => mapSecretaryUserResponse(user, req)),
+    users: users.map((user) => ({ ...mapSecretaryUserResponse(user, req), ...monitoring.get(accountId(user)) })),
   });
 });
 

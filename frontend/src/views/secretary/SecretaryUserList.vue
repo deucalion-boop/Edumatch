@@ -158,6 +158,8 @@
               <option value="all">All Statuses</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
+              <option value="pending">Pending</option>
+              <option value="suspended">Suspended</option>
             </select>
           </label>
         </div>
@@ -170,13 +172,18 @@
                 <th>Email</th>
                 <th>Role</th>
                 <th>Department</th>
+                <th>Assigned Subject</th>
+                <th>Advisory Section</th>
+                <th>Classes</th>
+                <th>Students</th>
                 <th>Status</th>
                 <th>Last Login</th>
+                <th>Details</th>
               </tr>
             </thead>
             <tbody v-if="isLoading">
               <tr>
-                <td colspan="6">
+                <td colspan="11">
                   <div class="table-state">
                     <i class="fas fa-spinner fa-spin"></i>
                     <span>Loading user list...</span>
@@ -186,7 +193,7 @@
             </tbody>
             <tbody v-else-if="filteredUsers.length === 0">
               <tr>
-                <td colspan="6">
+                <td colspan="11">
                   <div class="table-state">
                     <i class="fas fa-folder-open"></i>
                     <span>No users found.</span>
@@ -214,15 +221,41 @@
                 <td>
                   <span class="secretary-badge department-badge">{{ user.department || 'Not assigned' }}</span>
                 </td>
+                <td>{{ user.assignedSubject || (user.role === 'headteacher' ? 'Department oversight' : 'Not assigned') }}</td>
+                <td>{{ user.advisorySection?.name || 'Not assigned' }}</td>
+                <td><span class="faculty-count">{{ user.classCount }}</span></td>
+                <td><span class="faculty-count">{{ user.studentCount }}</span></td>
                 <td><span class="secretary-status-indicator" :class="`status-${normalizedStatus(user.status)}`"><span class="secretary-status-dot"></span><span>{{ statusLabel(user.status) }}</span></span></td>
                 <td>
                   <span class="secretary-last-login-chip">{{ formatDateTime(user.lastLoginAt) }}</span>
                 </td>
+                <td><button type="button" class="faculty-details-button" @click="openFacultyDetails(user)">View Details</button></td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
+      <p v-if="directoryError" class="faculty-error" role="alert">{{ directoryError }} <button type="button" @click="fetchDirectory">Retry</button></p>
+      <p class="faculty-scope-note">Teacher counts show active classes and unique enrolled students. Head Teacher counts cover their managed teachers in the same department. Pending registrations and archived students are excluded from student totals.</p>
+      <dialog ref="facultyDialog" class="faculty-detail-dialog" aria-labelledby="faculty-detail-title" @click="closeOnBackdrop">
+        <template v-if="selectedFaculty">
+          <header class="faculty-detail-header">
+            <div><span class="faculty-eyebrow">Read-only faculty record</span><h2 id="faculty-detail-title">{{ selectedFaculty.name }}</h2><p>{{ roleLabel(selectedFaculty.role) }} · {{ selectedFaculty.department || 'No department' }}</p></div>
+            <button type="button" class="faculty-close" aria-label="Close faculty details" @click="facultyDialog.close()">×</button>
+          </header>
+          <dl class="faculty-detail-grid">
+            <div><dt>Email</dt><dd>{{ selectedFaculty.email }}</dd></div>
+            <div><dt>Status</dt><dd>{{ statusLabel(selectedFaculty.status) }}</dd></div>
+            <div><dt>Assigned subject</dt><dd>{{ selectedFaculty.assignedSubject || 'Not assigned' }}</dd></div>
+            <div><dt>Advisory section</dt><dd>{{ selectedFaculty.advisorySection?.name || 'Not assigned' }}</dd></div>
+            <div><dt>Last login</dt><dd>{{ formatDateTime(selectedFaculty.lastLoginAt) }}</dd></div>
+            <div><dt>Workload</dt><dd>{{ selectedFaculty.classCount }} classes · {{ selectedFaculty.studentCount }} unique students</dd></div>
+          </dl>
+          <h3>{{ selectedFaculty.role === 'headteacher' ? 'Managed teacher classes' : 'Handled classes' }}</h3>
+          <p v-if="!selectedFaculty.classes.length" class="faculty-scope-note">No active classes assigned.</p>
+          <div v-else class="faculty-class-table-wrap"><table class="faculty-class-table"><thead><tr><th>Class</th><th>Subject</th><th v-if="selectedFaculty.role === 'headteacher'">Teacher</th><th>Students</th></tr></thead><tbody><tr v-for="teacherClass in selectedFaculty.classes" :key="teacherClass.id"><td>{{ teacherClass.className }}</td><td>{{ teacherClass.subject }}</td><td v-if="selectedFaculty.role === 'headteacher'">{{ teacherClass.teacherName }}</td><td>{{ teacherClass.studentCount }}</td></tr></tbody></table></div>
+        </template>
+      </dialog>
       <DashboardFooter />
     </main>
   </div>
@@ -243,6 +276,15 @@ const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
 const searchTerm = ref('')
 const users = ref([])
+const directoryError = ref('')
+const facultyDialog = ref(null)
+const selectedFaculty = ref(null)
+const openFacultyDetails = user => { selectedFaculty.value = user; facultyDialog.value?.showModal() }
+const closeOnBackdrop = event => {
+  if (event.target !== facultyDialog.value) return
+  const bounds = facultyDialog.value.getBoundingClientRect()
+  if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) facultyDialog.value.close()
+}
 const accountMenuRef = ref(null)
 const filters = ref({ role: 'all', department: 'all', status: 'all' })
 const CORE_DEPARTMENTS = ['Mathematics', 'English', 'Science', 'TLE', 'Filipino', 'Araling Panlipunan', 'Edukasyon sa Pagpapakatao (ESP)', 'MAPEH']
@@ -255,8 +297,11 @@ const resolveApiBaseUrl = () => {
   return `${configured}/api`
 }
 const getAuthConfig = () => ({ headers: { Authorization: `Bearer ${authStore.token}` } })
-const normalizedStatus = (status) => String(status || '').trim().toLowerCase() === 'active' ? 'active' : 'inactive'
-const statusLabel = (status) => normalizedStatus(status) === 'active' ? 'Active' : 'Inactive'
+const normalizedStatus = status => {
+  const value = String(status || '').trim().toLowerCase()
+  return ['active', 'inactive', 'pending', 'suspended'].includes(value) ? value : 'inactive'
+}
+const statusLabel = status => ({ active: 'Active', inactive: 'Inactive', pending: 'Pending', suspended: 'Suspended' })[normalizedStatus(status)]
 const roleLabel = (role) => role === 'headteacher' ? 'HeadTeacher' : (role === 'teacher' ? 'Teacher' : String(role || 'User'))
 const formatDateTime = (value) => {
   if (!value) return 'N/A'
@@ -277,7 +322,7 @@ const filteredUsers = computed(() => {
     const matchesRole = filters.value.role === 'all' || user.role === filters.value.role
     const matchesDepartment = filters.value.department === 'all' || String(user.department || '').trim() === filters.value.department
     const matchesStatus = filters.value.status === 'all' || normalizedStatus(user.status) === filters.value.status
-    const haystack = [user.name, user.email, user.department, roleLabel(user.role)].map((value) => String(value || '').toLowerCase()).join(' ')
+    const haystack = [user.name, user.email, user.department, user.assignedSubject, user.advisorySection?.name, roleLabel(user.role)].map((value) => String(value || '').toLowerCase()).join(' ')
     return matchesRole && matchesDepartment && matchesStatus && (!query || haystack.includes(query))
   })
 })
@@ -292,6 +337,10 @@ const getUsersExportRows = () => filteredUsers.value.map((user) => ({
   Email: user.email || 'N/A',
   Role: roleLabel(user.role),
   Department: user.department || 'Not assigned',
+  'Assigned Subject': user.assignedSubject || 'Not assigned',
+  'Advisory Section': user.advisorySection?.name || 'Not assigned',
+  Classes: user.classCount,
+  Students: user.studentCount,
   Status: statusLabel(user.status),
   'Last Login': formatDateTime(user.lastLoginAt),
 }))
@@ -365,6 +414,7 @@ const handleAccountMenuClickOutside = (event) => {
 
 const fetchDirectory = async () => {
   isLoading.value = true
+  directoryError.value = ''
   try {
     const response = await axios.get(`${resolveApiBaseUrl()}/secretary/directory`, getAuthConfig())
     const payload = Array.isArray(response.data?.users) ? response.data.users : []
@@ -374,9 +424,16 @@ const fetchDirectory = async () => {
       email: user.email,
       role: user.role,
       department: user.department || '',
+      assignedSubject: user.assignedSubject || '',
+      advisorySection: user.advisorySection || null,
+      classCount: Number(user.classCount || 0),
+      studentCount: Number(user.studentCount || 0),
+      classes: Array.isArray(user.classes) ? user.classes : [],
       status: user.status || 'inactive',
       lastLoginAt: user.lastLoginAt || null,
     }))
+  } catch (error) {
+    directoryError.value = error.response?.data?.message || 'Unable to load teacher monitoring. Please retry.'
   } finally {
     isLoading.value = false
   }
@@ -393,6 +450,28 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.faculty-count { display: inline-flex; min-width: 2rem; justify-content: center; padding: .3rem .55rem; border-radius: 8px; background: #eef5e9; color: #356f48; font-weight: 700; }
+.faculty-details-button { white-space: nowrap; border: 1px solid #78a985; border-radius: 9px; padding: .55rem .75rem; background: #fff; color: #356f48; cursor: pointer; font: inherit; font-size: .8rem; }
+.faculty-details-button:hover { background: #eef5e9; }
+.faculty-scope-note { color: #64748b; font-size: .8rem; line-height: 1.6; margin: 1rem 0; }
+.faculty-error { padding: 1rem; background: #fef2f2; color: #b91c1c; border-radius: 10px; }
+.faculty-detail-dialog { width: min(760px, calc(100vw - 2rem)); max-height: 85dvh; box-sizing: border-box; overflow: auto; padding: 1.5rem; border: 1px solid #dce7d5; border-radius: 20px; background: #fff; color: #172014; }
+.faculty-detail-dialog::backdrop { background: rgba(15, 23, 42, .5); }
+.faculty-detail-header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.faculty-detail-header h2 { margin: .3rem 0; font-size: 1.3rem; }
+.faculty-detail-header p { color: #64748b; font-size: .85rem; margin: 0; }
+.faculty-eyebrow { color: #356f48; text-transform: uppercase; letter-spacing: .08em; font-size: .7rem; font-weight: 700; }
+.faculty-close { flex-shrink: 0; width: 36px; height: 36px; border: 1px solid #dce7d5; border-radius: 9px; background: #fff; color: #25431b; font-size: 1.5rem; cursor: pointer; }
+.faculty-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0; padding: 1rem; border-radius: 12px; background: #f7faf4; }
+.faculty-detail-grid dt { color: #64748b; font-size: .75rem; margin-bottom: .35rem; }
+.faculty-detail-grid dd { margin: 0; font-size: .85rem; font-weight: 600; overflow-wrap: anywhere; }
+.faculty-class-table-wrap { overflow-x: auto; }
+.faculty-class-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.faculty-class-table th, .faculty-class-table td { padding: .75rem; border-bottom: 1px solid #e5e7eb; text-align: left; }
+.faculty-class-table th { background: #f7faf4; color: #52634a; }
+.secretary-status-indicator.status-pending { background: #fff7ed; color: #b45309; }
+.secretary-status-indicator.status-suspended { background: #fef2f2; color: #b91c1c; }
+@media (max-width: 600px) { .faculty-detail-grid { grid-template-columns: minmax(0, 1fr); } .faculty-detail-dialog { padding: 1rem; } }
 @reference "../../styles/tailwind.css";
 
 .secretary-top-header {
@@ -894,4 +973,5 @@ onBeforeUnmount(() => {
   }
 }
 
+.secretary-userlist-panel .secretary-table { min-width: 1400px; }
 </style>
