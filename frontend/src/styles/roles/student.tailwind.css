@@ -8145,19 +8145,19 @@ body.student-dashboard .nav-submenu-leave-to {
 
 /* Keep the drawer close icon legible over the global student icon theme. */
 body.student-dashboard .student-sidebar .sidebar-close {
-    color: #1e4307 !important;
-    background: #f4faef !important;
-    border-color: #bfd5af !important;
+    color: #ffffff !important;
+    background: #4f8a35 !important;
+    border-color: #4f8a35 !important;
     box-shadow: none !important;
 }
 body.student-dashboard .student-sidebar .sidebar-close i,
 body.student-dashboard .student-sidebar .sidebar-close i::before {
-    color: #1e4307 !important;
-    -webkit-text-fill-color: #1e4307 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
     opacity: 1 !important;
 }
 body.student-dashboard .student-sidebar .sidebar-close:hover {
-    background: #e4f0db !important;
+    background: #3e7028 !important;
 }
 body.student-dashboard .student-sidebar .sidebar-close:focus-visible {
     outline: 2px solid #4f8a35;
