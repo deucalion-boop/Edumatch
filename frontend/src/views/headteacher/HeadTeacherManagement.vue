@@ -46,7 +46,7 @@
         </div>
       </header>
 
-      <section class="headteacher-section-card headteacher-panel headteacher-content-card">
+      <section class="headteacher-section-card headteacher-panel headteacher-content-card teacher-registration-panel">
         <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" teacher-registration @created="fetchTeachers" />
       </section>
 
@@ -1477,6 +1477,10 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.teacher-registration-panel {
+  margin-bottom: 1.5rem;
+}
+
 @reference "../../styles/tailwind.css";
 
 .headteacher-management-page .headteacher-create-teacher-modal {
