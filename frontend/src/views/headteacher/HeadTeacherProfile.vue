@@ -1,12 +1,12 @@
 <template>
-  <div class="headteacher-workspace headteacher-dashboard-page">
+  <div class="headteacher-workspace headteacher-dashboard-page headteacher-content-page">
     <HeadTeacherSidebar v-model:is-open="isSidebarOpen" :display-name="displayName" />
     <main class="headteacher-main headteacher-page-container">
-      <header class="headteacher-top-header">
+      <header class="headteacher-top-header headteacher-matched-page-header">
         <div class="headteacher-header-content">
           <div class="headteacher-header-copy">
             <button type="button" class="headteacher-mobile-menu-toggle" :aria-expanded="isSidebarOpen" aria-controls="headteacher-sidebar-drawer" aria-label="Open sidebar" @click="isSidebarOpen = !isSidebarOpen"><i class="fas fa-bars" aria-hidden="true"></i></button>
-            <div><h1>Head Teacher Profile</h1><p class="headteacher-header-subtitle">Manage your account identity and department leadership details.</p></div>
+            <div class="headteacher-matched-header-copy"><h1>Head Teacher Profile</h1><p class="headteacher-header-subtitle">Manage your account identity and department leadership details.</p></div>
           </div>
           <div class="headteacher-header-tools">
             <HeadTeacherNotifications />
