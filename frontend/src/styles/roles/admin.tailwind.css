@@ -14445,3 +14445,24 @@ body.admin-dashboard .sidebar-menu .nav-link.router-link-exact-active::before,
 body.admin-dashboard .sidebar-item.active::before {
     display: none !important;
 }
+
+/* Keep the portal identity visible and left-aligned on every Admin sidebar. */
+body.admin-dashboard .admin-sidebar > .sidebar-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px;
+    padding: 0 0 16px !important;
+    margin-bottom: 16px !important;
+}
+body.admin-dashboard .admin-sidebar .admin-sidebar-brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    margin: 0 auto 0 0 !important;
+    text-align: left !important;
+}
+body.admin-dashboard .admin-sidebar .admin-sidebar-brand-copy {
+    text-align: left !important;
+}
