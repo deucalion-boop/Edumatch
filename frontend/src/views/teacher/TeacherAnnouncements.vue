@@ -38,7 +38,7 @@
           </div>
         </div>
       </header>
-    <StudentAnnouncements />
+    <StudentAnnouncements class="teacher-announcement-content" />
     <DashboardFooter />
   </main></div>
 </template>
@@ -75,3 +75,24 @@ const closeOnEscape = event => {
 onMounted(() => { document.addEventListener('click', closeHeaderMenus); document.addEventListener('keydown', closeOnEscape) })
 onBeforeUnmount(() => { document.removeEventListener('click', closeHeaderMenus); document.removeEventListener('keydown', closeOnEscape) })
 </script>
+<style scoped>
+.teacher-announcement-content { width: 100%; max-width: none; box-sizing: border-box; color: #1e4307; }
+.teacher-announcement-content :deep(.page-header h1),
+.teacher-announcement-content :deep(.empty-state h2),
+.teacher-announcement-content :deep(.announcement-detail h2) { color: #1e4307; }
+.teacher-announcement-content :deep(.eyebrow) { color: #4f8a35 !important; }
+.teacher-announcement-content :deep(.announcement-subject),
+.teacher-announcement-content :deep(.card-arrow) { color: #4f8a35; }
+.teacher-announcement-content :deep(.announcement-icon) { color: #4f8a35; background: #e6f3df; }
+.teacher-announcement-content :deep(.announcement-card),
+.teacher-announcement-content :deep(.announcement-detail),
+.teacher-announcement-content :deep(.state-card) { border-color: #b8d5a8; }
+.teacher-announcement-content :deep(.announcement-card:hover) { border-color: #4f8a35; box-shadow: 0 10px 24px rgb(30 67 7 / 8%); }
+.teacher-announcement-content :deep(.empty-state) { background: linear-gradient(135deg, #f4faef, #e8f4e1); color: #53664a; }
+.teacher-announcement-content :deep(.empty-state > i) { color: #4f8a35; }
+.teacher-announcement-content :deep(.back-button),
+.teacher-announcement-content :deep(.state-card button) { color: #3e7028; border-color: #b8d5a8; }
+.teacher-announcement-content :deep(.page-header p:not(.eyebrow)),
+.teacher-announcement-content :deep(.announcement-preview),
+.teacher-announcement-content :deep(.meta) { color: #53664a; }
+</style>
