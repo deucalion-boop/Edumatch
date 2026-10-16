@@ -154,6 +154,21 @@ watch(() => route.query.event, (eventKey, previousEventKey) => {
 .empty-state > i { @apply tw:[color:#93c5fd]; @apply tw:[font-size:2rem]; }
 .empty-state h2 { @apply tw:[margin:.8rem_0_.25rem]; @apply tw:[color:#0f172a]; }
 
+:global(.student-dashboard .announcement-page) { color: #1e4307; }
+:global(.student-dashboard .announcement-page .eyebrow) { color: #4f8a35 !important; }
+:global(.student-dashboard .announcement-page .announcement-subject),
+:global(.student-dashboard .announcement-page .card-arrow) { color: #4f8a35; }
+:global(.student-dashboard .announcement-page .announcement-icon) { background: #e6f3df; color: #4f8a35; }
+:global(.student-dashboard .announcement-page .announcement-card),
+:global(.student-dashboard .announcement-page .announcement-detail),
+:global(.student-dashboard .announcement-page .state-card) { border-color: #b8d5a8; }
+:global(.student-dashboard .announcement-page .announcement-card:hover) { border-color: #4f8a35; box-shadow: 0 10px 24px rgb(30 67 7 / 8%); }
+:global(.student-dashboard .announcement-page .empty-state) { background: linear-gradient(135deg, #f4faef, #e8f4e1); color: #53664a; }
+:global(.student-dashboard .announcement-page .empty-state h2) { color: #1e4307; }
+:global(.student-dashboard .announcement-page .empty-state > i) { color: #4f8a35; }
+:global(.student-dashboard .announcement-page .back-button),
+:global(.student-dashboard .announcement-page .state-card button) { color: #3e7028; border-color: #b8d5a8; }
+
 :global(.student-dashboard.student-theme-dark .announcement-page :is(
   .announcement-card,
   .announcement-detail,
@@ -204,6 +219,7 @@ watch(() => route.query.event, (eventKey, previousEventKey) => {
 }
 
 :global(.student-dashboard.student-theme-dark .announcement-page .announcement-icon i),
+:global(.student-dashboard.student-theme-dark .announcement-page .empty-state > i),
 :global(.student-dashboard.student-theme-dark .announcement-page .announcement-icon i::before),
 :global(.student-dashboard.student-theme-dark .announcement-page .card-arrow) {
   @apply tw:[color:#b9dfa5]!;
