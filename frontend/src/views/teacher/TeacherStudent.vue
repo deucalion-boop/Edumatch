@@ -547,7 +547,9 @@
       <div v-if="isClassInvitationModalOpen" class="modal-shell" @click.self="isClassInvitationModalOpen = false">
         <section class="modal-panel" role="dialog" aria-modal="true" aria-label="Private student registration">
           <div class="modal-panel-head"><h3>Invite Student</h3><button type="button" class="modal-close-btn" aria-label="Close student registration" @click="isClassInvitationModalOpen = false"><i class="fas fa-times"></i></button></div>
-          <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" />
+          <div class="student-invite-body">
+            <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" hide-heading />
+          </div>
         </section>
       </div>
 
@@ -2238,6 +2240,11 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.student-invite-body {
+  padding: clamp(1rem, 3vw, 1.5rem);
+  min-width: 0;
+}
+
 @reference "../../styles/tailwind.css";
 
 .class-invitation-summary { @apply tw:[margin-top:.65rem] tw:[padding:.6rem] tw:[border:1px_solid_#dce8d3] tw:[border-radius:9px] tw:[background:#f8fbf5]; }

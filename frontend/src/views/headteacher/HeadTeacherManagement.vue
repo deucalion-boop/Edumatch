@@ -660,7 +660,7 @@
             </button>
           </div>
 
-          <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" is-head-teacher :teacher-id="studentForm.teacherId" />
+          <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" is-head-teacher :teacher-id="studentForm.teacherId" hide-heading />
         </div>
       </div>
 
