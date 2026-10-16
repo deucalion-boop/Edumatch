@@ -477,6 +477,7 @@
               <tr>
                 <th>Student</th>
                 <th>Email</th>
+                <th>Registration Link</th>
                 <th>Lessons</th>
                 <th>Average</th>
                 <th>Progress</th>
@@ -487,7 +488,7 @@
 
             <tbody v-if="isLoading">
               <tr>
-                <td colspan="7">
+                <td colspan="8">
                   <div class="table-state">
                     <i class="fas fa-spinner fa-spin"></i>
                     <span>Loading class list...</span>
@@ -498,7 +499,7 @@
 
             <tbody v-else-if="visibleRosterStudents.length === 0">
               <tr>
-                <td colspan="7">
+                <td colspan="8">
                   <div class="table-state">
                     <i class="fas fa-user-graduate"></i>
                     <span>{{ studentSearch || studentClassFilter || studentEnrollmentFilter ? 'No students match your search or filters' : studentRosterView === 'advisory' ? 'No advisory-section students have joined your classes yet' : 'No students from other sections have joined your handled classes yet' }}</span>
@@ -520,7 +521,16 @@
                     </div>
                   </div>
                 </td>
-                <td class="student-email">{{ student.isInvitationOnly ? 'Awaiting registration' : student.email }}</td>
+                <td class="student-email">{{ student.isInvitationOnly || registrationLinkForStudent(student.id) ? 'Awaiting registration' : student.email }}</td>
+                <td class="student-registration-cell">
+                  <div v-if="registrationLinkForStudent(student.id)" class="student-registration-control">
+                    <label class="student-registration-label" :for="`student-registration-${student.id}`">Private student link</label>
+                    <input :id="`student-registration-${student.id}`" :value="registrationLinkForStudent(student.id).inviteLink" type="url" readonly @focus="$event.target.select()">
+                    <button type="button" class="btn btn-primary btn-sm" @click="copyClassRegistrationLink(registrationLinkForStudent(student.id))">Copy Link</button>
+                    <small>Expires {{ formatDateTime(registrationLinkForStudent(student.id).expiresAt) }}</small>
+                  </div>
+                  <span v-else class="invitation-table-muted">{{ student.status === 'active' ? 'Registered' : 'No active link' }}</span>
+                </td>
                 <td>
                   <span v-if="!student.isInvitationOnly" class="lessons-pill">{{ student.completedChallenges }}/{{ student.totalChallenges }}</span><span v-else class="invitation-table-muted">—</span>
                 </td>
@@ -813,6 +823,7 @@ import StudentPrivateRegistration from '../../components/StudentPrivateRegistrat
 const registrationLinks = ref([])
 const registrationLinksError = ref('')
 const registrationLinksForClass = subjectId => registrationLinks.value.filter(link => String(link.subjectId) === String(subjectId) && Date.parse(link.expiresAt) > Date.now())
+const registrationLinkForStudent = studentId => registrationLinks.value.find(link => String(link.id) === String(studentId) && Date.parse(link.expiresAt) > Date.now())
 async function fetchRegistrationLinks() {
   try {
     const response = await axios.get(`${resolveApiBaseUrl()}/teacher/students/registration-links`, getAuthConfig())
@@ -822,7 +833,7 @@ async function fetchRegistrationLinks() {
     registrationLinksError.value = error.response?.data?.message || 'Unable to load student registration links.'
   }
 }
-function handleRegistrationLinkCreated() { void fetchRegistrationLinks() }
+function handleRegistrationLinkCreated() { void Promise.allSettled([fetchRegistrationLinks(), fetchStudents(), fetchSubjects()]) }
 async function copyClassRegistrationLink(registration) {
   try { await navigator.clipboard.writeText(registration.inviteLink); showToast('success', 'Private student registration link copied.') }
   catch { showToast('error', 'Select the link in the class card and copy it manually.') }
@@ -2271,6 +2282,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.student-registration-cell { min-width: 230px; max-width: 300px; }
+.student-registration-control { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+.student-registration-control input { width: 100%; min-width: 0; box-sizing: border-box; padding: .6rem; border: 1px solid #ccd9c3; border-radius: 8px; font-size: .75rem; color: #25431b; background: white; text-overflow: ellipsis; }
+.student-registration-label, .student-registration-control small { font-size: .72rem; color: #64748b; }
+.student-registration-control button { justify-self: start; }
+
 .class-registration-links { display: grid; gap: .85rem; min-width: 0; margin-top: 1rem; padding: 1rem; border: 1px solid #dce7d2; border-radius: 12px; background: #f7faf4; }
 .class-registration-link { display: grid; grid-template-columns: minmax(0, 1fr); gap: .4rem; min-width: 0; }
 .class-registration-link label, .class-registration-link small { font-size: .75rem; color: #52634a; }
