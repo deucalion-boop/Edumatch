@@ -5783,6 +5783,9 @@ body.admin-dashboard .modal.edit-user-modal .modal-actions .btn-success:focus {
 </style>
 
 <style scoped>
+@media (max-width: 768px) {
+  .admin-logo { display: none !important; }
+}
 @reference "../../styles/tailwind.css";
 #addUserForm #email.email-invalid {
   @apply tw:[border-color:#dc2626];

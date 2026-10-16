@@ -257,6 +257,10 @@ body.admin-dashboard {
     @apply tw:[height:70px];
 }
 
+@media (max-width: 768px) {
+  .admin-header .admin-logo { display: none !important; }
+}
+
 .admin-logo {
     @apply tw:flex;
     @apply tw:items-center;
