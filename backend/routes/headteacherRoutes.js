@@ -26,6 +26,7 @@ const teacherInvitation = require('../controllers/teacherInvitationController');
 router.use(authMiddleware, roleMiddleware('headteacher'));
 router.use('/student-registry', require('./studentRegistryRoutes').management);
 router.post('/students/registration-links', inviteLimiter, require('../controllers/studentPrivateRegistrationController').create);
+router.post('/teachers/registration-links', inviteLimiter, require('../controllers/teacherPrivateRegistrationController').create);
 
 router.get('/teacher-invitations', teacherInvitation.list);
 router.post('/teacher-invitations', inviteLimiter, teacherInvitation.create);

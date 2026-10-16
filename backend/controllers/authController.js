@@ -529,6 +529,7 @@ const validateInvite = asyncHandler(async (req, res) => {
       role: user.role,
       department: user.department || '',
       selfRegistration: user?.invite?.selfRegistration === true,
+      departmentLocked: Boolean(user?.invite?.teacherRegistration),
       status: user.status,
       expiresAt: user?.invite?.expiresAt || null,
     },
@@ -574,7 +575,19 @@ const completeInvite = asyncHandler(async (req, res) => {
     if (!fullName || fullName.length > 100) throw Object.assign(new Error('Full name is required and must be 100 characters or fewer'), { statusCode: 400 });
     if (!/^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$/.test(username)) throw Object.assign(new Error('Username must be 3–30 characters using letters, numbers, dots, underscores, or hyphens'), { statusCode: 400 });
     let selectedDepartment = '';
-    if ([ROLE_HEADTEACHER, ROLE_TEACHER].includes(user.role)) {
+    if (user.invite.teacherRegistration) {
+      const assignment = user.invite.teacherRegistration;
+      const headTeacher = await findSupabaseAccount('id', assignment.headTeacherId);
+      if (user.role !== ROLE_TEACHER || !headTeacher || headTeacher.role !== ROLE_HEADTEACHER
+        || headTeacher.status !== 'active' || headTeacher.archive?.isArchived === true
+        || headTeacher.department !== assignment.department || String(user.managedBy || '') !== assignment.headTeacherId) {
+        throw Object.assign(new Error('The inviting Head Teacher or department is no longer available. Ask for a new registration link.'), { statusCode: 409 });
+      }
+      if (requestedDepartment && requestedDepartment !== assignment.department) {
+        throw Object.assign(new Error('Use the department assigned by your Head Teacher.'), { statusCode: 400 });
+      }
+      selectedDepartment = assignment.department;
+    } else if ([ROLE_HEADTEACHER, ROLE_TEACHER].includes(user.role)) {
       selectedDepartment = DEPARTMENTS.find(value => value.toLowerCase() === requestedDepartment.toLowerCase()) || '';
       if (!selectedDepartment) {
         throw Object.assign(new Error(`Department is required and must be one of: ${DEPARTMENTS.join(', ')}`), { statusCode: 400 });

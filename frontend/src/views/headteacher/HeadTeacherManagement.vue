@@ -46,7 +46,9 @@
         </div>
       </header>
 
-      <TeacherInvitationManager :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" @accepted="fetchTeachers" />
+      <section class="headteacher-section-card headteacher-panel headteacher-content-card">
+        <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" teacher-registration @created="fetchTeachers" />
+      </section>
 
       <section
         ref="directorySectionRef"
@@ -803,7 +805,6 @@ import StudentPrivateRegistration from '../../components/StudentPrivateRegistrat
 import DashboardFooter from '../../components/DashboardFooter.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
-import TeacherInvitationManager from '../../components/headteacher/TeacherInvitationManager.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'

@@ -1,7 +1,7 @@
 <template>
   <section class="student-private-registration">
-    <h3 v-if="!hideHeading">Private student registration</h3>
-    <p class="registration-description">Share a private link with one student. They’ll enter their name, email, username, and password to join your advisory section.</p>
+    <h3 v-if="!hideHeading">Private {{ teacherRegistration ? 'teacher' : 'student' }} registration</h3>
+    <p class="registration-description">{{ teacherRegistration ? 'Share a private link with one teacher. They’ll enter their name, email, username, and password to join your department.' : 'Share a private link with one student. They’ll enter their name, email, username, and password to join your advisory section.' }}</p>
     <label v-if="isHeadTeacher" class="registration-field">
       <span>Advisory teacher</span>
       <select v-model="selectedTeacherId" :disabled="busy || loadingTeachers || Boolean(link)" required>
@@ -14,9 +14,9 @@
     <template v-if="link">
       <label class="registration-field"><span>Private registration link</span><input :value="link" readonly type="url" @focus="$event.target.select()"></label>
       <dl class="registration-details">
-        <div><dt>Section</dt><dd>{{ sectionName }}</dd></div>
+        <div><dt>{{ teacherRegistration ? 'Department' : 'Section' }}</dt><dd>{{ sectionName }}</dd></div>
         <div><dt>Expires</dt><dd>{{ formatExpiry(expiresAt) }}</dd></div>
-        <div><dt>Access</dt><dd>One student · Single use</dd></div>
+        <div><dt>Access</dt><dd>One {{ teacherRegistration ? 'teacher' : 'student' }} · Single use</dd></div>
       </dl>
       <div class="registration-actions"><button type="button" @click="copyLink">{{ copied ? 'Copied!' : 'Copy link' }}</button><button type="button" class="secondary" @click="startAnother">Create another link</button></div>
       <small class="registration-hint">Copy this link before creating another one. Existing links remain valid until used or expired.</small>
@@ -28,7 +28,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
-const props = defineProps({ apiBaseUrl: { type: String, required: true }, authToken: { type: String, required: true }, isHeadTeacher: Boolean, hideHeading: Boolean, teacherId: { type: String, default: '' } })
+const props = defineProps({ apiBaseUrl: { type: String, required: true }, authToken: { type: String, required: true }, isHeadTeacher: Boolean, hideHeading: Boolean, teacherRegistration: Boolean, teacherId: { type: String, default: '' } })
 const emit = defineEmits(['created'])
 const selectedTeacherId = ref(props.teacherId)
 const teachers = ref([])
@@ -57,11 +57,12 @@ async function generateLink() {
   busy.value = true
   error.value = ''
   try {
-    const role = props.isHeadTeacher ? 'headteacher' : 'teacher'
-    const response = await axios.post(`${base()}/${role}/students/registration-links`, props.isHeadTeacher ? { teacherId: selectedTeacherId.value } : {}, config())
+    const role = props.isHeadTeacher || props.teacherRegistration ? 'headteacher' : 'teacher'
+    const accountType = props.teacherRegistration ? 'teachers' : 'students'
+    const response = await axios.post(`${base()}/${role}/${accountType}/registration-links`, props.isHeadTeacher ? { teacherId: selectedTeacherId.value } : {}, config())
     link.value = response.data.invite.inviteLink
     expiresAt.value = response.data.invite.inviteExpiresAt
-    sectionName.value = response.data.section.name
+    sectionName.value = props.teacherRegistration ? response.data.department : response.data.section.name
     emit('created', response.data)
   } catch (err) { error.value = err.response?.data?.message || 'Unable to create a private registration link. Please try again.' }
   finally { busy.value = false }

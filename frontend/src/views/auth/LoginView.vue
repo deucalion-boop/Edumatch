@@ -201,7 +201,7 @@
               </div>
               <div v-if="['teacher', 'headteacher'].includes(invite.role)" class="auth-form-group">
                 <label class="auth-form-label" for="inviteDepartment"><i class="fas fa-building"></i> Department</label>
-                <select id="inviteDepartment" v-model="inviteForm.department" class="auth-form-input" required>
+                <select id="inviteDepartment" v-model="inviteForm.department" class="auth-form-input" required :disabled="invite.departmentLocked">
                   <option value="" disabled>Select your department</option>
                   <option v-for="department in departmentOptions" :key="department" :value="department">{{ department }}</option>
                 </select>
@@ -309,6 +309,7 @@ export default {
       role: '',
       expiresAt: null,
       selfRegistration: false,
+      departmentLocked: false,
       department: '',
     })
     
@@ -516,6 +517,8 @@ export default {
         invite.expiresAt = inviteDetails?.expiresAt || null
         invite.selfRegistration = inviteDetails?.selfRegistration === true
         invite.department = inviteDetails?.department || ''
+        invite.departmentLocked = inviteDetails?.departmentLocked === true
+        if (invite.departmentLocked) inviteForm.department = invite.department
       } catch (_error) {
         // The store exposes the error for rendering.
       } finally {
