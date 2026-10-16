@@ -305,6 +305,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 @reference "../../styles/tailwind.css";
+.headteacher-main > .headteacher-top-header { margin-bottom: 1.5rem !important; }
 
 .headteacher-main,
 .headteacher-main.headteacher-page-container {
