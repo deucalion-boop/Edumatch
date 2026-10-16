@@ -267,7 +267,7 @@ test('admin self picture uploads cannot bypass restrictions on managed account f
   }
 });
 
-test('admin staff creation uses private activation links and student creation remains with secretary workflows', async () => {
+test('admin and secretary cannot create students while secretary staff creation uses private registration links', async () => {
   client = createFakeSupabase({ users: [] });
   await assert.rejects(invoke('createUser', {
     user: { _id: 'admin', role: 'admin' },
@@ -278,33 +278,26 @@ test('admin staff creation uses private activation links and student creation re
   }), { statusCode: 403 });
   assert.deepEqual(client.tables.users, []);
 
-  const studentResult = await invoke('createUser', {
+  await assert.rejects(invoke('createUser', {
     user: { _id: 'secretary-id', role: 'secretary' },
     body: {
       name: 'Student User', email: 'student.user@gmail.com', username: 'student.user',
       role: 'student', gradeLevel: 'Grade 10', strand: 'STEM',
     },
-  });
-  assert.equal(studentResult.user.role, 'student');
-  assert.equal(studentResult.user.gradeLevel, 'Grade 10');
-  assert.equal(client.tables.users[0].role, 'student');
-  assert.equal(client.tables.users[0].status, 'pending');
-  assert.equal(client.tables.users[0].password_hash, null);
-  assert.match(studentResult.invite.inviteLink, /\/auth\/invite\/[a-f0-9]{64}$/);
-  assert.ok(studentResult.invite.inviteExpiresAt);
+  }), { statusCode: 403 });
+  assert.deepEqual(client.tables.users, []);
 
   const teacherResult = await invoke('createUser', {
     user: { _id: 'secretary-id', role: 'secretary' },
-    body: {
-      name: 'Teacher User', email: 'teacher.user@gmail.com', username: 'teacher.user',
-      role: 'teacher', department: 'Science', subject: 'Biology',
-    },
+    body: { selfRegistration: true, role: 'teacher' },
   });
   assert.equal(teacherResult.user.role, 'teacher');
-  assert.equal(teacherResult.user.department, 'Science');
-  assert.equal(teacherResult.user.subject, 'Biology');
-  assert.equal(client.tables.users[1].role, 'teacher');
-  assert.equal(client.tables.users[1].status, 'pending');
+  assert.equal(teacherResult.user.status, 'pending');
+  assert.match(teacherResult.invite.inviteLink, /\/auth\/invite\/[a-f0-9]{64}$/);
+  assert.equal(teacherResult.invite.emailSent, null);
+  assert.equal(client.tables.users[0].role, 'teacher');
+  assert.equal(client.tables.users[0].status, 'pending');
+  assert.equal(client.tables.users[0].invite.selfRegistration, true);
 });
 
 test('admin can generate a staff self-registration link without entering personal details', async () => {

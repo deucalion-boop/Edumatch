@@ -742,8 +742,8 @@ function ensureUserManagementPermission(req, role) {
 
 function ensureAccountCreationPermission(req, role) {
   ensureUserManagementPermission(req, role);
-  if (String(req?.user?.role || '').trim().toLowerCase() === ROLE_ADMIN && role === ROLE_STUDENT) {
-    const error = new Error('Administrators cannot create Student accounts. Students must use the designated school or class enrollment flow.');
+  if ([ROLE_ADMIN, ROLE_SECRETARY].includes(String(req?.user?.role || '').trim().toLowerCase()) && role === ROLE_STUDENT) {
+    const error = new Error('Student accounts must use the designated school or class enrollment flow.');
     error.statusCode = 403;
     throw error;
   }
@@ -1008,8 +1008,8 @@ const createUser = asyncHandler(async (req, res) => {
     sectionId,
   } = req.body;
 
-  const isAdminSelfRegistration = req.user?.role === ROLE_ADMIN && req.body?.selfRegistration === true;
-  if (isAdminSelfRegistration) {
+  const isStaffSelfRegistration = [ROLE_ADMIN, ROLE_SECRETARY].includes(req.user?.role) && req.body?.selfRegistration === true;
+  if (isStaffSelfRegistration) {
     const invitationKey = require('node:crypto').randomBytes(12).toString('hex');
     name = `Pending ${normalizeAdminManagedRole(role) || 'staff'} registration`;
     email = `edumatch.invite+${invitationKey}@gmail.com`;
@@ -1034,12 +1034,12 @@ const createUser = asyncHandler(async (req, res) => {
   ensureAdminManagedRole(normalizedRole);
   ensureAccountCreationPermission(req, normalizedRole);
   const normalizedUsername = String(username).trim();
-  const scopedFields = isAdminSelfRegistration && [ROLE_HEADTEACHER, ROLE_TEACHER].includes(normalizedRole)
+  const scopedFields = isStaffSelfRegistration && [ROLE_HEADTEACHER, ROLE_TEACHER].includes(normalizedRole)
     ? { department: '', subject: '' }
     : applyRoleScopedFields({ role: normalizedRole, department, subject });
   const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
   const studentSection = await resolveStudentSection(normalizedRole, sectionId);
-  if (!isAdminSelfRegistration) {
+  if (!isStaffSelfRegistration) {
     await ensureSingleHeadTeacherPerDepartment({ role: normalizedRole, department: scopedFields.department });
   }
   const normalizedStatus = String(status || '').trim().toLowerCase();
@@ -1098,7 +1098,7 @@ const createUser = asyncHandler(async (req, res) => {
     user: created,
     req,
     privateRegistration: true,
-    shareOnly: isAdminSelfRegistration,
+    shareOnly: isStaffSelfRegistration,
   });
 
   return sendSuccess(res, 201, 'User created successfully', {

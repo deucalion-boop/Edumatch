@@ -48,7 +48,7 @@
         <div class="header-content secretary-header-content dashboard-header-content">
           <div class="header-left secretary-header-copy dashboard-header-copy">
             <button type="button" class="mobile-menu-toggle" aria-label="Open sidebar" @click="toggleSidebar"><i class="fas fa-bars"></i></button>
-            <div><h1>User Management</h1><p class="header-subtitle">Create and manage Head Teacher, Teacher, and Student accounts.</p></div>
+            <div><h1>User Management</h1><p class="header-subtitle">Invite and manage Head Teacher and Teacher accounts.</p></div>
           </div>
           <div class="secretary-header-tools">
             <button type="button" class="secretary-primary-btn" @click="openCreate"><i class="fas fa-user-plus"></i><span>Add account</span></button>
@@ -95,7 +95,7 @@
                   <button type="button" title="View account" @click="viewUser(user)"><i class="fas fa-eye"></i></button>
                   <button type="button" title="Edit account" @click="openEdit(user)"><i class="fas fa-pen"></i></button>
                   <button type="button" :title="user.status === 'active' ? 'Deactivate account' : 'Activate account'" :disabled="isRowActionPending(user, 'status')" :class="{ 'is-loading': isRowActionPending(user, 'status'), 'is-success': isRowActionSucceeded(user, 'status') }" @click="toggleStatus(user)"><i :class="rowActionIcon(user, 'status', user.status === 'active' ? 'fas fa-pause' : 'fas fa-play')"></i></button>
-                  <button type="button" title="Send new temporary password" :disabled="isRowActionPending(user, 'invite')" :class="{ 'is-loading': isRowActionPending(user, 'invite'), 'is-success': isRowActionSucceeded(user, 'invite') }" @click="resendInvite(user)"><i :class="rowActionIcon(user, 'invite', 'fas fa-paper-plane')"></i></button>
+                  <button type="button" title="Send a new invitation" :disabled="isRowActionPending(user, 'invite')" :class="{ 'is-loading': isRowActionPending(user, 'invite'), 'is-success': isRowActionSucceeded(user, 'invite') }" @click="resendInvite(user)"><i :class="rowActionIcon(user, 'invite', 'fas fa-paper-plane')"></i></button>
                   <button type="button" class="danger" title="Delete account" @click="openDelete(user)"><i class="fas fa-trash"></i></button>
                 </div></td>
               </tr>
@@ -109,19 +109,21 @@
     <div v-if="formModal.open" class="secretary-modal" role="dialog" aria-modal="true" :aria-labelledby="formModal.mode + '-account-title'">
       <button type="button" class="secretary-modal-backdrop" aria-label="Close dialog" @click="closeForm"></button>
       <section class="secretary-modal-card">
-        <header><div><h2 :id="formModal.mode + '-account-title'">{{ formModal.mode === 'create' ? 'Create account' : 'Edit account' }}</h2><p>Fields and permissions are saved to the existing account record.</p></div><button type="button" class="secretary-icon-btn" aria-label="Close" @click="closeForm"><i class="fas fa-times"></i></button></header>
+        <header><div><h2 :id="formModal.mode + '-account-title'">{{ formModal.mode === 'create' ? 'Create private registration link' : 'Edit account' }}</h2><p>{{ formModal.mode === 'create' ? 'Choose a staff role, then share the link so they can complete their own registration.' : 'Fields and permissions are saved to the existing account record.' }}</p></div><button type="button" class="secretary-icon-btn" aria-label="Close" @click="closeForm"><i class="fas fa-times"></i></button></header>
         <form class="secretary-account-form" @submit.prevent="submitForm">
           <div class="secretary-form-grid">
-            <label class="secretary-field"><span>Full name *</span><input v-model.trim="form.name" required maxlength="100"></label>
-            <label class="secretary-field"><span>Username *</span><input v-model.trim="form.username" required maxlength="50"></label>
-            <label class="secretary-field"><span>Gmail address *</span><input v-model.trim="form.email" type="email" required placeholder="user@gmail.com"></label>
-            <label class="secretary-field"><span>Role *</span><select v-model="form.role" required @change="onRoleChange"><option value="headteacher">Head Teacher</option><option value="teacher">Teacher</option><option value="student">Student</option></select></label>
+            <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Full name *</span><input v-model.trim="form.name" required maxlength="100"></label>
+            <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Username *</span><input v-model.trim="form.username" required maxlength="50"></label>
+            <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Gmail address *</span><input v-model.trim="form.email" type="email" required placeholder="user@gmail.com"></label>
+            <label class="secretary-field"><span>Role *</span><select v-model="form.role" required @change="onRoleChange"><option value="headteacher">Head Teacher</option><option value="teacher">Teacher</option><option v-if="formModal.mode === 'edit'" value="student">Student</option></select></label>
             <label v-if="formModal.mode === 'edit'" class="secretary-field"><span>Status *</span><select v-model="form.status"><option v-for="status in statuses" :key="status" :value="status">{{ capitalize(status) }}</option></select></label>
-            <label v-if="['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required :disabled="selectableDepartments.length === 0"><option value="" disabled>{{ selectableDepartments.length ? (form.role === 'teacher' ? 'Select department with a Head Teacher' : 'Select department') : 'No department available' }}</option><option v-for="department in selectableDepartments" :key="department" :value="department">{{ department }}</option></select></label>
-            <label v-if="form.role === 'student'" class="secretary-field"><span>Assigned teacher *</span><select v-model="form.sectionId" required :disabled="isLoadingSections || availableStudentSections.length === 0"><option value="" disabled>{{ isLoadingSections ? 'Loading teachers...' : (availableStudentSections.length ? 'Select teacher' : 'No teacher with an assigned section') }}</option><option v-for="section in availableStudentSections" :key="section.id" :value="section.id">{{ section.adviser.name }} — {{ section.name }}</option></select></label>
+            <label v-if="formModal.mode === 'edit' && ['headteacher', 'teacher'].includes(form.role)" class="secretary-field"><span>Department *</span><select v-model="form.department" required :disabled="selectableDepartments.length === 0"><option value="" disabled>{{ selectableDepartments.length ? (form.role === 'teacher' ? 'Select department with a Head Teacher' : 'Select department') : 'No department available' }}</option><option v-for="department in selectableDepartments" :key="department" :value="department">{{ department }}</option></select></label>
+            <label v-if="formModal.mode === 'edit' && form.role === 'student'" class="secretary-field"><span>Assigned teacher *</span><select v-model="form.sectionId" required :disabled="isLoadingSections || availableStudentSections.length === 0"><option value="" disabled>{{ isLoadingSections ? 'Loading teachers...' : (availableStudentSections.length ? 'Select teacher' : 'No teacher with an assigned section') }}</option><option v-for="section in availableStudentSections" :key="section.id" :value="section.id">{{ section.adviser.name }} — {{ section.name }}</option></select></label>
           </div>
+          <label v-if="createdInviteLink" class="secretary-field"><span>Private registration link</span><input :value="createdInviteLink" readonly @focus="$event.target.select()"></label>
+          <p v-if="createdInviteLink" class="toolbar-subtitle">Share this link with the intended staff member. They will enter their own name, email, username, password, and department.</p>
           <div v-if="formError" class="secretary-feedback error" role="alert">{{ formError }}</div>
-          <div class="secretary-form-actions"><button type="button" class="secretary-secondary-btn" @click="closeForm">Cancel</button><button type="submit" class="secretary-primary-btn" :disabled="isSaving"><i :class="isSaving ? 'fas fa-spinner fa-spin' : 'fas fa-save'"></i>{{ isSaving ? 'Saving...' : (formModal.mode === 'create' ? 'Create account' : 'Save changes') }}</button></div>
+          <div class="secretary-form-actions"><button type="button" class="secretary-secondary-btn" @click="closeForm">{{ createdInviteLink ? 'Close' : 'Cancel' }}</button><button v-if="!createdInviteLink" type="submit" class="secretary-primary-btn" :disabled="isSaving"><i :class="isSaving ? 'fas fa-spinner fa-spin' : (formModal.mode === 'create' ? 'fas fa-link' : 'fas fa-save')"></i>{{ isSaving ? 'Saving...' : (formModal.mode === 'create' ? 'Generate private link' : 'Save changes') }}</button><button v-if="createdInviteLink" type="button" class="secretary-primary-btn" @click="copyCreatedInviteLink"><i class="fas fa-copy"></i>Copy link</button></div>
         </form>
       </section>
     </div>
@@ -161,6 +163,7 @@ const isSaving = ref(false)
 const isDeleting = ref(false)
 const errorMessage = ref('')
 const formError = ref('')
+const createdInviteLink = ref('')
 const deleteError = ref('')
 const users = ref([])
 const search = ref('')
@@ -263,11 +266,12 @@ const fetchSections = async () => {
   } finally { isLoadingSections.value = false }
 }
 
-const openCreate = () => { Object.assign(form, emptyForm()); formModal.mode = 'create'; formModal.open = true; formError.value = '' }
-const openEdit = (user) => { Object.assign(form, emptyForm(), user); formModal.mode = 'edit'; formModal.open = true; formError.value = '' }
+const openCreate = () => { Object.assign(form, emptyForm()); formModal.mode = 'create'; formModal.open = true; formError.value = ''; createdInviteLink.value = '' }
+const openEdit = (user) => { createdInviteLink.value = ''; Object.assign(form, emptyForm(), user); formModal.mode = 'edit'; formModal.open = true; formError.value = '' }
 const closeForm = () => { if (!isSaving.value) formModal.open = false }
 const onRoleChange = () => { if (!['headteacher', 'teacher'].includes(form.role)) form.department = ''; if (form.role !== 'student') form.sectionId = '' }
 const validateForm = () => {
+  if (formModal.mode === 'create') return ['headteacher', 'teacher'].includes(form.role) ? '' : 'Select Head Teacher or Teacher.'
   if (!form.name || !form.username || !form.email) return 'Name, username, and email are required.'
   if (!/^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(form.email)) return 'Enter a valid Gmail address.'
   if (!managedRoles.includes(form.role)) return 'Select a permitted role.'
@@ -280,17 +284,30 @@ const validateForm = () => {
 const submitForm = async () => {
   formError.value = validateForm()
   if (formError.value) return
-  const payload = { name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role, status: formModal.mode === 'create' ? 'active' : form.status, department: ['headteacher', 'teacher'].includes(form.role) ? form.department : '', subject: '', gradeLevel: form.role === 'student' ? 'Grade 10' : '', strand: '', sectionId: form.role === 'student' ? form.sectionId : '' }
+  const payload = formModal.mode === 'create'
+    ? { selfRegistration: true, role: form.role, status: 'pending' }
+    : { name: form.name.trim(), email: form.email.trim(), username: form.username.trim(), role: form.role, status: form.status, department: ['headteacher', 'teacher'].includes(form.role) ? form.department : '', subject: '', gradeLevel: form.role === 'student' ? 'Grade 10' : '', strand: '', sectionId: form.role === 'student' ? form.sectionId : '' }
   isSaving.value = true
   try {
     const response = formModal.mode === 'create'
       ? await axios.post(`${apiBase.value}/users`, payload, authConfig())
       : await axios.put(`${apiBase.value}/users/${encodeURIComponent(form.id)}`, payload, authConfig())
-    const password = String(response.data?.invite?.generatedPassword || '').trim()
-    notify(formModal.mode === 'create' ? `Account created successfully.${password ? ` Temporary password: ${password}` : ''}` : 'Account updated successfully.')
-    formModal.open = false
+    if (formModal.mode === 'create') {
+      createdInviteLink.value = String(response.data?.invite?.inviteLink || '').trim()
+      if (!createdInviteLink.value) throw new Error('The private registration link was not returned.')
+      notify('Private registration link created. Copy and share it with the intended staff member.')
+    } else {
+      notify('Account updated successfully.')
+      formModal.open = false
+    }
     await fetchUsers()
   } catch (error) { formError.value = error.response?.data?.message || 'Unable to save the account.' } finally { isSaving.value = false }
+}
+
+const copyCreatedInviteLink = async () => {
+  if (!createdInviteLink.value) return
+  try { await navigator.clipboard.writeText(createdInviteLink.value); notify('Private registration link copied.') }
+  catch { notify('Select the link and copy it manually.', 'error') }
 }
 
 const viewUser = async (user) => {
@@ -325,7 +342,7 @@ const toggleStatus = (user) => runRowAction(user, 'status', async () => {
   catch (error) { notify(error.response?.data?.message || 'Unable to update account status.', 'error'); return false }
 })
 const resendInvite = (user) => runRowAction(user, 'invite', async () => {
-  try { const response = await axios.post(`${apiBase.value}/users/${encodeURIComponent(user.id)}/send-invite`, {}, authConfig()); const password = String(response.data?.invite?.generatedPassword || '').trim(); notify(`New sign-in credentials generated.${password ? ` Temporary password: ${password}` : ''}`); await fetchUsers(); return true }
+  try { const response = await axios.post(`${apiBase.value}/users/${encodeURIComponent(user.id)}/send-invite`, {}, authConfig()); const inviteLink = String(response.data?.invite?.inviteLink || '').trim(); const password = String(response.data?.invite?.generatedPassword || '').trim(); if (inviteLink) { try { await navigator.clipboard.writeText(inviteLink); notify('Fresh private registration link copied.') } catch { notify('Fresh private registration link generated. Resend again when clipboard access is available.') } } else notify(`New sign-in credentials generated.${password ? ` Temporary password: ${password}` : ''}`); await fetchUsers(); return true }
   catch (error) { notify(error.response?.data?.message || 'Unable to send new credentials.', 'error'); return false }
 })
 const openDelete = (user) => { deleteTarget.value = user; deletePassword.value = ''; deleteError.value = '' }
