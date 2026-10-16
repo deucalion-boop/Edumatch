@@ -1184,18 +1184,18 @@ onBeforeUnmount(() => {
   @apply tw:[color:#b91c1c]!;
 }
 
-.export-request-action--approve {
+.export-request-actions > button.btn.btn-primary.export-request-action {
   background: #15803d !important;
   border-color: #15803d !important;
   color: #fff !important;
 }
 
-.export-request-action--approve:hover:not(:disabled) {
+.export-request-actions > button.btn.btn-primary.export-request-action:hover:not(:disabled) {
   background: #166534 !important;
   border-color: #166534 !important;
 }
 
-.export-request-action--approve > i {
+.export-request-actions > button.btn.btn-primary.export-request-action > i {
   color: #fff !important;
 }
 
