@@ -30,6 +30,7 @@
       <div class="auth-card-wrapper">
         <div class="auth-card-container">
         <div class="auth-card">
+          <slot name="registration">
           <div class="auth-card-header">
             <span v-if="isInviteMode" class="auth-card-badge">
               <i class="fas fa-user-check"></i>
@@ -254,6 +255,7 @@
 
           <div class="auth-footer auth-support-footer">
           </div>
+          </slot>
         </div>
         </div>
       </div>
@@ -298,8 +300,9 @@ const PASSWORD_MAX_LENGTH = 16
 export default {
   name: 'LoginView',
   components: { MathCaptcha },
+  props: { customRegistration: { type: Boolean, default: false } },
   
-  setup() {
+  setup(props) {
     const router = useRouter()
     const route = useRoute()
     const authStore = useAuthStore()
@@ -564,6 +567,7 @@ export default {
     }
 
     onMounted(async () => {
+      if (props.customRegistration) return
       loadInvite()
 
       const queryMessage = String(route.query.message || '').trim()

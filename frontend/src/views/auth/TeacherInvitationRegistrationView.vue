@@ -1,29 +1,13 @@
 <template>
-  <main class="teacher-registration">
-    <div class="registration-shell">
-      <RouterLink to="/auth/login" class="registration-brand" aria-label="EduMatch sign in">
-        <span class="brand-mark"><i class="fas fa-graduation-cap" aria-hidden="true"></i></span>
-        <span>EduMatch<small>Teacher registration</small></span>
-      </RouterLink>
-
-      <section class="registration-card" aria-labelledby="teacher-registration-title" :aria-busy="loadingInvitation || submitting">
-        <div class="registration-aside">
-          <header>
-            <p class="eyebrow">{{ isGroupInvitation ? 'DEPARTMENT INVITATION' : 'TEACHER INVITATION' }}</p>
-            <h1 id="teacher-registration-title">{{ completed ? 'Welcome to EduMatch' : isGroupInvitation ? 'Join your department' : 'Create your teacher account' }}</h1>
-            <p class="intro">{{ completed ? (isGroupInvitation ? 'Your teacher account is active.' : 'Your invitation has been accepted.') : (isGroupInvitation ? 'Create your own teacher account using the department link shared by your Head Teacher.' : 'Join your department with a secure invitation from your Head Teacher.') }}</p>
-          </header>
-          <template v-if="invitation && !loadingInvitation && !invitationError && !completed">
-            <div class="assignment-card">
-              <span class="assignment-icon"><i class="fas fa-chalkboard-user" aria-hidden="true"></i></span>
-              <div><strong>{{ invitation.schoolName || 'EduMatch' }}</strong><small>{{ invitation.department }} · Teacher account</small></div>
-              <span class="verified-invitation"><i class="fas fa-circle-check" aria-hidden="true"></i> {{ isGroupInvitation ? 'Shared by your Head Teacher' : 'Valid invitation' }}</span>
-            </div>
-            <p class="assignment-note"><i class="fas fa-lock" aria-hidden="true"></i> Your Head Teacher has assigned your school, department, and Teacher role.</p>
-            <p v-if="invitation.expiresAt" class="invitation-expiry"><i class="fas fa-clock" aria-hidden="true"></i> {{ isGroupInvitation ? 'Department link expires' : 'Invitation expires' }} {{ formatExpiry(invitation.expiresAt) }}</p>
-          </template>
-        </div>
-        <div class="registration-main">
+  <LoginView custom-registration>
+    <template #registration>
+      <section class="teacher-registration-content" aria-labelledby="teacher-registration-title" :aria-busy="loadingInvitation || submitting">
+        <header class="teacher-activation-header">
+          <span class="teacher-activation-badge"><i class="fas fa-user-check" aria-hidden="true"></i> Account Activation</span>
+          <h1 id="teacher-registration-title">{{ completed ? 'Your account is ready' : 'Activate your account' }}</h1>
+          <p>Enter your account details and create a password to join EduMatch.</p>
+        </header>
+        <p v-if="invitation && !invitationError && !completed" class="teacher-department-note"><i class="fas fa-lock" aria-hidden="true"></i> Teacher registration · {{ invitation.department }}</p>
           <div v-if="loadingInvitation" class="loading-state" role="status">
             <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Checking your invitation…
           </div>
@@ -49,18 +33,18 @@
             <div v-if="formError" class="form-error" role="alert">{{ formError }}</div>
             <div class="name-grid">
               <div class="form-field">
-                <label for="teacher-first-name">First name</label>
+                <label for="teacher-first-name"><i class="fas fa-user" aria-hidden="true"></i> First Name</label>
                 <input id="teacher-first-name" v-model="firstName" type="text" required maxlength="50" autocomplete="given-name" :disabled="submitting" :aria-invalid="Boolean(firstName && !validFirstName)" aria-describedby="teacher-name-hint" />
               </div>
               <div class="form-field">
-                <label for="teacher-last-name">Last name</label>
+                <label for="teacher-last-name"><i class="fas fa-user" aria-hidden="true"></i> Last Name</label>
                 <input id="teacher-last-name" v-model="lastName" type="text" required maxlength="50" autocomplete="family-name" :disabled="submitting" :aria-invalid="Boolean(lastName && !validLastName)" aria-describedby="teacher-name-hint" />
               </div>
               <small id="teacher-name-hint" class="name-hint" :class="{ invalid: nameHintInvalid }">Each name uses letters, spaces, hyphens, or apostrophes.</small>
             </div>
 
             <div class="form-field">
-              <label for="teacher-email">School email</label>
+              <label for="teacher-email"><i class="fas fa-at" aria-hidden="true"></i> Email Address</label>
               <input id="teacher-email" v-model="email" type="email" required maxlength="254" autocomplete="email" :readonly="emailIsBound" :disabled="submitting || sendingCode || verifyingEmail" :aria-invalid="Boolean(email && !validEmail)" aria-describedby="teacher-email-hint" />
               <small id="teacher-email-hint">{{ emailIsBound ? 'This invitation is assigned to this email address. Verify it to continue.' : 'Enter your own school email address. We will send you a verification code.' }}</small>
             </div>
@@ -92,7 +76,7 @@
             </section>
 
             <div class="form-field">
-              <label for="teacher-username">Username</label>
+              <label for="teacher-username"><i class="fas fa-id-badge" aria-hidden="true"></i> Username</label>
               <input id="teacher-username" v-model="username" type="text" required minlength="3" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" :disabled="submitting" :aria-invalid="['unavailable', 'invalid'].includes(usernameStatus)" aria-describedby="teacher-username-feedback" />
               <small id="teacher-username-feedback" class="username-feedback" :class="{ available: usernameStatus === 'available', invalid: ['unavailable', 'invalid', 'error'].includes(usernameStatus) }" role="status" aria-live="polite">
                 <i v-if="usernameStatus === 'checking'" class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>{{ usernameFeedback }}
@@ -106,14 +90,14 @@
 
             <div class="password-grid">
               <div class="form-field">
-                <label for="teacher-password">Password</label>
+                <label for="teacher-password"><i class="fas fa-lock" aria-hidden="true"></i> Password</label>
                 <div class="password-field">
                   <input id="teacher-password" v-model="password" :type="showPassword ? 'text' : 'password'" required minlength="8" maxlength="16" autocomplete="new-password" :disabled="submitting" aria-describedby="teacher-password-hint" />
                   <button type="button" :aria-label="showPassword ? 'Hide passwords' : 'Show passwords'" :aria-pressed="showPassword" :disabled="submitting" @click="showPassword = !showPassword"><i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'" aria-hidden="true"></i></button>
                 </div>
               </div>
               <div class="form-field">
-                <label for="teacher-confirm-password">Confirm password</label>
+                <label for="teacher-confirm-password"><i class="fas fa-lock" aria-hidden="true"></i> Confirm Password</label>
                 <input id="teacher-confirm-password" v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" required minlength="8" maxlength="16" autocomplete="new-password" :disabled="submitting" :aria-invalid="Boolean(confirmPassword && confirmPassword !== password)" aria-describedby="teacher-password-match" />
                 <small v-if="confirmPassword && confirmPassword !== password" id="teacher-password-match" class="invalid">Passwords do not match.</small>
               </div>
@@ -121,20 +105,18 @@
             </div>
 
             <button type="submit" class="primary-button create-account" :disabled="!canRegister">
-              {{ submitting ? 'Creating your account…' : 'Create teacher account' }}<i v-if="!submitting" class="fas fa-arrow-right" aria-hidden="true"></i>
+              <i v-if="!submitting" class="fas fa-key" aria-hidden="true"></i>{{ submitting ? 'Activating...' : 'Activate Account' }}
             </button>
             <p v-if="!emailVerified" class="verification-reminder">Verify your email to enable account creation.</p>
           </form>
-        </div>
-
         <footer v-if="!completed && !invitationError" class="registration-footer">Already have an account? <RouterLink to="/auth/login">Sign in</RouterLink></footer>
       </section>
-      <p class="registration-help">Need help with your invitation? Contact your Head Teacher.</p>
-    </div>
-  </main>
+    </template>
+  </LoginView>
 </template>
 
 <script setup>
+import LoginView from './LoginView.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
@@ -589,4 +571,29 @@ h2 { @apply tw:[font-size:20px] tw:[margin:18px_0_12px]; }
   .registration-aside { @apply tw:[border-right:0] tw:[border-bottom:1px_solid_#eaf0e6] tw:[padding-right:0] tw:[padding-bottom:20px]; }
 }
 @media (prefers-reduced-motion: reduce) { .fa-spin { @apply tw:animate-none; } }
+.teacher-registration-content { min-width: 0; color: #111; }
+.teacher-activation-header { margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 1px solid #e5e7eb; }
+.teacher-activation-badge { display: inline-flex; align-items: center; gap: .45rem; padding: .4rem .65rem; border: 1px solid #d4e4c5; border-radius: 999px; background: linear-gradient(135deg, #e6e9e1, #efffdc); color: #1e4307; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.teacher-activation-badge i { color: #69aa47; }
+.teacher-activation-header h1 { margin: .5rem 0 .35rem; font-size: 1.9rem; font-weight: 750; line-height: 1.15; letter-spacing: -.045em; }
+.teacher-activation-header p, .teacher-department-note { margin: 0; color: #526170; font-size: .8rem; line-height: 1.5; }
+.teacher-department-note { margin-bottom: 1rem; }
+.teacher-department-note i { margin-right: .3rem; color: #69aa47; }
+.teacher-registration-content .registration-form { gap: .85rem; }
+.teacher-registration-content .name-grid, .teacher-registration-content .password-grid { grid-template-columns: minmax(0, 1fr); gap: .85rem; }
+.teacher-registration-content .form-field { min-width: 0; gap: .25rem; }
+.teacher-registration-content .form-field label { color: #111; font-size: .82rem; font-weight: 700; }
+.teacher-registration-content .form-field label i { color: #69aa47; margin-right: .3rem; }
+.teacher-registration-content .form-field input { box-sizing: border-box; min-height: 40px; padding: .52rem 1rem; border: 2px solid #e5e7eb; border-radius: 12px; color: #111; font-size: .95rem; }
+.teacher-registration-content .form-field input:focus { outline: none; border-color: #69aa47; box-shadow: 0 0 0 4px rgba(105, 170, 71, .16); }
+.teacher-registration-content .form-field input::placeholder { color: #9ca3af; }
+.teacher-registration-content .primary-button { border: 0; border-radius: 12px; background: linear-gradient(135deg, #69aa47, #3f7f2a); color: #fff; font-size: .95rem; font-weight: 700; box-shadow: 0 8px 18px rgba(63, 127, 42, .15); }
+.teacher-registration-content .primary-button:hover:enabled { background: linear-gradient(135deg, #58983b, #326b21); }
+.teacher-registration-content .email-verification { padding: .85rem; gap: .65rem; background: #f8fcf5; }
+.teacher-registration-content .password-field input { padding-right: 45px; }
+.teacher-registration-content .password-field button { top: 0; right: 3px; }
+.teacher-registration-content .invalid { color: #a13b30; }
+.teacher-registration-content .available { color: #36762e; }
+.teacher-registration-content button:disabled, .teacher-registration-content input:disabled { opacity: .58; cursor: not-allowed; }
+@media (max-width: 600px) { .teacher-activation-header h1 { font-size: 1.6rem; } }
 </style>
