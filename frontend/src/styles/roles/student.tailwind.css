@@ -8169,6 +8169,42 @@ body.student-dashboard .student-sidebar .sidebar-close:focus-visible {
     outline-offset: 3px;
 }
 
+/* Student drawer controls and avatar retain contrast in dark mode. */
+body.student-dashboard .student-theme-dark .student-sidebar .sidebar-close,
+body.student-dashboard.student-theme-dark .student-sidebar .sidebar-close {
+    background: #203127 !important;
+    color: #e7efe9 !important;
+    border-color: #526b59 !important;
+    box-shadow: none !important;
+}
+body.student-dashboard .student-theme-dark .student-sidebar .sidebar-close i,
+body.student-dashboard .student-theme-dark .student-sidebar .sidebar-close i::before,
+body.student-dashboard.student-theme-dark .student-sidebar .sidebar-close i,
+body.student-dashboard.student-theme-dark .student-sidebar .sidebar-close i::before {
+    color: #e7efe9 !important;
+    -webkit-text-fill-color: #e7efe9 !important;
+    opacity: 1 !important;
+}
+body.student-dashboard .student-theme-dark .student-sidebar .sidebar-close:hover,
+body.student-dashboard.student-theme-dark .student-sidebar .sidebar-close:hover {
+    background: #293d30 !important;
+    border-color: #6b8974 !important;
+}
+body.student-dashboard .student-theme-dark .student-sidebar .user-avatar,
+body.student-dashboard.student-theme-dark .student-sidebar .user-avatar {
+    background: #203127 !important;
+    border-color: #6b8974 !important;
+    color: #b9dfa5 !important;
+}
+body.student-dashboard .student-theme-dark .student-sidebar .user-avatar i,
+body.student-dashboard .student-theme-dark .student-sidebar .user-avatar i::before,
+body.student-dashboard.student-theme-dark .student-sidebar .user-avatar i,
+body.student-dashboard.student-theme-dark .student-sidebar .user-avatar i::before {
+    color: #b9dfa5 !important;
+    -webkit-text-fill-color: #b9dfa5 !important;
+    opacity: 1 !important;
+}
+
 /* Preserve the Lessons hero CTA gradient over the global student button theme. */
 body.student-dashboard .lessons-page-hero .join-class-trigger,
 body.student-dashboard .lessons-page-hero .join-class-trigger:hover:not(:disabled) {
