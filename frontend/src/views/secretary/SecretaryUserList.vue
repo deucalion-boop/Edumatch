@@ -456,6 +456,7 @@ onBeforeUnmount(() => {
 .faculty-scope-note { color: #64748b; font-size: .8rem; line-height: 1.6; margin: 1rem 0; }
 .faculty-error { padding: 1rem; background: #fef2f2; color: #b91c1c; border-radius: 10px; }
 .faculty-detail-dialog { width: min(760px, calc(100vw - 2rem)); max-height: 85dvh; box-sizing: border-box; overflow: auto; padding: 1.5rem; border: 1px solid #dce7d5; border-radius: 20px; background: #fff; color: #172014; }
+.faculty-detail-dialog { position: fixed; inset: 0; margin: auto; }
 .faculty-detail-dialog::backdrop { background: rgba(15, 23, 42, .5); }
 .faculty-detail-header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
 .faculty-detail-header h2 { margin: .3rem 0; font-size: 1.3rem; }
