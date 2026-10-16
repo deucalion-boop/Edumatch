@@ -540,20 +540,27 @@ const exportArchivedCsv = () => {
   exportRowsToCsv(getArchivedExportRows(), buildExportFileName('filtered', 'csv'))
 }
 
+const openArchivePrintWindow = () => {
+  const printWindow = window.open('', '_blank', 'width=1200,height=800')
+  if (printWindow) printWindow.opener = null
+  return printWindow
+}
+
 const exportArchivedPdf = (printWindow = null) => {
   if (!filteredStudents.value.length) return
-  const targetWindow = printWindow || window.open('', '_blank', 'noopener,noreferrer,width=1200,height=800')
+  const targetWindow = printWindow || openArchivePrintWindow()
   if (!targetWindow) {
     setBanner('error', 'Allow pop-ups in your browser to export the archived PDF.')
     return
   }
   targetWindow.document.open()
-  targetWindow.document.write(buildArchivePdfDocument())
-  targetWindow.document.close()
-  targetWindow.focus()
   targetWindow.onload = () => {
+    targetWindow.onload = null
+    targetWindow.focus()
     targetWindow.print()
   }
+  targetWindow.document.write(buildArchivePdfDocument())
+  targetWindow.document.close()
 }
 
 const stopPdfApprovalPolling = () => {
@@ -682,7 +689,7 @@ const handleArchivedPdfAction = async () => {
     return
   }
 
-  const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=1200,height=800')
+  const printWindow = openArchivePrintWindow()
   if (!printWindow) {
     setBanner('error', 'Allow pop-ups in your browser before exporting the approved PDF.')
     return
