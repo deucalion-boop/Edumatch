@@ -2019,12 +2019,7 @@ async function finalizeGeneratedAssessment() {
     assessmentUploadProgress.value = attachments.length ? 100 : 0;
     const savedAssessment = response.data?.assessment || null;
 
-    isGeneratedPreviewVisible.value = false;
-    window.setTimeout(() => {
-      generatedQuestions.value = [];
-      generatedDraftMeta.value = null;
-      showCorrectAnswers.value = false;
-    }, 280);
+    resetAssessmentBuilder();
 
     flash.value = {
       tab: "challenge",
