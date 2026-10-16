@@ -37,7 +37,7 @@
             </span>
             <h1 class="auth-card-title">{{ isInviteMode ? 'Activate your account' : 'Sign In' }}</h1>
             <p v-if="isInviteMode" class="auth-card-subtitle">
-              Create your password to complete setup and access EduMatch.
+              {{ invite.selfRegistration ? 'Enter your account details and create a password to join EduMatch.' : 'Create your password to complete setup and access EduMatch.' }}
             </p>
           </div>
 
@@ -182,7 +182,21 @@
           </form>
 
           <form v-else class="auth-form" @submit.prevent="handleInviteSubmit">
-            <div class="auth-form-group">
+            <template v-if="invite.selfRegistration">
+              <div class="auth-form-group">
+                <label class="auth-form-label" for="inviteFullName"><i class="fas fa-user"></i> Full Name</label>
+                <input id="inviteFullName" v-model.trim="inviteForm.fullName" type="text" class="auth-form-input" required maxlength="100" autocomplete="name" placeholder="Enter your full name" />
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-form-label" for="inviteEmail"><i class="fas fa-at"></i> Email Address</label>
+                <input id="inviteEmail" v-model.trim="inviteForm.email" type="email" class="auth-form-input" required maxlength="254" autocomplete="email" placeholder="Enter your email" />
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-form-label" for="inviteUsername"><i class="fas fa-id-badge"></i> Username</label>
+                <input id="inviteUsername" v-model.trim="inviteForm.username" type="text" class="auth-form-input" required minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,29}" autocomplete="username" placeholder="Choose a username" />
+              </div>
+            </template>
+            <div v-if="!invite.selfRegistration" class="auth-form-group">
               <label class="auth-form-label">Invited Email</label>
               <div class="auth-form-input-wrapper has-icon">
                 <i class="auth-form-icon fas fa-at"></i>
@@ -282,7 +296,9 @@ export default {
     const invite = reactive({
       email: '',
       role: '',
-      expiresAt: null
+      expiresAt: null,
+      selfRegistration: false,
+      department: '',
     })
     
     // Form state
@@ -314,6 +330,9 @@ export default {
       otp: '',
     })
     const inviteForm = reactive({
+      fullName: '',
+      email: '',
+      username: '',
       password: '',
     })
     
@@ -481,6 +500,8 @@ export default {
         invite.email = inviteDetails?.email || ''
         invite.role = inviteDetails?.role || ''
         invite.expiresAt = inviteDetails?.expiresAt || null
+        invite.selfRegistration = inviteDetails?.selfRegistration === true
+        invite.department = inviteDetails?.department || ''
       } catch (_error) {
         // The store exposes the error for rendering.
       } finally {
@@ -508,6 +529,9 @@ export default {
         await authStore.completeInvite({
           token: inviteToken,
           password: inviteForm.password,
+          fullName: inviteForm.fullName,
+          email: inviteForm.email,
+          username: inviteForm.username,
         })
 
         router.push({

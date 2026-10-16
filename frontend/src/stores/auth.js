@@ -423,7 +423,7 @@ export function useAuthStore() {
     }
   }
 
-  const completeInvite = async ({ token, password }) => {
+  const completeInvite = async ({ token, password, fullName, email, username }) => {
     clearAlerts()
     const inviteToken = String(token || '').trim()
     if (!inviteToken) {
@@ -435,6 +435,9 @@ export function useAuthStore() {
       const apiBaseUrl = resolveApiBaseUrl()
       const payload = {
         password,
+        fullName,
+        email,
+        username,
       }
       const response = await axios.post(`${apiBaseUrl}/auth/invite/${encodeURIComponent(inviteToken)}/complete`, payload)
       return response.data?.user || null

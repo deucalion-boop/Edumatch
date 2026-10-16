@@ -522,9 +522,11 @@ const validateInvite = asyncHandler(async (req, res) => {
 
   return sendSuccess(res, 200, 'Invite link is valid', {
     invite: {
-      email: user.email,
+      email: user?.invite?.selfRegistration === true ? '' : user.email,
       name: user.name,
       role: user.role,
+      department: user.department || '',
+      selfRegistration: user?.invite?.selfRegistration === true,
       status: user.status,
       expiresAt: user?.invite?.expiresAt || null,
     },
@@ -550,6 +552,22 @@ const completeInvite = asyncHandler(async (req, res) => {
 
   if (!user) {
     await resolveInviteError(hashedToken, now);
+  }
+
+  if (user?.invite?.selfRegistration === true) {
+    const fullName = String(req.body?.fullName || '').trim().replace(/\s+/g, ' ');
+    const email = assertAccountEmail(req.body?.email, user.role, user.authProvider);
+    const username = String(req.body?.username || '').trim();
+    if (!fullName || fullName.length > 100) throw Object.assign(new Error('Full name is required and must be 100 characters or fewer'), { statusCode: 400 });
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$/.test(username)) throw Object.assign(new Error('Username must be 3–30 characters using letters, numbers, dots, underscores, or hyphens'), { statusCode: 400 });
+    const [emailAccount, usernameAccount] = await Promise.all([
+      findSupabaseAccountByEmail(email), findSupabaseAccountByUsername(username),
+    ]);
+    if (emailAccount && String(emailAccount._id) !== String(user._id)) throw Object.assign(new Error('Email already exists'), { statusCode: 409 });
+    if (usernameAccount && String(usernameAccount._id) !== String(user._id)) throw Object.assign(new Error('Username already exists'), { statusCode: 409 });
+    user.name = fullName;
+    user.email = email;
+    user.username = username;
   }
 
   const hasExistingPassword = Boolean(String(user.password || '').trim());

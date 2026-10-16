@@ -307,6 +307,21 @@ test('admin staff creation uses private activation links and student creation re
   assert.equal(client.tables.users[1].status, 'pending');
 });
 
+test('admin can generate a staff self-registration link without entering personal details', async () => {
+  client = createFakeSupabase({ users: [] });
+  const result = await invoke('createUser', {
+    user: { _id: 'admin', role: 'admin' },
+    body: { selfRegistration: true, role: 'teacher', department: 'Science', subject: 'Biology' },
+  });
+  assert.equal(result.user.role, 'teacher');
+  assert.equal(result.user.status, 'pending');
+  assert.match(result.invite.inviteLink, /\/auth\/invite\/[a-f0-9]{64}$/);
+  assert.equal(result.invite.emailSent, null);
+  assert.equal(client.tables.users[0].invite.selfRegistration, true);
+  assert.match(client.tables.users[0].email, /^edumatch\.invite\+[a-f0-9]{24}@gmail\.com$/);
+  assert.match(client.tables.users[0].username, /^invite_[a-f0-9]{24}$/);
+});
+
 test('secretary updates assign a student to the selected section adviser', async () => {
   client = createFakeSupabase({
     users: [

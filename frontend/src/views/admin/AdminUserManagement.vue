@@ -417,7 +417,7 @@
       <div class="modal-overlay" @click="closeAddUserModal"></div>
       <div class="modal-content">
         <div class="modal-header">
-          <h3>New User</h3>
+          <h3>Create Private Registration Link</h3>
           <button class="modal-close" @click="closeAddUserModal">
             <i class="fas fa-times"></i>
           </button>
@@ -425,14 +425,6 @@
         <div class="modal-body">
           <form id="addUserForm" class="user-form" @submit.prevent="createUser">
             <div class="form-tabs">
-              <button 
-                type="button" 
-                class="form-tab" 
-                :class="{ active: addUserTab === 'basic' }"
-                @click="addUserTab = 'basic'"
-              >
-                Basic Info
-              </button>
               <button 
                 type="button" 
                 class="form-tab" 
@@ -449,47 +441,6 @@
               >
                 Additional Info
               </button>
-            </div>
-
-            <div class="tab-content" :class="{ active: addUserTab === 'basic' }" id="basicTab">
-              <div class="form-group">
-                <label for="fullName">Full Name *</label>
-                <input 
-                  type="text" 
-                  id="fullName" 
-                  v-model="newUser.fullName"
-                  required
-                  placeholder="Enter full name"
-                >
-              </div>
-              <div class="form-group">
-                <label for="username">Username *</label>
-                <input 
-                  type="text" 
-                  id="username" 
-                  v-model="newUser.username"
-                  required
-                  placeholder="Enter username"
-                >
-              </div>
-              <div class="form-group">
-                <label for="email">Email Address *</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  v-model="newUser.email"
-                  :class="{ 'email-invalid': addUserEmailError }"
-                  :aria-invalid="addUserEmailError ? 'true' : undefined"
-                  required
-                  placeholder="user@gmail.com"
-                >
-              </div>
-              <div class="form-group">
-                <label>Account Access</label>
-                <p class="hint-text">
-                  EduMatch will generate a secure temporary password automatically and email it to this user. They will be required to change it on first login.
-                </p>
-              </div>
             </div>
 
             <div class="tab-content" :class="{ active: addUserTab === 'role' }" id="roleTab">
@@ -571,7 +522,7 @@
               <button 
                 type="button" 
                 class="btn btn-outline prev-tab" 
-                v-if="addUserTab !== 'basic'"
+                v-if="addUserTab === 'additional'"
                 @click="prevTab"
               >
                 <i class="fas fa-arrow-left"></i>
@@ -1350,7 +1301,7 @@ export default {
     })
     
     // Form data
-    const addUserTab = ref('basic')
+    const addUserTab = ref('role')
     const addUserEmailError = ref(false)
     const newUser = reactive({
       fullName: '',
@@ -2248,7 +2199,7 @@ export default {
       createdInviteLink.value = ''
       modals.addUser = true
       isCreateInviteLoading.value = false
-      addUserTab.value = 'basic'
+      addUserTab.value = 'role'
       Object.assign(newUser, {
         fullName: '',
         username: '',
@@ -2311,45 +2262,21 @@ export default {
     }
     
     // Tab navigation
-    const isValidAddUserEmail = (email) => /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(String(email || '').trim())
-
-    watch(() => newUser.email, (email) => {
-      if (isValidAddUserEmail(email)) addUserEmailError.value = false
-    })
-
-    const validateAddUserEmail = () => {
-      addUserEmailError.value = !isValidAddUserEmail(newUser.email)
-      if (!addUserEmailError.value) return true
-      addUserTab.value = 'basic'
-      window.alert('Please enter a valid Gmail address (e.g., user@gmail.com).')
-      return false
-    }
-
     const goToAddUserTab = (tab) => {
-      if (!validateAddUserEmail()) return
       addUserTab.value = tab
     }
 
     const nextTab = () => {
-      if (addUserTab.value === 'basic') goToAddUserTab('role')
-      else if (addUserTab.value === 'role') goToAddUserTab('additional')
+      if (addUserTab.value === 'role') goToAddUserTab('additional')
     }
     
     const prevTab = () => {
-      if (addUserTab.value === 'role') addUserTab.value = 'basic'
-      else if (addUserTab.value === 'additional') addUserTab.value = 'role'
+      if (addUserTab.value === 'additional') addUserTab.value = 'role'
     }
     
     // Create user
     const createUser = async () => {
       if (isCreateInviteLoading.value) return
-      if (!validateAddUserEmail()) return
-
-      if (!newUser.fullName || !newUser.email || !String(newUser.username || '').trim()) {
-        showToastMessage('Name, email, and username are required', 'error')
-        return
-      }
-
       if (!creatableRoles.includes(newUser.role)) {
         showToastMessage('You do not have permission to create that role', 'error')
         return
@@ -2367,11 +2294,9 @@ export default {
 
       try {
         const createPayload = {
-          name: newUser.fullName.trim(),
-          email: newUser.email.trim(),
-          username: String(newUser.username || '').trim(),
+          selfRegistration: true,
           role: newUser.role,
-          status: 'active',
+          status: 'pending',
           department: ['headteacher', 'teacher'].includes(newUser.role) ? newUser.department : '',
           subject: newUser.role === 'teacher' ? newUser.subject : '',
           gradeLevel: newUser.role === 'student' ? 'Grade 10' : '',
@@ -2380,11 +2305,7 @@ export default {
         }
         const response = await axios.post(`${managementApiPath.value}/users`, createPayload, getAuthConfig())
         createdInviteLink.value = String(response.data?.invite?.inviteLink || '').trim()
-        const emailSent = response.data?.invite?.emailSent !== false
-        const baseMessage = emailSent
-          ? 'Private registration link created and emailed successfully.'
-          : 'Private registration link created, but the email failed. Copy and share the link below.'
-        showToastMessage(baseMessage, emailSent ? 'success' : 'warning')
+        showToastMessage('Private self-registration link created. Copy and share it with the intended staff member.')
         isCreateInviteLoading.value = false
         await fetchUsers()
       } catch (error) {
@@ -2600,7 +2521,14 @@ export default {
         )
         const inviteResult = response.data?.invite || null
         const inviteLink = String(inviteResult?.inviteLink || '').trim()
-        if (inviteResult?.emailSent === false) {
+        if (inviteResult?.emailSent === null && inviteLink) {
+          try {
+            await navigator.clipboard.writeText(inviteLink)
+            showToastMessage('A fresh private registration link was copied')
+          } catch {
+            showToastMessage('A fresh private registration link was generated', 'warning')
+          }
+        } else if (inviteResult?.emailSent === false) {
           showToastMessage(
             inviteLink
               ? `${inviteResult.emailError || 'Invitation email failed'} A fresh private link is available to copy.`

@@ -998,7 +998,7 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
 });
 
 const createUser = asyncHandler(async (req, res) => {
-  const {
+  let {
     name,
     email,
     username,
@@ -1010,6 +1010,15 @@ const createUser = asyncHandler(async (req, res) => {
     gradeLevel,
     sectionId,
   } = req.body;
+
+  const isAdminSelfRegistration = req.user?.role === ROLE_ADMIN && req.body?.selfRegistration === true;
+  if (isAdminSelfRegistration) {
+    const invitationKey = require('node:crypto').randomBytes(12).toString('hex');
+    name = `Pending ${normalizeAdminManagedRole(role) || 'staff'} registration`;
+    email = `edumatch.invite+${invitationKey}@gmail.com`;
+    username = `invite_${invitationKey}`;
+    status = 'pending';
+  }
 
   if (!name || !email || !username || !role) {
     const error = new Error('name, email, username, and role are required');
@@ -1091,6 +1100,7 @@ const createUser = asyncHandler(async (req, res) => {
     user: created,
     req,
     privateRegistration: true,
+    shareOnly: isAdminSelfRegistration,
   });
 
   return sendSuccess(res, 201, 'User created successfully', {
@@ -1129,6 +1139,7 @@ const sendUserInvite = asyncHandler(async (req, res) => {
     user,
     req,
     privateRegistration: true,
+    shareOnly: user?.invite?.selfRegistration === true,
   });
 
   return sendSuccess(res, 200, 'Onboarding email sent successfully', {

@@ -191,7 +191,7 @@ async function sendInviteEmail({ toEmail, toName, inviteLink, expiresAt }) {
   });
 }
 
-async function issueInviteForUser({ user, expiresInHours, req, privateRegistration = false }) {
+async function issueInviteForUser({ user, expiresInHours, req, privateRegistration = false, shareOnly = false }) {
   const now = new Date();
   const appBaseUrl = String(process.env.APP_BASE_URL || req.get('origin') || '').trim().replace(/\/+$/, '');
   const frontendBase = appBaseUrl || `${req.protocol}://${req.get('host')}`;
@@ -232,14 +232,12 @@ async function issueInviteForUser({ user, expiresInHours, req, privateRegistrati
     expiresAt,
     sentAt: now,
     usedAt: null,
+    selfRegistration: shareOnly,
   };
   await user.save();
 
-  const emailResult = await sendInviteEmail({
-    toEmail: user?.email,
-    toName: user?.name,
-    inviteLink,
-    expiresAt,
+  const emailResult = shareOnly ? { sent: null, reason: null } : await sendInviteEmail({
+    toEmail: user?.email, toName: user?.name, inviteLink, expiresAt,
   });
 
   return {
