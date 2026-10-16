@@ -467,12 +467,13 @@ const createTeacherClass = asyncHandler(async (req, res) => {
 
   if (req.body?.sectionId) {
     const section = await getSectionOrThrow(req.body.sectionId);
-    className = `${assignedSubject} ${section.name}`;
+    className = `${assignedSubject} 10 - ${section.name}`;
     const normalizeLabel = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
     const existingClasses = await listTeacherSubjects(req.user._id);
     if (existingClasses.some((subject) => (
       String(subject.advisorySectionId || '') === String(section.id)
       || normalizeLabel(subject.className) === normalizeLabel(className)
+      || normalizeLabel(subject.className) === normalizeLabel(`${assignedSubject} ${section.name}`)
       || normalizeLabel(subject.className) === normalizeLabel(section.name)
     ))) {
       const error = new Error('You already have a class for this section. Select another available section.');

@@ -1010,6 +1010,7 @@ const normalizeClassLabel = (value) => String(value || '').trim().replace(/\s+/g
 const availableClassSections = computed(() => classSections.value.filter(section => (
   section.isActive === true && !subjects.value.some(subject => (
     String(subject.advisorySectionId || '') === String(section.id)
+    || normalizeClassLabel(subject.className) === normalizeClassLabel(`${teacherSubject.value} 10 - ${section.name}`)
     || normalizeClassLabel(subject.className) === normalizeClassLabel(`${teacherSubject.value} ${section.name}`)
     || normalizeClassLabel(subject.className) === normalizeClassLabel(section.name)
   ))
@@ -1916,7 +1917,7 @@ const submitEditClass = async () => {
 const submitCreateClass = async () => {
   const selectedSection = availableClassSections.value.find(section => section.id === createClassForm.sectionId)
   const subject = String(createClassForm.subject || teacherSubject.value || '').trim()
-  const className = selectedSection ? `${subject} ${selectedSection.name}` : ''
+  const className = selectedSection ? `${subject} 10 - ${selectedSection.name}` : ''
   const description = String(createClassForm.description || '').trim()
 
   if (!className || !subject) {
