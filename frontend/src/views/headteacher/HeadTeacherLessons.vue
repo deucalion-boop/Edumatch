@@ -587,6 +587,7 @@ const isAssessmentSaving = ref(false)
 const canGenerateAssessment = ref(false)
 const assessmentGenerationWarning = ref('')
 const AI_CONFIG_WARNING_MESSAGE = 'AI Generator is not configured. Please contact the administrator to set up the API Key and Model.'
+const AI_STATUS_UNAVAILABLE_MESSAGE = 'Unable to check the AI Generator status. Please verify that the server is running and try again.'
 const teachers = ref([])
 const lessons = ref([])
 const lessonCurrentPage = ref(1)
@@ -783,9 +784,9 @@ const refreshAssessmentAiStatus = async () => {
     assessmentGenerationWarning.value = canGenerateAssessment.value
       ? ''
       : String(data?.configurationMessage || AI_CONFIG_WARNING_MESSAGE).trim() || AI_CONFIG_WARNING_MESSAGE
-  } catch {
+  } catch (error) {
     canGenerateAssessment.value = false
-    assessmentGenerationWarning.value = AI_CONFIG_WARNING_MESSAGE
+    assessmentGenerationWarning.value = String(error.response?.data?.message || AI_STATUS_UNAVAILABLE_MESSAGE).trim()
   }
 }
 

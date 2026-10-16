@@ -1610,6 +1610,7 @@ const isSavingGeneratedAssessment = ref(false);
 const isPublishingActivity = ref(false);
 const canGenerate = ref(false);
 const AI_CONFIG_WARNING_MESSAGE = "AI Generator is not configured. Please contact the administrator to set up the API Key and Model.";
+const AI_STATUS_UNAVAILABLE_MESSAGE = "Unable to check the AI Generator status. Please verify that the server is running and try again.";
 const aiGenerationWarning = ref("");
 const generateButtonTitle = computed(() => {
   if (canGenerate.value) return "";
@@ -1800,7 +1801,7 @@ async function refreshAiStatus() {
   try {
     if (!authStore.token) {
       canGenerate.value = false;
-      aiGenerationWarning.value = AI_CONFIG_WARNING_MESSAGE;
+      aiGenerationWarning.value = "Please sign in again to use the AI Generator.";
       return;
     }
     const response = await axios.get(`${resolveApiBaseUrl()}/teacher/ai/status`, getAuthConfig());
@@ -1809,9 +1810,9 @@ async function refreshAiStatus() {
     aiGenerationWarning.value = canGenerate.value
       ? ""
       : String(data?.configurationMessage || AI_CONFIG_WARNING_MESSAGE).trim() || AI_CONFIG_WARNING_MESSAGE;
-  } catch {
+  } catch (error) {
     canGenerate.value = false;
-    aiGenerationWarning.value = AI_CONFIG_WARNING_MESSAGE;
+    aiGenerationWarning.value = String(error.response?.data?.message || AI_STATUS_UNAVAILABLE_MESSAGE).trim();
   }
 }
 
