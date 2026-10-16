@@ -7029,3 +7029,30 @@ html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAttendance
     @apply tw:[color:#86d567]!;
     @apply tw:[-webkit-text-fill-color:#86d567]!;
 }
+
+/* Maintain readable drawer controls against the Teacher dark surfaces. */
+html[data-teacher-theme='dark'] body.teacher-dashboard .mobile-menu-toggle,
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-close {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569 !important;
+    box-shadow: none !important;
+}
+html[data-teacher-theme='dark'] body.teacher-dashboard .mobile-menu-toggle i,
+html[data-teacher-theme='dark'] body.teacher-dashboard .mobile-menu-toggle i::before,
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-close i,
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-close i::before {
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+    opacity: 1 !important;
+}
+html[data-teacher-theme='dark'] body.teacher-dashboard .mobile-menu-toggle:hover,
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-close:hover {
+    background: #334155 !important;
+    border-color: #64748b !important;
+}
+html[data-teacher-theme='dark'] body.teacher-dashboard .mobile-menu-toggle:focus-visible,
+html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-sidebar .sidebar-close:focus-visible {
+    outline: 2px solid #a7d88c !important;
+    outline-offset: 3px;
+}
