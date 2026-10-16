@@ -3,7 +3,7 @@
     <header class="admin-header"><div class="container"><div class="admin-header-content">
       <button type="button" class="mobile-menu-toggle" :aria-label="isSidebarOpen ? 'Close menu' : 'Open menu'" :aria-expanded="isSidebarOpen ? 'true' : 'false'" aria-controls="admin-sidebar-drawer" @click="toggleSidebar"><i class="fas fa-bars"></i></button>
       <div class="admin-logo"><div class="admin-logo-icon"><img src="/logo.png" alt="EduMatch" class="admin-logo-img"></div><div class="admin-logo-text"><h1>EduMatch Admin</h1><span class="page-title">Announcements</span></div></div>
-      <div class="admin-actions"><button type="button" class="header-account-trigger" aria-label="Admin dashboard" @click="router.push('/admin/dashboard')"><i class="fas fa-home"></i></button></div>
+      <div class="admin-actions"><button type="button" class="header-account-trigger" aria-label="Admin settings" title="Settings" @click="router.push('/admin/settings')"><i class="fas fa-cog" aria-hidden="true"></i></button></div>
     </div></div></header>
 
     <div class="admin-layout">
