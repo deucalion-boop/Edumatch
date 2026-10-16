@@ -24,7 +24,7 @@ exports.update = async (req, res, next) => {
     }
     let image = req.user.profileImage;
     if (req.file) {
-      const uploaded = await uploadFile({ file: req.file, folder: `profile-images/headteachers/${req.user._id}` });
+      const uploaded = await uploadFile({ file: req.file, folder: `profile-images/${req.user.role}/${req.user._id}` });
       image = uploaded.storedPath;
     }
     req.user.name = name;

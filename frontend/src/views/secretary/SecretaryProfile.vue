@@ -107,29 +107,35 @@
         <div class="secretary-card-head">
           <div>
             <h3>Edit Basic Information</h3>
-            <p>Update your local account details for dashboard display and quick reference.</p>
+            <p>Update your photo, name, and username. Your role cannot be changed here.</p>
           </div>
         </div>
 
         <form class="secretary-form" @submit.prevent="saveProfile">
+          <div class="secretary-photo-row">
+            <img v-if="photoPreview || authStore.user?.profileImage" :src="photoPreview || authStore.user.profileImage" alt="Your profile photo" class="secretary-profile-photo">
+            <span v-else class="secretary-profile-photo secretary-photo-placeholder"><i class="fas fa-user" aria-hidden="true"></i></span>
+            <label class="secretary-field"><span>Profile Photo</span><input ref="photoInput" type="file" accept="image/jpeg,image/png,image/webp" :disabled="isSaving" @change="selectPhoto"><small>JPG, PNG or WebP, up to 5 MB.</small></label>
+          </div>
           <div class="secretary-form-grid">
             <label class="secretary-field">
               <span>Display Name</span>
-              <input v-model.trim="profileForm.name" type="text" placeholder="Enter display name">
+              <input v-model.trim="profileForm.name" type="text" placeholder="Enter display name" required maxlength="100" :disabled="isSaving">
               <small v-if="errors.name" class="secretary-field-error">{{ errors.name }}</small>
             </label>
 
             <label class="secretary-field">
               <span>Email Address</span>
-              <input v-model.trim="profileForm.email" type="email" placeholder="Enter email address">
-              <small v-if="errors.email" class="secretary-field-error">{{ errors.email }}</small>
+              <input :value="profileForm.email" type="email" readonly>
+              <small>Contact an administrator to request an email change.</small>
             </label>
-
+            <label class="secretary-field"><span>Username</span><input v-model.trim="profileForm.username" required minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,29}" autocomplete="username" :disabled="isSaving"><small v-if="errors.username" class="secretary-field-error">{{ errors.username }}</small></label>
+            <label class="secretary-field"><span>Role</span><input value="Secretary" readonly></label>
           </div>
 
           <div class="secretary-form-actions">
-            <button type="button" class="btn btn-outline" @click="resetProfile">Reset</button>
-            <button type="submit" class="btn btn-primary secretary-save-profile-btn">Save Profile</button>
+            <button type="button" class="btn btn-outline" :disabled="isSaving" @click="resetProfile">Reset</button>
+            <button type="submit" class="btn btn-primary secretary-save-profile-btn" :disabled="isSaving || !profileLoaded">{{ isSaving ? 'Saving…' : 'Save Profile' }}</button>
           </div>
         </form>
       </article>
@@ -141,6 +147,7 @@
 
 <script setup>
 import DashboardFooter from '../../components/DashboardFooter.vue'
+import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
@@ -152,6 +159,25 @@ const authStore = useAuthStore()
 const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
 const accountMenuRef = ref(null)
+const isSaving = ref(false)
+const profileLoaded = ref(false)
+const photoPreview = ref('')
+const photoInput = ref(null)
+let selectedPhoto = null
+const clearPhoto = () => {
+  if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
+  photoPreview.value = ''; selectedPhoto = null
+  if (photoInput.value) photoInput.value.value = ''
+}
+const selectPhoto = (event) => {
+  const file = event.target.files?.[0]
+  clearPhoto()
+  if (!file) return
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    banner.type = 'error'; banner.message = 'Choose a JPG, PNG or WebP image no larger than 5 MB.'; return
+  }
+  selectedPhoto = file; photoPreview.value = URL.createObjectURL(file); clearBanner()
+}
 
 const banner = reactive({
   type: 'success',
@@ -160,10 +186,11 @@ const banner = reactive({
 const profileForm = reactive({
   name: '',
   email: '',
+  username: '',
 })
 const errors = reactive({
   name: '',
-  email: '',
+  username: '',
 })
 
 const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
@@ -196,6 +223,7 @@ const handleAccountMenuClickOutside = (event) => {
 const syncProfileForm = () => {
   profileForm.name = String(authStore.user?.name || authStore.user?.displayName || '').trim()
   profileForm.email = String(authStore.user?.email || '').trim()
+  profileForm.username = String(authStore.user?.username || '').trim()
 }
 
 const clearBanner = () => {
@@ -204,23 +232,19 @@ const clearBanner = () => {
 
 const validateProfile = () => {
   errors.name = ''
-  errors.email = ''
+  errors.username = ''
 
   if (!String(profileForm.name || '').trim()) {
     errors.name = 'Display name is required.'
   }
 
-  const emailValue = String(profileForm.email || '').trim()
-  if (!emailValue) {
-    errors.email = 'Email address is required.'
-  } else if (!/^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(emailValue)) {
-    errors.email = 'Enter a valid Gmail address (e.g., user@gmail.com).'
-  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$/.test(profileForm.username)) errors.username = 'Enter a valid username (3–30 characters).'
 
-  return !errors.name && !errors.email
+  return !errors.name && !errors.username
 }
 
-const saveProfile = () => {
+const saveProfile = async () => {
+  if (isSaving.value || !profileLoaded.value) return
   clearBanner()
   if (!validateProfile()) {
     banner.type = 'error'
@@ -228,36 +252,51 @@ const saveProfile = () => {
     return
   }
 
-  authStore.setUser({
-    name: String(profileForm.name || '').trim(),
-    displayName: String(profileForm.name || '').trim(),
-    email: String(profileForm.email || '').trim(),
-  })
-
-  banner.type = 'success'
-  banner.message = 'Secretary profile updated successfully.'
+  isSaving.value = true
+  try {
+    let base = String(import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
+    if (!base.endsWith('/api')) base += '/api'
+    const body = new FormData()
+    body.append('name', profileForm.name); body.append('username', profileForm.username)
+    if (selectedPhoto) body.append('profileImage', selectedPhoto)
+    const { data } = await axios.put(`${base}/secretary/profile`, body, { headers: { Authorization: `Bearer ${authStore.token}` } })
+    authStore.setUser({ ...data.user, displayName: data.user.name })
+    syncProfileForm(); clearPhoto()
+    banner.type = 'success'; banner.message = 'Secretary profile saved successfully.'
+  } catch (error) {
+    banner.type = 'error'; banner.message = error.response?.data?.message || 'Unable to save your profile. Please try again.'
+  } finally { isSaving.value = false }
 }
 
 const resetProfile = () => {
   clearBanner()
   syncProfileForm()
   errors.name = ''
-  errors.email = ''
+  errors.username = ''
+  clearPhoto()
 }
 
 syncProfileForm()
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', handleAccountMenuClickOutside)
+  try { await authStore.refreshProfile(); syncProfileForm(); profileLoaded.value = true }
+  catch { banner.type = 'error'; banner.message = 'Unable to load your profile. Reload before saving.' }
 })
 
 onBeforeUnmount(() => {
+  clearPhoto()
   document.removeEventListener('click', handleAccountMenuClickOutside)
 })
 </script>
 
 <style scoped>
 @reference "../../styles/tailwind.css";
+.secretary-photo-row { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.secretary-profile-photo { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 3px solid #cfe2c4; }
+.secretary-photo-placeholder { display: grid; place-items: center; background: #edf6e7; color: #4f8a35; font-size: 2rem; }
+.secretary-field input[readonly] { background: #f2f7ee; color: #53664a; }
+.secretary-form button:disabled { opacity: .6; cursor: not-allowed; }
 
 .secretary-profile-grid,
 .secretary-banner {

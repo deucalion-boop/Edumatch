@@ -563,7 +563,7 @@ export function useAuthStore() {
   const refreshProfile = async () => {
     if (!state.token || !state.user) return null
     const role = String(state.user.role || '').toLowerCase().trim()
-    if (!['teacher', 'student', 'headteacher'].includes(role)) return state.user
+    if (!['teacher', 'student', 'headteacher', 'secretary'].includes(role)) return state.user
 
     const response = await axios.get(`${resolveApiBaseUrl()}/${role}/profile`, {
       headers: buildAuthHeaders(),

@@ -42,3 +42,13 @@ test('uploads a profile image and returns the saved image', async () => {
   assert.equal(f.saves(), 1);
   assert.equal(f.res.data.user.profileImage, 'https://example.com/photo.png');
 });
+test('secretary can save own profile without changing role', async () => {
+  duplicate = null;
+  const f = fixture({ name: 'Secretary Name', username: 'secretary.name', role: 'admin' });
+  f.req.user.role = 'secretary';
+  await controller.update(f.req, f.res, error => { throw error; });
+  assert.equal(f.saves(), 1);
+  assert.equal(f.res.data.user.name, 'Secretary Name');
+  assert.equal(f.res.data.user.username, 'secretary.name');
+  assert.equal(f.res.data.user.role, 'secretary');
+});

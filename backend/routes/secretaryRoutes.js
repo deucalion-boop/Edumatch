@@ -27,6 +27,9 @@ const {
 const router = express.Router();
 
 router.use(authMiddleware, roleMiddleware('secretary'));
+const profileController = require('../controllers/headteacherProfileController');
+router.get('/profile', profileController.get);
+router.put('/profile', uploadLimiter, uploadProfileImage.single('profileImage'), profileController.update);
 
 router.get('/directory', getDirectory);
 router.route('/users').post(createUser).get(getUsers);
