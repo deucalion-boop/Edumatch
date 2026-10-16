@@ -108,6 +108,10 @@
           </div>
 
         </div>
+        <router-link to="/teacher/announcements" class="nav-link" :class="{ active: $route.path === '/teacher/announcements' }" @click="closeSidebar">
+          <i class="fas fa-bullhorn" aria-hidden="true"></i>
+          <span>Announcements</span>
+        </router-link>
       </nav>
 
       <div class="sidebar-footer">

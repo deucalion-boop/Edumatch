@@ -158,4 +158,5 @@ onMounted(load)
 .history-state { @apply tw:[padding:2rem_1rem]; @apply tw:text-center; @apply tw:[color:var(--admin-muted)]; }.history-state.error { @apply tw:[color:var(--danger)]; }
 @media (max-width:900px) { .announcement-admin-grid { @apply tw:[grid-template-columns:1fr]; }.announcement-admin-main { @apply tw:[padding:1.25rem]; } }
 @media (max-width:520px) { .announcement-hero-icon { @apply tw:hidden; }.announcement-panel { @apply tw:[padding:1rem]; } }
+.publish-button > i { color: #fff !important; }
 </style>
