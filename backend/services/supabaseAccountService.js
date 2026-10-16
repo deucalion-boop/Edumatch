@@ -11,7 +11,9 @@ function accountError(error, fallbackMessage) {
   let message = String(error?.message || fallbackMessage);
   if (error?.code === '23505') {
     const constraint = `${error.constraint || ''} ${error.message || ''}`;
-    if (constraint.includes('users_username_lower_unique')) {
+    if (constraint.includes('users_single_secretary_unique')) {
+      message = 'Only one secretary account is allowed. Manage the existing secretary account instead.';
+    } else if (constraint.includes('users_username_lower_unique')) {
       message = 'Username already exists';
     } else if (constraint.includes('users_email_lower_unique')) {
       message = 'Email already exists';
@@ -135,6 +137,7 @@ function fromRow(row) {
 async function saveSupabaseAccount(account) {
   const accountId = account._id || account.id;
   const existing = accountId ? await findSupabaseAccount('id', accountId) : null;
+  if (existing?.role !== 'secretary') await assertSecretarySlotAvailable(account.role, accountId);
   if (existing?.authProvider === 'supabase' && (existing.email !== String(account.email || '').trim().toLowerCase()
     || existing.authUserId !== account.authUserId || account.authProvider !== 'supabase')) {
     throw Object.assign(new Error('The verified student sign-in identity cannot be changed through profile editing. Contact your administrator.'), { statusCode: 400 });
@@ -163,6 +166,7 @@ async function saveSupabaseAccount(account) {
 }
 
 async function createSupabaseAccount(payload) {
+  await assertSecretarySlotAvailable(payload.role);
   const account = { ...payload };
   account.username = String(payload.username || '').trim();
   if (!account.username || account.username.length > 50) {
@@ -176,6 +180,15 @@ async function createSupabaseAccount(payload) {
   const { data, error } = await client.from('users').insert(row).select('*').single();
   if (error) throw accountError(error, 'Failed to create account in Supabase');
   return fromRow(data);
+}
+
+async function assertSecretarySlotAvailable(role, excludeUserId = null) {
+  if (String(role || '').trim().toLowerCase() !== 'secretary') return;
+  let query = getSupabaseStorageClient().from('users').select('id').eq('role', 'secretary');
+  if (excludeUserId) query = query.neq('id', String(excludeUserId));
+  const { data, error } = await query.limit(1).maybeSingle();
+  if (error) throw accountError(error, 'Unable to check secretary account availability');
+  if (data) throw Object.assign(new Error('Only one secretary account is allowed. Manage the existing secretary account instead.'), { statusCode: 409 });
 }
 
 async function touchSupabaseAccountActivity(userId, lastActivityAt = new Date()) {
