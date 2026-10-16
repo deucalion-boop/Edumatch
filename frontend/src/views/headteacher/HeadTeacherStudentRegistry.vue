@@ -262,6 +262,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.headteacher-main > .headteacher-top-header { margin-bottom: 1.5rem !important; }
 @reference "../../styles/tailwind.css";
 .student-registry-page { @apply tw:[background:#f4f8f0]; }
 .registry-panel { @apply tw:[margin-bottom:1.25rem] tw:[padding:clamp(1rem,_2vw,_1.5rem)] tw:bg-white tw:[border:1px_solid_#dce7d5] tw:[border-radius:18px] tw:[box-shadow:0_10px_28px_rgba(30,_67,_7,_.04)] tw:min-w-0; }

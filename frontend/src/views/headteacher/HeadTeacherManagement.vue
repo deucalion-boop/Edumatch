@@ -1477,6 +1477,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.headteacher-main > .headteacher-top-header { margin-bottom: 1.5rem !important; }
 .teacher-registration-panel {
   margin-bottom: 1.5rem;
 }
