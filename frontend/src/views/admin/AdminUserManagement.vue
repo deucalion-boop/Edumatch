@@ -517,11 +517,6 @@
                     <div class="role-info"><h4>Teacher</h4><p>Can manage classes, lessons, assessments, and students</p></div>
                     <div class="role-check"><i class="fas fa-check"></i></div>
                   </div>
-                  <div class="role-option" :class="{ selected: newUser.role === 'student' }" @click="newUser.role = 'student'">
-                    <div class="role-icon"><i class="fas fa-user-graduate"></i></div>
-                    <div class="role-info"><h4>Student</h4><p>Can access assigned learning activities and records</p></div>
-                    <div class="role-check"><i class="fas fa-check"></i></div>
-                  </div>
                   <div 
                     class="role-option" 
                     :class="{ selected: newUser.role === 'headteacher' }"
@@ -544,7 +539,7 @@
               <div class="form-group">
                 <label>Account Status</label>
                 <div class="readonly-field">
-                  <input value="Active - password change required on first login" readonly class="tw:inline:[background:#f8fafc] tw:inline:[border:1px_solid_#e2e8f0] tw:inline:[color:#64748b]">
+                  <input value="Pending - activates after private registration" readonly class="tw:inline:[background:#f8fafc] tw:inline:[border:1px_solid_#e2e8f0] tw:inline:[color:#64748b]">
                 </div>
               </div>
 
@@ -561,25 +556,13 @@
                 <label for="teacherSubject">Subject</label>
                 <input id="teacherSubject" v-model.trim="newUser.subject" type="text" placeholder="Defaults to department">
               </div>
-              <div v-if="newUser.role === 'student'" class="form-group">
-                <label for="studentSection">Section *</label>
-                <select id="studentSection" v-model="newUser.sectionId" required :disabled="isLoadingSections || availableStudentSections.length === 0">
-                  <option value="" disabled>
-                    {{ isLoadingSections ? 'Loading sections…' : (availableStudentSections.length ? 'Select section' : 'No section with an assigned teacher') }}
-                  </option>
-                  <option v-for="section in availableStudentSections" :key="section.id" :value="section.id">
-                    {{ section.name }} — {{ section.adviser.name }}
-                  </option>
-                </select>
-                <p class="hint-text">Only sections with an active assigned teacher are available.</p>
-              </div>
             </div>
 
             <div class="tab-content" :class="{ active: addUserTab === 'additional' }" id="additionalTab">
               <div class="form-group">
                 <label>Security</label>
                 <p class="hint-text">
-                  Temporary passwords are automatically generated, hashed before storage, and marked for mandatory password change after the first successful sign-in.
+                  A private, expiring registration link will be generated. Share it with the invited staff member so they can set their own password and activate the account.
                 </p>
               </div>
             </div>
@@ -606,13 +589,19 @@
                 <button 
                   type="submit" 
                   class="btn btn-success submit-form"
-                  v-if="addUserTab === 'additional'"
+                  v-if="addUserTab === 'additional' && !createdInviteLink"
                   :disabled="isCreateInviteLoading"
                 >
                   <i class="fas fa-user-plus"></i>
-                  {{ isCreateInviteLoading ? 'Processing...' : 'Create User & Email Credentials' }}
+                  {{ isCreateInviteLoading ? 'Generating...' : 'Generate Private Registration Link' }}
                 </button>
               </div>
+            </div>
+            <div v-if="createdInviteLink" class="form-group">
+              <label for="createdInviteLink">Private registration link</label>
+              <div class="readonly-field"><input id="createdInviteLink" :value="createdInviteLink" readonly @focus="$event.target.select()"></div>
+              <button type="button" class="btn btn-outline" @click="copyCreatedInviteLink"><i class="fas fa-copy"></i> Copy Link</button>
+              <p class="hint-text">Only share this link with the intended staff member. It expires after 24 hours.</p>
             </div>
           </form>
         </div>
@@ -1319,6 +1308,7 @@ export default {
     const apiBaseUrl = resolveApiBaseUrl()
     const managementApiPath = computed(() => `${apiBaseUrl}/admin`)
     const allowedManagedRoles = computed(() => ['secretary', 'headteacher', 'teacher', 'student'])
+    const creatableRoles = ['secretary', 'headteacher', 'teacher']
     const roleLabel = (role) => ({
       secretary: 'Secretary',
       headteacher: 'Head Teacher',
@@ -1415,6 +1405,7 @@ export default {
     const confirmPassword = ref('')
     const confirmRequiresPassword = ref(false)
     const isCreateInviteLoading = ref(false)
+    const createdInviteLink = ref('')
     const isSavingEdit = ref(false)
     const isProfileLoading = ref(false)
     const isProgressLoading = ref(false)
@@ -2254,6 +2245,7 @@ export default {
     // Modal controls
     const openAddUserModal = () => {
       addUserEmailError.value = false
+      createdInviteLink.value = ''
       modals.addUser = true
       isCreateInviteLoading.value = false
       addUserTab.value = 'basic'
@@ -2358,7 +2350,7 @@ export default {
         return
       }
 
-      if (!allowedManagedRoles.value.includes(newUser.role)) {
+      if (!creatableRoles.includes(newUser.role)) {
         showToastMessage('You do not have permission to create that role', 'error')
         return
       }
@@ -2387,16 +2379,12 @@ export default {
           strand: newUser.role === 'student' ? newUser.strand : '',
         }
         const response = await axios.post(`${managementApiPath.value}/users`, createPayload, getAuthConfig())
-        const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()
+        createdInviteLink.value = String(response.data?.invite?.inviteLink || '').trim()
         const emailSent = response.data?.invite?.emailSent !== false
         const baseMessage = emailSent
-          ? 'User created and credentials emailed successfully.'
-          : 'User created, but the onboarding email failed to send.'
-        showToastMessage(
-          generatedPassword ? `${baseMessage} Temporary password: ${generatedPassword}` : baseMessage,
-          emailSent ? 'success' : 'warning'
-        )
-        modals.addUser = false
+          ? 'Private registration link created and emailed successfully.'
+          : 'Private registration link created, but the email failed. Copy and share the link below.'
+        showToastMessage(baseMessage, emailSent ? 'success' : 'warning')
         isCreateInviteLoading.value = false
         await fetchUsers()
       } catch (error) {
@@ -2405,6 +2393,16 @@ export default {
           error.response?.data?.message ||
           (error.request ? 'Unable to reach server. Check backend connection.' : 'Failed to create user')
         showToastMessage(message, 'error')
+      }
+    }
+
+    const copyCreatedInviteLink = async () => {
+      if (!createdInviteLink.value) return
+      try {
+        await navigator.clipboard.writeText(createdInviteLink.value)
+        showToastMessage('Private registration link copied')
+      } catch {
+        showToastMessage('Select the link and copy it manually', 'warning')
       }
     }
     
@@ -2601,21 +2599,19 @@ export default {
           getAuthConfig()
         )
         const inviteResult = response.data?.invite || null
+        const inviteLink = String(inviteResult?.inviteLink || '').trim()
         if (inviteResult?.emailSent === false) {
-          const generatedPassword = String(inviteResult.generatedPassword || '').trim()
           showToastMessage(
-            generatedPassword
-              ? `${inviteResult.emailError || 'Onboarding email failed'} Temporary password: ${generatedPassword}`
-              : (inviteResult.emailError || 'Onboarding email failed'),
+            inviteLink
+              ? `${inviteResult.emailError || 'Invitation email failed'} A fresh private link is available to copy.`
+              : (inviteResult.emailError || 'Invitation email failed'),
             'warning'
           )
         } else {
-          const generatedPassword = String(inviteResult?.generatedPassword || '').trim()
-          showToastMessage(
-            generatedPassword
-              ? `Onboarding email sent successfully. Temporary password: ${generatedPassword}`
-              : 'Onboarding email sent successfully'
-          )
+          showToastMessage('A fresh private registration link was emailed successfully')
+        }
+        if (inviteLink && inviteResult?.emailSent === false) {
+          try { await navigator.clipboard.writeText(inviteLink) } catch { /* The link remains available from a later resend. */ }
         }
         closeUserActionsModal()
         await fetchUsers()
@@ -2906,6 +2902,7 @@ export default {
       confirmPassword,
       confirmRequiresPassword,
       isCreateInviteLoading,
+      createdInviteLink,
       isSavingEdit,
       isProfileLoading,
       isProgressLoading,
@@ -2983,6 +2980,7 @@ export default {
       nextTab,
       prevTab,
       createUser,
+      copyCreatedInviteLink,
       departmentOptions,
       editUser,
       saveUserEdit,

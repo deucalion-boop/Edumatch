@@ -740,6 +740,15 @@ function ensureUserManagementPermission(req, role) {
   }
 }
 
+function ensureAccountCreationPermission(req, role) {
+  ensureUserManagementPermission(req, role);
+  if (String(req?.user?.role || '').trim().toLowerCase() === ROLE_ADMIN && role === ROLE_STUDENT) {
+    const error = new Error('Administrators cannot create Student accounts. Students must use the designated school or class enrollment flow.');
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
 function normalizeStudentFields({ role, strand, gradeLevel }) {
   if (role !== ROLE_STUDENT) return { strand: '', gradeLevel: '' };
   const normalizedStrand = String(strand || '').trim().toUpperCase();
@@ -938,7 +947,7 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
 
   const normalizedRole = normalizeAdminManagedRole(role);
   ensureAdminManagedRole(normalizedRole);
-  ensureUserManagementPermission(req, normalizedRole);
+  ensureAccountCreationPermission(req, normalizedRole);
   const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
   const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
   await ensureSingleHeadTeacherPerDepartment({
@@ -968,6 +977,7 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
   const inviteResult = await issueInviteForUser({
     user: created,
     req,
+    privateRegistration: true,
   });
 
   return sendSuccess(res, 201, 'User created and onboarding email sent successfully', {
@@ -1016,7 +1026,7 @@ const createUser = asyncHandler(async (req, res) => {
 
   const normalizedRole = normalizeAdminManagedRole(role);
   ensureAdminManagedRole(normalizedRole);
-  ensureUserManagementPermission(req, normalizedRole);
+  ensureAccountCreationPermission(req, normalizedRole);
   const normalizedUsername = String(username).trim();
   const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
   const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
@@ -1080,6 +1090,7 @@ const createUser = asyncHandler(async (req, res) => {
   const inviteResult = await issueInviteForUser({
     user: created,
     req,
+    privateRegistration: true,
   });
 
   return sendSuccess(res, 201, 'User created successfully', {
@@ -1117,6 +1128,7 @@ const sendUserInvite = asyncHandler(async (req, res) => {
   const inviteResult = await issueInviteForUser({
     user,
     req,
+    privateRegistration: true,
   });
 
   return sendSuccess(res, 200, 'Onboarding email sent successfully', {

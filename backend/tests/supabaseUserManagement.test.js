@@ -267,10 +267,19 @@ test('admin self picture uploads cannot bypass restrictions on managed account f
   }
 });
 
-test('admin and secretary create directly managed roles with the selected role and scoped fields', async () => {
+test('admin staff creation uses private activation links and student creation remains with secretary workflows', async () => {
   client = createFakeSupabase({ users: [] });
-  const studentResult = await invoke('createUser', {
+  await assert.rejects(invoke('createUser', {
     user: { _id: 'admin', role: 'admin' },
+    body: {
+      name: 'Student User', email: 'student.user@gmail.com', username: 'student.user',
+      role: 'student', gradeLevel: 'Grade 10', strand: 'STEM',
+    },
+  }), { statusCode: 403 });
+  assert.deepEqual(client.tables.users, []);
+
+  const studentResult = await invoke('createUser', {
+    user: { _id: 'secretary-id', role: 'secretary' },
     body: {
       name: 'Student User', email: 'student.user@gmail.com', username: 'student.user',
       role: 'student', gradeLevel: 'Grade 10', strand: 'STEM',
@@ -279,11 +288,10 @@ test('admin and secretary create directly managed roles with the selected role a
   assert.equal(studentResult.user.role, 'student');
   assert.equal(studentResult.user.gradeLevel, 'Grade 10');
   assert.equal(client.tables.users[0].role, 'student');
-  assert.equal(client.tables.users[0].force_password_change, true);
-  assert.equal(
-    await bcrypt.compare(studentResult.invite.generatedPassword, client.tables.users[0].password_hash),
-    true,
-  );
+  assert.equal(client.tables.users[0].status, 'pending');
+  assert.equal(client.tables.users[0].password_hash, null);
+  assert.match(studentResult.invite.inviteLink, /\/auth\/invite\/[a-f0-9]{64}$/);
+  assert.ok(studentResult.invite.inviteExpiresAt);
 
   const teacherResult = await invoke('createUser', {
     user: { _id: 'secretary-id', role: 'secretary' },
@@ -296,6 +304,7 @@ test('admin and secretary create directly managed roles with the selected role a
   assert.equal(teacherResult.user.department, 'Science');
   assert.equal(teacherResult.user.subject, 'Biology');
   assert.equal(client.tables.users[1].role, 'teacher');
+  assert.equal(client.tables.users[1].status, 'pending');
 });
 
 test('secretary updates assign a student to the selected section adviser', async () => {

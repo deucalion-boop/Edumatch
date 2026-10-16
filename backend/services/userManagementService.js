@@ -191,82 +191,61 @@ async function sendInviteEmail({ toEmail, toName, inviteLink, expiresAt }) {
   });
 }
 
-async function issueInviteForUser({ user, expiresInHours, req }) {
+async function issueInviteForUser({ user, expiresInHours, req, privateRegistration = false }) {
   const now = new Date();
-  const temporaryPassword = generateTemporaryPassword();
   const appBaseUrl = String(process.env.APP_BASE_URL || req.get('origin') || '').trim().replace(/\/+$/, '');
   const frontendBase = appBaseUrl || `${req.protocol}://${req.get('host')}`;
-  const loginLink = `${frontendBase}/auth/login`;
 
-  user.password = temporaryPassword;
-  user.status = 'active';
-  user.forcePasswordChange = true;
-  user.temporaryPasswordIssuedAt = now;
+  if (!privateRegistration) {
+    const temporaryPassword = generateTemporaryPassword();
+    const loginLink = `${frontendBase}/auth/login`;
+    user.password = temporaryPassword;
+    user.status = 'active';
+    user.forcePasswordChange = true;
+    user.temporaryPasswordIssuedAt = now;
+    user.invite = { tokenHash: '', expiresAt: null, sentAt: now, usedAt: null };
+    await user.save();
+    const recipientName = String(user?.name || '').trim() || 'there';
+    const recipientEmail = String(user?.email || '').trim();
+    const emailResult = await sendEmailViaGmail({
+      to: [{ email: recipientEmail, name: recipientName }],
+      subject: 'EduMatch Account Created',
+      text: `Hello ${recipientName},\n\nYour EduMatch account has been created.\n\nEmail: ${recipientEmail}\nUsername: ${String(user?.username || '').trim()}\nTemporary password: ${temporaryPassword}\n\nYou must change this password after your first login.\n\nLogin here: ${loginLink}`,
+      html: `<p>Hello <strong>${recipientName}</strong>,</p><p>Your EduMatch account has been created.</p><p><strong>Email:</strong> ${recipientEmail}<br><strong>Username:</strong> ${String(user?.username || '').trim()}<br><strong>Temporary password:</strong> ${temporaryPassword}</p><p>You must change this password after your first login.</p><p><a href="${loginLink}">Sign in to EduMatch</a></p>`,
+    });
+    return { inviteExpiresAt: null, inviteSentAt: now, inviteLink: '', generatedPassword: temporaryPassword,
+      emailSent: emailResult.sent, emailError: emailResult.sent ? null : emailResult.reason };
+  }
+
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const expiryHours = normalizeInviteExpiryHours(expiresInHours);
+  const expiresAt = new Date(now.getTime() + expiryHours * 60 * 60 * 1000);
+  const inviteLink = `${frontendBase}/auth/invite/${rawToken}`;
+
+  user.password = '';
+  user.status = 'pending';
+  user.forcePasswordChange = false;
+  user.temporaryPasswordIssuedAt = null;
   user.invite = {
-    tokenHash: '',
-    expiresAt: null,
+    tokenHash,
+    expiresAt,
     sentAt: now,
     usedAt: null,
   };
   await user.save();
 
-  const recipientEmail = String(user?.email || '').trim();
-  const recipientName = String(user?.name || '').trim() || 'there';
-  const subject = 'EduMatch Account Created';
-  const text = `Hello ${recipientName},
-
-Your EduMatch account has been created.
-
-Email: ${recipientEmail}
-Username: ${String(user?.username || '').trim()}
-Temporary password: ${temporaryPassword}
-
-For security reasons, you will be required to change this password when you log in for the first time.
-
-Login here: ${loginLink}`;
-  const html = `
-    <div style="max-width: 640px; margin: 0 auto; font-family: 'Segoe UI', Arial, sans-serif; color: #111111; background: #ffffff; border: 1px solid #d9d9d9; border-radius: 10px; overflow: hidden;">
-      <div style="padding: 20px 24px; background: #111111; color: #ffffff; border-bottom: 1px solid #2b2b2b;">
-        <h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.2px;">EduMatch</h1>
-        <p style="margin: 6px 0 0 0; font-size: 14px; color: #e5e5e5;">Account Created</p>
-      </div>
-      <div style="padding: 24px;">
-        <p style="margin: 0 0 14px 0; font-size: 15px; color: #111111;">Hello <strong>${recipientName}</strong>,</p>
-        <p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #222222;">
-          Your EduMatch account has been created. Use the temporary password below to sign in.
-        </p>
-        <div style="margin: 0 0 18px 0; padding: 16px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
-          <p style="margin: 0 0 8px 0; font-size: 14px;"><strong>Email:</strong> ${recipientEmail}</p>
-          <p style="margin: 0 0 8px 0; font-size: 14px;"><strong>Username:</strong> ${String(user?.username || '').trim()}</p>
-          <p style="margin: 0; font-size: 14px;"><strong>Temporary Password:</strong> ${temporaryPassword}</p>
-        </div>
-        <p style="margin: 0 0 14px 0; font-size: 14px; color: #374151;">
-          For security reasons, you will be required to change this password immediately after your first login.
-        </p>
-        <p style="margin: 20px 0;">
-          <a href="${loginLink}" style="display: inline-block; padding: 12px 18px; border-radius: 6px; background: #111111; color: #ffffff; text-decoration: none; font-weight: 600; border: 1px solid #111111;">
-            Sign In to EduMatch
-          </a>
-        </p>
-      </div>
-    </div>
-  `;
-
-  const emailResult = await sendEmailViaGmail({
-    to: [{ email: recipientEmail, name: recipientName }],
-    cc: process.env.MAIL_DEFAULT_CC || '',
-    bcc: process.env.MAIL_DEFAULT_BCC || '',
-    attachments: [],
-    subject,
-    text,
-    html,
+  const emailResult = await sendInviteEmail({
+    toEmail: user?.email,
+    toName: user?.name,
+    inviteLink,
+    expiresAt,
   });
 
   return {
-    inviteExpiresAt: null,
+    inviteExpiresAt: expiresAt,
     inviteSentAt: now,
-    inviteLink: '',
-    generatedPassword: temporaryPassword,
+    inviteLink,
     emailSent: emailResult.sent,
     emailError: emailResult.sent ? null : emailResult.reason,
   };
