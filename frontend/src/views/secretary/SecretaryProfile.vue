@@ -27,15 +27,6 @@
           </div>
 
           <div class="secretary-header-tools">
-            <button
-              type="button"
-              class="header-tour-btn account-menu-trigger"
-              aria-label="Home dashboard"
-              title="Home Dashboard"
-              @click="router.push('/secretary/dashboard')"
-            >
-              <i class="fas fa-home"></i>
-            </button>
             <div ref="accountMenuRef" class="account-menu secretary-account-menu">
               <button
                 type="button"
@@ -292,6 +283,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 @reference "../../styles/tailwind.css";
+.secretary-top-header { padding: .9rem 1rem !important; border-radius: 18px !important; }
+.secretary-header-content { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.secretary-header-copy { display: flex; align-items: center; gap: .9rem; flex: 1 1 auto; min-width: 0; }
+.secretary-header-copy > div { min-width: 0; }
+.secretary-header-copy h1 { margin: 0; font-size: 1.35rem; line-height: 1.15; }
+.secretary-header-copy .header-subtitle { margin-top: .2rem; font-size: .86rem; line-height: 1.45; }
+.secretary-header-tools { display: flex; align-items: center; gap: .6rem; margin-left: auto; flex: none; }
+.secretary-header-copy .mobile-menu-toggle,
+.secretary-header-tools .account-menu-trigger { width: 40px; height: 40px; min-width: 40px; border-radius: 12px; }
 .secretary-photo-row { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
 .secretary-profile-photo { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 3px solid #cfe2c4; }
 .secretary-photo-placeholder { display: grid; place-items: center; background: #edf6e7; color: #4f8a35; font-size: 2rem; }
