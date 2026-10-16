@@ -424,26 +424,7 @@
         </div>
         <div class="modal-body">
           <form id="addUserForm" class="user-form" @submit.prevent="createUser">
-            <div class="form-tabs">
-              <button 
-                type="button" 
-                class="form-tab" 
-                :class="{ active: addUserTab === 'role' }"
-                @click="goToAddUserTab('role')"
-              >
-                Role & Permissions
-              </button>
-              <button 
-                type="button" 
-                class="form-tab" 
-                :class="{ active: addUserTab === 'additional' }"
-                @click="goToAddUserTab('additional')"
-              >
-                Additional Info
-              </button>
-            </div>
-
-            <div class="tab-content" :class="{ active: addUserTab === 'role' }" id="roleTab">
+            <div class="tab-content active" id="roleTab">
               <div class="form-group">
                 <label for="userRole">User Role *</label>
                 <div class="role-options">
@@ -507,9 +488,6 @@
                 <label for="teacherSubject">Subject</label>
                 <input id="teacherSubject" v-model.trim="newUser.subject" type="text" placeholder="Defaults to department">
               </div>
-            </div>
-
-            <div class="tab-content" :class="{ active: addUserTab === 'additional' }" id="additionalTab">
               <div class="form-group">
                 <label>Security</label>
                 <p class="hint-text">
@@ -519,28 +497,11 @@
             </div>
 
             <div class="form-actions">
-              <button 
-                type="button" 
-                class="btn btn-outline prev-tab" 
-                v-if="addUserTab === 'additional'"
-                @click="prevTab"
-              >
-                <i class="fas fa-arrow-left"></i>
-                Previous
-              </button>
               <div class="action-right">
-                <button 
-                  type="button" 
-                  class="btn btn-primary next-tab" 
-                  v-if="addUserTab !== 'additional'"
-                  @click="nextTab"
-                >
-                  Next
-                </button>
                 <button 
                   type="submit" 
                   class="btn btn-success submit-form"
-                  v-if="addUserTab === 'additional' && !createdInviteLink"
+                  v-if="!createdInviteLink"
                   :disabled="isCreateInviteLoading"
                 >
                   <i class="fas fa-user-plus"></i>
@@ -2262,18 +2223,6 @@ export default {
     }
     
     // Tab navigation
-    const goToAddUserTab = (tab) => {
-      addUserTab.value = tab
-    }
-
-    const nextTab = () => {
-      if (addUserTab.value === 'role') goToAddUserTab('additional')
-    }
-    
-    const prevTab = () => {
-      if (addUserTab.value === 'additional') addUserTab.value = 'role'
-    }
-    
     // Create user
     const createUser = async () => {
       if (isCreateInviteLoading.value) return
@@ -2904,9 +2853,6 @@ export default {
       closeEditUserModal,
       onEditRoleChange,
       addUserEmailError,
-      goToAddUserTab,
-      nextTab,
-      prevTab,
       createUser,
       copyCreatedInviteLink,
       departmentOptions,
