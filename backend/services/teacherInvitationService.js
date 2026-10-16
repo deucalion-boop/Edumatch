@@ -326,5 +326,22 @@ async function registerTeacher(token, body = {}) {
   return { registered: true, user: { id: userId, name: fullName, role: 'teacher', department: row.department } };
 }
 
-module.exports = { createInvitation, createGroupInvitation, listInvitations, resendInvitation, revokeInvitation, publicInvitation,
+async function activateTeacher(token, body = {}) {
+  const row = await requireInvitation(token);
+  body = inputBody(body);
+  const fullName = cleanName(body.fullName);
+  const email = assertTeacherEmail(body.email);
+  const username = typeof body.username === 'string' ? body.username.trim() : '';
+  if (!USERNAME_PATTERN.test(username)) throw fail('Username must be 3–30 characters using letters, numbers, dots, underscores, or hyphens.');
+  if (row.email && row.email !== email) throw knownError('EMAIL_MISMATCH');
+  if (body.department && body.department !== row.department) throw fail('Use the department assigned by your Head Teacher.');
+  assertPasswordMeetsPolicy(body.password);
+  const id = await result(client().rpc('activate_teacher_link', {
+    p_token_hash: row.token_hash, p_name: fullName, p_email: email, p_username: username,
+    p_password_hash: await bcrypt.hash(body.password, 12),
+  }));
+  return { user: { id, name: fullName, role: 'teacher', department: row.department } };
+}
+
+module.exports = { activateTeacher, createInvitation, createGroupInvitation, listInvitations, resendInvitation, revokeInvitation, publicInvitation,
   usernameAvailability, sendEmailCode, verifyEmail, registerTeacher, invitationToken, codeHash, digest, databaseError };

@@ -405,7 +405,7 @@ export function useAuthStore() {
     throw new Error(state.error)
   }
 
-  const validateInvite = async (token) => {
+  const validateInvite = async (token, teacherInvitation = false) => {
     clearAlerts()
     const inviteToken = String(token || '').trim()
     if (!inviteToken) {
@@ -415,6 +415,10 @@ export function useAuthStore() {
 
     try {
       const apiBaseUrl = resolveApiBaseUrl()
+      if (teacherInvitation) {
+        const response = await axios.get(`${apiBaseUrl}/auth/teacher-invitations/${encodeURIComponent(inviteToken)}`)
+        return { ...response.data?.invitation, role: 'teacher', selfRegistration: true, departmentLocked: true }
+      }
       const response = await axios.get(`${apiBaseUrl}/auth/invite/${encodeURIComponent(inviteToken)}`)
       return response.data?.invite || null
     } catch (error) {
@@ -423,7 +427,7 @@ export function useAuthStore() {
     }
   }
 
-  const completeInvite = async ({ token, password, fullName, email, username, department }) => {
+  const completeInvite = async ({ token, password, fullName, email, username, department, teacherInvitation = false }) => {
     clearAlerts()
     const inviteToken = String(token || '').trim()
     if (!inviteToken) {
@@ -440,7 +444,10 @@ export function useAuthStore() {
         username,
         department,
       }
-      const response = await axios.post(`${apiBaseUrl}/auth/invite/${encodeURIComponent(inviteToken)}/complete`, payload)
+      const endpoint = teacherInvitation
+        ? `${apiBaseUrl}/auth/teacher-invitations/${encodeURIComponent(inviteToken)}/activate`
+        : `${apiBaseUrl}/auth/invite/${encodeURIComponent(inviteToken)}/complete`
+      const response = await axios.post(endpoint, payload)
       return response.data?.user || null
     } catch (error) {
       state.error = error.response?.data?.message || 'Unable to complete account setup'

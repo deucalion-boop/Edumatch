@@ -18,4 +18,5 @@ publicRoutes.get('/:token/username', limiter('username', 90), controller.usernam
 publicRoutes.post('/:token/email-code', limiter('email', 5), controller.sendCode);
 publicRoutes.post('/:token/verify-email', limiter('verify', 15), controller.verifyEmail);
 publicRoutes.post('/:token/register', limiter('register', 10), controller.register);
+publicRoutes.post('/:token/activate', limiter('register', 10), controller.activate);
 module.exports = { publicRoutes };

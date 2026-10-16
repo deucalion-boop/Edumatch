@@ -33,7 +33,7 @@ async function verified(person = maria) { await prepare(person); assert.equal((a
 test.before(async () => {
   db = new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for (const file of ['001_create_users.sql', '017_teacher_invitations.sql', '018_teacher_group_invitations.sql']) await db.exec(migration(file));
+  for (const file of ['001_create_users.sql', '017_teacher_invitations.sql', '018_teacher_group_invitations.sql', '024_teacher_link_activation.sql']) await db.exec(migration(file));
 });
 test.after(async () => { if (db) await db.close(); });
 test.beforeEach(async () => {
@@ -53,6 +53,36 @@ test('one reusable group link is returned for repeated and concurrent department
   assert.equal(new Date(results[0].expires_at) - new Date(results[0].created_at), 48 * 3600000);
   assert.equal(await count('teacher_invitations'), 1);
   assert.equal(await count('users'), 2);
+});
+
+test('shared activation form registers teachers without email codes and fixes their role, department and manager', async () => {
+  await create();
+  const id = await rpc('activate_teacher_link', [token, 'Maria Santos', maria.email, maria.username, passwordHash]);
+  const user = (await db.query('select * from public.users where id=$1', [id])).rows[0];
+  assert.equal(user.role, 'teacher');
+  assert.equal(user.status, 'active');
+  assert.equal(user.department, 'Mathematics');
+  assert.equal(user.managed_by, 'head');
+  assert.equal((await parent()).registration_count, 1);
+  assert.equal((await claim(maria)).accepted_user_id, id);
+  await assert.rejects(rpc('activate_teacher_link', [token, 'Maria Santos', maria.email, 'other.username', passwordHash]), /EMAIL_TAKEN/);
+});
+
+test('single-use activation validates the bound email and cannot be replayed', async () => {
+  await rpc('create_teacher_invitation', ['head', 'individual', nonce, token, 'Maria Santos', maria.email, 48]);
+  await assert.rejects(rpc('activate_teacher_link', [token, 'Juan Cruz', juan.email, juan.username, passwordHash]), /EMAIL_MISMATCH/);
+  await rpc('activate_teacher_link', [token, 'Maria Santos', maria.email, maria.username, passwordHash]);
+  await assert.rejects(rpc('activate_teacher_link', [token, 'Juan Cruz', maria.email, juan.username, passwordHash]), /INVITATION_ACCEPTED/);
+});
+
+test('code-free activation still rejects expired, revoked and unavailable-issuer links', async () => {
+  await create();
+  await db.exec("update public.teacher_invitations set expires_at=now()-interval '1 second'");
+  await assert.rejects(rpc('activate_teacher_link', [token, 'Maria Santos', maria.email, maria.username, passwordHash]), /INVITATION_EXPIRED/);
+  await db.exec("update public.teacher_invitations set expires_at=now()+interval '1 day', status='revoked'");
+  await assert.rejects(rpc('activate_teacher_link', [token, 'Maria Santos', maria.email, maria.username, passwordHash]), /INVITATION_REVOKED/);
+  await db.exec("update public.teacher_invitations set status='pending'; update public.users set status='inactive' where id='head'");
+  await assert.rejects(rpc('activate_teacher_link', [token, 'Maria Santos', maria.email, maria.username, passwordHash]), /ISSUER_UNAVAILABLE/);
 });
 
 test('independent teachers verify their own emails and create accounts from the same live link', async () => {

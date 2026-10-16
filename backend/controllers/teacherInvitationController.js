@@ -20,4 +20,5 @@ const username = handler(async (req, res) => sendSuccess(res, 200, 'Username che
 const sendCode = handler(async (req, res) => sendSuccess(res, 200, 'Verification code sent. Check your email.', await service.sendEmailCode(req.params.token, req.body)));
 const verifyEmail = handler(async (req, res) => sendSuccess(res, 200, 'Email verified.', await service.verifyEmail(req.params.token, req.body)));
 const register = handler(async (req, res) => sendSuccess(res, 201, 'Your teacher account is ready. You can sign in.', await service.registerTeacher(req.params.token, req.body)));
-module.exports = { list, create, resend, revoke, details, username, sendCode, verifyEmail, register };
+const activate = handler(async (req, res) => sendSuccess(res, 201, 'Account activated. You can now sign in.', await service.activateTeacher(req.params.token, req.body)));
+module.exports = { activate, list, create, resend, revoke, details, username, sendCode, verifyEmail, register };

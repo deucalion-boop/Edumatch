@@ -55,6 +55,23 @@ function groupFixture(rpcBehavior) {
   return client;
 }
 
+test('shared activation validates teacher details and uses the code-free atomic RPC', async () => {
+  fixture({}, async (name, input) => {
+    assert.equal(name, 'activate_teacher_link');
+    assert.equal(input.p_token_hash, tokenHash);
+    assert.equal(input.p_email, 'maria@school.edu.ph');
+    assert.equal(await bcrypt.compare('Password123!', input.p_password_hash), true);
+    assert.equal(Object.hasOwn(input, 'p_verification_hash'), false);
+    return { data: 'new-teacher', error: null };
+  });
+  const details = { fullName: 'Maria Santos', email: 'maria@school.edu.ph', username: 'maria.santos', password: 'Password123!', department: 'Mathematics' };
+  await assert.rejects(service.activateTeacher(token, { ...details, department: 'Science' }), { statusCode: 400 });
+  const activated = await service.activateTeacher(token, details);
+  assert.equal(activated.user.id, 'new-teacher');
+  assert.equal(activated.user.department, 'Mathematics');
+  assert.equal(mailCalls.length, 0);
+});
+
 function claim(email, id, extra = {}) {
   return { id, invitation_id: invitationId, email, token_hash: tokenHash, status: 'pending',
     email_challenge_id: `${id}-challenge`, email_code_hash: `${id}-private-code`, email_code_sent_at: new Date().toISOString(),

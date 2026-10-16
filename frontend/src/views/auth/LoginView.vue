@@ -300,7 +300,7 @@ const PASSWORD_MAX_LENGTH = 16
 export default {
   name: 'LoginView',
   components: { MathCaptcha },
-  props: { customRegistration: { type: Boolean, default: false } },
+  props: { customRegistration: { type: Boolean, default: false }, teacherInvitation: { type: Boolean, default: false } },
   
   setup(props) {
     const router = useRouter()
@@ -514,7 +514,7 @@ export default {
 
       isLoading.value = true
       try {
-        const inviteDetails = await authStore.validateInvite(inviteToken)
+        const inviteDetails = await authStore.validateInvite(inviteToken, props.teacherInvitation)
         invite.email = inviteDetails?.email || ''
         invite.role = inviteDetails?.role || ''
         invite.expiresAt = inviteDetails?.expiresAt || null
@@ -547,6 +547,7 @@ export default {
       isLoading.value = true
       try {
         await authStore.completeInvite({
+          teacherInvitation: props.teacherInvitation,
           token: inviteToken,
           password: inviteForm.password,
           fullName: `${inviteForm.firstName.trim()} ${inviteForm.lastName.trim()}`.replace(/\s+/g, ' ').trim(),
