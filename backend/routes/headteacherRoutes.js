@@ -1,7 +1,7 @@
 const express = require('express');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
-const { lessonUpload } = require('../utils/uploadMiddleware');
+const { lessonUpload, uploadProfileImage } = require('../utils/uploadMiddleware');
 const {
   getManagedTeachers,
   createTeacherAccount,
@@ -24,6 +24,9 @@ const router = express.Router();
 const teacherInvitation = require('../controllers/teacherInvitationController');
 
 router.use(authMiddleware, roleMiddleware('headteacher'));
+const profileController = require('../controllers/headteacherProfileController');
+router.get('/profile', profileController.get);
+router.put('/profile', uploadLimiter, uploadProfileImage.single('profileImage'), profileController.update);
 router.use('/student-registry', require('./studentRegistryRoutes').management);
 router.post('/students/registration-links', inviteLimiter, require('../controllers/studentPrivateRegistrationController').create);
 router.post('/teachers/registration-links', inviteLimiter, require('../controllers/teacherPrivateRegistrationController').create);

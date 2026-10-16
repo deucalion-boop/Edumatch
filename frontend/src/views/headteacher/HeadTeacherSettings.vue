@@ -9,8 +9,8 @@
               <i class="fas fa-bars" aria-hidden="true"></i>
             </button>
             <div>
-              <h1>Change Password</h1>
-              <p class="headteacher-header-subtitle">Update your Head Teacher account password and keep your department access secure.</p>
+              <h1>Settings</h1>
+              <p class="headteacher-header-subtitle">Manage your profile and keep your Head Teacher account secure.</p>
             </div>
           </div>
 
@@ -58,6 +58,8 @@
         <i class="fas" :class="banner.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
         <span>{{ banner.message }}</span>
       </section>
+
+      <HeadTeacherProfileForm />
 
       <section class="headteacher-section-card headteacher-panel headteacher-profile-hero">
         <div class="headteacher-settings-icon">
@@ -174,6 +176,7 @@
 
 <script setup>
 import DashboardFooter from '../../components/DashboardFooter.vue'
+import HeadTeacherProfileForm from '../../components/HeadTeacherProfileForm.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
