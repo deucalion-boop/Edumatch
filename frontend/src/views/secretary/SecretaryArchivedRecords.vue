@@ -132,15 +132,6 @@
             <div class="secretary-export-actions">
               <button
                 type="button"
-                class="secretary-export-btn"
-                :disabled="filteredStudents.length === 0"
-                @click="exportArchivedCsv"
-              >
-                <i class="fas fa-file-csv"></i>
-                <span>Export CSV</span>
-              </button>
-              <button
-                type="button"
                 class="secretary-export-btn secretary-export-btn-pdf"
                 :class="pdfApprovalToneClass"
                 :disabled="isPdfExportActionDisabled"
