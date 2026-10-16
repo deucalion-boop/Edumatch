@@ -30,3 +30,6 @@ const auth = useAuthStore()
 const isSidebarOpen = ref(false)
 const displayName = computed(() => auth.user?.name || 'Head Teacher')
 </script>
+<style scoped>
+.headteacher-top-header { margin-bottom: 1.5rem; }
+</style>
