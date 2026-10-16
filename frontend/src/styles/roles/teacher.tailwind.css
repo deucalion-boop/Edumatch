@@ -183,6 +183,13 @@ p {
     @apply tw:animate-none;
 }
 
+.teacher-logo-icon .teacher-sidebar-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
 .teacher-logo-icon i {
     @apply tw:[font-size:1.25rem];
     @apply tw:[line-height:1];

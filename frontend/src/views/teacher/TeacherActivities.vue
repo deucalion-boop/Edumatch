@@ -6,7 +6,7 @@
       <div class="sidebar-header">
         <div class="teacher-logo">
           <div class="teacher-logo-icon">
-            <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+            <img src="/logo.png" alt="EduMatch" class="teacher-sidebar-logo-img">
           </div>
           <div class="teacher-logo-text">
             <h2>EduMatch</h2>
