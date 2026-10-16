@@ -560,8 +560,12 @@
           <form class="class-form" @submit.prevent="submitCreateClass">
             <div class="class-form-grid">
               <label class="class-form-group">
-                <span>Class Name</span>
-                <input v-model.trim="createClassForm.className" type="text" :placeholder="classNamePlaceholder" required>
+                <span>Section</span>
+                <select v-model="createClassForm.sectionId" required :disabled="isLoadingClassSections || !availableClassSections.length || isCreatingClass">
+                  <option value="" disabled>{{ isLoadingClassSections ? 'Loading sections...' : availableClassSections.length ? 'Select an available section' : 'No available sections' }}</option>
+                  <option v-for="section in availableClassSections" :key="section.id" :value="section.id">{{ section.name }}</option>
+                </select>
+                <small v-if="classSectionsError" role="alert">{{ classSectionsError }}</small>
               </label>
               <label class="class-form-group">
                 <span>Subject</span>
@@ -574,7 +578,7 @@
             </div>
             <p v-if="createClassMessage" class="class-form-feedback" :class="createClassMessageType">{{ createClassMessage }}</p>
             <div class="modal-panel-actions">
-              <button type="submit" class="btn btn-primary" :disabled="isCreatingClass">
+              <button type="submit" class="btn btn-primary" :disabled="isCreatingClass || isLoadingClassSections || !availableClassSections.some(section => section.id === createClassForm.sectionId)">
                 <i class="fas" :class="isCreatingClass ? 'fa-spinner fa-spin' : 'fa-plus-circle'"></i>
                 {{ isCreatingClass ? 'Creating...' : 'Create Class' }}
               </button>
@@ -994,10 +998,22 @@ const toggleRecordsMenu = () => {
   recordsMenuOpen.value = !recordsMenuOpen.value
 }
 const createClassForm = reactive({
+  sectionId: '',
   className: '',
   subject: '',
   description: '',
 })
+const classSections = ref([])
+const isLoadingClassSections = ref(false)
+const classSectionsError = ref('')
+const normalizeClassLabel = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase()
+const availableClassSections = computed(() => classSections.value.filter(section => (
+  section.isActive === true && !subjects.value.some(subject => (
+    String(subject.advisorySectionId || '') === String(section.id)
+    || normalizeClassLabel(subject.className) === normalizeClassLabel(`${teacherSubject.value} ${section.name}`)
+    || normalizeClassLabel(subject.className) === normalizeClassLabel(section.name)
+  ))
+)))
 const editClassForm = reactive({
   id: '',
   className: '',
@@ -1662,9 +1678,24 @@ const resetCreateClassForm = ({ preserveWorkflow = false } = {}) => {
   createClassMessageType.value = 'success'
 }
 
-const openCreateClassModal = () => {
+const openCreateClassModal = async () => {
   resetCreateClassForm({ preserveWorkflow: hasCreateClassReference.value })
+  createClassForm.sectionId = ''
+  classSections.value = []
+  classSectionsError.value = ''
   isCreateClassModalOpen.value = true
+  isLoadingClassSections.value = true
+  try {
+    const [response] = await Promise.all([
+      axios.get(`${resolveApiBaseUrl()}/teacher/sections`, getAuthConfig()),
+      fetchSubjects(),
+    ])
+    classSections.value = Array.isArray(response.data?.sections) ? response.data.sections : []
+  } catch (error) {
+    classSectionsError.value = error.response?.data?.message || 'Unable to load available sections. Close this form and try again.'
+  } finally {
+    isLoadingClassSections.value = false
+  }
 }
 
 const closeCreateClassModal = () => {
@@ -1883,12 +1914,13 @@ const submitEditClass = async () => {
 }
 
 const submitCreateClass = async () => {
-  const className = String(createClassForm.className || '').trim()
+  const selectedSection = availableClassSections.value.find(section => section.id === createClassForm.sectionId)
   const subject = String(createClassForm.subject || teacherSubject.value || '').trim()
+  const className = selectedSection ? `${subject} ${selectedSection.name}` : ''
   const description = String(createClassForm.description || '').trim()
 
   if (!className || !subject) {
-    createClassMessage.value = 'Class name and subject are required.'
+    createClassMessage.value = 'Select an available section and ensure your subject is assigned.'
     createClassMessageType.value = 'error'
     return
   }
@@ -1903,6 +1935,7 @@ const submitCreateClass = async () => {
   createClassMessage.value = ''
   try {
     await axios.post(`${resolveApiBaseUrl()}/teacher/subjects`, {
+      sectionId: selectedSection.id,
       className,
       subject,
       description,
@@ -1911,7 +1944,8 @@ const submitCreateClass = async () => {
     createClassReference.className = className
     createClassReference.description = description
     createClassReference.hasReference = true
-    createClassMessage.value = 'Class created successfully. You can create another class using the same pattern.'
+    createClassForm.sectionId = ''
+    createClassMessage.value = 'Class created successfully. Select another available section to create another class.'
     createClassMessageType.value = 'success'
     await Promise.all([fetchSubjects(), fetchStudents()])
   } catch (error) {

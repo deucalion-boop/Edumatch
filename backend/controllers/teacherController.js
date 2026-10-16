@@ -459,11 +459,27 @@ async function resolveTeacherSubjectRecord({
 }
 
 const createTeacherClass = asyncHandler(async (req, res) => {
-  const className = String(req.body?.className || req.body?.name || '').trim();
+  let className = String(req.body?.className || req.body?.name || '').trim();
   const requestedSubject = String(req.body?.subject || '').trim();
   const assignedSubject = ensureTeacherSubjectAccess(req.user, requestedSubject);
   const description = String(req.body?.description || '').trim();
   const track = normalizeLessonStrand(req.user?.strand || req.body?.track || 'GENERAL') || 'GENERAL';
+
+  if (req.body?.sectionId) {
+    const section = await getSectionOrThrow(req.body.sectionId);
+    className = `${assignedSubject} ${section.name}`;
+    const normalizeLabel = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    const existingClasses = await listTeacherSubjects(req.user._id);
+    if (existingClasses.some((subject) => (
+      String(subject.advisorySectionId || '') === String(section.id)
+      || normalizeLabel(subject.className) === normalizeLabel(className)
+      || normalizeLabel(subject.className) === normalizeLabel(section.name)
+    ))) {
+      const error = new Error('You already have a class for this section. Select another available section.');
+      error.statusCode = 409;
+      throw error;
+    }
+  }
 
   if (!className) {
     const error = new Error('className is required');

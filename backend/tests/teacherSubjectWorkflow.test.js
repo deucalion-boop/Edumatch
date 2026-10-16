@@ -28,7 +28,7 @@ aiRuntimeConfig.getAiRuntimeConfigFromEnv = () => ({
   temperature: 0.3,
 });
 
-const { createLesson, createAssessment } = require('../controllers/teacherController');
+const { createLesson, createAssessment, createTeacherClass } = require('../controllers/teacherController');
 const { generateAssessmentWithAi } = require('../controllers/aiController');
 const teacherId = 'custom-subject-teacher';
 const subjectId = 'custom-subject-class';
@@ -84,6 +84,25 @@ function lessonRequest(user, body = {}) {
     },
   };
 }
+
+test('class creation rejects an inactive section without writing a class', async () => {
+  const user = fixture('Biology');
+  client.tables.sections = [{ id: 'inactive-section', name: 'Charity', is_active: false }];
+  await assert.rejects(call(createTeacherClass, {
+    user, body: { subject: 'Biology', sectionId: 'inactive-section' },
+  }), { statusCode: 404 });
+  assert.deepEqual(client.writes, []);
+});
+
+test('class creation rejects a section already used by the teacher', async () => {
+  const user = fixture('Biology');
+  client.tables.sections = [{ id: 'charity-section', name: 'Charity', is_active: true }];
+  client.tables.subjects[0].class_name = 'Biology Charity';
+  await assert.rejects(call(createTeacherClass, {
+    user, body: { subject: 'Biology', sectionId: 'charity-section' },
+  }), { statusCode: 409 });
+  assert.deepEqual(client.writes, []);
+});
 
 function aiRequest(user, body = {}) {
   return {
