@@ -13569,6 +13569,7 @@ body.admin-dashboard .modal-content {
 }
 
 body.admin-dashboard .confirmation-modal .modal-content {
+    @apply tw:[border-left:0]!;
     @apply tw:[border-right:0]!;
 }
 
