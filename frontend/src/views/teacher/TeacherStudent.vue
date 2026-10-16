@@ -211,7 +211,7 @@
                 :disabled="!hasAdvisorySection"
                 @click="openStudentInviteModal"
                 aria-label="Invite Student"
-                :title="hasAdvisorySection ? 'Import students into your designated advisory section' : 'Ask your Head Teacher to assign an advisory section first'"
+                :title="hasAdvisorySection ? 'Share a private student registration link' : 'Ask your Head Teacher to assign an advisory section first'"
               >
                 <i class="fas fa-plus" aria-hidden="true"></i>
                 <span>Invite Student</span>
@@ -544,7 +544,12 @@
         </div>
       </section>
 
-      <ClassInvitationModal v-if="isClassInvitationModalOpen" :advisory-context="advisoryInvitationContext" :context-loading="isAdvisoryContextLoading" :context-error="advisoryContextError" :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" :invitation="selectedClassInvitation" @close="isClassInvitationModalOpen = false" @manual="openManualStudentInvite" @imported="handleInvitationImported" @retry-context="fetchAdvisoryInvitationContext" />
+      <div v-if="isClassInvitationModalOpen" class="modal-shell" @click.self="isClassInvitationModalOpen = false">
+        <section class="modal-panel" role="dialog" aria-modal="true" aria-label="Private student registration">
+          <div class="modal-panel-head"><h3>Invite Student</h3><button type="button" class="modal-close-btn" aria-label="Close student registration" @click="isClassInvitationModalOpen = false"><i class="fas fa-times"></i></button></div>
+          <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" />
+        </section>
+      </div>
 
       <div v-if="isCreateClassModalOpen" class="modal-shell" @click.self="closeCreateClassModal">
         <div class="modal-panel">
@@ -622,48 +627,7 @@
         </div>
       </div>
 
-      <div v-if="isStudentInviteModalOpen" class="modal-shell" @click.self="closeStudentInviteModal">
-        <div class="modal-panel">
-          <div class="modal-panel-head">
-            <div>
-              <h3><i class="fas fa-user-plus"></i> Create Student Account</h3>
-              <p>Create a student account, automatically add the learner to your advisory class, and email a temporary password for their first login.</p>
-            </div>
-            <button type="button" class="modal-close-btn" @click="closeStudentInviteModal">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          <form class="class-form" @submit.prevent="submitStudentInvite">
-            <div class="class-form-grid">
-              <label class="class-form-group">
-                <span>Student Name</span>
-                <input v-model.trim="studentInviteForm.name" type="text" required placeholder="Enter student name">
-              </label>
-              <label class="class-form-group">
-                <span>Email</span>
-                <input v-model.trim="studentInviteForm.email" type="email" required placeholder="Enter student email">
-              </label>
-              <label class="class-form-group">
-                <span>Username</span>
-                <input v-model.trim="studentInviteForm.username" type="text" required maxlength="50" placeholder="Enter username">
-              </label>
-              <label class="class-form-group">
-                <span>Advisory Section</span>
-                <input :value="teacherAdvisorySectionName || 'Not assigned'" type="text" readonly>
-                <small class="invite-helper-copy">The student automatically joins your advisory class with approved access. They can join additional classes later with a class code.</small>
-              </label>
-            </div>
-            <p v-if="studentInviteMessage" class="class-form-feedback" :class="studentInviteMessageType">{{ studentInviteMessage }}</p>
-            <div class="modal-panel-actions">
-              <button type="button" class="btn btn-outline" @click="closeStudentInviteModal">Cancel</button>
-              <button type="submit" class="btn btn-primary" :disabled="isSubmittingStudentInvite">
-                <i class="fas" :class="isSubmittingStudentInvite ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
-                {{ isSubmittingStudentInvite ? 'Saving...' : 'Create Student & Email Credentials' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+
 
       <div v-if="announcementSubject" class="modal-shell" @click.self="!announcementSaving && (announcementSubject = null)">
         <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="announcement-title">
@@ -830,7 +794,7 @@ import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
-import ClassInvitationModal from '../../components/teacher/ClassInvitationModal.vue'
+import StudentPrivateRegistration from '../../components/StudentPrivateRegistration.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -907,8 +871,6 @@ const isDeleteClassModalOpen = ref(false)
 const isDeletingClass = ref(false)
 const isSubjectStudentsModalOpen = ref(false)
 const isSubjectStudentsLoading = ref(false)
-const isStudentInviteModalOpen = ref(false)
-const isSubmittingStudentInvite = ref(false)
 const isEnrollmentRequestsLoading = ref(false)
 const requestActionId = ref('')
 const focusedEnrollmentRequestId = computed(() => String(route.query.request || '').trim())
@@ -919,8 +881,6 @@ const editClassMessage = ref('')
 const editClassMessageType = ref('success')
 const deleteClassMessage = ref('')
 const deleteClassMessageType = ref('error')
-const studentInviteMessage = ref('')
-const studentInviteMessageType = ref('success')
 const classPendingEdit = ref(null)
 const classPendingDeletion = ref(null)
 const subjectPendingStudents = ref(null)
@@ -1026,11 +986,7 @@ const createClassReference = reactive({
   description: '',
   hasReference: false,
 })
-const studentInviteForm = reactive({
-  name: '',
-  email: '',
-  username: '',
-})
+
 const isLoading = ref(false)
 const studentRosterView = ref('advisory')
 const tourSteps = [
@@ -1801,13 +1757,7 @@ const removeStudentFromSubject = async (student) => {
   }
 }
 
-const resetStudentInviteForm = () => {
-  studentInviteForm.name = ''
-  studentInviteForm.email = ''
-  studentInviteForm.username = ''
-  studentInviteMessage.value = ''
-  studentInviteMessageType.value = 'success'
-}
+
 
 const openStudentInviteModal = () => {
   if (!hasAdvisorySection.value) {
@@ -1819,63 +1769,7 @@ const openStudentInviteModal = () => {
   void fetchAdvisoryInvitationContext()
 }
 
-const openManualStudentInvite = () => {
-  if (!hasAdvisorySection.value || !advisoryInvitationContext.value || isAdvisoryContextLoading.value) {
-    showToast('error', 'Assign an advisory section first. Student accounts created here belong to your advisory section.')
-    return
-  }
-  isClassInvitationModalOpen.value = false
-  resetStudentInviteForm()
-  isStudentInviteModalOpen.value = true
-}
 
-const closeStudentInviteModal = () => {
-  if (isSubmittingStudentInvite.value) return
-  isStudentInviteModalOpen.value = false
-}
-
-const submitStudentInvite = async () => {
-  isSubmittingStudentInvite.value = true
-  studentInviteMessage.value = ''
-  try {
-    const normalizedUsername = String(studentInviteForm.username || '').trim()
-    if (!hasAdvisorySection.value) {
-      studentInviteMessage.value = 'Assign an advisory section before creating student accounts.'
-      studentInviteMessageType.value = 'error'
-      return
-    }
-    if (!normalizedUsername) {
-      studentInviteMessage.value = 'Username is required.'
-      studentInviteMessageType.value = 'error'
-      return
-    }
-
-
-    const response = await axios.post(`${resolveApiBaseUrl()}/teacher/students`, {
-      name: studentInviteForm.name,
-      email: studentInviteForm.email,
-      username: normalizedUsername,
-    }, getAuthConfig())
-
-    const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()
-    const emailSent = response.data?.invite?.emailSent !== false
-    const advisoryClassName = String(response.data?.advisoryClass?.className || '').trim()
-    const advisoryMembershipMessage = advisoryClassName
-      ? ` Automatically added to ${advisoryClassName}.`
-      : ' Automatically added to your advisory class.'
-    studentInviteMessage.value = `${emailSent ? 'Student account created and credentials emailed successfully.' : 'Student account created, but email sending failed.'}${advisoryMembershipMessage}${generatedPassword ? ` Temporary password: ${generatedPassword}` : ''}`
-    studentInviteMessageType.value = emailSent ? 'success' : 'error'
-    await Promise.allSettled([fetchStudents(), fetchSubjects()])
-    window.setTimeout(() => {
-      isStudentInviteModalOpen.value = false
-    }, 400)
-  } catch (error) {
-    studentInviteMessage.value = error.response?.data?.message || 'Failed to create the student account.'
-    studentInviteMessageType.value = 'error'
-  } finally {
-    isSubmittingStudentInvite.value = false
-  }
-}
 
 const submitEditClass = async () => {
   const subjectId = String(editClassForm.id || '').trim()

@@ -652,68 +652,15 @@
         <div class="headteacher-modal-panel">
           <div class="headteacher-modal-head">
             <div>
-              <h3>Create Student Account</h3>
-              <p>Select an advisory teacher to place the student in that teacher's section.</p>
+              <h3>Invite Student</h3>
+              <p>Share a private registration link for the selected advisory teacher's section.</p>
             </div>
             <button type="button" class="headteacher-modal-close" aria-label="Close student form" @click="closeStudentCreateModal">
               <i class="fas fa-times"></i>
             </button>
           </div>
 
-          <form class="headteacher-form" novalidate @submit.prevent="createStudent">
-            <div class="headteacher-form-grid">
-              <label class="headteacher-form-group">
-                <span>Advisory Teacher</span>
-                <select v-model="studentForm.teacherId" required :aria-invalid="Boolean(studentErrors.teacherId)" @change="validateStudentForm">
-                  <option value="" disabled>Select an advisory teacher</option>
-                  <option v-for="teacher in studentEligibleTeachers" :key="`student-teacher-${teacher.id}`" :value="teacher.id">
-                    {{ teacher.name }} — {{ teacher.advisorySectionName }}
-                  </option>
-                </select>
-                <small v-if="studentErrors.teacherId" class="headteacher-field-error" role="alert">{{ studentErrors.teacherId }}</small>
-              </label>
-              <label class="headteacher-form-group">
-                <span>Section</span>
-                <input :value="selectedStudentSectionName" type="text" readonly placeholder="Select an advisory teacher">
-              </label>
-              <label class="headteacher-form-group">
-                <span>Full Name</span>
-                <input v-model.trim="studentForm.name" type="text" required maxlength="100" placeholder="Enter student name" :aria-invalid="Boolean(studentErrors.name)" @input="validateStudentForm">
-                <small v-if="studentErrors.name" class="headteacher-field-error" role="alert">{{ studentErrors.name }}</small>
-              </label>
-              <label class="headteacher-form-group">
-                <span>Email</span>
-                <input v-model.trim="studentForm.email" type="email" required placeholder="Enter student email" :aria-invalid="Boolean(studentErrors.email)" @input="validateStudentForm">
-                <small v-if="studentErrors.email" class="headteacher-field-error" role="alert">{{ studentErrors.email }}</small>
-              </label>
-              <label class="headteacher-form-group">
-                <span>Username</span>
-                <input v-model.trim="studentForm.username" type="text" required maxlength="50" placeholder="Enter student username" :aria-invalid="Boolean(studentErrors.username)" @input="validateStudentForm">
-                <small v-if="studentErrors.username" class="headteacher-field-error" role="alert">{{ studentErrors.username }}</small>
-              </label>
-              <label class="headteacher-form-group">
-                <span>Grade Level</span>
-                <input value="Grade 10" type="text" readonly>
-              </label>
-              <label class="headteacher-form-group">
-                <span>Access</span>
-                <input value="Temporary password is auto-generated and emailed" type="text" readonly>
-              </label>
-            </div>
-
-            <p v-if="studentFormMessage" class="headteacher-form-feedback" :class="studentFormMessageType">{{ studentFormMessage }}</p>
-            <p v-else-if="studentEligibleTeachers.length === 0" class="headteacher-form-feedback error">
-              Assign an advisory section to a managed teacher before creating a student.
-            </p>
-
-            <div class="headteacher-modal-actions">
-              <button type="button" class="headteacher-button headteacher-button-outline" @click="closeStudentCreateModal">Cancel</button>
-              <button type="submit" class="headteacher-button headteacher-button-primary" :disabled="isSubmittingStudent || studentEligibleTeachers.length === 0">
-                <i class="fas" :class="isSubmittingStudent ? 'fa-spinner fa-spin' : 'fa-user-plus'"></i>
-                {{ isSubmittingStudent ? 'Saving...' : 'Create Student & Email Credentials' }}
-              </button>
-            </div>
-          </form>
+          <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" is-head-teacher :teacher-id="studentForm.teacherId" />
         </div>
       </div>
 
@@ -852,11 +799,11 @@
 </template>
 
 <script setup>
+import StudentPrivateRegistration from '../../components/StudentPrivateRegistration.vue'
 import DashboardFooter from '../../components/DashboardFooter.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import TeacherInvitationManager from '../../components/headteacher/TeacherInvitationManager.vue'
-import { nameError } from '../../utils/teacherValidation.js'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
@@ -869,7 +816,6 @@ const authStore = useAuthStore()
 const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
 const isLoading = ref(false)
-const isSubmittingStudent = ref(false)
 const isStudentCreateModalOpen = ref(false)
 const isStudentsModalOpen = ref(false)
 const isAttendanceModalOpen = ref(false)
@@ -877,8 +823,6 @@ const isAnnouncementModalOpen = ref(false)
 const isSendingAnnouncement = ref(false)
 const isUpdatingTeacherAssignment = ref(false)
 const updatingTeacherAssignmentId = ref('')
-const studentFormMessage = ref('')
-const studentFormMessageType = ref('success')
 const assignmentMessage = ref('')
 const assignmentMessageType = ref('success')
 const teachers = ref([])
@@ -922,12 +866,7 @@ const filters = reactive({
   status: 'all',
   sort: 'newest',
 })
-const studentForm = reactive({
-  teacherId: '',
-  name: '',
-  email: '',
-  username: '',
-})
+const studentForm = reactive({ teacherId: '' })
 const announcementForm = reactive({
   subject: '',
   content: '',
@@ -952,10 +891,6 @@ const departmentLabel = computed(() => authStore.user?.department || 'Department
 const studentEligibleTeachers = computed(() => teachers.value.filter((teacher) => (
   normalizeStatus(teacher.status) === 'active' && String(teacher.advisorySectionId || '').trim()
 )))
-const selectedStudentTeacher = computed(() => studentEligibleTeachers.value.find(
-  (teacher) => String(teacher.id) === String(studentForm.teacherId)
-) || null)
-const selectedStudentSectionName = computed(() => selectedStudentTeacher.value?.advisorySectionName || '')
 const attendanceStatuses = ['Present', 'Late', 'Absent', 'Excused']
 const activeSelectedTeacherStudents = computed(() => selectedTeacherStudents.value.filter((student) => normalizeStatus(student.status) === 'active').length)
 const recentAttendanceRecords = computed(() => Array.isArray(attendanceOverview.value?.recentRecords) ? attendanceOverview.value.recentRecords.slice(0, 12) : [])
@@ -1203,17 +1138,7 @@ watch(totalPages, (value) => {
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
 const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.value }
 
-const studentErrors = reactive({ teacherId: '', name: '', email: '', username: '' })
-
-const resetStudentForm = (teacherId = '') => {
-  Object.keys(studentErrors).forEach((field) => { studentErrors[field] = '' })
-  studentForm.teacherId = String(teacherId || '').trim()
-  studentForm.name = ''
-  studentForm.email = ''
-  studentForm.username = ''
-  studentFormMessage.value = ''
-  studentFormMessageType.value = 'success'
-}
+const resetStudentForm = (teacherId = '') => { studentForm.teacherId = String(teacherId || '').trim() }
 
 const openStudentCreateModal = (teacher = null) => {
   const requestedTeacherId = normalizeTeacherId(teacher)
@@ -1235,7 +1160,6 @@ const openStudentCreateModal = (teacher = null) => {
 }
 
 const closeStudentCreateModal = () => {
-  if (isSubmittingStudent.value) return
   isStudentCreateModalOpen.value = false
   resetStudentForm()
 }
@@ -1467,45 +1391,7 @@ const openTeacherStudents = async (teacher) => {
   }
 }
 
-const validateStudentForm = () => {
-  studentErrors.teacherId = String(studentForm.teacherId || '').trim() ? '' : 'Select an advisory teacher.'
-  studentErrors.name = nameError(studentForm.name, 'Full name', 100)
-  studentErrors.username = !String(studentForm.username || '').trim()
-    ? 'Username is required.'
-    : studentForm.username.length > 50 ? 'Username must be 50 characters or fewer.' : ''
-  studentErrors.email = /^[a-z0-9]+(?:\.[a-z0-9]+)*(?:\+[a-z0-9]+(?:[._-][a-z0-9]+)*)?@gmail\.com$/i.test(studentForm.email)
-    ? '' : 'Enter a valid Gmail address (e.g., user@gmail.com).'
-  return !Object.values(studentErrors).some(Boolean)
-}
 
-const createStudent = async () => {
-  if (isSubmittingStudent.value || !validateStudentForm()) return
-  isSubmittingStudent.value = true
-  studentFormMessage.value = ''
-  try {
-
-    const response = await axios.post(`${resolveApiBaseUrl()}/headteacher/students`, {
-      teacherId: studentForm.teacherId,
-      name: studentForm.name,
-      email: studentForm.email,
-      username: studentForm.username,
-    }, getAuthConfig())
-
-    const generatedPassword = String(response.data?.invite?.generatedPassword || '').trim()
-    const emailSent = response.data?.invite?.emailSent !== false
-    studentFormMessage.value = generatedPassword
-      ? `${emailSent ? 'Student account created and credentials emailed successfully.' : 'Student account created, but email sending failed.'} Section: ${selectedStudentSectionName.value || 'Assigned section'}. Temporary password: ${generatedPassword}`
-      : 'Student account created successfully.'
-    studentFormMessageType.value = emailSent ? 'success' : 'error'
-    await fetchTeachers()
-    if (emailSent) window.setTimeout(() => closeStudentCreateModal(), 800)
-  } catch (error) {
-    studentFormMessage.value = error.response?.data?.message || 'Failed to create student account.'
-    studentFormMessageType.value = 'error'
-  } finally {
-    isSubmittingStudent.value = false
-  }
-}
 
 const updateStatus = async (teacher, status) => {
   await axios.put(`${resolveApiBaseUrl()}/headteacher/teachers/${encodeURIComponent(teacher.id)}`, {

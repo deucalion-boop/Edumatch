@@ -18,7 +18,11 @@ function createFakeSupabase(initialTables = {}) {
     let single = false;
     const query = {
       select() { return query; },
-      eq(field, value) { filters.push((row) => row[field] === value); return query; },
+      eq(field, value) {
+        const [column, jsonKey] = field.split('->>');
+        filters.push((row) => (jsonKey ? row[column]?.[jsonKey] : row[column]) === value);
+        return query;
+      },
       ilike(field, value) {
         let pattern = '';
         const characters = [...String(value).toLowerCase()];

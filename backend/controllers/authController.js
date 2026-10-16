@@ -557,6 +557,16 @@ const completeInvite = asyncHandler(async (req, res) => {
   }
 
   if (user?.invite?.selfRegistration === true) {
+    if (user.invite.studentRegistration) {
+      const { teacherId, sectionId } = user.invite.studentRegistration;
+      const teacher = await findSupabaseAccount('id', teacherId);
+      const { getSectionOrThrow } = require('../services/sectionService');
+      await getSectionOrThrow(sectionId);
+      if (!teacher || teacher.role !== 'teacher' || teacher.status !== 'active'
+        || teacher.archive?.isArchived === true || String(teacher.advisorySectionId || '') !== String(sectionId)) {
+        throw Object.assign(new Error('This advisory assignment is no longer available. Ask your teacher for a new registration link.'), { statusCode: 409 });
+      }
+    }
     const fullName = String(req.body?.fullName || '').trim().replace(/\s+/g, ' ');
     const email = assertAccountEmail(req.body?.email, user.role, user.authProvider);
     const username = String(req.body?.username || '').trim();
@@ -584,7 +594,7 @@ const completeInvite = asyncHandler(async (req, res) => {
     user.name = fullName;
     user.email = email;
     user.username = username;
-    user.department = selectedDepartment;
+    if (user.role !== 'student') user.department = selectedDepartment;
     user.subject = user.role === ROLE_TEACHER ? selectedDepartment : '';
   }
 
