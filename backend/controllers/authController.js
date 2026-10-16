@@ -8,11 +8,13 @@ const { assertPasswordMeetsPolicy, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } = 
 const { resolveStoredFileUrl } = require('../utils/fileStorage');
 const { getAppSettings } = require('../services/supabaseSettingsService');
 const { consumeToken: consumeCaptchaToken } = require('../services/mathCaptchaService');
+const { DEPARTMENTS, ROLE_HEADTEACHER, ROLE_TEACHER } = require('../constants/userRoles');
 const {
   findSupabaseAccount,
   findSupabaseAccountByEmail,
   findSupabaseAccountByJsonToken,
   findSupabaseAccountByUsername,
+  findSupabaseHeadTeacherByDepartment,
 } = require('../services/supabaseAccountService');
 const {
   consumeOpenChallenges,
@@ -558,8 +560,22 @@ const completeInvite = asyncHandler(async (req, res) => {
     const fullName = String(req.body?.fullName || '').trim().replace(/\s+/g, ' ');
     const email = assertAccountEmail(req.body?.email, user.role, user.authProvider);
     const username = String(req.body?.username || '').trim();
+    const requestedDepartment = String(req.body?.department || '').trim();
     if (!fullName || fullName.length > 100) throw Object.assign(new Error('Full name is required and must be 100 characters or fewer'), { statusCode: 400 });
     if (!/^[A-Za-z0-9][A-Za-z0-9._-]{2,29}$/.test(username)) throw Object.assign(new Error('Username must be 3–30 characters using letters, numbers, dots, underscores, or hyphens'), { statusCode: 400 });
+    let selectedDepartment = '';
+    if ([ROLE_HEADTEACHER, ROLE_TEACHER].includes(user.role)) {
+      selectedDepartment = DEPARTMENTS.find(value => value.toLowerCase() === requestedDepartment.toLowerCase()) || '';
+      if (!selectedDepartment) {
+        throw Object.assign(new Error(`Department is required and must be one of: ${DEPARTMENTS.join(', ')}`), { statusCode: 400 });
+      }
+      if (user.role === ROLE_HEADTEACHER) {
+        const existingHeadTeacher = await findSupabaseHeadTeacherByDepartment(selectedDepartment);
+        if (existingHeadTeacher && String(existingHeadTeacher._id) !== String(user._id)) {
+          throw Object.assign(new Error('This department already has a Head Teacher assigned'), { statusCode: 409 });
+        }
+      }
+    }
     const [emailAccount, usernameAccount] = await Promise.all([
       findSupabaseAccountByEmail(email), findSupabaseAccountByUsername(username),
     ]);
@@ -568,6 +584,8 @@ const completeInvite = asyncHandler(async (req, res) => {
     user.name = fullName;
     user.email = email;
     user.username = username;
+    user.department = selectedDepartment;
+    user.subject = user.role === ROLE_TEACHER ? selectedDepartment : '';
   }
 
   const hasExistingPassword = Boolean(String(user.password || '').trim());

@@ -950,10 +950,7 @@ const createAndInviteUser = asyncHandler(async (req, res) => {
   ensureAccountCreationPermission(req, normalizedRole);
   const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
   const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
-  await ensureSingleHeadTeacherPerDepartment({
-    role: normalizedRole,
-    department: scopedFields.department,
-  });
+  await ensureSingleHeadTeacherPerDepartment({ role: normalizedRole, department: scopedFields.department });
 
   const created = await createSupabaseAccount({
     name: String(name).trim(),
@@ -1037,13 +1034,14 @@ const createUser = asyncHandler(async (req, res) => {
   ensureAdminManagedRole(normalizedRole);
   ensureAccountCreationPermission(req, normalizedRole);
   const normalizedUsername = String(username).trim();
-  const scopedFields = applyRoleScopedFields({ role: normalizedRole, department, subject });
+  const scopedFields = isAdminSelfRegistration && [ROLE_HEADTEACHER, ROLE_TEACHER].includes(normalizedRole)
+    ? { department: '', subject: '' }
+    : applyRoleScopedFields({ role: normalizedRole, department, subject });
   const studentFields = normalizeStudentFields({ role: normalizedRole, strand, gradeLevel });
   const studentSection = await resolveStudentSection(normalizedRole, sectionId);
-  await ensureSingleHeadTeacherPerDepartment({
-    role: normalizedRole,
-    department: scopedFields.department,
-  });
+  if (!isAdminSelfRegistration) {
+    await ensureSingleHeadTeacherPerDepartment({ role: normalizedRole, department: scopedFields.department });
+  }
   const normalizedStatus = String(status || '').trim().toLowerCase();
   if (!normalizedUsername || normalizedUsername.length > 50) {
     const error = new Error('Username must be between 1 and 50 characters');

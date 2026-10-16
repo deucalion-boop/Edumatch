@@ -475,19 +475,6 @@
                 </div>
               </div>
 
-              <div v-if="['headteacher', 'teacher'].includes(newUser.role)" class="form-group">
-                <label for="managedDepartment">Department *</label>
-                <select id="managedDepartment" v-model="newUser.department" required>
-                  <option value="" disabled>Select department</option>
-                  <option v-for="department in departmentOptions" :key="department" :value="department">
-                    {{ department }}
-                  </option>
-                </select>
-              </div>
-              <div v-if="newUser.role === 'teacher'" class="form-group">
-                <label for="teacherSubject">Subject</label>
-                <input id="teacherSubject" v-model.trim="newUser.subject" type="text" placeholder="Defaults to department">
-              </div>
               <div class="form-group">
                 <label>Security</label>
                 <p class="hint-text">
@@ -1171,7 +1158,7 @@
           <button class="btn btn-outline" @click="closeConfirmationModal">
             Cancel
           </button>
-          <button class="btn btn-danger" :disabled="confirmRequiresPassword && !confirmPassword.trim()" @click="executeConfirmAction">
+          <button class="btn btn-success" :disabled="confirmRequiresPassword && !confirmPassword.trim()" @click="executeConfirmAction">
             {{ confirmRequiresPassword ? 'Delete User' : 'Confirm' }}
           </button>
         </div>
@@ -2230,15 +2217,6 @@ export default {
         showToastMessage('You do not have permission to create that role', 'error')
         return
       }
-      if (['headteacher', 'teacher'].includes(newUser.role) && !String(newUser.department || '').trim()) {
-        showToastMessage('Department is required for Head Teacher and Teacher accounts', 'error')
-        return
-      }
-      if (newUser.role === 'headteacher' && hasDepartmentHeadTeacher({ department: newUser.department })) {
-        showToastMessage('This department already has a Head Teacher assigned', 'error')
-        return
-      }
-
       isCreateInviteLoading.value = true
 
       try {
@@ -2246,8 +2224,6 @@ export default {
           selfRegistration: true,
           role: newUser.role,
           status: 'pending',
-          department: ['headteacher', 'teacher'].includes(newUser.role) ? newUser.department : '',
-          subject: newUser.role === 'teacher' ? newUser.subject : '',
           gradeLevel: newUser.role === 'student' ? 'Grade 10' : '',
           sectionId: newUser.role === 'student' ? newUser.sectionId : '',
           strand: newUser.role === 'student' ? newUser.strand : '',

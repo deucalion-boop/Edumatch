@@ -199,6 +199,13 @@
                 <label class="auth-form-label" for="inviteUsername"><i class="fas fa-id-badge"></i> Username</label>
                 <input id="inviteUsername" v-model.trim="inviteForm.username" type="text" class="auth-form-input" required minlength="3" maxlength="30" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,29}" autocomplete="username" placeholder="Choose a username" />
               </div>
+              <div v-if="['teacher', 'headteacher'].includes(invite.role)" class="auth-form-group">
+                <label class="auth-form-label" for="inviteDepartment"><i class="fas fa-building"></i> Department</label>
+                <select id="inviteDepartment" v-model="inviteForm.department" class="auth-form-input" required>
+                  <option value="" disabled>Select your department</option>
+                  <option v-for="department in departmentOptions" :key="department" :value="department">{{ department }}</option>
+                </select>
+              </div>
             </template>
             <div v-if="!invite.selfRegistration" class="auth-form-group">
               <label class="auth-form-label">Invited Email</label>
@@ -338,8 +345,10 @@ export default {
       lastName: '',
       email: '',
       username: '',
+      department: '',
       password: '',
     })
+    const departmentOptions = ['Mathematics', 'English', 'Science', 'TLE', 'Filipino', 'Araling Panlipunan', 'Edukasyon sa Pagpapakatao (ESP)', 'MAPEH']
     
     // Get error/success messages from store or route query
     const error = computed(() => {
@@ -537,6 +546,7 @@ export default {
           fullName: `${inviteForm.firstName.trim()} ${inviteForm.lastName.trim()}`.replace(/\s+/g, ' ').trim(),
           email: inviteForm.email,
           username: inviteForm.username,
+          department: inviteForm.department,
         })
 
         router.push({
@@ -577,6 +587,7 @@ export default {
       isResendingOtp,
       invite,
       inviteForm,
+      departmentOptions,
       mathCaptcha,
       captchaToken,
       isInviteMode,
