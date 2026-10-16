@@ -16,7 +16,7 @@
       <p v-if="loadError" class="registry-notice is-error" role="alert">{{ loadError }} <button type="button" class="registry-text-button" @click="loadRegistry({ force: true })">Retry</button></p>
 
       <section class="registry-summary" aria-label="School student totals">
-        <article v-for="item in summaryCards" :key="item.key" class="registry-summary-card"><span class="registry-summary-icon"><i class="fas" :class="item.icon" aria-hidden="true"></i></span><div><span>{{ item.label }}</span><strong>{{ summary[item.key] }}</strong></div></article>
+        <article v-for="item in summaryCards" :key="item.key" class="registry-summary-card" :class="`is-${item.key}`"><span class="registry-summary-icon"><i class="fas" :class="item.icon" aria-hidden="true"></i></span><div><span>{{ item.label }}</span><strong>{{ summary[item.key] }}</strong></div></article>
       </section>
       <p class="registry-summary-note">Pending includes students whose registration code is expired or revoked.</p>
 
@@ -270,12 +270,17 @@ onBeforeUnmount(() => {
 .registry-section-heading h2 { @apply tw:[margin:.3rem_0_.4rem] tw:[font-size:1.15rem] tw:font-bold tw:[color:#21450f] tw:[line-height:1.35]; }
 .registry-section-heading p, .registry-dialog-description { @apply tw:m-0 tw:[font-size:.8rem] tw:[color:#6b7b61] tw:[line-height:1.65]; }
 .registry-scope { @apply tw:inline-flex tw:items-center tw:[gap:.4rem] tw:[padding:.4rem_.65rem] tw:[border-radius:99px] tw:[background:#edf5e6] tw:[color:#3b6427] tw:[font-size:.72rem] tw:font-semibold; }
-.registry-summary { @apply tw:grid tw:[grid-template-columns:repeat(4,_minmax(0,_1fr))] tw:[gap:1rem]; }
-.registry-summary-card { @apply tw:flex tw:items-center tw:[gap:.85rem] tw:[padding:1.2rem] tw:bg-white tw:[border:1px_solid_#dce7d5] tw:[border-radius:16px] tw:min-w-0; }
-.registry-summary-icon { @apply tw:inline-flex tw:items-center tw:justify-center tw:[width:44px] tw:[height:44px] tw:shrink-0 tw:[border-radius:12px] tw:[background:#edf5e6] tw:[color:#46742d]; }
-.registry-summary-card > div { @apply tw:grid tw:[gap:.25rem] tw:min-w-0; }
-.registry-summary-card div > span { @apply tw:[font-size:.74rem] tw:[color:#708263]; }
-.registry-summary-card strong { @apply tw:[font-size:1.8rem] tw:[line-height:1.1] tw:[color:#2b511b] tw:font-bold; }
+.registry-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+.registry-summary-card { display: flex; align-items: center; gap: .75rem; min-width: 0; padding: .9rem; border: 1px solid rgba(30, 67, 7, .14); border-radius: 18px; background: rgba(255, 255, 255, .88); box-shadow: 0 8px 20px rgba(30, 67, 7, .045); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.registry-summary-card:hover { transform: translateY(-2px); border-color: rgba(30, 67, 7, .28); box-shadow: 0 14px 28px rgba(30, 67, 7, .09); }
+.registry-summary-icon { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 14px; background: linear-gradient(145deg, #1e4307, #477b22); color: white; box-shadow: 0 8px 17px rgba(30, 67, 7, .17); }
+.registry-summary-icon > i { color: white; }
+.registry-summary-card.is-registered .registry-summary-icon { background: linear-gradient(145deg, #477b22, #71a948); }
+.registry-summary-card.is-pending .registry-summary-icon { background: linear-gradient(145deg, #8a6605, #d4aa2f); }
+.registry-summary-card.is-unassigned .registry-summary-icon { background: linear-gradient(145deg, #596454, #7b8975); }
+.registry-summary-card > div { display: grid; gap: .18rem; min-width: 0; }
+.registry-summary-card div > span { overflow: hidden; color: #667260; font-size: .69rem; font-weight: 750; letter-spacing: .055em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.registry-summary-card strong { color: #172014; font-size: 1.35rem; line-height: 1; font-weight: 700; }
 .registry-summary-note { @apply tw:[margin:.6rem_0_1.25rem] tw:[font-size:.72rem] tw:[color:#718367]; }
 .registry-button-row, .registry-link-actions { @apply tw:flex tw:items-center tw:flex-wrap tw:[gap:.55rem]; }
 .registry-button { @apply tw:inline-flex tw:items-center tw:justify-center tw:[gap:.45rem] tw:[padding:.65rem_.9rem] tw:[min-height:44px] tw:[border:1px_solid_transparent] tw:[border-radius:9px] tw:[font-size:.78rem] tw:font-bold tw:cursor-pointer; }
@@ -350,4 +355,15 @@ onBeforeUnmount(() => {
 .registry-sr-only { @apply tw:sr-only; }
 @media (max-width: 1050px) { .registry-summary { @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))]; } .registry-toolbar { @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))]; } }
 @media (max-width: 600px) { .registry-summary { @apply tw:[gap:.6rem]; } .registry-summary-card { @apply tw:[padding:.85rem] tw:[gap:.5rem]; } .registry-summary-icon { @apply tw:hidden; } .registry-summary-card strong { @apply tw:[font-size:1.5rem]; } .registry-toolbar, .registry-class-options { @apply tw:[grid-template-columns:minmax(0,_1fr)]; } .registry-link-actions .registry-button { @apply tw:w-full; } .registry-section-heading > .registry-button-row { @apply tw:w-full; } .registry-section-heading > .registry-button-row .registry-button { @apply tw:flex-1; } .registry-dialog-content { @apply tw:[padding:1rem]; } .registry-dialog-footer .registry-button { @apply tw:flex-1; } }
+@media (max-width: 600px) {
+  .registry-summary { gap: .55rem; }
+  .registry-summary-card { gap: .55rem; padding: .72rem; border-radius: 15px; }
+  .registry-summary-icon { display: inline-flex; width: 36px; height: 36px; flex-basis: 36px; border-radius: 12px; }
+  .registry-summary-card div > span { font-size: .58rem; }
+  .registry-summary-card strong { font-size: 1.1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .registry-summary-card { transition: none; }
+  .registry-summary-card:hover { transform: none; }
+}
 </style>
