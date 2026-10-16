@@ -12,7 +12,7 @@
           <span>{{ loading ? 'Refreshing…' : 'Refresh' }}</span>
         </button>
         <button type="button" class="invitation-button invitation-button-primary" :disabled="working || !authToken" @click="openDialog('create')">
-          <i class="fas fa-link" aria-hidden="true"></i> Generate Group Link
+          <i class="fas fa-link" style="color: #fff" aria-hidden="true"></i> Generate Group Link
         </button>
       </div>
     </header>
