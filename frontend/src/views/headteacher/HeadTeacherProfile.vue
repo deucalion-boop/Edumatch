@@ -10,7 +10,7 @@
           </div>
           <div class="headteacher-header-tools">
             <HeadTeacherNotifications />
-            <RouterLink to="/headteacher/settings" class="headteacher-header-settings-button" aria-label="Settings"><i class="fas fa-cog" aria-hidden="true"></i></RouterLink>
+            <HeadTeacherAccountMenu />
           </div>
         </div>
       </header>
@@ -25,6 +25,7 @@ import { useAuthStore } from '../../stores/auth.js'
 import DashboardFooter from '../../components/DashboardFooter.vue'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
+import HeadTeacherAccountMenu from '../../components/HeadTeacherAccountMenu.vue'
 import HeadTeacherProfileForm from '../../components/HeadTeacherProfileForm.vue'
 const auth = useAuthStore()
 const isSidebarOpen = ref(false)

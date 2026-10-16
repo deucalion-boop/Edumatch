@@ -8,7 +8,7 @@
             <button type="button" class="headteacher-mobile-menu-toggle" aria-label="Open sidebar" aria-controls="headteacher-sidebar-drawer" :aria-expanded="isSidebarOpen" @click="isSidebarOpen = !isSidebarOpen"><i class="fas fa-bars" aria-hidden="true"></i></button>
             <div class="headteacher-matched-header-copy"><h1>Student Management</h1><p class="headteacher-header-subtitle">Share private student registration links and manage class assignments in your department.</p></div>
           </div>
-          <div class="headteacher-header-tools"><HeadTeacherNotifications /><RouterLink to="/headteacher/settings" class="headteacher-header-settings-button" aria-label="Head Teacher settings"><i class="fas fa-cog" aria-hidden="true"></i></RouterLink></div>
+          <div class="headteacher-header-tools"><HeadTeacherNotifications /><HeadTeacherAccountMenu /></div>
         </div>
       </header>
 
@@ -70,6 +70,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import axios from 'axios'
 import HeadTeacherSidebar from '../../components/HeadTeacherSidebar.vue'
 import HeadTeacherNotifications from '../../components/HeadTeacherNotifications.vue'
+import HeadTeacherAccountMenu from '../../components/HeadTeacherAccountMenu.vue'
 import { useAuthStore } from '../../stores/auth.js'
 
 const authStore = useAuthStore()
