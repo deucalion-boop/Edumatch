@@ -3,11 +3,12 @@ const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
 const { createFakeSupabase } = require('./helpers/fakeSupabase');
 const storage = require('../services/supabaseStorageService');
+process.env.JWT_SECRET = 'student-private-registration-test-secret-32';
 let client;
 let emails = 0;
 storage.getSupabaseStorageClient = () => client;
 require('../services/gmailService').sendEmailViaGmail = async () => { emails += 1; return { sent: true }; };
-const { create } = require('../controllers/studentPrivateRegistrationController');
+const { create, list } = require('../controllers/studentPrivateRegistrationController');
 const { validateInvite, completeInvite } = require('../controllers/authController');
 const teacher = { _id: 'teacher', role: 'teacher', status: 'active', name: 'Teacher', subject: 'MAPEH',
   department: 'MAPEH', advisorySectionId: 'charity', managedBy: 'headteacher' };
@@ -93,4 +94,22 @@ test('inactive teacher and missing section cannot issue student links', async ()
   await assert.rejects(invoke(create, { user: { ...teacher, status: 'inactive' } }), { statusCode: 409 });
   await assert.rejects(invoke(create, { user: { ...teacher, advisorySectionId: '' } }), { statusCode: 400 });
   assert.equal(client.tables.users.length, 1);
+});
+
+test('teacher class list recovers only their active registration links without storing plaintext', async () => {
+  fixture();
+  const created = await invoke(create);
+  const student = client.tables.users.find(row => row.role === 'student');
+  assert.equal(JSON.stringify(student.invite).includes(tokenOf(created)), false);
+  const response = await invoke(list);
+  assert.equal(response.links.length, 1);
+  assert.equal(response.links[0].subjectId, 'class');
+  assert.equal(response.links[0].inviteLink, created.invite.inviteLink);
+  assert.equal((await invoke(list, { user: { ...teacher, _id: 'other-teacher' } })).links.length, 0);
+  assert.equal((await invoke(list, { user: { ...teacher, advisorySectionId: 'unity' } })).links.length, 0);
+  student.invite.expiresAt = new Date(Date.now() - 1000).toISOString();
+  assert.equal((await invoke(list)).links.length, 0);
+  student.invite.expiresAt = new Date(Date.now() + 60000).toISOString();
+  student.invite.usedAt = new Date().toISOString();
+  assert.equal((await invoke(list)).links.length, 0);
 });

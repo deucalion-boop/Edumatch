@@ -298,6 +298,18 @@
               </div>
             </div>
             <p v-if="subject.description" class="subject-management-copy">{{ subject.description }}</p>
+            <div v-if="registrationLinksForClass(subject.id).length" class="class-registration-links">
+              <strong>Student registration links</strong>
+              <div v-for="(registration, index) in registrationLinksForClass(subject.id)" :key="registration.id" class="class-registration-link">
+                <label :for="`registration-link-${registration.id}`">Private link {{ index + 1 }} · One student</label>
+                <div class="class-registration-link-actions">
+                  <input :id="`registration-link-${registration.id}`" :value="registration.inviteLink" type="url" readonly @focus="$event.target.select()">
+                  <button type="button" class="btn btn-primary btn-sm" @click="copyClassRegistrationLink(registration)">Copy Link</button>
+                </div>
+                <small>Expires {{ formatDateTime(registration.expiresAt) }}</small>
+              </div>
+            </div>
+            <p v-if="registrationLinksError && subject.classType === 'advisory'" class="invitation-load-error" role="status">{{ registrationLinksError }} <button type="button" @click="fetchRegistrationLinks">Retry</button></p>
             <div class="subject-management-meta">
               <span class="subject-metric-chip"><i class="fas fa-file-lines"></i><strong>{{ subject.lessonCount }}</strong> Lessons</span>
               <span class="subject-metric-chip"><i class="fas fa-clipboard-check"></i><strong>{{ subject.assessmentCount }}</strong> Assessments</span>
@@ -548,7 +560,7 @@
         <section class="modal-panel" role="dialog" aria-modal="true" aria-label="Private student registration">
           <div class="modal-panel-head"><h3>Invite Student</h3><button type="button" class="modal-close-btn" aria-label="Close student registration" @click="isClassInvitationModalOpen = false"><i class="fas fa-times"></i></button></div>
           <div class="student-invite-body">
-            <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" hide-heading />
+            <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" hide-heading @created="handleRegistrationLinkCreated" />
           </div>
         </section>
       </div>
@@ -797,6 +809,24 @@ import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
 import StudentPrivateRegistration from '../../components/StudentPrivateRegistration.vue'
+
+const registrationLinks = ref([])
+const registrationLinksError = ref('')
+const registrationLinksForClass = subjectId => registrationLinks.value.filter(link => String(link.subjectId) === String(subjectId) && Date.parse(link.expiresAt) > Date.now())
+async function fetchRegistrationLinks() {
+  try {
+    const response = await axios.get(`${resolveApiBaseUrl()}/teacher/students/registration-links`, getAuthConfig())
+    registrationLinks.value = Array.isArray(response.data?.links) ? response.data.links : []
+    registrationLinksError.value = ''
+  } catch (error) {
+    registrationLinksError.value = error.response?.data?.message || 'Unable to load student registration links.'
+  }
+}
+function handleRegistrationLinkCreated() { void fetchRegistrationLinks() }
+async function copyClassRegistrationLink(registration) {
+  try { await navigator.clipboard.writeText(registration.inviteLink); showToast('success', 'Private student registration link copied.') }
+  catch { showToast('error', 'Select the link in the class card and copy it manually.') }
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -1552,7 +1582,7 @@ const fetchClassInvitations = (options = {}) => {
 const refreshEnrollment = async () => {
   if (isEnrollmentRefreshing.value) return
   isEnrollmentRefreshing.value = true
-  try { await Promise.allSettled([fetchStudents(), fetchSubjects(), fetchEnrollmentRequests(), fetchClassInvitations(), fetchAdvisoryInvitationContext({ silent: true })]) }
+  try { await Promise.allSettled([fetchStudents(), fetchSubjects(), fetchEnrollmentRequests(), fetchClassInvitations(), fetchAdvisoryInvitationContext({ silent: true }), fetchRegistrationLinks()]) }
   finally { isEnrollmentRefreshing.value = false }
 }
 const openClassInvitation = (subjectId = '') => {
@@ -2216,6 +2246,7 @@ onMounted(async () => {
   fetchStudents()
   fetchEnrollmentRequests()
   fetchClassInvitations()
+  fetchRegistrationLinks()
   fetchAdvisoryInvitationContext()
   syncMobileMenuBodyState()
   startTeacherAssignmentRefreshLoop()
@@ -2240,6 +2271,17 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.class-registration-links { display: grid; gap: .85rem; min-width: 0; margin-top: 1rem; padding: 1rem; border: 1px solid #dce7d2; border-radius: 12px; background: #f7faf4; }
+.class-registration-link { display: grid; grid-template-columns: minmax(0, 1fr); gap: .4rem; min-width: 0; }
+.class-registration-link label, .class-registration-link small { font-size: .75rem; color: #52634a; }
+.class-registration-link-actions { display: flex; gap: .5rem; min-width: 0; }
+.class-registration-link-actions input { flex: 1; width: 0; min-width: 0; padding: .6rem; border: 1px solid #ccd9c3; border-radius: 8px; background: white; color: #25431b; font-size: .8rem; text-overflow: ellipsis; }
+.class-registration-link-actions button { flex-shrink: 0; }
+@media (max-width: 480px) {
+  .class-registration-link-actions { flex-direction: column; }
+  .class-registration-link-actions input { flex: auto; width: 100%; box-sizing: border-box; }
+}
+
 .student-invite-body {
   padding: clamp(1rem, 3vw, 1.5rem);
   min-width: 0;

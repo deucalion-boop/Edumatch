@@ -49,6 +49,7 @@ const router = express.Router();
 router.use(authMiddleware, roleMiddleware('teacher'));
 router.use('/class-invitations', require('./classInvitationRoutes').teacher);
 router.post('/students/registration-links', inviteLimiter, require('../controllers/studentPrivateRegistrationController').create);
+router.get('/students/registration-links', require('../controllers/studentPrivateRegistrationController').list);
 
 router.post(
   '/lessons',

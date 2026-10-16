@@ -1,5 +1,5 @@
 const { findSupabaseAccount } = require('../services/supabaseAccountService');
-const { createStudentRegistrationLink } = require('../services/studentPrivateRegistrationService');
+const { createStudentRegistrationLink, listStudentRegistrationLinks } = require('../services/studentPrivateRegistrationService');
 const { sendSuccess } = require('../utils/responseHelper');
 
 async function create(req, res, next) {
@@ -19,4 +19,11 @@ async function create(req, res, next) {
   } catch (error) { return next(error); }
 }
 
-module.exports = { create };
+async function list(req, res, next) {
+  try {
+    const links = await listStudentRegistrationLinks(req.user);
+    return sendSuccess(res, 200, 'Student registration links fetched.', { links });
+  } catch (error) { return next(error); }
+}
+
+module.exports = { create, list };

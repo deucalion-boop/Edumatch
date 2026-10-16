@@ -62,7 +62,7 @@ async function generateLink() {
     link.value = response.data.invite.inviteLink
     expiresAt.value = response.data.invite.inviteExpiresAt
     sectionName.value = response.data.section.name
-    emit('created')
+    emit('created', response.data)
   } catch (err) { error.value = err.response?.data?.message || 'Unable to create a private registration link. Please try again.' }
   finally { busy.value = false }
 }
