@@ -172,6 +172,7 @@
               <col class="archive-col-section">
               <col class="archive-col-grade">
               <col class="archive-col-adviser">
+              <col class="archive-col-recommendation">
               <col class="archive-col-owner">
             </colgroup>
             <thead>
@@ -182,12 +183,13 @@
                 <th scope="col">Section</th>
                 <th scope="col">Grade</th>
                 <th scope="col">Adviser / Teacher</th>
+                <th scope="col">Recommendation Progress</th>
                 <th scope="col">Archived By</th>
               </tr>
             </thead>
             <tbody v-if="isLoading">
               <tr>
-                <td colspan="7">
+                <td colspan="8">
                   <div class="table-state" role="status">
                     <i class="fas fa-spinner fa-spin"></i>
                     <strong>Loading archived records</strong>
@@ -198,7 +200,7 @@
             </tbody>
             <tbody v-else-if="filteredStudents.length === 0">
               <tr>
-                <td colspan="7">
+                <td colspan="8">
                   <div class="table-state" role="status">
                     <span class="table-state-icon"><i class="fas fa-box-open"></i></span>
                     <strong>No archived records found</strong>
@@ -231,6 +233,13 @@
                   </div>
                 </td>
                 <td>
+                  <div class="archive-recommendation-progress">
+                    <strong>{{ student.recommendation.progressPercent }}%</strong>
+                    <progress :value="student.recommendation.progressPercent" max="100" :aria-label="`Recommendation progress for ${student.name}`"></progress>
+                    <small>{{ student.recommendation.statusLabel }}</small>
+                  </div>
+                </td>
+                <td>
                   <div class="secretary-adviser-cell">
                     <strong>{{ student.archive.archivedBy?.name || 'System' }}</strong>
                     <small>{{ student.archive.archivedBy?.email || 'No email recorded' }}</small>
@@ -252,7 +261,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
-import archivePrintStyles from '../../styles/export/archive-print.tailwind.css?inline'
 
 const router = useRouter()
 const route = useRoute()
@@ -266,6 +274,7 @@ const banner = ref({ type: 'success', message: '' })
 const currentPdfExportRequest = ref(null)
 const isRequestingPdfApproval = ref(false)
 const isUsingPdfApproval = ref(false)
+const isPreparingPdf = ref(false)
 const accountMenuRef = ref(null)
 const filters = ref({ schoolYear: 'all', department: 'all', gradeLevel: 'all' })
 const CORE_DEPARTMENTS = ['Mathematics', 'English', 'Science', 'TLE', 'Filipino', 'Araling Panlipunan', 'Edukasyon sa Pagpapakatao (ESP)', 'MAPEH']
@@ -315,24 +324,6 @@ const formatDateTime = (value) => {
 const buildExportFileName = (suffix, extension) => {
   const stamp = new Date().toISOString().slice(0, 10)
   return `secretary-archived-records-${suffix}-${stamp}.${extension}`
-}
-const escapeCsvCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`
-const escapeHtml = (value) => String(value ?? '')
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;')
-const downloadBlob = (content, fileName, mimeType) => {
-  const blob = new Blob([content], { type: mimeType })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
 }
 
 const schoolYearOptions = computed(() => Array.from(new Set(
@@ -405,7 +396,7 @@ const pdfApprovalToneClass = computed(() => {
 })
 
 const pdfExportButtonLabel = computed(() => {
-  if (isUsingPdfApproval.value) return 'Preparing PDF...'
+  if (isUsingPdfApproval.value || isPreparingPdf.value) return 'Preparing PDF...'
   if (isRequestingPdfApproval.value) return 'Sending Request...'
   if (pdfApprovalStatus.value === 'approved') return 'Export PDF'
   if (pdfApprovalStatus.value === 'pending') return 'Approval Pending'
@@ -413,7 +404,7 @@ const pdfExportButtonLabel = computed(() => {
 })
 
 const pdfExportButtonIcon = computed(() => {
-  if (isUsingPdfApproval.value || isRequestingPdfApproval.value) return 'fa-spinner fa-spin'
+  if (isUsingPdfApproval.value || isPreparingPdf.value || isRequestingPdfApproval.value) return 'fa-spinner fa-spin'
   if (pdfApprovalStatus.value === 'approved') return 'fa-file-pdf'
   if (pdfApprovalStatus.value === 'pending') return 'fa-clock'
   return 'fa-user-shield'
@@ -423,6 +414,7 @@ const isPdfExportActionDisabled = computed(() => (
   filteredStudents.value.length === 0
   || isRequestingPdfApproval.value
   || isUsingPdfApproval.value
+  || isPreparingPdf.value
   || pdfApprovalStatus.value === 'pending'
 ))
 
@@ -435,7 +427,7 @@ const pdfExportHelperText = computed(() => {
     const expiresAt = currentPdfExportRequest.value?.expiresAt
     return expiresAt
       ? `Admin approved this export. Use it before ${formatDateTime(expiresAt)}.`
-      : 'Admin approved this export. You can print the PDF now.'
+      : 'Admin approved this export. You can download the PDF now.'
   }
 
   if (pdfApprovalStatus.value === 'pending') {
@@ -457,102 +449,7 @@ const pdfExportHelperText = computed(() => {
   return 'PDF export requires admin approval for the current archived record filters.'
 })
 
-const exportRowsToCsv = (rows, fileName) => {
-  if (!rows.length) return
-  const headers = Object.keys(rows[0])
-  const lines = [
-    headers.map(escapeCsvCell).join(','),
-    ...rows.map((row) => headers.map((header) => escapeCsvCell(row[header])).join(',')),
-  ]
-  downloadBlob(`\uFEFF${lines.join('\r\n')}`, fileName, 'text/csv;charset=utf-8;')
-}
 
-const buildArchivePdfDocument = () => {
-  const exportedAt = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date())
-  const filterSummary = [
-    filters.value.schoolYear !== 'all' ? `School Year: ${filters.value.schoolYear}` : 'School Year: All',
-    filters.value.department !== 'all' ? `Department: ${filters.value.department}` : 'Department: All',
-    filters.value.gradeLevel !== 'all' ? `Grade: ${filters.value.gradeLevel}` : 'Grade: All',
-    searchTerm.value ? `Search: ${searchTerm.value}` : 'Search: None',
-  ]
-  const rowsHtml = filteredStudents.value.map((student) => `
-    <tr>
-      <td>${escapeHtml(student.name || 'N/A')}</td>
-      <td>${escapeHtml(student.email || 'N/A')}</td>
-      <td>${escapeHtml(student.archive?.schoolYear || 'Not tagged')}</td>
-      <td>${escapeHtml(formatShortDate(student.archive?.archivedAt))}</td>
-      <td>${escapeHtml(student.section?.name || 'No section')}</td>
-      <td>${escapeHtml(student.gradeLevel || 'Not set')}</td>
-      <td>${escapeHtml(student.adviser?.name || 'No adviser assigned')}</td>
-      <td>${escapeHtml(student.archive?.archivedBy?.name || 'System')}</td>
-    </tr>
-  `).join('')
-
-  return `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Archived Student Records</title>
-    <style>${archivePrintStyles}</style>
-  </head>
-  <body>
-    <h1>Archived Student Records</h1>
-    <p>Secretary archive export generated on ${escapeHtml(exportedAt)}.</p>
-    <div class="meta">
-      <strong>${filteredStudents.value.length} archived record${filteredStudents.value.length === 1 ? '' : 's'}</strong>
-      <p>${escapeHtml(filterSummary.join(' | '))}</p>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th>Email</th>
-          <th>School Year</th>
-          <th>Archived On</th>
-          <th>Section</th>
-          <th>Grade</th>
-          <th>Adviser</th>
-          <th>Archived By</th>
-        </tr>
-      </thead>
-      <tbody>${rowsHtml}</tbody>
-    </table>
-  </body>
-</html>`
-}
-
-const exportArchivedCsv = () => {
-  exportRowsToCsv(getArchivedExportRows(), buildExportFileName('filtered', 'csv'))
-}
-
-const openArchivePrintWindow = () => {
-  const printWindow = window.open('', '_blank', 'width=1200,height=800')
-  if (printWindow) printWindow.opener = null
-  return printWindow
-}
-
-const exportArchivedPdf = (printWindow = null) => {
-  if (!filteredStudents.value.length) return
-  const targetWindow = printWindow || openArchivePrintWindow()
-  if (!targetWindow) {
-    setBanner('error', 'Allow pop-ups in your browser to export the archived PDF.')
-    return
-  }
-  targetWindow.document.open()
-  targetWindow.onload = () => {
-    targetWindow.onload = null
-    targetWindow.focus()
-    targetWindow.print()
-  }
-  targetWindow.document.write(buildArchivePdfDocument())
-  targetWindow.document.close()
-}
 
 const stopPdfApprovalPolling = () => {
   if (!pdfApprovalPollingTimer) return
@@ -673,27 +570,36 @@ const consumeArchivedPdfApproval = async () => {
 }
 
 const handleArchivedPdfAction = async () => {
-  if (!filteredStudents.value.length) return
+  if (!filteredStudents.value.length || isPreparingPdf.value || isUsingPdfApproval.value || isRequestingPdfApproval.value) return
 
   if (pdfApprovalStatus.value !== 'approved') {
     await requestArchivedPdfApproval()
     return
   }
 
-  const printWindow = openArchivePrintWindow()
-  if (!printWindow) {
-    setBanner('error', 'Allow pop-ups in your browser before exporting the approved PDF.')
-    return
+  isPreparingPdf.value = true
+  const approvedRequestId = currentPdfExportRequest.value?.id
+  const rows = getArchivedExportRows()
+  const filterSummary = [
+    `School Year: ${filters.value.schoolYear === 'all' ? 'All' : filters.value.schoolYear}`,
+    `Department: ${filters.value.department === 'all' ? 'All' : filters.value.department}`,
+    `Grade: ${filters.value.gradeLevel === 'all' ? 'All' : filters.value.gradeLevel}`,
+    `Search: ${searchTerm.value || 'None'}`,
+  ].join(' | ')
+  try {
+    const { buildArchivedRecordsPdf } = await import('../../utils/archivedRecordsPdf.js')
+    const doc = buildArchivedRecordsPdf({ rows, filterSummary, exportedAt: formatDateTime(new Date()) })
+    if (currentPdfExportRequest.value?.id !== approvedRequestId || pdfApprovalStatus.value !== 'approved') {
+      throw new Error('The selected archive filters changed. Please confirm approval for the current view and try again.')
+    }
+    if (!await consumeArchivedPdfApproval()) return
+    doc.save(buildExportFileName('filtered', 'pdf'))
+    setBanner('success', 'Archived records PDF download started.')
+  } catch (error) {
+    setBanner('error', error?.message || 'Unable to prepare the PDF download. Please try again.')
+  } finally {
+    isPreparingPdf.value = false
   }
-
-  const isApprovalValid = await consumeArchivedPdfApproval()
-  if (!isApprovalValid) {
-    printWindow.close()
-    return
-  }
-
-  exportArchivedPdf(printWindow)
-  setBanner('success', 'Archived PDF export is ready.')
 }
 
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
@@ -721,6 +627,12 @@ const fetchArchivedStudents = async () => {
       section: student.section || null,
       gradeLevel: student.gradeLevel || '',
       adviser: student.adviser || null,
+      recommendation: {
+        progressPercent: Math.max(0, Math.min(100, Number(student.recommendation?.recommendationProgressPercent) || 0)),
+        statusLabel: student.recommendation?.isRecommendationReady
+          ? 'Recommendation ready'
+          : String(student.recommendation?.recommendationStatus || 'not_started').replace(/_/g, ' '),
+      },
       archive: {
         schoolYear: student.archive?.schoolYear || '',
         archivedAt: student.archive?.archivedAt || null,
@@ -990,13 +902,20 @@ onBeforeUnmount(() => {
 .secretary-student-table {
   @apply tw:table-fixed;
 }
-.secretary-student-table .archive-col-student { @apply tw:[width:25%]; }
-.secretary-student-table .archive-col-year { @apply tw:[width:11%]; }
-.secretary-student-table .archive-col-date { @apply tw:[width:12%]; }
-.secretary-student-table .archive-col-section { @apply tw:[width:11%]; }
-.secretary-student-table .archive-col-grade { @apply tw:[width:9%]; }
-.secretary-student-table .archive-col-adviser { @apply tw:[width:17%]; }
-.secretary-student-table .archive-col-owner { @apply tw:[width:15%]; }
+.secretary-student-table .archive-col-student { width: 20%; }
+.secretary-student-table .archive-col-year { width: 10%; }
+.secretary-student-table .archive-col-date { width: 11%; }
+.secretary-student-table .archive-col-section { width: 9%; }
+.secretary-student-table .archive-col-grade { width: 8%; }
+.secretary-student-table .archive-col-adviser { width: 14%; }
+.secretary-student-table .archive-col-recommendation { width: 15%; }
+.secretary-student-table .archive-col-owner { width: 13%; }
+.archive-recommendation-progress { display: grid; gap: .4rem; min-width: 130px; }
+.archive-recommendation-progress progress { width: 100%; height: 8px; border: 0; border-radius: 999px; overflow: hidden; accent-color: #356f48; background: #e5e7eb; }
+.archive-recommendation-progress progress::-webkit-progress-bar { background: #e5e7eb; border-radius: 999px; }
+.archive-recommendation-progress progress::-webkit-progress-value { background: #356f48; border-radius: 999px; }
+.archive-recommendation-progress progress::-moz-progress-bar { background: #356f48; border-radius: 999px; }
+.archive-recommendation-progress small { color: #64748b; font-size: .75rem; text-transform: capitalize; }
 .secretary-table thead th {
   @apply tw:[background:linear-gradient(180deg,_#f2f8f3_0%,_#e9f3eb_100%)];
   @apply tw:[border-bottom:1px_solid_#a9c5b0];
