@@ -296,7 +296,7 @@
               <div v-if="request.status === 'pending'" class="export-request-actions">
                 <button
                   type="button"
-                  class="btn btn-primary export-request-action"
+                  class="btn btn-primary export-request-action export-request-action--approve"
                   :disabled="activeRequestActionId === request.id"
                   @click="reviewRequest(request, 'approved')"
                 >
@@ -1182,6 +1182,21 @@ onBeforeUnmount(() => {
 .export-request-action--reject {
   @apply tw:[border-color:#fca5a5]!;
   @apply tw:[color:#b91c1c]!;
+}
+
+.export-request-action--approve {
+  background: #15803d !important;
+  border-color: #15803d !important;
+  color: #fff !important;
+}
+
+.export-request-action--approve:hover:not(:disabled) {
+  background: #166534 !important;
+  border-color: #166534 !important;
+}
+
+.export-request-action--approve > i {
+  color: #fff !important;
 }
 
 @media (max-width: 1024px) {
