@@ -184,8 +184,12 @@
           <form v-else class="auth-form" @submit.prevent="handleInviteSubmit">
             <template v-if="invite.selfRegistration">
               <div class="auth-form-group">
-                <label class="auth-form-label" for="inviteFullName"><i class="fas fa-user"></i> Full Name</label>
-                <input id="inviteFullName" v-model.trim="inviteForm.fullName" type="text" class="auth-form-input" required maxlength="100" autocomplete="name" placeholder="Enter your full name" />
+                <label class="auth-form-label" for="inviteFirstName"><i class="fas fa-user"></i> First Name</label>
+                <input id="inviteFirstName" v-model.trim="inviteForm.firstName" type="text" class="auth-form-input" required maxlength="50" autocomplete="given-name" placeholder="Enter your first name" />
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-form-label" for="inviteLastName"><i class="fas fa-user"></i> Last Name</label>
+                <input id="inviteLastName" v-model.trim="inviteForm.lastName" type="text" class="auth-form-input" required maxlength="50" autocomplete="family-name" placeholder="Enter your last name" />
               </div>
               <div class="auth-form-group">
                 <label class="auth-form-label" for="inviteEmail"><i class="fas fa-at"></i> Email Address</label>
@@ -330,7 +334,8 @@ export default {
       otp: '',
     })
     const inviteForm = reactive({
-      fullName: '',
+      firstName: '',
+      lastName: '',
       email: '',
       username: '',
       password: '',
@@ -529,7 +534,7 @@ export default {
         await authStore.completeInvite({
           token: inviteToken,
           password: inviteForm.password,
-          fullName: inviteForm.fullName,
+          fullName: `${inviteForm.firstName.trim()} ${inviteForm.lastName.trim()}`.replace(/\s+/g, ' ').trim(),
           email: inviteForm.email,
           username: inviteForm.username,
         })

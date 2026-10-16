@@ -50,13 +50,19 @@
           </div>
 
           <form v-if="step === 'verify'" class="registration-form" @submit.prevent="verifyStudent">
-            <p class="form-description">Enter the full name on your teacher’s class list to continue.</p>
-            <div class="form-field">
-              <label for="student-full-name">Full name</label>
-              <input id="student-full-name" v-model="fullName" type="text" required maxlength="150" autocomplete="name" :disabled="verifying" aria-describedby="name-hint" />
-              <small id="name-hint">Enter your first and last names together, including any other names listed by your teacher. Spelling must match the class list; capitalization and extra spaces do not matter.</small>
+            <p class="form-description">Enter the first and last name on your teacher’s class list to continue.</p>
+            <div class="name-grid">
+              <div class="form-field">
+                <label for="student-first-name">First name</label>
+                <input id="student-first-name" v-model="firstName" type="text" required maxlength="75" autocomplete="given-name" :disabled="verifying" aria-describedby="name-hint" />
+              </div>
+              <div class="form-field">
+                <label for="student-last-name">Last name</label>
+                <input id="student-last-name" v-model="lastName" type="text" required maxlength="75" autocomplete="family-name" :disabled="verifying" aria-describedby="name-hint" />
+              </div>
+              <small id="name-hint">Spelling must match the class list; capitalization and extra spaces do not matter.</small>
             </div>
-            <button type="submit" class="primary-button" :disabled="verifying || !fullName.trim()">
+            <button type="submit" class="primary-button" :disabled="verifying || !firstName.trim() || !lastName.trim()">
               {{ verifying ? 'Verifying…' : 'Verify and continue' }}<i v-if="!verifying" class="fas fa-arrow-right" aria-hidden="true"></i>
             </button>
           </form>
@@ -125,7 +131,9 @@ const loadingInvitation = ref(false)
 const invitationError = ref('')
 const invitationUnavailable = ref(false)
 const step = ref('verify')
-const fullName = ref('')
+const firstName = ref('')
+const lastName = ref('')
+const fullName = computed(() => `${firstName.value.trim()} ${lastName.value.trim()}`.replace(/\s+/g, ' ').trim())
 const verifiedStudent = ref(null)
 const registeredStudent = ref({})
 const email = ref('')
@@ -349,7 +357,7 @@ function formatExpiry(value) {
 }
 
 watch(username, scheduleUsernameCheck, { flush: 'sync' })
-watch(fullName, () => {
+watch([firstName, lastName], () => {
   verificationRequestId += 1
   alreadyRegistered.value = false
   if (verifiedStudent.value) backToVerification()
@@ -360,7 +368,8 @@ watch(() => route.params.token, () => {
   verifying.value = false
   submitting.value = false
   completed.value = false
-  fullName.value = ''
+  firstName.value = ''
+  lastName.value = ''
   email.value = ''
   username.value = ''
   password.value = ''
@@ -401,6 +410,8 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .registration-steps .current { @apply tw:[color:#36682d]; @apply tw:[font-weight:650]; }
 .registration-steps .current span, .registration-steps .done span { @apply tw:[color:#fff]; @apply tw:[background:#518b40]; }
 .registration-form { @apply tw:grid; @apply tw:[gap:19px]; }
+.name-grid { @apply tw:grid; @apply tw:grid-cols-2; @apply tw:[gap:10px_16px]; }
+.name-grid > small { @apply tw:[grid-column:1/-1]; }
 .form-description { @apply tw:[margin:0]; @apply tw:[color:#607065]; @apply tw:[font-size:14px]; @apply tw:[line-height:1.6]; }
 .form-field { @apply tw:grid; @apply tw:[gap:7px]; }
 .form-field label { @apply tw:[font-size:13px]; @apply tw:[color:#263d2c]; @apply tw:[font-weight:650]; }
@@ -444,7 +455,7 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .invitation-error .text-link { @apply tw:inline-block; @apply tw:[margin-top:20px]; @apply tw:[font-size:13px]; }
 .state-icon { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:60px]; @apply tw:[height:60px]; @apply tw:[margin:0_auto]; @apply tw:[border-radius:50%]; @apply tw:[background:#f2f6ef]; @apply tw:[color:#6a8660]; @apply tw:[font-size:23px]; }
 .success-icon { @apply tw:[background:#eaf5e2]; @apply tw:[color:#4b8737]; }
-@media (max-width: 540px) { .class-registration { @apply tw:[padding:24px_12px]; } .registration-brand { @apply tw:[margin-bottom:20px]; } .registration-card { @apply tw:[padding:25px_20px]; @apply tw:[border-radius:16px]; } h1 { @apply tw:[font-size:24px]; } .registration-steps { @apply tw:[gap:10px]; } .registration-steps li { @apply tw:[font-size:11px]; } }
+@media (max-width: 540px) { .class-registration { @apply tw:[padding:24px_12px]; } .registration-brand { @apply tw:[margin-bottom:20px]; } .registration-card { @apply tw:[padding:25px_20px]; @apply tw:[border-radius:16px]; } h1 { @apply tw:[font-size:24px]; } .registration-steps { @apply tw:[gap:10px]; } .registration-steps li { @apply tw:[font-size:11px]; } .name-grid { @apply tw:grid-cols-1; } .name-grid > small { @apply tw:[grid-column:auto]; } }
 @media (prefers-reduced-motion: reduce) { .fa-spin { @apply tw:animate-none; } }
 
 </style>
