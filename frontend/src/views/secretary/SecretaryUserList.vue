@@ -169,7 +169,6 @@
             <thead>
               <tr>
                 <th scope="col">Name</th>
-                <th>Email</th>
                 <th>Role</th>
                 <th>Department</th>
                 <th>Assigned Subject</th>
@@ -183,7 +182,7 @@
             </thead>
             <tbody v-if="isLoading">
               <tr>
-                <td colspan="11">
+                <td colspan="10">
                   <div class="table-state">
                     <i class="fas fa-spinner fa-spin"></i>
                     <span>Loading user list...</span>
@@ -193,7 +192,7 @@
             </tbody>
             <tbody v-else-if="filteredUsers.length === 0">
               <tr>
-                <td colspan="11">
+                <td colspan="10">
                   <div class="table-state">
                     <i class="fas fa-folder-open"></i>
                     <span>No users found.</span>
@@ -213,9 +212,6 @@
                       <small>{{ roleLabel(user.role) }} record</small>
                     </div>
                   </div>
-                </td>
-                <td>
-                  <a :href="`mailto:${user.email}`" class="secretary-email-link">{{ user.email }}</a>
                 </td>
                 <td><span class="secretary-badge role-badge" :class="`role-${user.role}`">{{ roleLabel(user.role) }}</span></td>
                 <td>
@@ -983,7 +979,7 @@ onBeforeUnmount(() => {
   overscroll-behavior-x: contain;
 }
 .secretary-userlist-panel .secretary-table {
-  min-width: 1600px;
+  min-width: 1400px;
   table-layout: auto !important;
 }
 .secretary-userlist-panel .secretary-table :is(th,td) {
@@ -993,11 +989,10 @@ onBeforeUnmount(() => {
   overflow-wrap: anywhere;
 }
 .secretary-userlist-panel .secretary-table :is(th,td):first-child { min-width: 220px; }
-.secretary-userlist-panel .secretary-table :is(th,td):nth-child(2) { min-width: 230px; max-width: 290px; }
-.secretary-userlist-panel .secretary-table :is(th,td):nth-child(4) { min-width: 170px; max-width: 230px; }
-.secretary-userlist-panel .secretary-table :is(th,td):nth-child(5),
-.secretary-userlist-panel .secretary-table :is(th,td):nth-child(6) { min-width: 140px; }
-.secretary-userlist-panel .secretary-table :is(th,td):nth-child(10) { min-width: 180px; }
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(3) { min-width: 170px; max-width: 230px; }
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(4),
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(5) { min-width: 140px; }
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(9) { min-width: 180px; }
 .secretary-userlist-panel .secretary-person-cell { min-width: 0; }
 .secretary-userlist-panel .secretary-person-copy { min-width: 0; overflow-wrap: anywhere; }
 .secretary-userlist-panel .secretary-email-link { display: block; overflow-wrap: anywhere; }
