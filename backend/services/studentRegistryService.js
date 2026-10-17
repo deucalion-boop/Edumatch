@@ -30,6 +30,7 @@ const messages = {
   AUTH_EMAIL_UNVERIFIED: ['Verify your email before registering.', 400],
   AUTH_IDENTITY_INVALID: ['The account identity could not be verified. Please try again.', 409],
   CLASS_UNAVAILABLE: ['A class or teacher assignment is unavailable. Contact your school to update the student’s class assignments.', 409],
+  STUDENT_ALREADY_ASSIGNED: ['This student already has a teacher class. Existing assignments cannot be replaced here.', 409],
   ISSUER_UNAVAILABLE: ['Only an active Head Teacher can manage the student registry.', 403],
   INVITATION_INVALID: ['This registration link is unavailable. Ask your school for the current link.', 404],
   INVITATION_EXPIRED: ['This registration link has expired. Ask your school for the current link.', 410],
@@ -119,23 +120,35 @@ function matches(row, filters) {
 async function list(id, filters = {}) {
   const headTeacher = await requireHeadTeacher(id);
   if (filters.status && !['pending', 'registered', 'revoked', 'expired'].includes(filters.status)) throw known('INPUT_INVALID');
-  const [registry, membership, subjects, users, link] = await Promise.all([
-    all('student_registry'), assignments(), all('subjects'), all('users', 'id,name,role,status,archive,username,email,department'), manageLink(id),
+  const [registry, membership, subjects, users, link, enrollments] = await Promise.all([
+    all('student_registry'), assignments(), all('subjects'), all('users', 'id,name,role,status,archive,username,email,department,invite'), manageLink(id), all('subject_enrollments'),
   ]);
   const people = new Map(users.map(u => [u.id, u]));
   const subjectMap = new Map(subjects.map(s => [s.id, s]));
+  const registryMap = new Map(registry.map(row => [row.id, row]));
+  const approved = new Set(enrollments.filter(row => row.status === 'approved').map(row => `${row.student_id}:${row.subject_id}`));
+  const usableSubject = subject => {
+    const teacher = people.get(subject?.teacher_id);
+    return Boolean(subject?.is_active && teacher?.role === 'teacher' && teacher.status === 'active' && teacher.archive?.isArchived !== true);
+  };
   const classes = subjects.filter(s => s.is_active && people.get(s.teacher_id)?.role === 'teacher'
     && people.get(s.teacher_id)?.status === 'active' && people.get(s.teacher_id)?.archive?.isArchived !== true
     && people.get(s.teacher_id)?.department === headTeacher.department)
     .map(s => ({ id: s.id, teacherId: s.teacher_id, teacherName: people.get(s.teacher_id).name, className: s.class_name || s.name, name: s.name }));
   const byRegistry = new Map();
   for (const item of membership) {
-    const subject = subjectMap.get(item.subject_id); if (!subject) continue;
+    const subject = subjectMap.get(item.subject_id); if (!usableSubject(subject)) continue;
+    const row = registryMap.get(item.registry_id);
+    if (row?.student_id && !approved.has(`${row.student_id}:${subject.id}`)) continue;
     const items = byRegistry.get(item.registry_id) || [];
     items.push({ subjectId: subject.id, teacherId: subject.teacher_id, teacherName: people.get(subject.teacher_id)?.name || 'Teacher', className: subject.class_name || subject.name, subjectName: subject.name });
     byRegistry.set(item.registry_id, items);
   }
-  const students = registry.map(row => ({ id: row.id, firstName: row.first_name, lastName: row.last_name, fullName: row.full_name,
+  const visibleRegistry = registry.filter(row => {
+    const account = people.get(row.student_id);
+    return !(account?.status === 'pending' && account.invite?.selfRegistration === true && !account.invite?.usedAt);
+  });
+  const students = visibleRegistry.map(row => ({ id: row.id, firstName: row.first_name, lastName: row.last_name, fullName: people.get(row.student_id)?.name || row.full_name,
     status: status(row), registeredAt: row.code_used_at || (row.student_id ? row.created_at : null), createdAt: row.created_at,
     codeExpiresAt: row.code_expires_at, registrationCode: !row.student_id && !row.code_used_at && !row.code_revoked_at && row.code_nonce ? formattedCode(row) : null,
     username: people.get(row.student_id)?.username || '', email: people.get(row.student_id)?.email || '', assignments: byRegistry.get(row.id) || [] }));
@@ -204,9 +217,9 @@ async function changeCode(id, registryId, revoke = false) {
 async function assign(id, body = {}) {
   await requireHeadTeacher(id);
   body = inputBody(body);
-  if (!Array.isArray(body.registryIds) || !body.registryIds.length || body.registryIds.length > 1000 || !Array.isArray(body.subjectIds) || body.subjectIds.length > 100
+  if (!Array.isArray(body.registryIds) || !body.registryIds.length || body.registryIds.length > 1000 || !Array.isArray(body.subjectIds) || !body.subjectIds.length || body.subjectIds.length > 100
     || [...body.registryIds, ...body.subjectIds].some(v => typeof v !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(v))) throw known('INPUT_INVALID');
-  return { assigned: await rpc('assign', { p_headteacher_id: id, p_registry_ids: [...new Set(body.registryIds)], p_subject_ids: [...new Set(body.subjectIds)] }) };
+  return { assigned: await rpc('assign_unassigned', { p_headteacher_id: id, p_registry_ids: [...new Set(body.registryIds)], p_subject_ids: [...new Set(body.subjectIds)] }) };
 }
 async function workbook(id, filters, template = false) {
   const book = new ExcelJS.Workbook(); const sheet = book.addWorksheet(template ? 'Students' : 'Student Registry');

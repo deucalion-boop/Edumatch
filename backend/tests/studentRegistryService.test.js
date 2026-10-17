@@ -60,6 +60,37 @@ test('public shared link exposes no student names, codes, hashes or nonces', asy
   client.tables.student_registry_links[0].expires_at = future(-1);
   await assert.rejects(service.details(token), { code: 'INVITATION_EXPIRED' });
 });
+test('unused student invitations never appear as registered students in the directory', async () => {
+  fixture({
+    users: [{id:'ht',role:'headteacher',status:'active',department:'Mathematics'},
+      {id:'placeholder',role:'student',status:'pending',name:'Pending student registration',invite:{selfRegistration:true}}],
+    student_registry:[{...student,student_id:'placeholder',code_used_at:future()}],
+  });
+  const result=await service.list('ht');
+  assert.equal(result.students.length,0);
+  assert.equal(result.summary.registered,0);
+  assert.equal(result.summary.total,0);
+});
+test('registered students show only actual approved classes with available teachers', async () => {
+  fixture({
+    users:[{id:'ht',role:'headteacher',status:'active',department:'Mathematics'},
+      {id:'student',name:'Maria Santos',role:'student',status:'active'},
+      {id:'teacher',name:'Teacher',role:'teacher',status:'active',department:'Mathematics'},
+      {id:'inactive',name:'Inactive',role:'teacher',status:'inactive',department:'Mathematics'}],
+    student_registry:[{...student,student_id:'student'}],
+    subjects:[{id:'stale',teacher_id:'teacher',name:'Einstein',is_active:true},
+      {id:'valid',teacher_id:'teacher',name:'Math',is_active:true},
+      {id:'unavailable',teacher_id:'inactive',name:'Old Class',is_active:true}],
+    student_registry_assignments:[{registry_id:student.id,subject_id:'stale'},{registry_id:student.id,subject_id:'valid'},{registry_id:student.id,subject_id:'unavailable'}],
+    subject_enrollments:[{student_id:'student',subject_id:'valid',status:'approved'}, {student_id:'student',subject_id:'unavailable',status:'approved'}],
+  });
+  let result=await service.list('ht');
+  assert.deepEqual(result.students[0].assignments.map(item=>item.subjectId),['valid']);
+  client.tables.subject_enrollments=[];
+  result=await service.list('ht');
+  assert.deepEqual(result.students[0].assignments,[]);
+  assert.equal(result.summary.unassigned,1);
+});
 test('import enforces missing fields, Unicode/case duplicates and possible duplicates on the server', () => {
   const rows = service.validateRecords([{ firstName: '', lastName: 'Santos' }, { firstName: 'Ｍａｒｉａ', lastName: 'Santos' },
     { firstName: 'maria', lastName: 'santos' }, { firstName: 'Jose', lastName: 'Cruz' }], [{ full_name: 'José Cruz' }]);

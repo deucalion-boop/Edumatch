@@ -36,8 +36,8 @@
         <p v-if="loading && !loaded" class="registry-empty" role="status">Loading the student registry…</p>
         <div v-else-if="!students.length && !loadError" class="registry-empty"><i class="fas fa-user-graduate" aria-hidden="true"></i><h3>{{ filters.search || filters.status || filters.unassigned ? 'No students match these filters' : 'No previous registry records' }}</h3><p>{{ filters.search || filters.status || filters.unassigned ? 'Change the search or filters to find other students.' : 'Use a private registration link above to invite a student. Registered accounts appear under their advisory teacher in Teacher Management.' }}</p></div>
         <div v-if="students.length" class="registry-table-wrap" tabindex="0" role="region" aria-label="Student registry; scroll horizontally to see all columns" :aria-busy="loading">
-          <table class="registry-table"><caption class="registry-sr-only">Student registration codes, statuses, class assignments and available actions</caption><thead><tr><th scope="col"><input type="checkbox" aria-label="Select all students on this page" :checked="allPageSelected" :indeterminate="somePageSelected && !allPageSelected" @change="togglePageSelection($event.target.checked)"></th><th scope="col">Student</th><th scope="col">Registration code</th><th scope="col">Status</th><th scope="col">Teacher classes</th><th scope="col">Actions</th></tr></thead><tbody>
-            <tr v-for="student in pagedStudents" :key="student.id"><td><input v-model="selectedIds" type="checkbox" :value="student.id" :aria-label="`Select ${studentName(student)}`"></td><th scope="row"><strong>{{ studentName(student) }}</strong><small>{{ studentDetails(student) }}</small></th><td><template v-if="student.registrationCode"><label class="registry-sr-only" :for="`registry-code-${student.id}`">Registration code for {{ studentName(student) }}</label><div class="registry-code-row"><input :id="`registry-code-${student.id}`" :value="student.registrationCode" readonly type="text" @focus="$event.target.select()"><button type="button" class="registry-icon-button" :disabled="!canCopyCode(student)" :aria-label="`Copy code for ${studentName(student)}`" @click="copyCode(student)"><i class="fas fa-copy" aria-hidden="true"></i></button></div><small v-if="student.codeExpiresAt">Expires {{ formatDate(student.codeExpiresAt) }}</small></template><span v-else class="registry-muted">{{ student.status === 'registered' ? 'Code used' : 'No active code' }}</span></td><td><span class="registry-status" :class="`status-${student.status}`">{{ statusLabel(student.status) }}</span><small v-if="student.registeredAt">{{ formatDate(student.registeredAt) }}</small></td><td><ul v-if="student.assignments?.length" class="registry-class-list"><li v-for="assignment in student.assignments" :key="assignment.subjectId"><strong>{{ assignment.className || assignment.subjectName }}</strong><span>{{ assignment.teacherName }}</span></li></ul><span v-else class="registry-muted">Unassigned</span></td><td><div class="registry-row-actions"><button type="button" class="registry-action" :disabled="Boolean(busy)" @click="assignOne(student)">Assign Classes</button><template v-if="student.status !== 'registered'"><button type="button" class="registry-action" :disabled="Boolean(busy)" @click="openDialog('code', student)">{{ student.registrationCode ? 'Renew Code' : 'Issue Code' }}</button><button v-if="student.status !== 'revoked'" type="button" class="registry-action registry-danger-text" :disabled="Boolean(busy)" @click="openDialog('revoke', student)">Revoke Code</button></template></div></td></tr>
+          <table class="registry-table"><caption class="registry-sr-only">Student registration codes, statuses, class assignments and available actions</caption><thead><tr><th scope="col"><input type="checkbox" aria-label="Select all students on this page" :checked="allPageSelected" :disabled="!selectablePage.length" :indeterminate="somePageSelected && !allPageSelected" @change="togglePageSelection($event.target.checked)"></th><th scope="col">Student</th><th scope="col">Registration code</th><th scope="col">Status</th><th scope="col">Teacher classes</th><th scope="col">Actions</th></tr></thead><tbody>
+            <tr v-for="student in pagedStudents" :key="student.id"><td><input v-model="selectedIds" type="checkbox" :disabled="!canAssignClasses(student)" :value="student.id" :aria-label="`Select ${studentName(student)}`"></td><th scope="row"><strong>{{ studentName(student) }}</strong><small>{{ studentDetails(student) }}</small></th><td><template v-if="student.registrationCode"><label class="registry-sr-only" :for="`registry-code-${student.id}`">Registration code for {{ studentName(student) }}</label><div class="registry-code-row"><input :id="`registry-code-${student.id}`" :value="student.registrationCode" readonly type="text" @focus="$event.target.select()"><button type="button" class="registry-icon-button" :disabled="!canCopyCode(student)" :aria-label="`Copy code for ${studentName(student)}`" @click="copyCode(student)"><i class="fas fa-copy" aria-hidden="true"></i></button></div><small v-if="student.codeExpiresAt">Expires {{ formatDate(student.codeExpiresAt) }}</small></template><span v-else class="registry-muted">{{ student.status === 'registered' ? 'Code used' : 'No active code' }}</span></td><td><span class="registry-status" :class="`status-${student.status}`">{{ statusLabel(student.status) }}</span><small v-if="student.registeredAt">{{ formatDate(student.registeredAt) }}</small></td><td><ul v-if="student.assignments?.length" class="registry-class-list"><li v-for="assignment in student.assignments" :key="assignment.subjectId"><strong>{{ assignment.className || assignment.subjectName }}</strong><span>{{ assignment.teacherName }}</span></li></ul><span v-else class="registry-muted">Unassigned</span></td><td><div class="registry-row-actions"><button type="button" class="registry-action" :disabled="Boolean(busy) || !canAssignClasses(student)" :title="student.assignments?.length ? 'Already assigned to a teacher class' : !classes.length ? 'No available teacher classes' : 'Assign teacher classes'" @click="assignOne(student)">Assign Classes</button><template v-if="student.status !== 'registered'"><button type="button" class="registry-action" :disabled="Boolean(busy)" @click="openDialog('code', student)">{{ student.registrationCode ? 'Renew Code' : 'Issue Code' }}</button><button v-if="student.status !== 'revoked'" type="button" class="registry-action registry-danger-text" :disabled="Boolean(busy)" @click="openDialog('revoke', student)">Revoke Code</button></template></div></td></tr>
           </tbody></table>
         </div>
         <nav v-if="students.length > pageSize" class="registry-pagination" aria-label="Student registry pages"><span>Page {{ currentPage }} of {{ totalPages }}</span><div class="registry-button-row"><button type="button" class="registry-button registry-secondary" :disabled="currentPage === 1" @click="currentPage--">Previous</button><button type="button" class="registry-button registry-secondary" :disabled="currentPage >= totalPages" @click="currentPage++">Next</button></div></nav>
@@ -51,11 +51,11 @@
             <p class="registry-selection-summary">{{ selectedIds.length }} {{ selectedIds.length === 1 ? 'student' : 'students' }} selected. Choose every class they should belong to.</p>
             <label class="registry-field" for="registry-class-search"><span>Find teacher classes</span><input id="registry-class-search" v-model="classSearch" type="search" placeholder="Search teacher, class or subject"></label>
             <div class="registry-class-options"><label v-for="teacherClass in filteredClasses" :key="teacherClass.id" class="registry-class-option"><input v-model="assignmentClassIds" type="checkbox" :value="teacherClass.id"><span><strong>{{ teacherClass.className || teacherClass.name }}</strong><small>{{ teacherClass.teacherName }}<template v-if="teacherClass.className && teacherClass.name"> · {{ teacherClass.name }}</template></small></span></label><p v-if="!filteredClasses.length" class="registry-help">No active teacher classes match. Teachers need an active class before students can be assigned.</p></div>
-            <p class="registry-help">{{ assignmentClassIds.length }} classes selected. Saving replaces the current class list for each selected student.</p>
-            <label v-if="requiresAssignmentConfirmation" class="registry-check-label"><input v-model="assignmentConfirmed" type="checkbox"><span>{{ !assignmentClassIds.length ? 'Remove all class assignments from the selected students.' : 'Replace every selected student’s current classes with this class list.' }}</span></label>
+            <p class="registry-help">{{ assignmentClassIds.length }} classes selected. Only unassigned students can be assigned here; existing teacher classes are preserved.</p>
+            <label v-if="requiresAssignmentConfirmation" class="registry-check-label"><input v-model="assignmentConfirmed" type="checkbox"><span>Assign the selected classes to every selected unassigned student.</span></label>
           </template>
           <div v-else-if="selectedStudent" class="registry-student-context"><strong>{{ studentName(selectedStudent) }}</strong><span>{{ statusLabel(selectedStudent.status) }}</span></div>
-          <footer class="registry-dialog-footer"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="closeDialog">Cancel</button><button v-if="dialogMode === 'assign'" type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || (requiresAssignmentConfirmation && !assignmentConfirmed)" @click="saveAssignments">{{ busy === 'assign' ? 'Saving…' : 'Save Class Assignments' }}</button><button v-else type="button" class="registry-button" :class="['revoke', 'link'].includes(dialogMode) ? 'registry-danger' : 'registry-primary'" :disabled="Boolean(busy)" @click="confirmAction">{{ busy ? 'Saving…' : dialogMode === 'revoke' ? 'Revoke Code' : dialogMode === 'code' ? 'Issue New Code' : 'Replace Shared Link' }}</button></footer>
+          <footer class="registry-dialog-footer"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="closeDialog">Cancel</button><button v-if="dialogMode === 'assign'" type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || !assignmentClassIds.length || (requiresAssignmentConfirmation && !assignmentConfirmed)" @click="saveAssignments">{{ busy === 'assign' ? 'Saving…' : 'Save Class Assignments' }}</button><button v-else type="button" class="registry-button" :class="['revoke', 'link'].includes(dialogMode) ? 'registry-danger' : 'registry-primary'" :disabled="Boolean(busy)" @click="confirmAction">{{ busy ? 'Saving…' : dialogMode === 'revoke' ? 'Revoke Code' : dialogMode === 'code' ? 'Issue New Code' : 'Replace Shared Link' }}</button></footer>
         </div>
       </dialog></Teleport>
       <DashboardFooter />
@@ -90,7 +90,8 @@ const currentPage = ref(1)
 const pageSize = 20
 const totalPages = computed(() => Math.max(1, Math.ceil(students.value.length / pageSize)))
 const pagedStudents = computed(() => students.value.slice((currentPage.value - 1) * pageSize, currentPage.value * pageSize))
-const allPageSelected = computed(() => pagedStudents.value.length > 0 && pagedStudents.value.every(student => selectedIds.value.includes(student.id)))
+const selectablePage = computed(() => pagedStudents.value.filter(canAssignClasses))
+const allPageSelected = computed(() => selectablePage.value.length > 0 && selectablePage.value.every(student => selectedIds.value.includes(student.id)))
 const somePageSelected = computed(() => pagedStudents.value.some(student => selectedIds.value.includes(student.id)))
 const loading = ref(false)
 const loaded = ref(false)
@@ -104,7 +105,7 @@ const selectedStudent = ref(null)
 const classSearch = ref('')
 const assignmentClassIds = ref([])
 const assignmentConfirmed = ref(false)
-const requiresAssignmentConfirmation = computed(() => selectedIds.value.length > 1 || assignmentClassIds.value.length === 0)
+const requiresAssignmentConfirmation = computed(() => selectedIds.value.length > 1)
 const filteredClasses = computed(() => {
   const search = classSearch.value.trim().toLocaleLowerCase()
   return classes.value.filter(item => `${item.teacherName || ''} ${item.className || ''} ${item.name || ''}`.toLocaleLowerCase().includes(search))
@@ -112,7 +113,7 @@ const filteredClasses = computed(() => {
 const now = ref(Date.now())
 const linkExpired = computed(() => Date.parse(registrationLink.value?.expiresAt || '') <= now.value)
 const dialogTitle = computed(() => ({ assign: 'Assign teacher classes', revoke: 'Revoke registration code?', code: 'Issue a new registration code?', link: 'Replace shared school link?' })[dialogMode.value])
-const dialogDescription = computed(() => ({ assign: 'Choose classes handled by teachers in your department. Saving replaces only this department’s assignments; assignments from other departments stay unchanged.', revoke: 'This unused code will stop working. You can issue a new code later if the student still needs to register.', code: 'The student receives a fresh code that expires in 30 days. Their previous code will stop working.', link: 'All students will need the new shared school link. Existing unused student codes remain separate; share the replacement link with your school.' })[dialogMode.value])
+const dialogDescription = computed(() => ({ assign: 'Choose classes handled by teachers in your department. Only unassigned students can be assigned here. Existing class assignments cannot be replaced.', revoke: 'This unused code will stop working. You can issue a new code later if the student still needs to register.', code: 'The student receives a fresh code that expires in 30 days. Their previous code will stop working.', link: 'All students will need the new shared school link. Existing unused student codes remain separate; share the replacement link with your school.' })[dialogMode.value])
 let controller
 let loadVersion = 0
 let filterTimer
@@ -124,6 +125,7 @@ const studentName = student => student.fullName || `${student.firstName || ''} $
 const studentDetails = student => [student.username, student.email].filter(Boolean).join(' · ') || `Imported ${formatDate(student.createdAt)}`
 const statusLabel = status => ({ pending: 'Pending', registered: 'Registered', revoked: 'Code revoked', expired: 'Code expired' })[status] || 'Unavailable'
 const canCopyCode = student => Boolean(student.registrationCode) && student.status === 'pending' && Date.parse(student.codeExpiresAt) > now.value
+function canAssignClasses(student) { return !student.assignments?.length && classes.value.length > 0 }
 const formatDate = value => {
   if (!value) return 'Unavailable'
   const date = new Date(value)
@@ -149,7 +151,7 @@ async function loadRegistry(options = {}) {
     classes.value = Array.isArray(response.data.classes) ? response.data.classes : []
     registrationLink.value = response.data.registrationLink || null
     Object.keys(summary).forEach(key => { summary[key] = Number(response.data.summary?.[key]) || 0 })
-    selectedIds.value = selectedIds.value.filter(id => students.value.some(student => student.id === id))
+    selectedIds.value = selectedIds.value.filter(id => students.value.some(student => student.id === id && canAssignClasses(student)))
     currentPage.value = Math.min(currentPage.value, totalPages.value)
     loadError.value = ''
     loaded.value = true
@@ -159,7 +161,7 @@ async function loadRegistry(options = {}) {
 }
 function togglePageSelection(checked) {
   const ids = new Set(selectedIds.value)
-  for (const student of pagedStudents.value) checked ? ids.add(student.id) : ids.delete(student.id)
+  for (const student of selectablePage.value) checked ? ids.add(student.id) : ids.delete(student.id)
   selectedIds.value = [...ids]
 }
 async function openDialog(mode, student = null) {
@@ -168,7 +170,7 @@ async function openDialog(mode, student = null) {
   selectedStudent.value = student
   dialogError.value = ''
   if (mode === 'assign') {
-    if (!selectedIds.value.length) return
+    if (!selectedIds.value.length || students.value.some(student => selectedIds.value.includes(student.id) && !canAssignClasses(student))) return
     classSearch.value = ''
     assignmentConfirmed.value = false
     const selected = students.value.filter(item => selectedIds.value.includes(item.id))
@@ -183,10 +185,10 @@ function closeOnBackdrop(event) {
   const bounds = dialog.value.getBoundingClientRect()
   if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeDialog()
 }
-function assignOne(student) { selectedIds.value = [student.id]; openDialog('assign') }
+function assignOne(student) { if (!canAssignClasses(student)) return; selectedIds.value = [student.id]; openDialog('assign') }
 
 async function saveAssignments() {
-  if (busy.value || !selectedIds.value.length || (requiresAssignmentConfirmation.value && !assignmentConfirmed.value)) return
+  if (busy.value || !selectedIds.value.length || !assignmentClassIds.value.length || (requiresAssignmentConfirmation.value && !assignmentConfirmed.value)) return
   busy.value = 'assign'
   dialogError.value = ''
   try {
