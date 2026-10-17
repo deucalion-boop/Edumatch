@@ -138,50 +138,6 @@
       </div>
 
       <div class="headteacher-dashboard-overview">
-        <section class="headteacher-section-card headteacher-panel headteacher-radial-section">
-          <div class="headteacher-section-head">
-            <div>
-              <h2 class="headteacher-section-title">Content Mix Overview</h2>
-              <p class="headteacher-section-subtitle">Lesson and assessment share across your department.</p>
-            </div>
-          </div>
-
-          <div class="headteacher-radial-grid">
-            <article class="headteacher-radial-card">
-              <div
-                class="headteacher-radial-chart lessons"
-                :style="{ '--progress-value': `${lessonAnalyticsPercent}%` }"
-                aria-label="Lesson share analytics"
-              >
-                <div class="headteacher-radial-center">
-                  <strong>{{ lessonAnalyticsPercent }}%</strong>
-                  <span>Lessons</span>
-                </div>
-              </div>
-              <div class="headteacher-radial-copy">
-                <h3>Lesson Share</h3>
-                <p>{{ summary.totalLessons }} lesson{{ summary.totalLessons === 1 ? '' : 's' }} created by department teachers.</p>
-              </div>
-            </article>
-
-            <article class="headteacher-radial-card">
-              <div
-                class="headteacher-radial-chart assessments"
-                :style="{ '--progress-value': `${assessmentAnalyticsPercent}%` }"
-                aria-label="Assessment share analytics"
-              >
-                <div class="headteacher-radial-center">
-                  <strong>{{ assessmentAnalyticsPercent }}%</strong>
-                  <span>Assessments</span>
-                </div>
-              </div>
-              <div class="headteacher-radial-copy">
-                <h3>Assessment Share</h3>
-                <p>{{ summary.totalAssessments }} activit{{ summary.totalAssessments === 1 ? 'y' : 'ies' }} or assessments created.</p>
-              </div>
-            </article>
-          </div>
-        </section>
 
         <section class="headteacher-section-card headteacher-panel headteacher-analytics-panel">
           <div class="headteacher-section-head headteacher-analytics-head">
@@ -449,16 +405,6 @@ const hasAttentionRequired = computed(() => hasLoaded.value && attentionTotal.va
 const teacherActivityPercent = computed(() => {
   if (teacherActivity.eligibleTeachers <= 0) return 0
   return Math.min(100, Math.round((teacherActivity.activeThisMonth / teacherActivity.eligibleTeachers) * 100))
-})
-const lessonAnalyticsPercent = computed(() => {
-  const totalContent = Number(summary.totalLessons || 0) + Number(summary.totalAssessments || 0)
-  if (totalContent === 0) return 0
-  return Math.round((Number(summary.totalLessons || 0) / totalContent) * 100)
-})
-const assessmentAnalyticsPercent = computed(() => {
-  const totalContent = Number(summary.totalLessons || 0) + Number(summary.totalAssessments || 0)
-  if (totalContent === 0) return 0
-  return Math.round((Number(summary.totalAssessments || 0) / totalContent) * 100)
 })
 const analyticsPeakPeriodLabel = computed(() => {
   if (lessonAnalytics.labels.length === 0) return 'No activity'
@@ -909,6 +855,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.headteacher-overview-page .headteacher-dashboard-overview { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1025px) {
   .headteacher-overview-page .headteacher-stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
