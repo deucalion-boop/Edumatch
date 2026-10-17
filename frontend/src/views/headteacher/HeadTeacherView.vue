@@ -60,17 +60,6 @@
           </article>
 
           <article class="headteacher-stat-card">
-            <div class="headteacher-stat-icon active">
-              <i class="fas fa-user-check"></i>
-            </div>
-            <div class="headteacher-stat-copy">
-              <span class="headteacher-stat-label">Total Active Teachers</span>
-              <strong class="headteacher-stat-value">{{ summary.activeTeachers }}</strong>
-              <small class="headteacher-stat-note">Currently available and active</small>
-            </div>
-          </article>
-
-          <article class="headteacher-stat-card">
             <div class="headteacher-stat-icon students">
               <i class="fas fa-user-graduate"></i>
             </div>
@@ -86,9 +75,19 @@
               <i class="fas fa-book-open"></i>
             </div>
             <div class="headteacher-stat-copy">
-              <span class="headteacher-stat-label">Total Assessments or Lessons</span>
-              <strong class="headteacher-stat-value">{{ summary.totalLessonsAndAssessments }}</strong>
-              <small class="headteacher-stat-note">{{ summary.totalLessons }} lessons and {{ summary.totalAssessments }} assessments</small>
+              <span class="headteacher-stat-label">Total Lessons</span>
+              <strong class="headteacher-stat-value">{{ summary.totalLessons }}</strong>
+              <small class="headteacher-stat-note">Lessons created in your department</small>
+            </div>
+          </article>
+          <article class="headteacher-stat-card">
+            <div class="headteacher-stat-icon lessons">
+              <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="headteacher-stat-copy">
+              <span class="headteacher-stat-label">Total Assessments</span>
+              <strong class="headteacher-stat-value">{{ summary.totalAssessments }}</strong>
+              <small class="headteacher-stat-note">Assessments created in your department</small>
             </div>
           </article>
         </div>
@@ -910,6 +909,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+@media (min-width: 1025px) {
+  .headteacher-overview-page .headteacher-stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 @reference "../../styles/tailwind.css";
 .headteacher-brand-image {
   @apply tw:w-full;
