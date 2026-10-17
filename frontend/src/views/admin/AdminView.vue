@@ -478,7 +478,7 @@
       </main>
     </div>
 
-    <div v-if="isMetricsModalOpen" class="modal-shell modal-shell--analytics" @click.self="closeMetricsModal">
+    <div v-if="isMetricsModalOpen" class="modal-shell modal-shell--analytics">
       <div class="modal-panel modal-panel--analytics">
         <div class="modal-panel-head">
           <div>

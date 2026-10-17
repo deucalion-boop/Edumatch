@@ -535,7 +535,7 @@
         </div>
       </section>
 
-      <div v-if="isAttendanceModalOpen" class="headteacher-modal-shell" @click.self="closeAttendanceModal">
+      <div v-if="isAttendanceModalOpen" class="headteacher-modal-shell">
         <div class="headteacher-modal-panel headteacher-attendance-modal">
           <div class="headteacher-modal-head headteacher-attendance-modal-head">
             <div class="headteacher-attendance-title-block">
@@ -611,7 +611,7 @@
         </div>
       </div>
 
-      <div v-if="isAnnouncementModalOpen" class="headteacher-modal-shell" @click.self="closeAnnouncementModal">
+      <div v-if="isAnnouncementModalOpen" class="headteacher-modal-shell">
         <div class="headteacher-modal-panel headteacher-announcement-modal">
           <div class="headteacher-modal-head">
             <div>
@@ -650,7 +650,7 @@
         </div>
       </div>
 
-      <div v-if="isStudentCreateModalOpen" class="headteacher-modal-shell" @click.self="closeStudentCreateModal">
+      <div v-if="isStudentCreateModalOpen" class="headteacher-modal-shell">
         <div class="headteacher-modal-panel">
           <div class="headteacher-modal-head">
             <div>
@@ -666,7 +666,7 @@
         </div>
       </div>
 
-      <div v-if="isStudentsModalOpen" class="headteacher-modal-shell" @click.self="closeStudentsModal">
+      <div v-if="isStudentsModalOpen" class="headteacher-modal-shell">
         <div class="headteacher-modal-panel headteacher-students-modal">
           <div class="headteacher-modal-head headteacher-students-modal-head">
             <div class="headteacher-students-title-block">

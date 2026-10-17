@@ -274,7 +274,7 @@
         </section>
       </div>
 
-      <div v-if="isCreateModalOpen" class="headteacher-modal-shell" @click.self="closeModal">
+      <div v-if="isCreateModalOpen" class="headteacher-modal-shell">
         <div class="headteacher-modal-panel">
           <div class="headteacher-modal-head">
             <div>

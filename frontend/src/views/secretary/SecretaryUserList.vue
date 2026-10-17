@@ -237,7 +237,7 @@
       </section>
       <p v-if="directoryError" class="faculty-error" role="alert">{{ directoryError }} <button type="button" @click="fetchDirectory">Retry</button></p>
       <p class="faculty-scope-note">Teacher counts show active classes and unique enrolled students. Head Teacher counts cover their managed teachers in the same department. Pending registrations and archived students are excluded from student totals.</p>
-      <dialog ref="facultyDialog" class="faculty-detail-dialog" aria-labelledby="faculty-detail-title" @click="closeOnBackdrop">
+      <dialog @cancel.prevent ref="facultyDialog" class="faculty-detail-dialog" aria-labelledby="faculty-detail-title">
         <template v-if="selectedFaculty">
           <header class="faculty-detail-header">
             <div><span class="faculty-eyebrow">Read-only faculty record</span><h2 id="faculty-detail-title">{{ selectedFaculty.name }}</h2><p>{{ roleLabel(selectedFaculty.role) }} · {{ selectedFaculty.department || 'No department' }}</p></div>

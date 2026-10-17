@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="invitation-backdrop" @click.self="requestClose">
+    <div class="invitation-backdrop">
       <section ref="dialogRef" class="invitation-dialog" role="dialog" aria-modal="true" aria-labelledby="class-invitation-title" aria-describedby="class-invitation-description" tabindex="-1" :aria-busy="busy">
         <header class="invitation-header">
           <div><span class="invitation-eyebrow">Student enrollment</span><h2 id="class-invitation-title">Invite Students</h2><p id="class-invitation-description">Import your class list and share one invitation link. Students register by matching their imported full names.</p></div>

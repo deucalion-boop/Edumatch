@@ -415,7 +415,7 @@
 
     <!-- Add User Modal -->
     <div class="modal new-user-modal" :class="{ active: modals.addUser }">
-      <div class="modal-overlay" @click="closeAddUserModal"></div>
+      <div class="modal-overlay"></div>
       <div class="modal-content">
         <div class="modal-header">
           <h3>Create Private Registration Link</h3>
@@ -510,7 +510,7 @@
 
     <!-- User Actions Modal -->
     <div class="modal" :class="{ active: modals.userActions }">
-      <div class="modal-overlay" @click="closeUserActionsModal"></div>
+      <div class="modal-overlay"></div>
       <div class="modal-content">
         <div class="modal-header">
           <h3><i class="fas fa-list-check"></i> More Options</h3>
@@ -582,7 +582,7 @@
 
     <!-- Edit User Modal -->
     <div class="modal edit-user-modal" :class="{ active: modals.editUser }">
-      <div class="modal-overlay" @click="closeEditUserModal"></div>
+      <div class="modal-overlay"></div>
       <div class="modal-content">
         <div class="modal-header">
           <h3><i class="fas fa-user-edit"></i> Edit User</h3>
@@ -698,7 +698,7 @@
 
     <!-- View Profile Modal -->
     <div class="modal profile-modal" :class="{ active: modals.viewProfile }">
-      <div class="modal-overlay" @click="closeViewProfileModal"></div>
+      <div class="modal-overlay"></div>
       <div class="modal-content large">
         <div class="modal-header">
           <h3><i class="fas fa-user-circle"></i> User Profile</h3>
@@ -830,7 +830,7 @@
 
     <!-- View Progress Modal -->
     <div class="modal progress-modal" :class="{ active: modals.viewProgress }">
-      <div class="modal-overlay" @click="closeViewProgressModal"></div>
+      <div class="modal-overlay"></div>
       <div class="modal-content large">
         <div class="modal-header">
           <h3><i class="fas fa-chart-line"></i> Learning Progress</h3>
@@ -1071,7 +1071,7 @@
 
     <!-- View Courses Modal -->
     <div class="modal" :class="{ active: modals.viewCourses }">
-      <div class="modal-overlay" @click="closeViewCoursesModal"></div>
+      <div class="modal-overlay"></div>
       <div class="modal-content large">
         <div class="modal-header">
           <h3><i class="fas fa-book-open"></i> View Subject</h3>
@@ -1129,7 +1129,7 @@
 
     <!-- Confirmation Modal -->
     <div class="modal confirmation-modal" :class="{ active: modals.confirmation }">
-      <div class="modal-overlay" @click="closeConfirmationModal"></div>
+      <div class="modal-overlay"></div>
       <div class="modal-content small">
         <div class="modal-header">
           <h3 id="confirmTitle">{{ confirmTitle }}</h3>

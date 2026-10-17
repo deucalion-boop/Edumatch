@@ -107,7 +107,7 @@
     </main>
 
     <div v-if="formModal.open" class="secretary-modal" role="dialog" aria-modal="true" :aria-labelledby="formModal.mode + '-account-title'">
-      <button type="button" class="secretary-modal-backdrop" aria-label="Close dialog" @click="closeForm"></button>
+      <div class="secretary-modal-backdrop" aria-hidden="true"></div>
       <section class="secretary-modal-card">
         <header><div><h2 :id="formModal.mode + '-account-title'">{{ formModal.mode === 'create' ? 'Create private registration link' : 'Edit account' }}</h2><p>{{ formModal.mode === 'create' ? 'Choose a staff role, then share the link so they can complete their own registration.' : 'Fields and permissions are saved to the existing account record.' }}</p></div><button type="button" class="secretary-icon-btn" aria-label="Close" @click="closeForm"><i class="fas fa-times"></i></button></header>
         <form class="secretary-account-form" @submit.prevent="submitForm">
@@ -129,7 +129,7 @@
     </div>
 
     <div v-if="detailsModal" class="secretary-modal" role="dialog" aria-modal="true" aria-labelledby="account-details-title">
-      <button type="button" class="secretary-modal-backdrop" aria-label="Close dialog" @click="detailsModal = null"></button>
+      <div class="secretary-modal-backdrop" aria-hidden="true"></div>
       <section class="secretary-modal-card compact">
         <header><div><h2 id="account-details-title">Account details</h2><p>Current profile and access information.</p></div><button type="button" class="secretary-icon-btn" @click="detailsModal = null"><i class="fas fa-times"></i></button></header>
         <div class="secretary-details-grid"><div><span>Name</span><strong>{{ detailsModal.name }}</strong></div><div><span>Role</span><strong>{{ roleLabel(detailsModal.role) }}</strong></div><div><span>Email</span><strong>{{ detailsModal.email }}</strong></div><div><span>Username</span><strong>{{ detailsModal.username || 'N/A' }}</strong></div><div><span>Status</span><strong>{{ capitalize(detailsModal.status) }}</strong></div><div><span>Assignment</span><strong>{{ assignmentLabel(detailsModal) }}</strong></div><div><span>Joined</span><strong>{{ formatDate(detailsModal.createdAt) }}</strong></div></div>
@@ -137,7 +137,7 @@
     </div>
 
     <div v-if="deleteTarget" class="secretary-modal" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
-      <button type="button" class="secretary-modal-backdrop" aria-label="Close dialog" @click="closeDelete"></button>
+      <div class="secretary-modal-backdrop" aria-hidden="true"></div>
       <section class="secretary-modal-card compact"><header><div><h2 id="delete-account-title">Delete account</h2><p>This permanently removes {{ deleteTarget.name }}.</p></div><button type="button" class="secretary-icon-btn" @click="closeDelete"><i class="fas fa-times"></i></button></header><form class="secretary-account-form" @submit.prevent="deleteUser"><label class="secretary-field"><span>Enter your Secretary password *</span><input v-model="deletePassword" type="password" required autocomplete="current-password"></label><div v-if="deleteError" class="secretary-feedback error">{{ deleteError }}</div><div class="secretary-form-actions"><button type="button" class="secretary-secondary-btn" @click="closeDelete">Cancel</button><button type="submit" class="secretary-danger-btn" :disabled="isDeleting"><i class="fas fa-trash"></i>{{ isDeleting ? 'Deleting...' : 'Delete account' }}</button></div></form></section>
     </div>
 

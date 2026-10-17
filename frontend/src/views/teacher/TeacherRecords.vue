@@ -1255,7 +1255,7 @@
         </section>
       </div>
 
-      <div v-if="showWeightsModal" class="records-modal-backdrop" @click.self="showWeightsModal = false">
+      <div v-if="showWeightsModal" class="records-modal-backdrop">
         <div class="records-modal-dialog weights-dialog">
           <div class="records-modal-header"><div><h3>Subject Grading Weights</h3><p>Choose how Activities, Quizzes, and Exams contribute to subject performance.</p></div><button type="button" class="sidebar-close" @click="showWeightsModal = false"><i class="fas fa-times"></i></button></div>
           <div class="records-modal-body weights-form">
@@ -1273,7 +1273,7 @@
         </div>
       </div>
 
-      <div v-if="showResultsModal && selectedAssessmentForResults" class="records-modal-backdrop" @click.self="closeResultsModal">
+      <div v-if="showResultsModal && selectedAssessmentForResults" class="records-modal-backdrop">
         <div class="records-modal-dialog">
           <div class="records-modal-header">
             <div>
@@ -1520,7 +1520,7 @@
         </div>
       </div>
 
-      <div v-if="showAnswerKeyModal && selectedAssessmentForAnswers" class="answer-key-modal" @click.self="closeAnswerKey">
+      <div v-if="showAnswerKeyModal && selectedAssessmentForAnswers" class="answer-key-modal">
         <div class="answer-key-dialog">
           <div class="answer-key-header">
             <div>
@@ -1570,7 +1570,7 @@
         </div>
       </div>
 
-      <div v-if="showDeadlineModal && selectedAssessmentForDeadline" class="records-modal-backdrop" @click.self="closeDeadlineEditor">
+      <div v-if="showDeadlineModal && selectedAssessmentForDeadline" class="records-modal-backdrop">
         <div class="records-modal-dialog deadline-modal-dialog">
           <div class="records-modal-header">
             <div>
@@ -1631,7 +1631,7 @@
         </div>
       </div>
 
-      <div v-if="showLessonEditModal && selectedLessonForEdit" class="records-modal-backdrop" @click.self="closeLessonEditModal">
+      <div v-if="showLessonEditModal && selectedLessonForEdit" class="records-modal-backdrop">
         <div class="records-modal-dialog lesson-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="lesson-edit-title">
           <div class="records-modal-header">
             <div>
@@ -1674,7 +1674,7 @@
         </div>
       </div>
 
-      <div v-if="showLessonCopyModal && selectedLessonForCopy" class="records-modal-backdrop" @click.self="closeLessonCopyModal">
+      <div v-if="showLessonCopyModal && selectedLessonForCopy" class="records-modal-backdrop">
         <div class="records-modal-dialog lesson-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="lesson-copy-title">
           <div class="records-modal-header">
             <div>
@@ -1712,7 +1712,7 @@
         </div>
       </div>
 
-      <div v-if="showAssessmentEditModal && selectedAssessmentForEdit" class="records-modal-backdrop" @click.self="closeAssessmentEditModal">
+      <div v-if="showAssessmentEditModal && selectedAssessmentForEdit" class="records-modal-backdrop">
         <div class="records-modal-dialog lesson-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="assessment-edit-title">
           <div class="records-modal-header">
             <div>
@@ -1798,7 +1798,7 @@
         </div>
       </div>
 
-      <div v-if="showAssessmentCopyModal && selectedAssessmentForCopy" class="records-modal-backdrop" @click.self="closeAssessmentCopyModal">
+      <div v-if="showAssessmentCopyModal && selectedAssessmentForCopy" class="records-modal-backdrop">
         <div class="records-modal-dialog lesson-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="assessment-copy-title">
           <div class="records-modal-header">
             <div>

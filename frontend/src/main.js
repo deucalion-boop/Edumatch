@@ -11,6 +11,7 @@ import './styles/roles/administrative-dark.css'
 import './styles/roles/headteacher-dark-details.css'
 import './styles/roles/admin-dark-details.css'
 import './utils/administrativeChartTheme.js'
+import './utils/modalDismissalPolicy.js'
 
 const teacherColorScheme = window.matchMedia('(prefers-color-scheme: dark)')
 const applyStoredTeacherTheme = () => {

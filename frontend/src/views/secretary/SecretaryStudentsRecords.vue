@@ -257,7 +257,7 @@
         </div>
       </section>
 
-      <div v-if="isAttendanceModalOpen" class="modal-shell" @click.self="closeAttendanceModal">
+      <div v-if="isAttendanceModalOpen" class="modal-shell">
         <div class="modal-panel secretary-attendance-modal">
           <div class="modal-panel-head secretary-attendance-modal-head">
             <div class="secretary-attendance-title-block">

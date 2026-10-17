@@ -65,7 +65,7 @@
     </details>
 
     <Teleport to="body">
-      <dialog ref="dialog" class="teacher-invitation-dialog" aria-labelledby="teacher-invitation-dialog-title" aria-describedby="teacher-invitation-dialog-description" @cancel.prevent="closeDialog" @click="closeOnBackdrop">
+      <dialog ref="dialog" class="teacher-invitation-dialog" aria-labelledby="teacher-invitation-dialog-title" aria-describedby="teacher-invitation-dialog-description" @cancel.prevent>
         <form class="invitation-dialog-content" novalidate @submit.prevent="submitInvitation">
           <header class="invitation-dialog-header">
             <div>

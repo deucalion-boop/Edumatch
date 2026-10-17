@@ -223,7 +223,7 @@
         role="dialog"
         aria-modal="true"
         aria-label="Lesson reader"
-        @click.self="requestCloseLessonReader"
+
       >
       <div class="lesson-preview-dialog">
         <div class="lesson-preview-head">
@@ -306,7 +306,7 @@
       </div>
     </Teleport>
 
-    <div v-if="isJoinClassModalOpen" class="join-class-modal" @click.self="closeJoinClassModal">
+    <div v-if="isJoinClassModalOpen" class="join-class-modal">
       <div class="join-class-dialog">
         <div class="join-class-dialog-head">
           <div>

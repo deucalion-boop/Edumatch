@@ -570,7 +570,7 @@
         </div>
       </section>
 
-      <div v-if="isClassInvitationModalOpen" class="modal-shell" @click.self="isClassInvitationModalOpen = false">
+      <div v-if="isClassInvitationModalOpen" class="modal-shell">
         <section class="modal-panel" role="dialog" aria-modal="true" aria-label="Private student registration">
           <div class="modal-panel-head"><h3>Invite Student</h3><button type="button" class="modal-close-btn" aria-label="Close student registration" @click="isClassInvitationModalOpen = false"><i class="fas fa-times"></i></button></div>
           <div class="student-invite-body">
@@ -579,7 +579,7 @@
         </section>
       </div>
 
-      <div v-if="isCreateClassModalOpen" class="modal-shell" @click.self="closeCreateClassModal">
+      <div v-if="isCreateClassModalOpen" class="modal-shell">
         <div class="modal-panel">
           <div class="modal-panel-head">
             <div>
@@ -620,7 +620,7 @@
         </div>
       </div>
 
-      <div v-if="isEditClassModalOpen && classPendingEdit" class="modal-shell" @click.self="closeEditClassModal">
+      <div v-if="isEditClassModalOpen && classPendingEdit" class="modal-shell">
         <div class="modal-panel">
           <div class="modal-panel-head">
             <div>
@@ -657,7 +657,7 @@
 
 
 
-      <div v-if="announcementSubject" class="modal-shell" @click.self="!announcementSaving && (announcementSubject = null)">
+      <div v-if="announcementSubject" class="modal-shell">
         <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="announcement-title">
           <div class="modal-panel-head"><h3 id="announcement-title">Post Announcement</h3><button type="button" class="modal-close-btn" :disabled="announcementSaving" @click="announcementSubject = null" aria-label="Close announcement">&times;</button></div>
           <form class="class-form" @submit.prevent="postAnnouncement">
@@ -669,7 +669,7 @@
           </form>
         </section>
       </div>
-      <div v-if="isSubjectStudentsModalOpen && subjectPendingStudents" class="modal-shell" @click.self="closeSubjectStudentsModal">
+      <div v-if="isSubjectStudentsModalOpen && subjectPendingStudents" class="modal-shell">
         <div class="modal-panel subject-students-modal">
           <div class="modal-panel-head">
             <div>
@@ -734,7 +734,7 @@
         </div>
       </div>
 
-      <div v-if="isDeleteClassModalOpen && classPendingDeletion" class="modal-shell" @click.self="closeDeleteClassModal">
+      <div v-if="isDeleteClassModalOpen && classPendingDeletion" class="modal-shell">
         <div class="modal-panel delete-class-modal">
           <div class="modal-panel-head">
             <div>

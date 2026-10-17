@@ -43,7 +43,7 @@
         <nav v-if="students.length > pageSize" class="registry-pagination" aria-label="Student registry pages"><span>Page {{ currentPage }} of {{ totalPages }}</span><div class="registry-button-row"><button type="button" class="registry-button registry-secondary" :disabled="currentPage === 1" @click="currentPage--">Previous</button><button type="button" class="registry-button registry-secondary" :disabled="currentPage >= totalPages" @click="currentPage++">Next</button></div></nav>
       </section>
 
-      <Teleport to="body"><dialog ref="dialog" class="registry-dialog" :class="{ 'registry-dialog-wide': dialogMode === 'assign' }" aria-labelledby="registry-dialog-title" aria-describedby="registry-dialog-description" @cancel.prevent="closeDialog" @click="closeOnBackdrop">
+      <Teleport to="body"><dialog ref="dialog" class="registry-dialog" :class="{ 'registry-dialog-wide': dialogMode === 'assign' }" aria-labelledby="registry-dialog-title" aria-describedby="registry-dialog-description" @cancel.prevent>
         <div class="registry-dialog-content"><header class="registry-section-heading"><div><span class="registry-eyebrow">Student management</span><h2 id="registry-dialog-title">{{ dialogTitle }}</h2></div><button type="button" class="registry-icon-button" aria-label="Close student management dialog" :disabled="Boolean(busy)" @click="closeDialog"><i class="fas fa-xmark" aria-hidden="true"></i></button></header><p id="registry-dialog-description" class="registry-dialog-description">{{ dialogDescription }}</p>
           <p v-if="dialogError" class="registry-notice is-error" role="alert">{{ dialogError }}</p>
 
