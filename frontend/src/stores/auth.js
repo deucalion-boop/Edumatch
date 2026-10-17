@@ -419,7 +419,8 @@ export function useAuthStore() {
         const response = await axios.get(`${apiBaseUrl}/auth/teacher-invitations/${encodeURIComponent(inviteToken)}`)
         return { ...response.data?.invitation, role: 'teacher', selfRegistration: true, departmentLocked: true }
       }
-      const response = await axios.get(`${apiBaseUrl}/auth/invite/${encodeURIComponent(inviteToken)}`)
+      const inviteRoute = inviteToken.startsWith('staff_') ? 'staff-registration' : 'invite'
+      const response = await axios.get(`${apiBaseUrl}/auth/${inviteRoute}/${encodeURIComponent(inviteToken)}`)
       return response.data?.invite || null
     } catch (error) {
       state.error = error.response?.data?.message || 'Invalid invite link'
@@ -427,7 +428,7 @@ export function useAuthStore() {
     }
   }
 
-  const completeInvite = async ({ token, password, fullName, email, username, department, teacherInvitation = false }) => {
+  const completeInvite = async ({ token, password, confirmPassword, fullName, email, username, department, teacherInvitation = false }) => {
     clearAlerts()
     const inviteToken = String(token || '').trim()
     if (!inviteToken) {
@@ -439,6 +440,7 @@ export function useAuthStore() {
       const apiBaseUrl = resolveApiBaseUrl()
       const payload = {
         password,
+        confirmPassword,
         fullName,
         email,
         username,
@@ -446,7 +448,7 @@ export function useAuthStore() {
       }
       const endpoint = teacherInvitation
         ? `${apiBaseUrl}/auth/teacher-invitations/${encodeURIComponent(inviteToken)}/activate`
-        : `${apiBaseUrl}/auth/invite/${encodeURIComponent(inviteToken)}/complete`
+        : `${apiBaseUrl}/auth/${inviteToken.startsWith('staff_') ? 'staff-registration' : 'invite'}/${encodeURIComponent(inviteToken)}/complete`
       const response = await axios.post(endpoint, payload)
       return response.data?.user || null
     } catch (error) {

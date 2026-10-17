@@ -17,6 +17,9 @@ const { listSessions, logout, revokeSession } = require('../controllers/security
 const { createCaptchaChallenge, verifyCaptchaChallenge } = require('../controllers/captchaController');
 
 const router = express.Router();
+const staffRegistration = require('../controllers/adminRegistrationLinkController');
+router.get('/staff-registration/:token', inviteLimiter, staffRegistration.validate);
+router.post('/staff-registration/:token/complete', inviteLimiter, staffRegistration.complete);
 router.use('/class-invitations', require('./classInvitationRoutes').publicRoutes);
 router.use('/teacher-invitations', require('./teacherInvitationRoutes').publicRoutes);
 router.use('/student-registry', require('./studentRegistryRoutes').publicRoutes);

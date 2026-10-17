@@ -34,6 +34,11 @@ const router = express.Router();
 const { publishSchoolAnnouncement, listSchoolAnnouncements } = require('../controllers/schoolAnnouncementController');
 
 router.use(authMiddleware, roleMiddleware('admin'));
+const registrationLinks = require('../controllers/adminRegistrationLinkController');
+router.get('/registration-links', registrationLinks.list);
+router.post('/registration-links', inviteLimiter, registrationLinks.create);
+router.post('/registration-links/:id/revoke', registrationLinks.revoke);
+router.delete('/registration-links/:id', registrationLinks.remove);
 
 router.route('/users').post(createUser).get(getUsers);
 router.route('/announcements').get(listSchoolAnnouncements).post(publishSchoolAnnouncement);

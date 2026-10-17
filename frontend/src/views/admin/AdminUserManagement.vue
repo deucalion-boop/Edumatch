@@ -117,6 +117,7 @@
           </div>
         </div>
 
+        <AdminRegistrationLinks ref="registrationLinksRef" />
         <!-- User Filters -->
         <section class="user-filters section-card fade-in tw:inline:[animation-delay:0.2s] tw:inline:[border-color:#69aa47]!" >
           <div class="filter-row">
@@ -478,7 +479,7 @@
               <div class="form-group">
                 <label>Security</label>
                 <p class="hint-text">
-                  A private, expiring registration link will be generated. Share it with the invited staff member so they can set their own password and activate the account.
+                  Teacher and Head Teacher links allow multiple staff registrations until they expire or you revoke them. Other account links remain single-use.
                 </p>
               </div>
             </div>
@@ -1187,17 +1188,19 @@
 import DashboardFooter from '../../components/DashboardFooter.vue'
 import axios from 'axios'
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import AdminRegistrationLinks from '../../components/AdminRegistrationLinks.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { debounce } from 'lodash'
 import { useAuthStore } from '../../stores/auth.js'
 
 export default {
-  components: { DashboardFooter },
+  components: { DashboardFooter, AdminRegistrationLinks },
   name: 'AdminUserManagement',
   setup() {
     const route = useRoute()
     const router = useRouter()
     const authStore = useAuthStore()
+    const registrationLinksRef = ref(null)
     const resolveApiBaseUrl = () => {
       const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
       if (!configured) return '/api'
@@ -2228,9 +2231,11 @@ export default {
           sectionId: newUser.role === 'student' ? newUser.sectionId : '',
           strand: newUser.role === 'student' ? newUser.strand : '',
         }
-        const response = await axios.post(`${managementApiPath.value}/users`, createPayload, getAuthConfig())
+        const reusable = ['teacher', 'headteacher'].includes(newUser.role)
+        const response = await axios.post(`${managementApiPath.value}/${reusable ? 'registration-links' : 'users'}`, createPayload, getAuthConfig())
         createdInviteLink.value = String(response.data?.invite?.inviteLink || '').trim()
-        showToastMessage('Private self-registration link created. Copy and share it with the intended staff member.')
+        showToastMessage(reusable ? 'Reusable staff registration link created.' : 'Private self-registration link created.')
+        if (reusable) await registrationLinksRef.value?.refresh()
         isCreateInviteLoading.value = false
         await fetchUsers()
       } catch (error) {
@@ -2737,6 +2742,7 @@ export default {
     })
     
     return {
+      registrationLinksRef,
       users,
       searchQuery,
       filters,

@@ -204,8 +204,9 @@
                 <label class="auth-form-label" for="inviteDepartment"><i class="fas fa-building"></i> Department</label>
                 <select id="inviteDepartment" v-model="inviteForm.department" class="auth-form-input" required :disabled="invite.departmentLocked">
                   <option value="" disabled>Select your department</option>
-                  <option v-for="department in departmentOptions" :key="department" :value="department">{{ department }}</option>
+                  <option v-for="department in (invite.availableDepartments || departmentOptions)" :key="department" :value="department">{{ department }}</option>
                 </select>
+                <small v-if="invite.availableDepartments && !invite.availableDepartments.length">All departments already have a Head Teacher. Contact your administrator.</small>
               </div>
             </template>
             <div v-if="!invite.selfRegistration" class="auth-form-group">
@@ -245,6 +246,12 @@
               <div class="validation-message" id="invitePasswordValidation">{{ validation.password }}</div>
             </div>
 
+            <div class="auth-form-group">
+              <label class="auth-form-label" for="inviteConfirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
+              <div class="auth-form-input-wrapper">
+                <input id="inviteConfirmPassword" v-model="inviteForm.confirmPassword" :type="showPassword ? 'text' : 'password'" class="auth-form-input" required minlength="8" maxlength="16" autocomplete="new-password" placeholder="Confirm your password" />
+              </div>
+            </div>
             <div class="auth-actions">
               <button type="submit" class="auth-submit-btn" :disabled="isLoading" id="inviteSubmitBtn">
                 <i class="fas fa-key login-submit-icon"></i>
@@ -313,6 +320,7 @@ export default {
       expiresAt: null,
       selfRegistration: false,
       departmentLocked: false,
+      availableDepartments: null,
       department: '',
     })
     
@@ -351,6 +359,7 @@ export default {
       username: '',
       department: '',
       password: '',
+      confirmPassword: '',
     })
     const departmentOptions = ['Mathematics', 'English', 'Science', 'TLE', 'Filipino', 'Araling Panlipunan', 'Edukasyon sa Pagpapakatao (ESP)', 'MAPEH']
     
@@ -521,6 +530,7 @@ export default {
         invite.selfRegistration = inviteDetails?.selfRegistration === true
         invite.department = inviteDetails?.department || ''
         invite.departmentLocked = inviteDetails?.departmentLocked === true
+        invite.availableDepartments = inviteDetails?.availableDepartments || null
         if (invite.departmentLocked) inviteForm.department = invite.department
       } catch (_error) {
         // The store exposes the error for rendering.
@@ -530,6 +540,10 @@ export default {
     }
 
     const handleInviteSubmit = async () => {
+      if (inviteForm.password !== inviteForm.confirmPassword) {
+        validation.password = 'Passwords do not match.'
+        return
+      }
       if (
         !inviteForm.password ||
         inviteForm.password.length < PASSWORD_MIN_LENGTH ||
@@ -550,6 +564,7 @@ export default {
           teacherInvitation: props.teacherInvitation,
           token: inviteToken,
           password: inviteForm.password,
+          confirmPassword: inviteForm.confirmPassword,
           fullName: `${inviteForm.firstName.trim()} ${inviteForm.lastName.trim()}`.replace(/\s+/g, ' ').trim(),
           email: inviteForm.email,
           username: inviteForm.username,
