@@ -1,5 +1,70 @@
 /* Admin page-specific surfaces override fixed light gradients and modal styles. */
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard {
+  --primary-light: #24382a;
+  --primary-lighter: #24382a;
+  --background: #0f141b;
+  --background-light: #171f29;
+  --surface: #171f29;
+  --text-dark: #edf2f7;
+  --text-muted: #a9b6c5;
+}
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
+  .page-header,.admin-profile-hero,.admin-welcome,.recent-activity,.activity-list,
+  .user-filters,.users-table-section,.section-card,.analytics-section,.ai-analytics-section,
+  .analytics-card,.ai-analytics-card,.insight-item,.user-stat-card,.stat-card,.config-card,
+  .ai-config-section,.action-card,.progress-stats,.progress-track,.message-options,
+  .modal-content,.modal-header,.modal-body,.modal-footer,.toast-content,
+  .dropdown-menu,.account-menu-dropdown,.pagination,.settings-page,.settings-page-header,
+  .model-option,.banned-tags,.role-option,.history-card,.export-request-card,
+  .request-summary-card,.loading-skeleton,.profile-card,.form-tab-content,
+  .tab-content,.user-actions-dropdown,.table-toolbar,.bulk-actions,.users-toolbar
+) {
+  background: #171f29 !important;
+  background-image: none !important;
+  border-color: #405162 !important;
+  color: #dce5ef !important;
+  box-shadow: none !important;
+}
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
+  .admin-header,.admin-header-content,.admin-sidebar,.sidebar-header,.sidebar-footer
+) { background: #171f29 !important; background-image: none !important; border-color: #334150 !important; }
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
+  .analytics-icon,.action-icon,.info-icon,.stat-icon,.profile-avatar-large,.avatar-placeholder,
+  .role-icon,.settings-title i,.insight-item i,.profile-chip,.settings-page-badge,
+  .ai-examtype-pill,.model-badge,.lang-badge,.tag,.filter-btn,.tab-btn,.view-btn,
+  .pagination-btn,.pagination-number,.btn-secondary,.dropdown-item,.account-menu-item i
+) {
+  background: #24313e !important;
+  background-image: none !important;
+  color: #cbd7e4 !important;
+  border-color: #405162 !important;
+  box-shadow: none !important;
+}
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
+  .filter-btn.active,.tab-btn.active,.view-btn.active,.pagination-number.active,
+  .role-option.selected,.model-option.active
+) { background: #293f2e !important; color: #c1e9ac !important; border-color: #6b8b59 !important; }
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
+  .action-card:hover,.dropdown-item:hover,.account-menu-item:hover,.user-row:hover td,
+  .pagination-btn:hover:not(:disabled),.pagination-number:hover,.tab-btn:hover,.view-btn:hover
+) { background: #25352f !important; color: #edf2f7 !important; border-color: #526a45 !important; }
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
+  .section-card,.analytics-card,.settings-card,.modal-content,.user-filters,.action-card,.admin-sidebar
+)::before,
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
+  .section-card,.analytics-card,.settings-card,.modal-content,.user-filters,.action-card,.admin-sidebar
+)::after { background: none !important; box-shadow: none !important; }
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
+  .analytics-icon,.action-icon,.stat-icon,.info-icon,.role-icon,.avatar-placeholder
+) :is(i,i::before,span) { color: inherit !important; -webkit-text-fill-color: currentColor !important; }
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(table,thead,tbody,tr,th,td) {
+  background: #171f29 !important; border-color: #334150 !important; color: #dce5ef !important;
+}
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(th,thead) { background: #202b37 !important; }
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(input:not([type='checkbox']):not([type='radio']),select,textarea) {
+  background: #101720 !important; border-color: #405162 !important; color: #edf2f7 !important;
+}
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
   .chart-wrap,.ai-chart-wrap,.ai-kpi-item,.ai-highlight,.funnel-metric,
   .risk-stats span,.activity-item,.analytics-table-wrap,.modal-panel--analytics,
   .settings-intro,.settings-section,.settings-card,.settings-header,.settings-row,
@@ -16,10 +81,10 @@ html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
   color: #dce5ef !important;
   box-shadow: none !important;
 }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
   .chart-wrap,.ai-chart-wrap,.trend-period-filter,.course-progress,.progress-bar
 ) { background: #101720 !important; background-image: none !important; }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
   .chart-type-badge,.activity-icon,.request-summary-icon,.request-empty-icon,
   .request-count-pill,.export-approval-count,.audit-category-badge,.audit-method-badge,
   .change-status,.form-section-icon,.refresh-button,.request-reset-btn,
@@ -31,35 +96,35 @@ html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
   border-color: #526a45 !important;
   box-shadow: none !important;
 }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
   .chart-type-badge,.activity-icon,.request-summary-icon,.request-empty-icon,.form-section-icon,.action-btn
 ) :is(i,i::before,span) { color: inherit !important; -webkit-text-fill-color: currentColor !important; }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
   .settings-row label,.profile-detail-item span,.request-count-pill,
   .funnel-metric span,.ai-kpi-item span,.risk-stats span
 ) { color: #b7c6d7 !important; -webkit-text-fill-color: currentColor !important; }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
   .session-row--current,.profile-banner.success,.request-feedback--success,
   .form-message.success,.export-request-status.is-approved,.export-request-card.is-approved,
   .audit-result-badge--success,.login-attempt-badge--success,.status-badge.active
 ) { background: #213b2b !important; color: #b7e4bf !important; border-color: #426a48 !important; }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
   .profile-banner.error,.request-feedback--error,.form-message.error,
   .export-request-status.is-rejected,.export-request-status.is-expired,
   .audit-result-badge--failed,.login-attempt-badge--failed,.status-badge.inactive
 ) { background: #41272c !important; color: #fecaca !important; border-color: #7c414a !important; }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(
   .change-status--pending,.request-count-pill.has-pending,.export-request-status.is-pending,
   .status-badge.pending,.audit-live-pill--syncing,.login-live-pill--syncing
 ) { background: #3c3422 !important; color: #f4d890 !important; border-color: #75623a !important; }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard .users-table-section .users-table tbody tr.user-row,
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard .users-table-section .users-table thead th {
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard .users-table-section .users-table tbody tr.user-row,
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard .users-table-section .users-table thead th {
   background: #171f29 !important; color: #dce5ef !important; border-color: #334150 !important;
 }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard .users-table-section .users-table tbody tr.user-row:hover {
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard .users-table-section .users-table tbody tr.user-row:hover {
   background: #25352f !important;
 }
-html[data-admin-theme='dark'] body.admin-dashboard :is(#progressContent,#coursesContent,#profileContent) :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app :is(#progressContent,#coursesContent,#profileContent) :is(
   .progress-hero,.stat-card,.progress-panel,.panel-emphasis,.progress-summary-row,
   .recent-submission-item,.progress-empty-state,.course-item,.course-meta,
   .profile-header,.info-section,.info-item,.avatar-placeholder
@@ -70,20 +135,20 @@ html[data-admin-theme='dark'] body.admin-dashboard :is(#progressContent,#courses
   color: #dce5ef !important;
   box-shadow: none !important;
 }
-html[data-admin-theme='dark'] body.admin-dashboard :is(#progressContent,#coursesContent,#profileContent) :is(
+html[data-admin-theme='dark'] body.admin-dashboard #app :is(#progressContent,#coursesContent,#profileContent) :is(
   .progress-track-chip,.progress-status-chip,.progress-pill,.recent-submission-score,
   .stat-icon,.course-progress-meta span,.profile-meta-strand,.profile-meta-status,
   .info-section-icon
 ) { background: #24332d !important; color: #c1e9ac !important; border-color: #526a45 !important; }
-html[data-admin-theme='dark'] body.admin-dashboard :is(#progressContent,#coursesContent) :is(.course-progress,.progress-hero-bar) {
+html[data-admin-theme='dark'] body.admin-dashboard #app :is(#progressContent,#coursesContent) :is(.course-progress,.progress-hero-bar) {
   background: #101720 !important;
 }
-html[data-admin-theme='dark'] body.admin-dashboard :is(#progressContent,#coursesContent) :is(.progress-fill,.course-progress-value,.progress-hero-bar > span) {
+html[data-admin-theme='dark'] body.admin-dashboard #app :is(#progressContent,#coursesContent) :is(.progress-fill,.course-progress-value,.progress-hero-bar > span) {
   background: #6aab4b !important;
 }
-html[data-admin-theme='dark'] body.admin-dashboard :is(#progressContent,#coursesContent,#profileContent) :is(h1,h2,h3,h4,strong,.info-value) {
+html[data-admin-theme='dark'] body.admin-dashboard #app :is(#progressContent,#coursesContent,#profileContent) :is(h1,h2,h3,h4,strong,.info-value) {
   color: #edf2f7 !important; -webkit-text-fill-color: currentColor !important;
 }
-html[data-admin-theme='dark'] body.admin-dashboard .admin-dashboard :is(.settings-section,.modal,.registration-links-panel) :is(input:not([type='checkbox']):not([type='radio']),select,textarea) {
+html[data-admin-theme='dark'] body.admin-dashboard #app .admin-dashboard :is(.settings-section,.modal,.registration-links-panel) :is(input:not([type='checkbox']):not([type='radio']),select,textarea) {
   background: #101720 !important; border-color: #405162 !important; color: #edf2f7 !important;
 }
