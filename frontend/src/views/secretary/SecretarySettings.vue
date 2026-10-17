@@ -142,6 +142,31 @@
           </div>
         </form>
       </article>
+
+      <article class="section-card dashboard-panel secretary-settings-card secretary-surface-card">
+        <div class="secretary-card-head">
+          <div>
+            <h3>Appearance</h3>
+            <p>Choose how the Secretary workspace looks on this device.</p>
+          </div>
+        </div>
+
+        <div class="role-theme-options" role="radiogroup" aria-label="Secretary workspace theme">
+          <button
+            v-for="option in themeOptions"
+            :key="option.value"
+            type="button"
+            class="role-theme-option"
+            :class="{ active: selectedTheme === option.value }"
+            role="radio"
+            :aria-checked="selectedTheme === option.value"
+            @click="selectTheme(option.value)"
+          >
+            <span class="role-theme-option-preview" :class="`role-theme-preview-${option.value}`"><i :class="option.icon"></i></span>
+            <span><strong>{{ option.label }}</strong><small>{{ option.description }}</small></span>
+          </button>
+        </div>
+      </article>
     </section>
       <DashboardFooter />
     </main>
@@ -153,10 +178,13 @@ import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
+import { useRoleTheme } from '../../composables/useRoleTheme.js'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+
+const { themeOptions, selectedTheme, selectTheme } = useRoleTheme('secretary', 'edumatch_secretary_theme')
 
 const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)

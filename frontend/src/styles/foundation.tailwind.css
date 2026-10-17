@@ -3051,3 +3051,77 @@ body.public-contact {
 ) {
     @apply tw:[color:#4B5563]!;
 }
+
+/* Role appearance picker (Admin / Secretary / Head Teacher).
+   Uses the shared --appearance-* tokens so each role can restyle the control
+   for light and dark themes by overriding those variables. */
+.role-theme-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.role-theme-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--appearance-border, #e2e8f0);
+    border-radius: 12px;
+    background: var(--appearance-surface, #ffffff);
+    color: var(--appearance-text, #111827);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+.role-theme-option:hover {
+    border-color: var(--appearance-accent, #4f8a35);
+}
+
+.role-theme-option.active {
+    border-color: var(--appearance-accent, #4f8a35);
+    box-shadow: 0 0 0 3px var(--appearance-accent-soft, rgba(79, 138, 53, 0.18));
+}
+
+.role-theme-option strong {
+    display: block;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    color: var(--appearance-text, #111827);
+}
+
+.role-theme-option small {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.78rem;
+    color: var(--appearance-muted, #64748b);
+}
+
+.role-theme-option-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--appearance-border, #e2e8f0);
+}
+
+.role-theme-preview-light {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.role-theme-preview-system {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.role-theme-preview-dark {
+    background: #0f172a;
+    color: #f8fafc;
+}
+

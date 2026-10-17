@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import { initializeAuthInterceptor, initializeAuthPresence } from './stores/auth'
 import { registerServiceWorker } from './pwa'
+import { bootstrapRoleThemes } from './composables/useRoleTheme'
 import '@fortawesome/fontawesome-free/css/all.min.css'
 import './styles/tailwind.css'
 import './styles/roles/workspace-polish.css'
@@ -25,6 +26,13 @@ applyStoredTeacherTheme()
 teacherColorScheme.addEventListener('change', () => {
   if (document.documentElement.dataset.teacherThemePreference === 'system') applyStoredTeacherTheme()
 })
+
+// Apply persisted appearance (light/system/dark) for the administrative roles.
+bootstrapRoleThemes([
+  { roleKey: 'admin', storageKey: 'edumatch_admin_theme' },
+  { roleKey: 'secretary', storageKey: 'edumatch_secretary_theme' },
+  { roleKey: 'headteacher', storageKey: 'edumatch_headteacher_theme' },
+])
 
 initializeAuthInterceptor()
 initializeAuthPresence()

@@ -14466,3 +14466,160 @@ body.admin-dashboard .admin-sidebar .admin-sidebar-brand {
 body.admin-dashboard .admin-sidebar .admin-sidebar-brand-copy {
     text-align: left !important;
 }
+
+/* ============================================================
+   Admin appearance — light & dark themes
+   Controlled by data-admin-theme on <html> (see useRoleTheme).
+   ============================================================ */
+
+html[data-admin-theme='dark'] body.admin-dashboard {
+    color-scheme: dark;
+
+    /* base tokens */
+    --admin-bg: #0f1420;
+    --admin-surface: #161d2b;
+    --admin-surface-alt: #10161f;
+    --admin-border: #263043;
+    --admin-text: #e7ecf5;
+    --admin-muted: #9aa7bd;
+    --admin-color: #9aa7bd;
+
+    /* "final redesign" tokens */
+    --admin-shell-bg: #0f1420;
+    --admin-panel: rgba(22, 29, 43, 0.92);
+    --admin-panel-strong: #161d2b;
+    --admin-border-strong: #33405a;
+    --admin-soft: #7f8da6;
+    --admin-accent: #6bbf59;
+    --admin-accent-soft: rgba(107, 191, 89, 0.16);
+    --admin-shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.4);
+    --admin-shadow-md: 0 20px 40px rgba(0, 0, 0, 0.5);
+    --admin-shadow-lg: 0 30px 60px rgba(0, 0, 0, 0.55);
+
+    --appearance-surface: #161d2b;
+    --appearance-border: #263043;
+    --appearance-text: #e7ecf5;
+    --appearance-muted: #9aa7bd;
+    --appearance-accent: #6bbf59;
+    --appearance-accent-soft: rgba(107, 191, 89, 0.18);
+
+    background: #0f1420 !important;
+    color: #e7ecf5 !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard .admin-layout,
+html[data-admin-theme='dark'] body.admin-dashboard .admin-main {
+    background: #0f1420 !important;
+}
+
+/* Header chrome (hardcoded light in the redesign block). */
+html[data-admin-theme='dark'] body.admin-dashboard .admin-header-content {
+    background: #161d2b !important;
+    border-color: #263043 !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard :is(.admin-logo-text h1, .page-title) {
+    color: #f1f5f9 !important;
+}
+
+/* Sidebar + navigation. */
+html[data-admin-theme='dark'] body.admin-dashboard .admin-sidebar {
+    background: transparent !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard :is(.nav-link, .sidebar-item) {
+    color: #b6c2d6 !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard :is(.nav-link:hover, .nav-link.active, .sidebar-item:hover, .sidebar-item.active) {
+    background: #1c2536 !important;
+    color: #ffffff !important;
+}
+
+/* Cards and panels. */
+html[data-admin-theme='dark'] body.admin-dashboard :is(
+    .section-card,
+    .settings-section,
+    .settings-page,
+    .settings-card,
+    .stat-card,
+    .action-card,
+    .analytics-card,
+    .activity-item,
+    .admin-welcome,
+    .recent-activity,
+    .user-stats,
+    .table-responsive,
+    .users-table-section,
+    .analytics-section,
+    .ai-analytics-section
+) {
+    background: #161d2b !important;
+    border-color: #263043 !important;
+    color: #e7ecf5 !important;
+    box-shadow: none !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard :is(.stat-card::before, .analytics-card::before, .action-card::before) {
+    background: #10161f !important;
+}
+
+/* Typography. */
+html[data-admin-theme='dark'] body.admin-dashboard :is(h1, h2, h3, h4, h5, h6, strong, label, .settings-title, .detail-value, .section-title) {
+    color: #f1f5f9 !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard :is(p, small, .settings-subtitle, .settings-desc, .settings-meta, .detail-label, .section-subtitle, .stat-label) {
+    color: #9aa7bd !important;
+}
+
+/* Form controls. */
+html[data-admin-theme='dark'] body.admin-dashboard :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+    background: #0e1420 !important;
+    border-color: #263043 !important;
+    color: #e7ecf5 !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard :is(input::placeholder, textarea::placeholder) {
+    color: #7f8da6 !important;
+}
+
+/* Tables. */
+html[data-admin-theme='dark'] body.admin-dashboard :is(table, thead, tbody, tr, td, th) {
+    color: #e7ecf5 !important;
+    border-color: #263043 !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard :is(table, th, .table-header) {
+    background: #10161f !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard tr:hover td {
+    background: #1c2536 !important;
+}
+
+/* Buttons. */
+html[data-admin-theme='dark'] body.admin-dashboard .btn-outline {
+    color: #cbd5e1 !important;
+    border-color: #33405a !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard .btn-outline:hover {
+    background: #1c2536 !important;
+}
+
+/* Dropdowns and modals. */
+html[data-admin-theme='dark'] body.admin-dashboard :is(.account-menu-dropdown, .modal-content, .toast) {
+    background: #161d2b !important;
+    border-color: #263043 !important;
+    color: #e7ecf5 !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard .account-menu-item {
+    color: #cbd5e1 !important;
+}
+
+html[data-admin-theme='dark'] body.admin-dashboard .account-menu-item:hover {
+    background: #1c2536 !important;
+}
+

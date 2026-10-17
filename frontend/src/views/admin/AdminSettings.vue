@@ -285,6 +285,32 @@
                   </div>
                 </div>
               </article>
+
+              <article class="settings-card settings-card--appearance">
+                <div class="settings-header">
+                  <div>
+                    <h3 class="settings-title">Appearance</h3>
+                    <p class="settings-subtitle">Choose how the Admin workspace looks on this device.</p>
+                  </div>
+                </div>
+                <div class="settings-body">
+                  <div class="role-theme-options" role="radiogroup" aria-label="Admin workspace theme">
+                    <button
+                      v-for="option in themeOptions"
+                      :key="option.value"
+                      type="button"
+                      class="role-theme-option"
+                      :class="{ active: selectedTheme === option.value }"
+                      role="radio"
+                      :aria-checked="selectedTheme === option.value"
+                      @click="selectTheme(option.value)"
+                    >
+                      <span class="role-theme-option-preview" :class="`role-theme-preview-${option.value}`"><i :class="option.icon"></i></span>
+                      <span><strong>{{ option.label }}</strong><small>{{ option.description }}</small></span>
+                    </button>
+                  </div>
+                </div>
+              </article>
             </div>
           </div>
 
@@ -370,6 +396,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useAuthStore } from '../../stores/auth.js'
+import { useRoleTheme } from '../../composables/useRoleTheme.js'
 
 const DEFAULT_SETTINGS = {
   user: {
@@ -415,6 +442,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const authStore = useAuthStore()
+    const { themeOptions, selectedTheme, selectTheme } = useRoleTheme('admin', 'edumatch_admin_theme')
     const SIDEBAR_BREAKPOINT = 1024
     const isSidebarOpen = ref(false)
 
@@ -863,6 +891,9 @@ export default {
       goToSettings,
       handleLogout,
       settings,
+      themeOptions,
+      selectedTheme,
+      selectTheme,
       saving,
       clearCacheLoading,
       visibleSessions,

@@ -4857,3 +4857,59 @@ body.headteacher-dashboard .headteacher-brand-copy p {
   }
 }
 
+
+/* ============================================================
+   Head Teacher appearance — light & dark themes
+   Controlled by data-headteacher-theme on <html> (see useRoleTheme).
+   ============================================================ */
+
+/* Dark theme: swap the Head Teacher design tokens. Nearly every element reads
+   these variables, so overriding them recolors the whole workspace. */
+html[data-headteacher-theme='dark'] body.headteacher-dashboard {
+    color-scheme: dark;
+    --headteacher-bg: #0e1420;
+    --headteacher-surface: #161d2b;
+    --headteacher-text: #e7ecf5;
+    --headteacher-muted: #9aa7bd;
+    --headteacher-border: #263043;
+    --headteacher-primary: #6bbf59;
+    --headteacher-primary-hover: #57a847;
+    --headteacher-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --headteacher-shadow-md: 0 14px 30px rgba(0, 0, 0, 0.5);
+
+    --appearance-surface: #161d2b;
+    --appearance-border: #263043;
+    --appearance-text: #e7ecf5;
+    --appearance-muted: #9aa7bd;
+    --appearance-accent: #6bbf59;
+    --appearance-accent-soft: rgba(107, 191, 89, 0.18);
+
+    background: var(--headteacher-bg) !important;
+    color: var(--headteacher-text) !important;
+}
+
+html[data-headteacher-theme='dark'] body.headteacher-dashboard :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+    background: #0e1420 !important;
+    border-color: #263043 !important;
+    color: #e7ecf5 !important;
+}
+
+html[data-headteacher-theme='dark'] body.headteacher-dashboard :is(input::placeholder, textarea::placeholder) {
+    color: #7f8da6 !important;
+}
+
+html[data-headteacher-theme='dark'] body.headteacher-dashboard table,
+html[data-headteacher-theme='dark'] body.headteacher-dashboard th,
+html[data-headteacher-theme='dark'] body.headteacher-dashboard td {
+    color: #e7ecf5 !important;
+    border-color: #263043 !important;
+}
+
+html[data-headteacher-theme='dark'] body.headteacher-dashboard th {
+    background: #10161f !important;
+}
+
+html[data-headteacher-theme='dark'] body.headteacher-dashboard tr:hover td {
+    background: #1c2536 !important;
+}
+
