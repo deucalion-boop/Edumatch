@@ -1,0 +1,121 @@
+/* Shared administrative dark surfaces. Role-scoped: light mode and student/teacher themes are untouched. */
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.registry-toolbar,.registry-filter-bar,.registry-summary-card,.secretary-filter-bar,.secretary-search-row,.secretary-table-wrap,.faculty-detail-grid > div,.headteacher-directory-toolbar,.headteacher-detail-list,.profile-summary,.settings-sidebar,.settings-content,.settings-section,.stat-card,.notification-item,.headteacher-notification-item) {
+  background:#171f29 !important; color:#edf2f7 !important; border-color:#334150 !important; background-image:none !important;
+}
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.nav-link,.sidebar-item,.headteacher-nav-link,.nav-sublink) :is(span,i) {
+  color:inherit !important; -webkit-text-fill-color:currentColor !important;
+}
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.badge,.department-badge,.role-badge,.faculty-department-badge,.secretary-department-chip,.trend-period-filter button,.pagination button) {
+  background:#24332d !important; color:#c1e9ac !important; border-color:#40583c !important;
+}
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) {
+  color-scheme: dark; --workspace-canvas:#0f141b; --workspace-surface:#171f29; --workspace-text:#edf2f7; --workspace-muted:#a9b6c5; --workspace-border:#334150; --workspace-accent:#9ed580; --workspace-accent-strong:#82bd63; --workspace-accent-soft:#24382a; --appearance-surface:#171f29; --appearance-text:#edf2f7; --appearance-muted:#a9b6c5; --appearance-border:#334150; --appearance-accent:#9ed580; --appearance-accent-soft:#24382a; --text-primary:#edf2f7; --text-secondary:#a9b6c5; --text-tertiary:#a9b6c5; --gray-light:#334150; --gray:#a9b6c5; --headteacher-bg:#0f141b; --headteacher-surface:#171f29; --headteacher-text:#edf2f7; --headteacher-muted:#a9b6c5; --headteacher-border:#334150; background:#0f141b !important; color:#edf2f7 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.admin-dashboard,.teacher-dashboard,.headteacher-workspace,main,.admin-layout,.dashboard-container) {
+  background:#0f141b !important; color:#edf2f7 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.admin-header,.top-header,.headteacher-top-header,.admin-sidebar,.teacher-sidebar,.headteacher-sidebar,.section-card,.dashboard-panel,.headteacher-panel,.profile-settings,.state-card,.announcement-card,.announcement-detail,.modal-content,dialog,.toast-content,.account-menu-dropdown,.headteacher-account-menu-dropdown,.notification-dropdown,.headteacher-notifications-panel,[class$='-card'],[class*='-card '],[class$='-panel'],[class*='-panel ']) {
+  background:#171f29 !important; background-image:none !important; border-color:#334150 !important; color:#edf2f7 !important; box-shadow:0 6px 20px rgb(0 0 0 / 12%) !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(h1,h2,h3,h4,h5,h6,strong,dt,dd,label,.page-title,.section-title,.headteacher-section-title,.headteacher-form-group > span,.secretary-field > span) {
+  color:#edf2f7 !important; -webkit-text-fill-color:currentColor !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(p,small,.header-subtitle,.headteacher-header-subtitle,.meta,.detail-label,.headteacher-section-subtitle,.secretary-role,.headteacher-sidebar-role,.nav-section-title) {
+  color:#a9b6c5 !important; -webkit-text-fill-color:currentColor !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(input:not([type='checkbox']):not([type='radio']),select,textarea,.headteacher-password-wrap,.secretary-password-wrap,.secretary-search-field) {
+  color-scheme:dark; background:#101720 !important; color:#edf2f7 !important; border-color:#405162 !important; box-shadow:none !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(input,textarea)::placeholder {
+  color:#98a8ba !important; opacity:1;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(input,select,textarea,button,a):focus-visible {
+  outline:2px solid #9ed580 !important; outline-offset:3px;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(input[readonly],input:disabled,select:disabled,textarea:disabled) {
+  background:#202a35 !important; color:#b7c3d0 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(table,thead,tbody,tr,td,th,.table-container,.table-wrapper,.faculty-class-table-wrap) {
+  background:#171f29 !important; color:#dce5ef !important; border-color:#334150 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(th,thead,.table-header) {
+  background:#202b37 !important; color:#b7c6d7 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) tbody tr:hover > td {
+  background:#22303a !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.nav-link,.sidebar-item,.headteacher-nav-link,.account-menu-item,.headteacher-account-menu-item) {
+  color:#d5dfe9 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.nav-link,.sidebar-item,.headteacher-nav-link,.account-menu-item,.headteacher-account-menu-item):hover {
+  background:#24332d !important; color:#edf2f7 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.nav-link.active,.sidebar-item.active,.headteacher-nav-link.active,.router-link-exact-active) {
+  background:#24382a !important; color:#c1e9ac !important; border-color:#668553 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.mobile-menu-toggle,.sidebar-close,.headteacher-mobile-menu-toggle,.headteacher-header-settings-button,.header-tour-btn,.header-account-trigger,.notification-bell,.faculty-close,.modal-close,.headteacher-password-toggle,.secretary-password-toggle) {
+  background:#202b37 !important; color:#e0e9f2 !important; border-color:#405162 !important; box-shadow:none !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.mobile-menu-toggle,.sidebar-close,.headteacher-mobile-menu-toggle,.headteacher-header-settings-button,.header-tour-btn,.header-account-trigger,.notification-bell,.faculty-close,.modal-close) :is(i,i::before) {
+  color:#e0e9f2 !important; -webkit-text-fill-color:#e0e9f2 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.btn-outline,.headteacher-button-outline,.back-button,.secretary-export-btn) {
+  background:#202b37 !important; border-color:#57734e !important; color:#c1e9ac !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.btn-primary,.btn-success,.headteacher-button-primary,.secretary-save-profile-btn,.secretary-update-password-btn) {
+  background:#3e752d !important; border-color:#6b9a53 !important; color:#fff !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.btn-primary,.btn-success,.headteacher-button-primary) :is(i,span) {
+  color:#fff !important; -webkit-text-fill-color:#fff !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.headteacher-password-rules,.secretary-password-rules,.photo-row .placeholder,.headteacher-settings-icon,.announcement-icon,.profile-photo.placeholder) {
+  background:#24382a !important; border-color:#40583c !important; color:#b9dfa5 !important; box-shadow:none !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.eyebrow,.headteacher-eyebrow,.registry-eyebrow,.announcement-subject,.empty-state > i,.headteacher-settings-icon i) {
+  color:#b9dfa5 !important; -webkit-text-fill-color:#b9dfa5 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.headteacher-detail-item,.secretary-detail-item,.sidebar-header,.sidebar-footer,hr) {
+  border-color:#334150 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.modal-overlay,.sidebar-backdrop) {
+  background:rgb(0 0 0 / 65%) !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) dialog::backdrop {
+  background:rgb(0 0 0 / 65%);
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.error,.danger,.secretary-field-error,.headteacher-form-feedback.error,.state-card-error) {
+  color:#fca5a5 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.account-menu-item.danger,.headteacher-account-menu-item.danger) {
+  color:#fca5a5 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) .edumatch-dashboard-footer {
+  color:#9aabbd !important; background:transparent !important; border-color:#334150 !important;
+}
