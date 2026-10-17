@@ -50,6 +50,8 @@ router.use(authMiddleware, roleMiddleware('teacher'));
 router.use('/class-invitations', require('./classInvitationRoutes').teacher);
 router.post('/students/registration-links', inviteLimiter, require('../controllers/studentPrivateRegistrationController').create);
 router.get('/students/registration-links', require('../controllers/studentPrivateRegistrationController').list);
+router.post('/students/registration-links/:id/revoke', require('../controllers/studentReusableRegistrationController').revoke);
+router.delete('/students/registration-links/:id', require('../controllers/studentReusableRegistrationController').remove);
 
 router.post(
   '/lessons',

@@ -14,14 +14,19 @@ async function create(req, res, next) {
     } else if (req.user.role !== 'teacher') {
       throw Object.assign(new Error('Only teachers and Head Teachers can create student registration links.'), { statusCode: 403 });
     }
-    const data = await createStudentRegistrationLink({ teacher, req });
-    return sendSuccess(res, 201, 'Private student registration link created. Share it with one student.', data);
+    const data = req.user.role === 'teacher'
+      ? await require('./studentReusableRegistrationController').createForTeacher(teacher, req)
+      : await createStudentRegistrationLink({ teacher, req });
+    return sendSuccess(res, 201, data.invite.multipleAccounts ? 'Reusable student registration link created.' : 'Private student registration link created. Share it with one student.', data);
   } catch (error) { return next(error); }
 }
 
 async function list(req, res, next) {
   try {
-    const links = await listStudentRegistrationLinks(req.user);
+    const links = [
+      ...await require('./studentReusableRegistrationController').listForTeacher(req.user, req),
+      ...await listStudentRegistrationLinks(req.user),
+    ];
     return sendSuccess(res, 200, 'Student registration links fetched.', { links });
   } catch (error) { return next(error); }
 }

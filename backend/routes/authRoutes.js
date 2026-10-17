@@ -18,6 +18,9 @@ const { createCaptchaChallenge, verifyCaptchaChallenge } = require('../controlle
 
 const router = express.Router();
 const staffRegistration = require('../controllers/adminRegistrationLinkController');
+const studentRegistration = require('../controllers/studentReusableRegistrationController');
+router.get('/student-registration/:token', inviteLimiter, studentRegistration.validate);
+router.post('/student-registration/:token/complete', inviteLimiter, studentRegistration.complete);
 router.get('/staff-registration/:token', inviteLimiter, staffRegistration.validate);
 router.post('/staff-registration/:token/complete', inviteLimiter, staffRegistration.complete);
 router.use('/class-invitations', require('./classInvitationRoutes').publicRoutes);

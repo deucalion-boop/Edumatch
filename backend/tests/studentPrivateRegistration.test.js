@@ -32,10 +32,12 @@ async function invoke(controller, overrides = {}) {
 }
 const studentDetails = { fullName: 'Maria Santos', email: 'maria.santos@gmail.com', username: 'maria.santos', password: 'Password123!' };
 const tokenOf = response => response.invite.inviteLink.split('/').at(-1);
+// Legacy single-use links are still issued through the Head Teacher workflow.
+const createLegacy = (req, res, next) => create({ ...req, user: { _id: 'headteacher', role: 'headteacher', department: 'MAPEH' }, body: { teacherId: 'teacher' } }, res, next);
 
-test('teacher creates a private link without student details, spreadsheet, email or temporary password', async () => {
+test('legacy private links retain single-use student placeholders and enrollment', async () => {
   fixture();
-  const response = await invoke(create);
+  const response = await invoke(createLegacy);
   assert.match(response.invite.inviteLink, /\/auth\/invite\/[a-f0-9]{64}$/);
   assert.equal(response.section.name, 'Charity');
   const student = client.tables.users.find(row => row.role === 'student');
@@ -57,9 +59,39 @@ test('Head Teacher creates links only for their managed department teachers', as
   await assert.rejects(invoke(create, { user: { ...user, department: 'Science' }, body: { teacherId: 'teacher' } }), { statusCode: 404 });
 });
 
+test('Teacher creates a reusable link without placeholder student accounts', async () => {
+  fixture();
+  const result = await invoke(create);
+  assert.equal(result.invite.multipleAccounts, true);
+  assert.match(result.invite.inviteLink, /\/auth\/invite\/pupil_[a-f0-9]+\.[a-f0-9]+$/);
+  assert.equal(client.tables.users.length, 1);
+  assert.equal(client.tables.subject_enrollments.length, 0);
+  const stored = client.tables.student_registration_links[0];
+  assert.equal(stored.teacher_id, 'teacher');
+  assert.equal(stored.section_id, 'charity');
+  assert.equal(stored.subject_id, 'class');
+  assert.equal(JSON.stringify(stored).includes(tokenOf(result)), false);
+  const listed = await invoke(list);
+  assert.equal(listed.links[0].multipleAccounts, true);
+  assert.equal(listed.links[0].inviteLink, result.invite.inviteLink);
+});
+
+test('Teacher can revoke and remove only their own reusable links', async () => {
+  fixture();
+  await invoke(create);
+  const { revoke, remove } = require('../controllers/studentReusableRegistrationController');
+  const id = client.tables.student_registration_links[0].id;
+  await assert.rejects(invoke(revoke, { params: { id }, user: { ...teacher, _id: 'other-teacher' } }), { statusCode: 404 });
+  await invoke(revoke, { params: { id } });
+  assert.ok(client.tables.student_registration_links[0].revoked_at);
+  await invoke(remove, { params: { id } });
+  assert.equal(client.tables.student_registration_links.length, 0);
+  assert.equal(client.tables.users.length, 1);
+});
+
 test('student completes private registration and preserves advisory ownership; used link cannot register again', async () => {
   fixture();
-  const response = await invoke(create);
+  const response = await invoke(createLegacy);
   const params = { token: tokenOf(response) };
   const valid = await invoke(validateInvite, { params });
   assert.equal(valid.invite.selfRegistration, true);
@@ -77,12 +109,12 @@ test('student completes private registration and preserves advisory ownership; u
 
 test('expired link and changed advisory assignment cannot activate an account', async () => {
   fixture();
-  let response = await invoke(create);
+  let response = await invoke(createLegacy);
   let student = client.tables.users.find(row => row.role === 'student');
   student.invite.expiresAt = new Date(Date.now() - 1000).toISOString();
   await assert.rejects(invoke(completeInvite, { params: { token: tokenOf(response) }, body: studentDetails }), { statusCode: 400 });
   fixture();
-  response = await invoke(create);
+  response = await invoke(createLegacy);
   client.tables.users[0].advisory_section_id = 'unity';
   await assert.rejects(invoke(completeInvite, { params: { token: tokenOf(response) }, body: studentDetails }), { statusCode: 409 });
   student = client.tables.users.find(row => row.role === 'student');
@@ -98,7 +130,7 @@ test('inactive teacher and missing section cannot issue student links', async ()
 
 test('teacher class list recovers only their active registration links without storing plaintext', async () => {
   fixture();
-  const created = await invoke(create);
+  const created = await invoke(createLegacy);
   const student = client.tables.users.find(row => row.role === 'student');
   assert.equal(JSON.stringify(student.invite).includes(tokenOf(created)), false);
   const response = await invoke(list);

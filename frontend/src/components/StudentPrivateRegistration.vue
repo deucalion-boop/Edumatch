@@ -1,7 +1,7 @@
 <template>
   <section class="student-private-registration">
     <h3 v-if="!hideHeading">Private {{ teacherRegistration ? 'teacher' : 'student' }} registration</h3>
-    <p class="registration-description">{{ teacherRegistration ? 'Share a private link with one teacher. They’ll enter their name, email, username, and password to join your department.' : 'Share a private link with one student. They’ll enter their name, email, username, and password to join your advisory section.' }}</p>
+    <p class="registration-description">{{ teacherRegistration ? 'Share a private link with one teacher. They’ll enter their name, email, username, and password to join your department.' : !isHeadTeacher ? 'Share one private link with multiple students. Each student creates their own account and joins your advisory section.' : 'Share a private link with one student. They’ll enter their name, email, username, and password to join your advisory section.' }}</p>
     <label v-if="isHeadTeacher" class="registration-field">
       <span>Advisory teacher</span>
       <select v-model="selectedTeacherId" :disabled="busy || loadingTeachers || Boolean(link)" required>
@@ -16,10 +16,10 @@
       <dl class="registration-details">
         <div><dt>{{ teacherRegistration ? 'Department' : 'Section' }}</dt><dd>{{ sectionName }}</dd></div>
         <div><dt>Expires</dt><dd>{{ formatExpiry(expiresAt) }}</dd></div>
-        <div><dt>Access</dt><dd>One {{ teacherRegistration ? 'teacher' : 'student' }} · Single use</dd></div>
+        <div><dt>Access</dt><dd>{{ multipleAccounts ? 'Multiple students · Reusable until expired or revoked' : `One ${teacherRegistration ? 'teacher' : 'student'} · Single use` }}</dd></div>
       </dl>
       <div class="registration-actions"><button type="button" @click="copyLink">{{ copied ? 'Copied!' : 'Copy link' }}</button><button type="button" class="secondary" @click="startAnother">Create another link</button></div>
-      <small class="registration-hint">Copy this link before creating another one. Existing links remain valid until used or expired.</small>
+      <small class="registration-hint">{{ multipleAccounts ? 'Share this link with your students. Manage or revoke it from the class list. Registered accounts are not affected.' : 'Copy this link before creating another one. Existing links remain valid until used or expired.' }}</small>
     </template>
     <button v-else type="button" :disabled="busy || (isHeadTeacher && !selectedTeacherId)" @click="generateLink">{{ busy ? 'Generating...' : 'Generate private link' }}</button>
   </section>
@@ -30,6 +30,7 @@ import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 const props = defineProps({ apiBaseUrl: { type: String, required: true }, authToken: { type: String, required: true }, isHeadTeacher: Boolean, hideHeading: Boolean, teacherRegistration: Boolean, teacherId: { type: String, default: '' } })
 const emit = defineEmits(['created'])
+const multipleAccounts = ref(false)
 const selectedTeacherId = ref(props.teacherId)
 const teachers = ref([])
 const loadingTeachers = ref(false)
@@ -61,6 +62,7 @@ async function generateLink() {
     const accountType = props.teacherRegistration ? 'teachers' : 'students'
     const response = await axios.post(`${base()}/${role}/${accountType}/registration-links`, props.isHeadTeacher ? { teacherId: selectedTeacherId.value } : {}, config())
     link.value = response.data.invite.inviteLink
+    multipleAccounts.value = response.data.invite.multipleAccounts === true
     expiresAt.value = response.data.invite.inviteExpiresAt
     sectionName.value = props.teacherRegistration ? response.data.department : response.data.section.name
     emit('created', response.data)

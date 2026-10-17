@@ -305,12 +305,14 @@
             <div v-if="registrationLinksForClass(subject.id).length" class="class-registration-links">
               <strong>Student registration links</strong>
               <div v-for="(registration, index) in registrationLinksForClass(subject.id)" :key="registration.id" class="class-registration-link">
-                <label :for="`registration-link-${registration.id}`">Private link {{ index + 1 }} · One student</label>
+                <label :for="`registration-link-${registration.id}`">Private link {{ index + 1 }} · {{ registration.multipleAccounts ? 'Multiple students' : 'One student (legacy)' }}{{ registration.revokedAt ? ' · Revoked' : Date.parse(registration.expiresAt) <= Date.now() ? ' · Expired' : '' }}</label>
                 <div class="class-registration-link-actions">
                   <input :id="`registration-link-${registration.id}`" :value="registration.inviteLink" type="url" readonly @focus="$event.target.select()">
-                  <button type="button" class="btn btn-primary btn-sm" @click="copyClassRegistrationLink(registration)">Copy Link</button>
+                  <button type="button" class="btn btn-primary btn-sm" :disabled="Boolean(registration.revokedAt) || Date.parse(registration.expiresAt) <= Date.now()" @click="copyClassRegistrationLink(registration)">Copy Link</button>
+                  <button type="button" class="btn btn-outline btn-sm" :disabled="Boolean(registration.revokedAt) || Boolean(registrationLinkBusy)" @click="manageClassRegistrationLink(registration, false)">Revoke</button>
+                  <button type="button" class="btn btn-outline btn-sm" :disabled="Boolean(registrationLinkBusy)" @click="manageClassRegistrationLink(registration, true)">Remove</button>
                 </div>
-                <small>Expires {{ formatDateTime(registration.expiresAt) }}</small>
+                <small>Expires {{ formatDateTime(registration.expiresAt) }}{{ registration.multipleAccounts ? ` · ${registration.registrationCount || 0} registered` : '' }}</small>
               </div>
             </div>
             <p v-if="registrationLinksError && subject.classType === 'advisory'" class="invitation-load-error" role="status">{{ registrationLinksError }} <button type="button" @click="fetchRegistrationLinks">Retry</button></p>
@@ -826,7 +828,8 @@ import StudentPrivateRegistration from '../../components/StudentPrivateRegistrat
 
 const registrationLinks = ref([])
 const registrationLinksError = ref('')
-const registrationLinksForClass = subjectId => registrationLinks.value.filter(link => String(link.subjectId) === String(subjectId) && Date.parse(link.expiresAt) > Date.now())
+const registrationLinkBusy = ref('')
+const registrationLinksForClass = subjectId => registrationLinks.value.filter(link => String(link.subjectId) === String(subjectId))
 const registrationLinkForStudent = studentId => registrationLinks.value.find(link => String(link.id) === String(studentId) && Date.parse(link.expiresAt) > Date.now())
 async function fetchRegistrationLinks() {
   try {
@@ -838,6 +841,18 @@ async function fetchRegistrationLinks() {
   }
 }
 function handleRegistrationLinkCreated() { void Promise.allSettled([fetchRegistrationLinks(), fetchStudents(), fetchSubjects()]) }
+async function manageClassRegistrationLink(registration, remove) {
+  if (registrationLinkBusy.value || !window.confirm(`${remove ? 'Remove and invalidate' : 'Revoke'} this registration link? Registered students will not be deleted.`)) return
+  registrationLinkBusy.value = registration.id
+  try {
+    const url = `${resolveApiBaseUrl()}/teacher/students/registration-links/${encodeURIComponent(registration.id)}`
+    if (remove) await axios.delete(url, getAuthConfig())
+    else await axios.post(`${url}/revoke`, {}, getAuthConfig())
+    await fetchRegistrationLinks()
+    showToast('success', remove ? 'Registration link removed.' : 'Registration link revoked.')
+  } catch (error) { showToast('error', error.response?.data?.message || 'Unable to update registration link.') }
+  finally { registrationLinkBusy.value = '' }
+}
 async function copyClassRegistrationLink(registration) {
   try { await navigator.clipboard.writeText(registration.inviteLink); showToast('success', 'Private student registration link copied.') }
   catch { showToast('error', 'Select the link in the class card and copy it manually.') }

@@ -419,7 +419,7 @@ export function useAuthStore() {
         const response = await axios.get(`${apiBaseUrl}/auth/teacher-invitations/${encodeURIComponent(inviteToken)}`)
         return { ...response.data?.invitation, role: 'teacher', selfRegistration: true, departmentLocked: true }
       }
-      const inviteRoute = inviteToken.startsWith('staff_') ? 'staff-registration' : 'invite'
+      const inviteRoute = inviteToken.startsWith('pupil_') ? 'student-registration' : inviteToken.startsWith('staff_') ? 'staff-registration' : 'invite'
       const response = await axios.get(`${apiBaseUrl}/auth/${inviteRoute}/${encodeURIComponent(inviteToken)}`)
       return response.data?.invite || null
     } catch (error) {
@@ -448,7 +448,7 @@ export function useAuthStore() {
       }
       const endpoint = teacherInvitation
         ? `${apiBaseUrl}/auth/teacher-invitations/${encodeURIComponent(inviteToken)}/activate`
-        : `${apiBaseUrl}/auth/${inviteToken.startsWith('staff_') ? 'staff-registration' : 'invite'}/${encodeURIComponent(inviteToken)}/complete`
+        : `${apiBaseUrl}/auth/${inviteToken.startsWith('pupil_') ? 'student-registration' : inviteToken.startsWith('staff_') ? 'staff-registration' : 'invite'}/${encodeURIComponent(inviteToken)}/complete`
       const response = await axios.post(endpoint, payload)
       return response.data?.user || null
     } catch (error) {
