@@ -1,4 +1,43 @@
 /* Page-level palettes and nested components must not reintroduce light surfaces. */
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-overview-page {
+  --ht-ink: #edf2f7 !important;
+  --ht-muted: #a9b6c5 !important;
+  --ht-forest: #b9dfa5 !important;
+  --ht-forest-soft: #24382a !important;
+  --ht-border: #405162 !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-overview-page :is(
+  .headteacher-highlight-pill, .headteacher-legend-item,
+  .headteacher-chart-shell, .headteacher-chart-empty
+) {
+  background: #202b37 !important;
+  background-image: none !important;
+  border-color: #405162 !important;
+  color: #dce5ef !important;
+  box-shadow: none !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-overview-page .headteacher-chart-shell {
+  background: #101720 !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-overview-page .headteacher-radial-chart {
+  background: conic-gradient(var(--progress-color, #82bd63) 0 var(--progress-value, 0%), #334150 var(--progress-value, 0%) 100%) !important;
+  box-shadow: none !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-overview-page .headteacher-radial-chart::before {
+  background: #171f29 !important;
+  border-color: #405162 !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-overview-page :is(
+  .headteacher-radial-center strong, .headteacher-highlight-pill strong,
+  .headteacher-legend-item strong, .headteacher-chart-empty strong
+) { color: #edf2f7 !important; -webkit-text-fill-color: currentColor !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-overview-page :is(
+  .headteacher-radial-center span, .headteacher-highlight-pill > span,
+  .headteacher-legend-item > span, .headteacher-chart-empty > span:last-child
+) { color: #b7c6d7 !important; -webkit-text-fill-color: currentColor !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-overview-page :is(
+  .headteacher-analytics-kicker, .headteacher-chart-empty-icon
+) { color: #b9dfa5 !important; background-color: #24382a !important; }
 html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace .student-private-registration {
   color: #dce5ef !important;
 }
