@@ -3344,7 +3344,7 @@ input:checked + .toggle-slider:before {
     @apply tw:[transform:translateX(0)];
 }
 
-.toast-content {
+body.admin-dashboard .toast-content {
     @apply tw:flex;
     @apply tw:items-center;
     @apply tw:[gap:1rem];
@@ -3352,7 +3352,7 @@ input:checked + .toggle-slider:before {
     @apply tw:[border-radius:var(--radius-lg)];
     @apply tw:[padding:1rem_1.5rem];
     @apply tw:[box-shadow:var(--shadow-xl)];
-    @apply tw:[border-left:4px_solid_var(--success)];
+    border-left: 0 !important;
     @apply tw:[min-width:300px];
 }
 
