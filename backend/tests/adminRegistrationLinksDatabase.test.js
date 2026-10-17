@@ -37,5 +37,18 @@ test('reusable Admin links enforce department slots, expiry, revocation and inpu
     assert.equal(grants.rows[0].anon, false); assert.equal(grants.rows[0].authenticated, false);
     await db.exec(`INSERT INTO admin_registration_links(id,issuer_id,role,nonce,token_hash) VALUES('disabled','admin','teacher','c','disabled-hash'); UPDATE users SET status='inactive' WHERE id='admin';`);
     await assert.rejects(register('disabled-hash', 'teacher6'), /administrator is unavailable/);
+    await db.exec(fs.readFileSync(path.join(__dirname, '../supabase/migrations/028_secretary_registration_links.sql'), 'utf8'));
+    await db.exec(`INSERT INTO users(id,name,role,status) VALUES('secretary','Secretary','secretary','active');
+      INSERT INTO admin_registration_links(id,issuer_id,role,nonce,token_hash) VALUES('secretary-link','secretary','teacher','s','secretary-hash');`);
+    await register('secretary-hash','secretary_teacher1');
+    await register('secretary-hash','secretary_teacher2');
+    assert.equal((await db.query(`SELECT registration_count FROM admin_registration_links WHERE id='secretary-link'`)).rows[0].registration_count,2);
+    await db.exec(`UPDATE users SET status='inactive' WHERE id='secretary'`);
+    await assert.rejects(register('secretary-hash','secretary_teacher3'), /staff account is unavailable/);
+    await db.exec(`UPDATE users SET status='active',role='teacher' WHERE id='secretary'`);
+    await assert.rejects(register('secretary-hash','secretary_teacher3'), /staff account is unavailable/);
+    await db.exec(`DELETE FROM admin_registration_links WHERE id='secretary-link'`);
+    await assert.rejects(register('secretary-hash','secretary_teacher3'), /expired, revoked, or invalid/);
+    assert.equal((await db.query(`SELECT count(*)::int AS total FROM users WHERE username LIKE 'secretary_teacher%'`)).rows[0].total,2);
   } finally { await db.close(); }
 });

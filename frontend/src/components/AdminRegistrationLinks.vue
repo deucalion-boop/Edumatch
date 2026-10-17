@@ -21,8 +21,9 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import axios from 'axios'
 import { resolveApiBaseUrl, useAuthStore } from '../stores/auth.js'
 const auth = useAuthStore()
+const props = defineProps({ managementRole: { type: String, default: 'admin', validator: value => ['admin','secretary'].includes(value) } })
 const links = ref([]), busy = ref(false), loading = ref(false), message = ref(''), now = ref(Date.now())
-const base = () => `${resolveApiBaseUrl()}/admin/registration-links`
+const base = () => `${resolveApiBaseUrl()}/${props.managementRole}/registration-links`
 const config = () => ({ headers: { Authorization: `Bearer ${auth.token}` } })
 async function refresh() {
   loading.value = true

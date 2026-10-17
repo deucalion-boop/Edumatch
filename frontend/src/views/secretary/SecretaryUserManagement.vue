@@ -64,6 +64,7 @@
         </div>
       </header>
 
+      <AdminRegistrationLinks ref="registrationLinksRef" management-role="secretary" />
       <section class="section-card dashboard-panel secretary-management-panel">
         <div class="secretary-section-head">
           <div><h2 class="section-title">Account directory</h2><p class="toolbar-subtitle">Showing only roles the Secretary is permitted to manage.</p></div>
@@ -121,7 +122,7 @@
             <label v-if="formModal.mode === 'edit' && form.role === 'student'" class="secretary-field"><span>Assigned teacher *</span><select v-model="form.sectionId" required :disabled="isLoadingSections || availableStudentSections.length === 0"><option value="" disabled>{{ isLoadingSections ? 'Loading teachers...' : (availableStudentSections.length ? 'Select teacher' : 'No teacher with an assigned section') }}</option><option v-for="section in availableStudentSections" :key="section.id" :value="section.id">{{ section.adviser.name }} — {{ section.name }}</option></select></label>
           </div>
           <label v-if="createdInviteLink" class="secretary-field"><span>Private registration link</span><input :value="createdInviteLink" readonly @focus="$event.target.select()"></label>
-          <p v-if="createdInviteLink" class="toolbar-subtitle">Share this link with the intended staff member. They will enter their own name, email, username, password, and department.</p>
+          <p v-if="createdInviteLink" class="toolbar-subtitle">Teacher and Head Teacher links can register multiple accounts until expired, revoked, or removed. Manage generated links above the account directory.</p>
           <div v-if="formError" class="secretary-feedback error" role="alert">{{ formError }}</div>
           <div class="secretary-form-actions"><button type="button" class="secretary-secondary-btn" @click="closeForm">{{ createdInviteLink ? 'Close' : 'Cancel' }}</button><button v-if="!createdInviteLink" type="submit" class="secretary-primary-btn" :disabled="isSaving"><i :class="isSaving ? 'fas fa-spinner fa-spin' : (formModal.mode === 'create' ? 'fas fa-link' : 'fas fa-save')"></i>{{ isSaving ? 'Saving...' : (formModal.mode === 'create' ? 'Generate private link' : 'Save changes') }}</button><button v-if="createdInviteLink" type="button" class="secretary-primary-btn" @click="copyCreatedInviteLink"><i class="fas fa-copy"></i>Copy link</button></div>
         </form>
@@ -149,6 +150,7 @@
 import DashboardFooter from '../../components/DashboardFooter.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import axios from 'axios'
+import AdminRegistrationLinks from '../../components/AdminRegistrationLinks.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 
@@ -164,6 +166,7 @@ const isDeleting = ref(false)
 const errorMessage = ref('')
 const formError = ref('')
 const createdInviteLink = ref('')
+const registrationLinksRef = ref(null)
 const deleteError = ref('')
 const users = ref([])
 const search = ref('')
@@ -290,12 +293,13 @@ const submitForm = async () => {
   isSaving.value = true
   try {
     const response = formModal.mode === 'create'
-      ? await axios.post(`${apiBase.value}/users`, payload, authConfig())
+      ? await axios.post(`${apiBase.value}/${['teacher','headteacher'].includes(form.role) ? 'registration-links' : 'users'}`, payload, authConfig())
       : await axios.put(`${apiBase.value}/users/${encodeURIComponent(form.id)}`, payload, authConfig())
     if (formModal.mode === 'create') {
       createdInviteLink.value = String(response.data?.invite?.inviteLink || '').trim()
       if (!createdInviteLink.value) throw new Error('The private registration link was not returned.')
-      notify('Private registration link created. Copy and share it with the intended staff member.')
+      notify('Registration link created. Teacher and Head Teacher links support multiple accounts until expiration or revocation.')
+      await registrationLinksRef.value?.refresh()
     } else {
       notify('Account updated successfully.')
       formModal.open = false

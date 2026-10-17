@@ -20,8 +20,8 @@ async function resolve(token) {
   const db = getSupabaseStorageClient();
   const row = checked(await db.from('admin_registration_links').select('*').eq('token_hash', hash(token)).maybeSingle());
   if (!row || row.revoked_at || Date.parse(row.expires_at) <= Date.now()) throw Object.assign(new Error('Registration link expired, revoked, or invalid.'), { statusCode: 410 });
-  const issuer = checked(await db.from('users').select('id').eq('id', row.issuer_id).eq('role', 'admin').eq('status', 'active').maybeSingle());
-  if (!issuer) throw Object.assign(new Error('Inviting administrator is unavailable.'), { statusCode: 410 });
+  const issuer = checked(await db.from('users').select('id,role').eq('id', row.issuer_id).eq('status', 'active').maybeSingle());
+  if (!issuer || !['admin','secretary'].includes(issuer.role)) throw Object.assign(new Error('Inviting staff account is unavailable.'), { statusCode: 410 });
   return row;
 }
 exports.list = wrap(async (req, res) => {

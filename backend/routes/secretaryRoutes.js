@@ -27,6 +27,11 @@ const {
 const router = express.Router();
 
 router.use(authMiddleware, roleMiddleware('secretary'));
+const registrationLinks = require('../controllers/adminRegistrationLinkController');
+router.get('/registration-links', registrationLinks.list);
+router.post('/registration-links', inviteLimiter, registrationLinks.create);
+router.post('/registration-links/:id/revoke', registrationLinks.revoke);
+router.delete('/registration-links/:id', registrationLinks.remove);
 const profileController = require('../controllers/headteacherProfileController');
 router.get('/profile', profileController.get);
 router.put('/profile', uploadLimiter, uploadProfileImage.single('profileImage'), profileController.update);
