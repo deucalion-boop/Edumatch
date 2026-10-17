@@ -164,11 +164,11 @@
           </label>
         </div>
 
-        <div class="secretary-table-wrap">
+        <div class="secretary-table-wrap" tabindex="0" role="region" aria-label="Faculty directory; scroll horizontally to view all columns">
           <table class="secretary-table">
             <thead>
               <tr>
-                <th>Name</th>
+                <th scope="col">Name</th>
                 <th>Email</th>
                 <th>Role</th>
                 <th>Department</th>
@@ -974,5 +974,38 @@ onBeforeUnmount(() => {
   }
 }
 
-.secretary-userlist-panel .secretary-table { min-width: 1400px; }
+.secretary-main,
+.secretary-userlist-panel { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.secretary-userlist-panel .secretary-table-wrap {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.secretary-userlist-panel .secretary-table {
+  min-width: 1600px;
+  table-layout: auto !important;
+}
+.secretary-userlist-panel .secretary-table :is(th,td) {
+  position: static;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.secretary-userlist-panel .secretary-table :is(th,td):first-child { min-width: 220px; }
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(2) { min-width: 230px; max-width: 290px; }
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(4) { min-width: 170px; max-width: 230px; }
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(5),
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(6) { min-width: 140px; }
+.secretary-userlist-panel .secretary-table :is(th,td):nth-child(10) { min-width: 180px; }
+.secretary-userlist-panel .secretary-person-cell { min-width: 0; }
+.secretary-userlist-panel .secretary-person-copy { min-width: 0; overflow-wrap: anywhere; }
+.secretary-userlist-panel .secretary-email-link { display: block; overflow-wrap: anywhere; }
+.secretary-userlist-panel .secretary-badge { max-width: 100%; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
+.secretary-userlist-panel :is(.secretary-status-indicator,.faculty-details-button) { white-space: nowrap; flex-shrink: 0; }
+.secretary-userlist-panel .secretary-last-login-chip { white-space: normal; line-height: 1.5; }
+@media (max-width: 768px) {
+  .secretary-userlist-panel { padding: 1rem; }
+  .secretary-userlist-panel .secretary-table :is(th,td) { padding: .75rem; }
+}
 </style>
