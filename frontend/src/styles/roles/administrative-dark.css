@@ -1,4 +1,49 @@
 /* Shared administrative dark surfaces. Role-scoped: light mode and student/teacher themes are untouched. */
+
+/* Light-only gradients and high-specificity sidebar styles need explicit dark counterparts. */
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(main,.admin-sidebar,.teacher-sidebar,.headteacher-sidebar) :is(.headteacher-workspace-tab,.headteacher-step-break,.headteacher-summary-item,.headteacher-upload-dropzone,.headteacher-mini-badge,.headteacher-exam-summary,.headteacher-exam-toolbar,.headteacher-question-item,.headteacher-question-preview,.headteacher-coverage-item,.headteacher-preview-box,.headteacher-takeover-item,.secretary-summary-meta,.secretary-detail-item,.headteacher-sidebar-profile,.headteacher-sidebar-avatar,.teacher-profile,.secretary-profile,.secretary-avatar,.admin-profile,.stat-icon,.summary-icon) {
+  background:#202b37 !important; background-image:none !important; border-color:#405162 !important; color:#dce5ef !important; box-shadow:none !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) main :is(.headteacher-workspace-tab.active,.headteacher-workspace-tab[aria-selected='true']) {
+  background:#24382a !important; border-color:#6d9458 !important; box-shadow:none !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) main :is(.headteacher-workspace-tab-count,.headteacher-step-label,.headteacher-eyebrow,.headteacher-mini-badge,.headteacher-lesson-pill,.headteacher-upload-action) {
+  background:#293c2d !important; color:#c1e9ac !important; -webkit-text-fill-color:#c1e9ac !important; border-color:#526a45 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) main :is(.headteacher-summary-item > span,.headteacher-selected-teacher-copy > span,.headteacher-selected-teacher-empty,.headteacher-helper-copy) {
+  color:#b7c6d7 !important; -webkit-text-fill-color:currentColor !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) main :is(.headteacher-upload-icon,.headteacher-selected-teacher-avatar) {
+  background:#283c30 !important; color:#b9dfa5 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(#headteacher-sidebar-drawer,#admin-sidebar-drawer,#secretary-sidebar-drawer) :is(.headteacher-nav-link,.nav-link,.sidebar-item,.nav-sublink) {
+  background:transparent !important; color:#cbd7e4 !important; -webkit-text-fill-color:currentColor !important; box-shadow:none !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(#headteacher-sidebar-drawer,#admin-sidebar-drawer,#secretary-sidebar-drawer) :is(.headteacher-nav-link,.nav-link,.sidebar-item,.nav-sublink):is(.active,.router-link-exact-active,:hover) {
+  background:#24382a !important; border-color:#607d50 !important; color:#e3f4d7 !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(#headteacher-sidebar-drawer,#admin-sidebar-drawer,#secretary-sidebar-drawer) :is(.headteacher-nav-link,.nav-link,.sidebar-item,.nav-sublink) :is(span,i,i::before) {
+  color:inherit !important; -webkit-text-fill-color:currentColor !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(#headteacher-sidebar-drawer,#admin-sidebar-drawer,#secretary-sidebar-drawer) :is(.headteacher-nav-link,.nav-link,.sidebar-item) > i {
+  background:#24313e !important; border-color:#405162 !important; color:#cbd7e4 !important; box-shadow:none !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(#headteacher-sidebar-drawer,#admin-sidebar-drawer,#secretary-sidebar-drawer) :is(.headteacher-sidebar-profile,.teacher-profile,.secretary-profile,.admin-profile,.headteacher-sidebar-avatar,.secretary-avatar) {
+  background:#202b37 !important; border-color:#405162 !important; color:#dce5ef !important; box-shadow:none !important;
+}
+
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(#headteacher-sidebar-drawer,#admin-sidebar-drawer,#secretary-sidebar-drawer) :is(.headteacher-sidebar-profile,.teacher-profile,.secretary-profile) :is(h5,span,i,i::before) {
+  color:#dce5ef !important; -webkit-text-fill-color:currentColor !important;
+}
 :is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.registry-toolbar,.registry-filter-bar,.registry-summary-card,.secretary-filter-bar,.secretary-search-row,.secretary-table-wrap,.faculty-detail-grid > div,.headteacher-directory-toolbar,.headteacher-detail-list,.profile-summary,.settings-sidebar,.settings-content,.settings-section,.stat-card,.notification-item,.headteacher-notification-item) {
   background:#171f29 !important; color:#edf2f7 !important; border-color:#334150 !important; background-image:none !important;
 }
