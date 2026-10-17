@@ -121,7 +121,7 @@ async function list(id, filters = {}) {
   const headTeacher = await requireHeadTeacher(id);
   if (filters.status && !['pending', 'registered', 'revoked', 'expired'].includes(filters.status)) throw known('INPUT_INVALID');
   const [registry, membership, subjects, users, link, enrollments] = await Promise.all([
-    all('student_registry'), assignments(), all('subjects'), all('users', 'id,name,role,status,archive,username,email,department,invite'), manageLink(id), all('subject_enrollments'),
+    all('student_registry'), assignments(), all('subjects'), all('users', 'id,name,role,status,archive,username,email,department,managed_by,invite'), manageLink(id), all('subject_enrollments'),
   ]);
   const people = new Map(users.map(u => [u.id, u]));
   const subjectMap = new Map(subjects.map(s => [s.id, s]));
@@ -136,22 +136,31 @@ async function list(id, filters = {}) {
     && people.get(s.teacher_id)?.department === headTeacher.department)
     .map(s => ({ id: s.id, teacherId: s.teacher_id, teacherName: people.get(s.teacher_id).name, className: s.class_name || s.name, name: s.name }));
   const byRegistry = new Map();
+  const assignedRegistry = new Set();
   for (const item of membership) {
     const subject = subjectMap.get(item.subject_id); if (!usableSubject(subject)) continue;
     const row = registryMap.get(item.registry_id);
     if (row?.student_id && !approved.has(`${row.student_id}:${subject.id}`)) continue;
+    assignedRegistry.add(item.registry_id);
+    if (people.get(subject.teacher_id)?.department !== headTeacher.department) continue;
     const items = byRegistry.get(item.registry_id) || [];
     items.push({ subjectId: subject.id, teacherId: subject.teacher_id, teacherName: people.get(subject.teacher_id)?.name || 'Teacher', className: subject.class_name || subject.name, subjectName: subject.name });
     byRegistry.set(item.registry_id, items);
   }
   const visibleRegistry = registry.filter(row => {
     const account = people.get(row.student_id);
-    return !(account?.status === 'pending' && account.invite?.selfRegistration === true && !account.invite?.usedAt);
+    if (account?.status === 'pending' && account.invite?.selfRegistration === true && !account.invite?.usedAt) return false;
+    const manager = people.get(account?.managed_by);
+    const importer = people.get(row.created_by);
+    return Boolean(byRegistry.get(row.id)?.length || account?.department === headTeacher.department
+      || (manager?.department === headTeacher.department && ['teacher', 'headteacher'].includes(manager.role))
+      || row.created_by === id
+      || (importer?.department === headTeacher.department && ['teacher', 'headteacher'].includes(importer.role)));
   });
   const students = visibleRegistry.map(row => ({ id: row.id, firstName: row.first_name, lastName: row.last_name, fullName: people.get(row.student_id)?.name || row.full_name,
     status: status(row), registeredAt: row.code_used_at || (row.student_id ? row.created_at : null), createdAt: row.created_at,
     codeExpiresAt: row.code_expires_at, registrationCode: !row.student_id && !row.code_used_at && !row.code_revoked_at && row.code_nonce ? formattedCode(row) : null,
-    username: people.get(row.student_id)?.username || '', email: people.get(row.student_id)?.email || '', assignments: byRegistry.get(row.id) || [] }));
+    username: people.get(row.student_id)?.username || '', email: people.get(row.student_id)?.email || '', hasAssignedClass: assignedRegistry.has(row.id), assignments: byRegistry.get(row.id) || [] }));
   return { students: students.filter(row => matches(row, filters)), summary: { total: students.length,
     registered: students.filter(s => s.status === 'registered').length, pending: students.filter(s => s.status !== 'registered').length,
     unassigned: students.filter(s => !s.assignments.length).length }, classes, ...link };

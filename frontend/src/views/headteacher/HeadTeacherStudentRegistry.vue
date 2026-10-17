@@ -15,7 +15,7 @@
       <p v-if="notice.message" class="registry-notice" :class="`is-${notice.type}`" :role="notice.type === 'error' ? 'alert' : 'status'">{{ notice.message }}</p>
       <p v-if="loadError" class="registry-notice is-error" role="alert">{{ loadError }} <button type="button" class="registry-text-button" @click="loadRegistry({ force: true })">Retry</button></p>
 
-      <section class="registry-summary" aria-label="School student totals">
+      <section class="registry-summary" aria-label="Department student totals">
         <article v-for="item in summaryCards" :key="item.key" class="registry-summary-card" :class="`is-${item.key}`"><span class="registry-summary-icon"><i class="fas" :class="item.icon" aria-hidden="true"></i></span><div><span>{{ item.label }}</span><strong>{{ summary[item.key] }}</strong></div></article>
       </section>
       <p class="registry-summary-note">Pending includes students whose registration code is expired or revoked.</p>
@@ -25,7 +25,7 @@
       </section>
 
       <section class="registry-panel" aria-labelledby="registry-directory-title">
-        <div class="registry-section-heading"><div><span class="registry-eyebrow">Central student registry</span><h2 id="registry-directory-title">Student directory</h2><p>Assign students only to teachers in your department. Pending students join those classes after registration.</p></div></div>
+        <div class="registry-section-heading"><div><span class="registry-eyebrow">Department student registry</span><h2 id="registry-directory-title">Student directory</h2><p>Only students and teacher classes under your department appear here. Pending students join their assigned classes after registration.</p></div></div>
         <div class="registry-toolbar">
           <label class="registry-field registry-search" for="registry-search"><span>Search students</span><input id="registry-search" v-model="filters.search" type="search" placeholder="Search name, username or email"></label>
           <label class="registry-field" for="registry-status"><span>Registration status</span><select id="registry-status" v-model="filters.status"><option value="">All statuses</option><option value="pending">Pending</option><option value="registered">Registered</option><option value="expired">Expired code</option><option value="revoked">Revoked code</option></select></label>
@@ -125,7 +125,7 @@ const studentName = student => student.fullName || `${student.firstName || ''} $
 const studentDetails = student => [student.username, student.email].filter(Boolean).join(' · ') || `Imported ${formatDate(student.createdAt)}`
 const statusLabel = status => ({ pending: 'Pending', registered: 'Registered', revoked: 'Code revoked', expired: 'Code expired' })[status] || 'Unavailable'
 const canCopyCode = student => Boolean(student.registrationCode) && student.status === 'pending' && Date.parse(student.codeExpiresAt) > now.value
-function canAssignClasses(student) { return !student.assignments?.length && classes.value.length > 0 }
+function canAssignClasses(student) { return !student.hasAssignedClass && !student.assignments?.length && classes.value.length > 0 }
 const formatDate = value => {
   if (!value) return 'Unavailable'
   const date = new Date(value)

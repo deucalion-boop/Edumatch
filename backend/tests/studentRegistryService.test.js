@@ -15,7 +15,7 @@ const token = service.linkToken('school-nonce');
 const ticket = 'b'.repeat(64);
 const proof = 'c'.repeat(64);
 const codeRow = { id: 'registry-one', code_nonce: 'secure-code-nonce' };
-const student = { ...codeRow, first_name: 'Maria', last_name: 'Santos', full_name: 'Maria Santos', code_hash: service.digest(service.registrationCode(codeRow)), code_expires_at: future(), created_at: new Date().toISOString() };
+const student = { ...codeRow, created_by: 'ht', first_name: 'Maria', last_name: 'Santos', full_name: 'Maria Santos', code_hash: service.digest(service.registrationCode(codeRow)), code_expires_at: future(), created_at: new Date().toISOString() };
 function fixture(extra = {}) {
   client = createFakeSupabase({ users: [{ id: 'ht', role: 'headteacher', status: 'active', archive: {}, department: 'Mathematics' }], subjects: [], student_registry: [student],
     student_registry_assignments: [], student_registry_links: [{ id: 'school', token_nonce: 'school-nonce', token_hash: service.digest(token), expires_at: future() }],
@@ -50,7 +50,7 @@ test('class choices are limited to active teachers in the Head Teacher departmen
   });
   const response = await service.list('ht');
   assert.deepEqual(response.classes.map(row => row.id), ['math']);
-  assert.deepEqual(response.students[0].assignments.map(row => row.subjectId), ['science']);
+  assert.deepEqual(response.students[0].assignments.map(row => row.subjectId), []);
 });
 test('public shared link exposes no student names, codes, hashes or nonces', async () => {
   fixture(); const response = await service.details(token);
@@ -70,6 +70,32 @@ test('unused student invitations never appear as registered students in the dire
   assert.equal(result.students.length,0);
   assert.equal(result.summary.registered,0);
   assert.equal(result.summary.total,0);
+});
+test('student directory and totals are scoped to the Head Teacher department', async () => {
+  fixture({
+    users:[{id:'ht',role:'headteacher',status:'active',department:'Mathematics'},
+      {id:'science-head',role:'headteacher',status:'active',department:'Science'},
+      {id:'math-teacher',role:'teacher',status:'active',department:'Mathematics',name:'Math Teacher'},
+      {id:'science-teacher',role:'teacher',status:'active',department:'Science',name:'Science Teacher'},
+      {id:'mixed',role:'student',status:'active',name:'Mixed Student',department:'Science'},
+      {id:'science-only',role:'student',status:'active',name:'Science Student',department:'Science',email:'science@gmail.com'},
+      {id:'unassigned',role:'student',status:'active',name:'Math Student',managed_by:'math-teacher'}],
+    student_registry:[{...student,id:'mixed-reg',student_id:'mixed',created_by:'science-head'},
+      {...student,id:'science-reg',student_id:'science-only',created_by:'science-head'},
+      {...student,id:'own-pending',student_id:null,created_by:'ht'},
+      {...student,id:'unassigned-reg',student_id:'unassigned',created_by:null},
+      {...student,id:'unknown',student_id:null,created_by:null}],
+    subjects:[{id:'math',teacher_id:'math-teacher',name:'Math',is_active:true},{id:'science',teacher_id:'science-teacher',name:'Science',is_active:true}],
+    student_registry_assignments:[{registry_id:'mixed-reg',subject_id:'math'},{registry_id:'mixed-reg',subject_id:'science'},{registry_id:'science-reg',subject_id:'science'}],
+    subject_enrollments:[{student_id:'mixed',subject_id:'math',status:'approved'},{student_id:'mixed',subject_id:'science',status:'approved'},{student_id:'science-only',subject_id:'science',status:'approved'}],
+  });
+  const result=await service.list('ht');
+  assert.deepEqual(result.students.map(row=>row.id),['mixed-reg','own-pending','unassigned-reg']);
+  assert.deepEqual(result.students[0].assignments.map(row=>row.subjectId),['math']);
+  assert.equal(result.summary.total,3);
+  assert.equal(result.summary.registered,2);
+  assert.equal(result.summary.unassigned,2);
+  assert.equal(JSON.stringify(result.students).includes('science@gmail.com'),false);
 });
 test('registered students show only actual approved classes with available teachers', async () => {
   fixture({
