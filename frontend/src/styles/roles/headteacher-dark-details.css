@@ -1,0 +1,94 @@
+/* Page-level palettes and nested components must not reintroduce light surfaces. */
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace .student-private-registration {
+  color: #dce5ef !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace .student-private-registration button.secondary {
+  background: #24332d !important; border-color: #57734e !important; color: #c1e9ac !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace {
+  --lessons-soft: #24382a !important;
+  --lessons-border: #405162 !important;
+  --lessons-forest: #9ed580 !important;
+  --lessons-forest-deep: #d3ebc3 !important;
+  --lessons-gold: #d5bd76 !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-context-card, .headteacher-policy-note, .headteacher-draft-box,
+  .headteacher-draft-item, .headteacher-assessment-card, .headteacher-lesson-pagination,
+  .headteacher-directory-enterprise, .headteacher-directory-toolbar,
+  .headteacher-directory-loading, .headteacher-directory-mobile-skeleton,
+  .headteacher-table-shell, .headteacher-attendance-group,
+  .headteacher-attendance-student-row, .headteacher-mobile-assignment-card,
+  .headteacher-mobile-stat-card, .headteacher-students-modal, .headteacher-attendance-modal,
+  .registry-panel, .registry-scope, .registry-upload, .registry-check-label,
+  .registry-selection-summary, .registry-student-context, .registry-class-list li,
+  .registration-details, .headteacher-table-state
+) {
+  background: #171f29 !important;
+  background-image: none !important;
+  border-color: #405162 !important;
+  color: #dce5ef !important;
+  box-shadow: none !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-directory-filter-chip, .headteacher-directory-filter-chip strong,
+  .headteacher-directory-clear-search, .headteacher-attendance-meta-pill,
+  .headteacher-subject-badge, .headteacher-mini-badge, .headteacher-lesson-pill,
+  .headteacher-lesson-file-chip, .headteacher-lesson-creator small,
+  .registry-icon-button, .registry-action, .registry-secondary,
+  .headteacher-directory-summary-icon, .registry-summary-icon,
+  .headteacher-directory-loading-icon, .headteacher-directory-empty-illustration
+) {
+  background: #24332d !important;
+  background-image: none !important;
+  border-color: #4f6849 !important;
+  color: #c1e9ac !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-directory-filter-chip.active, .headteacher-page-btn.active,
+  .headteacher-workspace-tab.active
+) { background: #2b4230 !important; border-color: #7fa567 !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-table tbody td, .headteacher-table tbody tr:nth-child(even) td
+) { background: #171f29 !important; border-color: #334150 !important; color: #dce5ef !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace .headteacher-table-row-interactive:hover td {
+  background: #25352f !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-directory-feedback.success, .headteacher-banner.success, .registry-notice,
+  .headteacher-status-badge.status-active, .status-registered
+) { background: #213b2b !important; color: #b7e4bf !important; border-color: #426a48 !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-directory-feedback.error, .headteacher-banner.error, .registry-notice.is-error,
+  .headteacher-attendance-status-pill.status-absent
+) { background: #41272c !important; color: #fecaca !important; border-color: #7c414a !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .registry-notice.is-warning, .status-pending, .status-expired,
+  .headteacher-status-badge.status-pending, .headteacher-attendance-status-pill.status-late
+) { background: #3c3422 !important; color: #f4d890 !important; border-color: #75623a !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-directory-summary-card, .headteacher-attendance-summary-card,
+  .headteacher-step-break, .headteacher-summary-item, .headteacher-workspace-tab,
+  .headteacher-upload-dropzone, .headteacher-mobile-card
+) {
+  background: #202b37 !important;
+  background-image: none !important;
+  border-color: #405162 !important;
+  box-shadow: none !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-directory-skeleton, .headteacher-directory-mobile-skeleton
+) { background: #25313e !important; background-image: none !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace :is(
+  .headteacher-upload-dropzone, .headteacher-step-break, .headteacher-summary-item,
+  .headteacher-context-card, .headteacher-policy-note, .registration-details,
+  .registry-selection-summary, .registry-student-context
+) :is(span, strong, h3, label) { color: #dce5ef !important; -webkit-text-fill-color: currentColor !important; }
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace .headteacher-sidebar-close {
+  background: #202b37 !important; border-color: #405162 !important; color: #edf2f7 !important;
+}
+html[data-headteacher-theme='dark'] body.headteacher-dashboard .headteacher-workspace .headteacher-sidebar-close :is(i,i::before) {
+  color: #edf2f7 !important; -webkit-text-fill-color: #edf2f7 !important;
+}
