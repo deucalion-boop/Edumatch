@@ -278,7 +278,7 @@
 
         <section class="analytics-board-grid">
           <article
-            class="section-card chart-panel role-growth-panel tw:inline:[border:1px_solid_transparent]! tw:inline:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)_padding-box,_linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)_border-box]!"
+            class="section-card chart-panel role-growth-panel admin-themed-chart"
           >
             <div class="panel-header">
               <div>
@@ -309,7 +309,7 @@
           </article>
 
           <article
-            class="section-card chart-panel learning-funnel-panel tw:inline:[border:1px_solid_transparent]! tw:inline:[background:linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)_padding-box,_linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)_border-box]!"
+            class="section-card chart-panel learning-funnel-panel admin-themed-chart"
           >
             <div class="panel-header">
               <div>
@@ -1287,6 +1287,10 @@ export default {
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 @import '../../styles/roles/admin.tailwind.css';
+.admin-themed-chart {
+  border: 1px solid transparent !important;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%) padding-box, linear-gradient(135deg, #1e4307 0%, #ffd542 42%, #bbff59 100%) border-box !important;
+}
 
 
 .ai-analytics-section {
