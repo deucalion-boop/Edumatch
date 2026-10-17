@@ -69,9 +69,6 @@
             <button type="button" class="mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar">
               <i class="fas fa-bars"></i>
             </button>
-            <div class="secretary-header-logo-icon">
-              <img src="/logo.png" alt="EduMatch" class="secretary-header-logo-img" />
-            </div>
             <div>
               <h1>Secretary Dashboard</h1>
               <p class="header-subtitle">Monitor faculty accounts, department assignments, and directory activity with view-only access.</p>
