@@ -19,7 +19,7 @@ exports.createForTeacher = async (teacher,req) => {
   const advisoryClass = await ensureTeacherAdvisoryClass(teacher);
   const nonce = crypto.randomBytes(24).toString('hex');
   const row = checked(await client().from('student_registration_links').insert({teacher_id:teacher._id,section_id:section.id,subject_id:advisoryClass.id,nonce,token_hash:hash(tokenFor(nonce))}).select('*').single());
-  return { invite:{inviteLink:`${base(req)}/auth/invite/${tokenFor(nonce)}`,inviteExpiresAt:row.expires_at,multipleAccounts:true},advisoryClass:{id:advisoryClass.id,className:advisoryClass.className},section:{id:section.id,name:section.name} };
+  return { invite:{id:row.id,inviteLink:`${base(req)}/auth/invite/${tokenFor(nonce)}`,inviteExpiresAt:row.expires_at,multipleAccounts:true},advisoryClass:{id:advisoryClass.id,className:advisoryClass.className},section:{id:section.id,name:section.name} };
 };
 exports.listForTeacher = async (teacher,req) => {
   const rows = checked(await client().from('student_registration_links').select('*').eq('teacher_id',teacher._id).eq('section_id',teacher.advisorySectionId || '').order('created_at',{ascending:false}));
@@ -46,10 +46,11 @@ exports.complete = wrap(async(req,res)=> {
   res.status(201).json({user:{id},message:'Student account created.'});
 });
 async function manage(req,remove) {
-  const row = checked(await client().from('student_registration_links').select('id').eq('id',req.params.id).eq('teacher_id',req.user._id).maybeSingle());
+  const row = checked(await client().from('student_registration_links').select('id,teacher_id').eq('id',req.params.id).maybeSingle());
   if (row) {
-    if(remove) checked(await client().from('student_registration_links').delete().eq('id',row.id).eq('teacher_id',req.user._id));
-    else checked(await client().from('student_registration_links').update({revoked_at:new Date().toISOString()}).eq('id',row.id).eq('teacher_id',req.user._id));
+    await requireManagedTeacher(req.user,row.teacher_id);
+    if(remove) checked(await client().from('student_registration_links').delete().eq('id',row.id).eq('teacher_id',row.teacher_id));
+    else checked(await client().from('student_registration_links').update({revoked_at:new Date().toISOString()}).eq('id',row.id).eq('teacher_id',row.teacher_id));
     return;
   }
   // Existing single-student links can also be invalidated without touching registered students.
@@ -60,3 +61,15 @@ async function manage(req,remove) {
 }
 exports.revoke = wrap(async(req,res)=>{ await manage(req,false); res.json({message:'Link revoked. Existing registered students are unchanged.'}); });
 exports.remove = wrap(async(req,res)=>{ await manage(req,true); res.json({message:'Link removed. Existing registered students are unchanged.'}); });
+async function requireManagedTeacher(user,teacherId) {
+  if(user.role==='teacher' && String(user._id)===String(teacherId)) return user;
+  if(user.role==='headteacher') {
+    const teacher=await findSupabaseAccount('id',teacherId);
+    if(teacher && teacher.role==='teacher' && teacher.department===user.department && String(teacher.managedBy)===String(user._id)) return teacher;
+  }
+  throw Object.assign(new Error('Registration link not found.'),{statusCode:404});
+}
+exports.headTeacherList=wrap(async(req,res)=> {
+  const teacher=await requireManagedTeacher(req.user,String(req.query.teacherId || ''));
+  res.json({links:await exports.listForTeacher(teacher,req)});
+});

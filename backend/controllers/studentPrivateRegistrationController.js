@@ -1,5 +1,5 @@
 const { findSupabaseAccount } = require('../services/supabaseAccountService');
-const { createStudentRegistrationLink, listStudentRegistrationLinks } = require('../services/studentPrivateRegistrationService');
+const { listStudentRegistrationLinks } = require('../services/studentPrivateRegistrationService');
 const { sendSuccess } = require('../utils/responseHelper');
 
 async function create(req, res, next) {
@@ -14,9 +14,7 @@ async function create(req, res, next) {
     } else if (req.user.role !== 'teacher') {
       throw Object.assign(new Error('Only teachers and Head Teachers can create student registration links.'), { statusCode: 403 });
     }
-    const data = req.user.role === 'teacher'
-      ? await require('./studentReusableRegistrationController').createForTeacher(teacher, req)
-      : await createStudentRegistrationLink({ teacher, req });
+    const data = await require('./studentReusableRegistrationController').createForTeacher(teacher, req);
     return sendSuccess(res, 201, data.invite.multipleAccounts ? 'Reusable student registration link created.' : 'Private student registration link created. Share it with one student.', data);
   } catch (error) { return next(error); }
 }

@@ -32,8 +32,11 @@ async function invoke(controller, overrides = {}) {
 }
 const studentDetails = { fullName: 'Maria Santos', email: 'maria.santos@gmail.com', username: 'maria.santos', password: 'Password123!' };
 const tokenOf = response => response.invite.inviteLink.split('/').at(-1);
-// Legacy single-use links are still issued through the Head Teacher workflow.
-const createLegacy = (req, res, next) => create({ ...req, user: { _id: 'headteacher', role: 'headteacher', department: 'MAPEH' }, body: { teacherId: 'teacher' } }, res, next);
+// Preserve regression coverage for old links created before reusable links.
+const createLegacy = async (req, res, next) => {
+  try { res.json(await require('../services/studentPrivateRegistrationService').createStudentRegistrationLink({ teacher: req.user, req })); }
+  catch(error) { next(error); }
+};
 
 test('legacy private links retain single-use student placeholders and enrollment', async () => {
   fixture();
@@ -87,6 +90,21 @@ test('Teacher can revoke and remove only their own reusable links', async () => 
   await invoke(remove, { params: { id } });
   assert.equal(client.tables.student_registration_links.length, 0);
   assert.equal(client.tables.users.length, 1);
+});
+test('Head Teacher lists and manages only student links for their own department teachers', async () => {
+  fixture();
+  const user={_id:'headteacher',role:'headteacher',department:'MAPEH'};
+  const result=await invoke(create,{user,body:{teacherId:'teacher'}});
+  assert.equal(result.invite.multipleAccounts,true);
+  const actions=require('../controllers/studentReusableRegistrationController');
+  const listed=await invoke(actions.headTeacherList,{user,query:{teacherId:'teacher'}});
+  assert.equal(listed.links.length,1);
+  const id=listed.links[0].id;
+  await assert.rejects(invoke(actions.revoke,{user:{...user,department:'English'},params:{id}}),{statusCode:404});
+  await invoke(actions.revoke,{user,params:{id}});
+  assert.ok(client.tables.student_registration_links[0].revoked_at);
+  await invoke(actions.remove,{user,params:{id}});
+  assert.equal(client.tables.student_registration_links.length,0);
 });
 
 test('student completes private registration and preserves advisory ownership; used link cannot register again', async () => {

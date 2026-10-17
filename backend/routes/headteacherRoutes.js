@@ -30,6 +30,12 @@ router.put('/profile', uploadLimiter, uploadProfileImage.single('profileImage'),
 router.use('/student-registry', require('./studentRegistryRoutes').management);
 router.post('/students/registration-links', inviteLimiter, require('../controllers/studentPrivateRegistrationController').create);
 router.post('/teachers/registration-links', inviteLimiter, require('../controllers/teacherPrivateRegistrationController').create);
+router.get('/teachers/registration-links', require('../controllers/teacherPrivateRegistrationController').list);
+router.post('/teachers/registration-links/:id/revoke', require('../controllers/teacherPrivateRegistrationController').revoke);
+router.delete('/teachers/registration-links/:id', require('../controllers/teacherPrivateRegistrationController').remove);
+router.get('/students/registration-links', require('../controllers/studentReusableRegistrationController').headTeacherList);
+router.post('/students/registration-links/:id/revoke', require('../controllers/studentReusableRegistrationController').revoke);
+router.delete('/students/registration-links/:id', require('../controllers/studentReusableRegistrationController').remove);
 
 router.get('/teacher-invitations', teacherInvitation.list);
 router.post('/teacher-invitations', inviteLimiter, teacherInvitation.create);
