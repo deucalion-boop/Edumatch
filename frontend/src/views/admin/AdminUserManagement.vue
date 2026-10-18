@@ -1159,7 +1159,7 @@
           <button class="btn btn-outline" @click="closeConfirmationModal">
             Cancel
           </button>
-          <button class="btn btn-success" :disabled="confirmRequiresPassword && !confirmPassword.trim()" @click="executeConfirmAction">
+          <button class="btn btn-success confirmation-submit-btn" :disabled="confirmRequiresPassword && !confirmPassword.trim()" @click="executeConfirmAction">
             {{ confirmRequiresPassword ? 'Delete User' : 'Confirm' }}
           </button>
         </div>
@@ -4370,6 +4370,14 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   @apply tw:[outline:none];
   @apply tw:[border-color:#111827];
   @apply tw:[box-shadow:0_0_0_3px_rgba(17,_24,_39,_0.08)];
+}
+
+body.admin-dashboard .confirmation-modal .confirmation-submit-btn,
+body.admin-dashboard .confirmation-modal .confirmation-submit-btn:disabled {
+  @apply tw:[background:#4f8a35]!;
+  @apply tw:[border-color:#4f8a35]!;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:bg-none!;
 }
 
 .sr-only {
