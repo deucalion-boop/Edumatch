@@ -262,12 +262,14 @@ onBeforeUnmount(() => {
 .invitation-table-wrap td { @apply tw:[padding:.6rem_.7rem] tw:[border-top:1px_solid_#e6ecdf] tw:align-top; }
 .invalid-row { @apply tw:[background:#fff8f4]; }
 .invitation-row-valid { @apply tw:inline-flex tw:items-center tw:[gap:.3rem] tw:[color:#4b8133]; }
+.invitation-row-valid :is(i.fa-check-circle, i.fa-check-circle::before) { @apply tw:[color:#4b8133]! tw:[-webkit-text-fill-color:#4b8133]!; }
 .invitation-row-errors { @apply tw:[margin:0] tw:[padding-left:1rem] tw:[color:#a84030] tw:[font-size:.73rem]; }
 .invitation-discard { @apply tw:flex tw:items-start tw:[gap:.55rem] tw:[padding:.8rem] tw:[margin:.85rem_0] tw:[border:1px_solid_#e5d7b6] tw:[border-radius:9px] tw:[background:#fffaf0] tw:[font-size:.78rem] tw:[line-height:1.5]; }
 .invitation-discard input { @apply tw:[margin-top:.2rem] tw:[accent-color:#4c8734] tw:shrink-0; }
 .invitation-expiry { @apply tw:[max-width:230px] tw:[margin-top:1rem]; }
 .invitation-success { @apply tw:flex tw:flex-wrap tw:items-center tw:[gap:.8rem] tw:[margin-bottom:.7rem]; }
-.invitation-success > i { @apply tw:[font-size:1.8rem] tw:[color:#5b903d]; }
+.invitation-success > i { @apply tw:[font-size:1.8rem] tw:[color:#5b903d]! tw:[-webkit-text-fill-color:#5b903d]!; }
+.invitation-success > i::before { @apply tw:[color:#5b903d]! tw:[-webkit-text-fill-color:#5b903d]!; }
 .invitation-success h3 { @apply tw:[margin:0] tw:[font-size:1rem]; }
 .invitation-success p { @apply tw:[margin:.25rem_0_0] tw:[font-size:.75rem] tw:[color:#667660]; }
 .invitation-status { @apply tw:inline-flex tw:[padding:.25rem_.5rem] tw:rounded-full tw:[background:#eaf5e3] tw:[color:#3b6c23] tw:[font-size:.68rem] tw:font-semibold tw:whitespace-nowrap; }
