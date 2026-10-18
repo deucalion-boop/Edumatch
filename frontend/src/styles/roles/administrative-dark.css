@@ -121,6 +121,10 @@
   color:#e0e9f2 !important; -webkit-text-fill-color:#e0e9f2 !important;
 }
 
+:is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) .notification-bell :is(i.fa-bell,i.fa-bell::before) {
+  color:#fff !important; -webkit-text-fill-color:#fff !important;
+}
+
 :is(html[data-admin-theme='dark'] body.admin-dashboard, html[data-secretary-theme='dark'] body.secretary-dashboard, html[data-headteacher-theme='dark'] body.headteacher-dashboard) :is(.btn-outline,.headteacher-button-outline,.back-button,.secretary-export-btn) {
   background:#202b37 !important; border-color:#57734e !important; color:#c1e9ac !important;
 }

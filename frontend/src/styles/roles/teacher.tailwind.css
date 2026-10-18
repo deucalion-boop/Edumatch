@@ -5648,6 +5648,11 @@ html[data-teacher-theme='dark'] body.teacher-dashboard i[class*='fa-'] {
     @apply tw:[color:#e2e8f0]!;
 }
 
+html[data-teacher-theme='dark'] body.teacher-dashboard .notification-bell :is(i.fa-bell, i.fa-bell::before) {
+    @apply tw:[color:#ffffff]!;
+    @apply tw:[-webkit-text-fill-color:#ffffff]!;
+}
+
 html[data-teacher-theme='dark'] body.teacher-dashboard :is(.btn-primary, .btn-success, .btn-danger) i[class*='fa-'] {
     @apply tw:text-current!;
 }

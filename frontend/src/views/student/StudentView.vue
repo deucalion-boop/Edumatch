@@ -1449,8 +1449,8 @@ body.student-dashboard .student-dashboard.student-theme-dark .header-actions :is
 
 body.student-dashboard .student-dashboard.student-theme-dark .header-actions :is(.header-tour-btn, .notification-bell[data-tour='notifications']) i {
   @apply tw:[background:transparent]!;
-  @apply tw:[color:#f8fafc]!;
-  @apply tw:[-webkit-text-fill-color:#f8fafc]!;
+  @apply tw:[color:#ffffff]!;
+  @apply tw:[-webkit-text-fill-color:#ffffff]!;
 }
 
 body.student-dashboard .student-dashboard.student-theme-dark .premium-dashboard :is(
