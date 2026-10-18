@@ -572,9 +572,23 @@
         </div>
       </section>
 
-      <div v-if="isClassInvitationModalOpen" class="modal-shell">
+      <ClassInvitationModal
+        v-if="isClassInvitationModalOpen"
+        :advisory-context="advisoryInvitationContext"
+        :context-loading="isAdvisoryContextLoading"
+        :context-error="advisoryContextError"
+        :api-base-url="resolveApiBaseUrl()"
+        :auth-token="authStore.token || ''"
+        :invitation="selectedClassInvitation"
+        @close="isClassInvitationModalOpen = false"
+        @manual="openPrivateRegistrationModal"
+        @imported="handleInvitationImported"
+        @retry-context="fetchAdvisoryInvitationContext"
+      />
+
+      <div v-if="isPrivateRegistrationModalOpen" class="modal-shell">
         <section class="modal-panel" role="dialog" aria-modal="true" aria-label="Private student registration">
-          <div class="modal-panel-head"><h3>Invite Student</h3><button type="button" class="modal-close-btn" aria-label="Close student registration" @click="isClassInvitationModalOpen = false"><i class="fas fa-times"></i></button></div>
+          <div class="modal-panel-head"><h3>Private Registration Link</h3><button type="button" class="modal-close-btn" aria-label="Close student registration" @click="isPrivateRegistrationModalOpen = false"><i class="fas fa-times"></i></button></div>
           <div class="student-invite-body">
             <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" hide-heading @created="handleRegistrationLinkCreated" />
           </div>
@@ -825,6 +839,7 @@ import { useAuthStore } from '../../stores/auth.js'
 import UserNotificationList from '../../components/UserNotificationList.vue'
 import { useUserNotifications } from '../../composables/useUserNotifications.js'
 import StudentPrivateRegistration from '../../components/StudentPrivateRegistration.vue'
+import ClassInvitationModal from '../../components/teacher/ClassInvitationModal.vue'
 
 const registrationLinks = ref([])
 const registrationLinksError = ref('')
@@ -912,6 +927,7 @@ const classInvitations = ref([])
 const invitationLoadError = ref('')
 const isEnrollmentRefreshing = ref(false)
 const isClassInvitationModalOpen = ref(false)
+const isPrivateRegistrationModalOpen = ref(false)
 const selectedInvitationId = ref('')
 const studentSearch = ref('')
 const studentClassFilter = ref('')
@@ -1627,6 +1643,10 @@ const handleInvitationImported = async invitation => {
   else classInvitations.value.unshift(invitation)
   selectedInvitationId.value = String(invitation.id)
   await refreshEnrollment()
+}
+const openPrivateRegistrationModal = () => {
+  isClassInvitationModalOpen.value = false
+  isPrivateRegistrationModalOpen.value = true
 }
 const copyInvitationLink = async invitation => {
   await fetchAdvisoryInvitationContext()
