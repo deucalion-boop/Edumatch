@@ -1,8 +1,14 @@
 <template>
   <main class="class-registration">
-    <div class="registration-shell">
+    <div class="registration-layout">
+      <section class="registration-form-panel">
+        <div class="registration-panel-geometry" aria-hidden="true">
+          <span class="registration-panel-shape registration-panel-shape-top"></span>
+          <span class="registration-panel-shape registration-panel-shape-bottom"></span>
+        </div>
+        <div class="registration-shell">
       <RouterLink to="/auth/login" class="registration-brand" aria-label="EduMatch sign in">
-        <span class="brand-mark"><i class="fas fa-graduation-cap" aria-hidden="true"></i></span>
+        <span class="brand-mark"><img src="/logo.png" alt="" /></span>
         <span>EduMatch<small>Student registration</small></span>
       </RouterLink>
 
@@ -115,6 +121,20 @@
         <footer v-if="!completed && !invitationError" class="registration-footer">Already have an account? <RouterLink to="/auth/login">Sign in</RouterLink></footer>
       </section>
       <p class="registration-help">Your teacher can help if your full name does not match the class list.</p>
+        </div>
+      </section>
+
+      <aside class="registration-design-panel" aria-label="EduMatch student registration">
+        <span class="registration-design-shape registration-design-shape-top" aria-hidden="true"></span>
+        <span class="registration-design-shape registration-design-shape-bottom" aria-hidden="true"></span>
+        <div class="registration-design-content">
+          <div class="registration-design-heading">
+            <h2>Join your class and start learning with EduMatch.</h2>
+            <img src="/logo.png" alt="EduMatch Logo" class="registration-design-logo" />
+          </div>
+          <p>Verify your place on the class list, create your student account, and enter a learning workspace built around your progress.</p>
+        </div>
+      </aside>
     </div>
   </main>
 </template>
@@ -392,13 +412,33 @@ onBeforeUnmount(() => {
 .registered-guidance { @apply tw:grid tw:[gap:8px] tw:[margin-bottom:20px] tw:[font-size:12px] tw:[line-height:1.6]; }
 .registered-guidance a { @apply tw:[color:#427433] tw:[font-weight:600] tw:underline tw:[text-underline-offset:3px]; }
 .registered-guidance p { @apply tw:[margin:0] tw:[color:#647267]; }
-.class-registration { @apply tw:[min-height:100dvh]; @apply tw:[padding:40px_20px]; @apply tw:[background:radial-gradient(ellipse_at_top,_#eaf5e7,_#f6f9f4_65%)]; @apply tw:[color:#182b21]; @apply tw:[font-family:'Inter',_'Segoe_UI',_sans-serif]; }
+.class-registration { @apply tw:[min-height:100dvh]; @apply tw:[background:#f8fafc]; @apply tw:[color:#182b21]; @apply tw:[font-family:'Inter',_'Segoe_UI',_sans-serif]; }
 .class-registration *, .class-registration *::before, .class-registration *::after { @apply tw:box-border; }
-.registration-shell { @apply tw:[max-width:540px]; @apply tw:[margin:0_auto]; }
+.registration-layout { @apply tw:grid; @apply tw:[grid-template-columns:minmax(0,_1fr)_minmax(0,_1fr)]; @apply tw:[min-height:100dvh]; @apply tw:w-full; @apply tw:overflow-hidden; }
+.registration-form-panel { @apply tw:relative tw:isolate tw:flex tw:items-center tw:justify-center tw:overflow-x-hidden tw:overflow-y-auto; @apply tw:[min-height:100dvh]; @apply tw:[padding:clamp(1rem,_2.8vw,_2.25rem)_clamp(1.4rem,_3vw,_2.8rem)]; @apply tw:[background:#f8fafc]; }
+.registration-form-panel::before { @apply tw:[content:''] tw:absolute tw:[inset:0] tw:[z-index:-2] tw:pointer-events-none; @apply tw:[background:radial-gradient(ellipse_62%_54%_at_50%_48%,_rgba(255,_255,_255,_0.98)_0%,_rgba(255,_255,_255,_0.76)_42%,_rgba(248,_250,_252,_0)_76%),______radial-gradient(circle_at_0_0,_rgba(126,_185,_77,_0.72)_0_3px,_transparent_3.5px)_77px_64px_/_204px_164px,______radial-gradient(circle_at_0_0,_rgba(232,_184,_36,_0.7)_0_3px,_transparent_3.5px)_115px_64px_/_268px_195px,______linear-gradient(rgba(148,_163,_184,_0.07)_1px,_transparent_1px)_0_0_/_40px_40px,______linear-gradient(90deg,_rgba(148,_163,_184,_0.07)_1px,_transparent_1px)_0_0_/_40px_40px]; }
+.registration-panel-geometry { @apply tw:absolute tw:[inset:0] tw:[z-index:-1] tw:overflow-hidden tw:pointer-events-none; }
+.registration-panel-shape { @apply tw:absolute tw:block; }
+.registration-panel-shape-top { @apply tw:[width:clamp(112px,_14vw,_178px)] tw:[height:clamp(112px,_14vw,_178px)] tw:[top:34px] tw:left-0; @apply tw:[background:linear-gradient(135deg,_rgba(165,_203,_126,_0.94),_rgba(83,_151,_70,_0.72))]; @apply tw:[clip-path:polygon(0_0,_78%_0,_0_78%)]; }
+.registration-panel-shape-bottom { @apply tw:[width:clamp(145px,_18vw,_230px)] tw:[height:clamp(130px,_17vw,_215px)] tw:right-0 tw:bottom-0; @apply tw:[background:linear-gradient(135deg,_rgba(165,_203,_126,_0.42),_rgba(73,_143,_67,_0.8))]; @apply tw:[clip-path:polygon(100%_20%,_100%_100%,_18%_100%)]; }
+.registration-shell { @apply tw:relative tw:[z-index:1] tw:w-full; @apply tw:[max-width:540px]; @apply tw:[margin:0_auto]; @apply tw:[animation:registration-card-enter_650ms_cubic-bezier(0.2,_0.75,_0.25,_1)_both]; }
 .registration-brand { @apply tw:flex; @apply tw:[gap:12px]; @apply tw:items-center; @apply tw:w-fit; @apply tw:[margin:0_auto_26px]; @apply tw:[font-size:23px]; @apply tw:[font-weight:750]; @apply tw:[text-decoration:none]; @apply tw:[color:#1d3826]; }
 .registration-brand small { @apply tw:block; @apply tw:[margin-top:2px]; @apply tw:[font-size:12px]; @apply tw:[font-weight:500]; @apply tw:[color:#657869]; }
-.brand-mark { @apply tw:[width:49px]; @apply tw:[height:49px]; @apply tw:grid; @apply tw:place-items-center; @apply tw:[border:1px_solid_#cbdcc7]; @apply tw:[background:#fff]; @apply tw:[border-radius:16px]; @apply tw:[font-size:24px]; @apply tw:[color:#4e873e]; }
-.registration-card { @apply tw:[padding:32px]; @apply tw:[background:#fff]; @apply tw:[border:1px_solid_#d9e7d5]; @apply tw:[border-radius:20px]; @apply tw:[box-shadow:0_18px_45px_#2448200b]; }
+.brand-mark { @apply tw:[width:49px]; @apply tw:[height:49px]; @apply tw:grid; @apply tw:place-items-center; @apply tw:[border:1px_solid_#cbdcc7]; @apply tw:[background:#fff]; @apply tw:[border-radius:16px]; @apply tw:overflow-hidden; }
+.brand-mark img { @apply tw:[width:43px] tw:[height:43px] tw:object-contain; }
+.registration-card { @apply tw:[padding:32px]; @apply tw:[border:2px_solid_transparent]; @apply tw:[border-radius:30px]; @apply tw:[background:linear-gradient(#ffffff,_#ffffff)_padding-box,linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)_border-box]; @apply tw:[box-shadow:0_0_0_1px_rgba(187,_255,_89,_0.2),_0_18px_45px_rgba(30,_67,_7,_0.15),_0_0_28px_rgba(255,_213,_66,_0.2)]; }
+.registration-design-panel { @apply tw:relative tw:flex tw:items-stretch tw:overflow-hidden; @apply tw:[min-height:100dvh]; @apply tw:[padding:clamp(1.6rem,_3vw,_3rem)]; @apply tw:[background:linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)]; }
+.registration-design-panel::before { @apply tw:[content:''] tw:absolute tw:[inset:0] tw:pointer-events-none; @apply tw:[background:linear-gradient(128deg,_rgba(255,_255,_255,_0.15)_0%,_rgba(255,_255,_255,_0.15)_16%,_transparent_16%,_transparent_56%,_rgba(17,_17,_17,_0.08)_56%,_rgba(17,_17,_17,_0.08)_60%,_transparent_60%),linear-gradient(180deg,_rgba(255,_255,_255,_0.04),_rgba(17,_17,_17,_0.08))]; }
+.registration-design-panel::after { @apply tw:[content:''] tw:absolute tw:[inset:1.2rem] tw:[border:1px_solid_rgba(255,_255,_255,_0.18)] tw:pointer-events-none; }
+.registration-design-content { @apply tw:relative tw:[z-index:1] tw:flex tw:flex-col tw:justify-center tw:[gap:1rem]; @apply tw:[width:min(100%,_560px)] tw:[color:#1f140f]; }
+.registration-design-heading { @apply tw:flex tw:items-start tw:justify-between; @apply tw:[gap:clamp(2rem,_4vw,_3.5rem)] tw:[margin-bottom:.35rem]; }
+.registration-design-heading h2 { @apply tw:[margin:0] tw:flex-1 tw:[font-size:clamp(2rem,_2.6vw,_3.1rem)] tw:[line-height:1] tw:[letter-spacing:-.05em] tw:[font-weight:900]; }
+.registration-design-logo { @apply tw:[width:220px] tw:[height:220px] tw:object-contain tw:shrink-0; @apply tw:[filter:drop-shadow(0_10px_18px_rgba(17,_17,_17,_0.12))]; }
+.registration-design-content > p { @apply tw:[max-width:34rem] tw:[margin:0] tw:[color:rgba(31,_20,_15,_.8)] tw:[font-size:1rem] tw:[line-height:1.6]; }
+.registration-design-shape { @apply tw:absolute tw:pointer-events-none tw:[z-index:0] tw:[border:1px_solid_rgba(255,_255,_255,_0.18)]; }
+.registration-design-shape-top { @apply tw:[width:300px] tw:[height:190px] tw:[top:8%] tw:[right:7%] tw:[clip-path:polygon(14%_0,_100%_0,_86%_100%,_0_100%)] tw:[background:linear-gradient(135deg,_rgba(255,_255,_255,_0.16),_rgba(255,_255,_255,_0.05))] tw:[transform:rotate(-8deg)]; }
+.registration-design-shape-bottom { @apply tw:[width:360px] tw:[height:220px] tw:[bottom:8%] tw:[left:4%] tw:[clip-path:polygon(0_18%,_76%_0,_100%_82%,_24%_100%)] tw:[background:linear-gradient(135deg,_rgba(17,_17,_17,_0.08),_rgba(255,_255,_255,_0.12))] tw:[transform:rotate(7deg)]; }
+@keyframes registration-card-enter { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
 .eyebrow { @apply tw:[margin:0_0_6px]; @apply tw:[color:#4a7b36]; @apply tw:[font-size:10px]; @apply tw:[font-weight:800]; @apply tw:[letter-spacing:1.5px]; }
 h1 { @apply tw:[margin:0]; @apply tw:[font-size:27px]; @apply tw:[line-height:1.25]; @apply tw:[font-weight:750]; }
 h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
@@ -455,7 +495,9 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .invitation-error .text-link { @apply tw:inline-block; @apply tw:[margin-top:20px]; @apply tw:[font-size:13px]; }
 .state-icon { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:60px]; @apply tw:[height:60px]; @apply tw:[margin:0_auto]; @apply tw:[border-radius:50%]; @apply tw:[background:#f2f6ef]; @apply tw:[color:#6a8660]; @apply tw:[font-size:23px]; }
 .success-icon { @apply tw:[background:#eaf5e2]; @apply tw:[color:#4b8737]; }
-@media (max-width: 540px) { .class-registration { @apply tw:[padding:24px_12px]; } .registration-brand { @apply tw:[margin-bottom:20px]; } .registration-card { @apply tw:[padding:25px_20px]; @apply tw:[border-radius:16px]; } h1 { @apply tw:[font-size:24px]; } .registration-steps { @apply tw:[gap:10px]; } .registration-steps li { @apply tw:[font-size:11px]; } .name-grid { @apply tw:grid-cols-1; } .name-grid > small { @apply tw:[grid-column:auto]; } }
+@media (max-width: 1080px) { .registration-layout { @apply tw:[grid-template-columns:1fr]; } .registration-design-panel { @apply tw:[min-height:420px]; } }
+@media (max-width: 768px) { .registration-design-panel { @apply tw:hidden; } .registration-form-panel { @apply tw:[padding:max(1rem,_env(safe-area-inset-top))_max(.75rem,_env(safe-area-inset-right))_max(1rem,_env(safe-area-inset-bottom))_max(.75rem,_env(safe-area-inset-left))]; } }
+@media (max-width: 540px) { .registration-brand { @apply tw:[margin-bottom:20px]; } .registration-card { @apply tw:[padding:25px_20px]; @apply tw:[border-radius:20px]; } h1 { @apply tw:[font-size:24px]; } .registration-steps { @apply tw:[gap:10px]; } .registration-steps li { @apply tw:[font-size:11px]; } .name-grid { @apply tw:grid-cols-1; } .name-grid > small { @apply tw:[grid-column:auto]; } }
 @media (prefers-reduced-motion: reduce) { .fa-spin { @apply tw:animate-none; } }
 
 </style>
