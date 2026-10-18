@@ -6398,6 +6398,23 @@ html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsAssessment
     @apply tw:[color:#b9e3a3]!;
 }
 
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .table-state {
+    @apply tw:[background:#111827]!;
+    @apply tw:[border-color:#334155]!;
+    @apply tw:[color:#cbd5e1]!;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .lessons-empty-icon {
+    @apply tw:[background:#24382a]!;
+    @apply tw:[color:#b9e3a3]!;
+    @apply tw:[box-shadow:inset_0_0_0_1px_#405b45]!;
+}
+
+html[data-teacher-theme='dark'] body.teacher-dashboard #teacherRecordsLessonsPanel .lessons-empty-icon i {
+    @apply tw:[color:#b9e3a3]!;
+    @apply tw:[-webkit-text-fill-color:#b9e3a3]!;
+}
+
 /* Profile cards have high-specificity light gradients in the page component. */
 html[data-teacher-theme='dark'] body.teacher-dashboard .teacher-profile-page .profile-content :is(
     .profile-card,
