@@ -285,6 +285,8 @@ onBeforeUnmount(() => {
 .invitation-footer-share { @apply tw:flex tw:flex-wrap tw:[gap:.6rem]; }
 .invitation-button { @apply tw:inline-flex tw:items-center tw:justify-center tw:[gap:.4rem] tw:[min-height:40px] tw:[padding:.55rem_.85rem] tw:[border:1px_solid_#ccdec2] tw:[border-radius:9px] tw:[font:inherit] tw:[font-size:.78rem] tw:font-semibold tw:cursor-pointer; }
 .invitation-button.primary { @apply tw:[background:#4c8734] tw:[border-color:#4c8734] tw:text-white; }
+.invitation-button.primary i,
+.invitation-button.primary i::before { @apply tw:[color:#ffffff]! tw:[-webkit-text-fill-color:#ffffff]!; }
 .invitation-button.secondary { @apply tw:bg-white tw:[color:#456b32]; }
 .invitation-button.primary:hover:not(:disabled) { @apply tw:[background:#3a6d27]; }
 .invitation-button.secondary:hover:not(:disabled) { @apply tw:[background:#f2f8ec]; }
