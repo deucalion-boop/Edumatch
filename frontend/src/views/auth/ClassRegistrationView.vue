@@ -73,7 +73,7 @@
             </button>
           </form>
 
-          <form v-else class="registration-form" @submit.prevent="registerStudent">
+          <form v-else class="registration-form account-registration-form" @submit.prevent="registerStudent">
             <div class="verified-student">
               <i class="fas fa-circle-check" aria-hidden="true"></i>
               <div><strong>{{ verifiedStudent.fullName }}</strong><small>{{ verifiedStudent.section ? `Section ${verifiedStudent.section}` : 'Your class enrollment is confirmed' }}</small></div>
@@ -426,7 +426,7 @@ onBeforeUnmount(() => {
 .registration-brand small { @apply tw:block; @apply tw:[margin-top:2px]; @apply tw:[font-size:12px]; @apply tw:[font-weight:500]; @apply tw:[color:#657869]; }
 .brand-mark { @apply tw:[width:49px]; @apply tw:[height:49px]; @apply tw:grid; @apply tw:place-items-center; @apply tw:[border:1px_solid_#cbdcc7]; @apply tw:[background:#fff]; @apply tw:[border-radius:16px]; @apply tw:overflow-hidden; }
 .brand-mark img { @apply tw:[width:43px] tw:[height:43px] tw:object-contain; }
-.registration-card { @apply tw:[padding:32px]; @apply tw:[border:2px_solid_transparent]; @apply tw:[border-radius:30px]; @apply tw:[background:linear-gradient(#ffffff,_#ffffff)_padding-box,linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)_border-box]; @apply tw:[box-shadow:0_0_0_1px_rgba(187,_255,_89,_0.2),_0_18px_45px_rgba(30,_67,_7,_0.15),_0_0_28px_rgba(255,_213,_66,_0.2)]; }
+.registration-card { @apply tw:overflow-visible; @apply tw:[padding:20px]; @apply tw:[border:2px_solid_transparent]; @apply tw:[border-radius:26px]; @apply tw:[background:linear-gradient(#ffffff,_#ffffff)_padding-box,linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)_border-box]; @apply tw:[box-shadow:0_0_0_1px_rgba(187,_255,_89,_0.2),_0_18px_45px_rgba(30,_67,_7,_0.15),_0_0_28px_rgba(255,_213,_66,_0.2)]; }
 .registration-design-panel { @apply tw:relative tw:flex tw:items-stretch tw:overflow-hidden; @apply tw:[min-height:100dvh]; @apply tw:[padding:clamp(1.6rem,_3vw,_3rem)]; @apply tw:[background:linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)]; }
 .registration-design-panel::before { @apply tw:[content:''] tw:absolute tw:[inset:0] tw:pointer-events-none; @apply tw:[background:linear-gradient(128deg,_rgba(255,_255,_255,_0.15)_0%,_rgba(255,_255,_255,_0.15)_16%,_transparent_16%,_transparent_56%,_rgba(17,_17,_17,_0.08)_56%,_rgba(17,_17,_17,_0.08)_60%,_transparent_60%),linear-gradient(180deg,_rgba(255,_255,_255,_0.04),_rgba(17,_17,_17,_0.08))]; }
 .registration-design-panel::after { @apply tw:[content:''] tw:absolute tw:[inset:1.2rem] tw:[border:1px_solid_rgba(255,_255,_255,_0.18)] tw:pointer-events-none; }
@@ -444,18 +444,20 @@ h1 { @apply tw:[margin:0]; @apply tw:[font-size:27px]; @apply tw:[line-height:1.
 h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .class-name, .intro { @apply tw:[margin:10px_0_0]; @apply tw:[color:#647368]; @apply tw:[font-size:14px]; @apply tw:[line-height:1.6]; @apply tw:[overflow-wrap:anywhere]; }
 .class-name { @apply tw:[color:#3d6838]; @apply tw:[font-weight:600]; }
-.registration-steps { @apply tw:[list-style:none]; @apply tw:flex; @apply tw:[gap:15px]; @apply tw:[padding:18px_0]; @apply tw:[margin:22px_0]; @apply tw:[border-top:1px_solid_#edf2ea]; @apply tw:[border-bottom:1px_solid_#edf2ea]; }
+.registration-steps { @apply tw:[list-style:none]; @apply tw:flex; @apply tw:[gap:12px]; @apply tw:[padding:13px_0]; @apply tw:[margin:16px_0]; @apply tw:[border-top:1px_solid_#edf2ea]; @apply tw:[border-bottom:1px_solid_#edf2ea]; }
 .registration-steps li { @apply tw:[flex:1]; @apply tw:flex; @apply tw:items-center; @apply tw:[gap:8px]; @apply tw:[color:#67706b]; @apply tw:[font-size:12px]; @apply tw:[line-height:1.4]; }
 .registration-steps li span { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:25px]; @apply tw:[height:25px]; @apply tw:shrink-0; @apply tw:[border-radius:50%]; @apply tw:[background:#f1f4ef]; @apply tw:[color:#626d60]; @apply tw:[font-size:11px]; @apply tw:[font-weight:700]; }
 .registration-steps .current { @apply tw:[color:#36682d]; @apply tw:[font-weight:650]; }
 .registration-steps .current span, .registration-steps .done span { @apply tw:[color:#fff]; @apply tw:[background:#518b40]; }
-.registration-form { @apply tw:grid; @apply tw:[gap:19px]; }
+.registration-form { @apply tw:grid; @apply tw:[gap:13px]; }
+.account-registration-form { @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))]; }
+.account-registration-form :is(.verified-student, .enrollment-note) { @apply tw:[grid-column:1/-1]; }
 .name-grid { @apply tw:grid; @apply tw:grid-cols-2; @apply tw:[gap:10px_16px]; }
 .name-grid > small { @apply tw:[grid-column:1/-1]; }
 .form-description { @apply tw:[margin:0]; @apply tw:[color:#607065]; @apply tw:[font-size:14px]; @apply tw:[line-height:1.6]; }
 .form-field { @apply tw:grid; @apply tw:[gap:7px]; }
 .form-field label { @apply tw:[font-size:13px]; @apply tw:[color:#263d2c]; @apply tw:[font-weight:650]; }
-.form-field input { @apply tw:block; @apply tw:w-full; @apply tw:[min-height:46px]; @apply tw:[padding:11px_13px]; @apply tw:[border:1px_solid_#cddccb]; @apply tw:[border-radius:9px]; @apply tw:[background:#fff]; @apply tw:[color:#203127]; @apply tw:[font:inherit]; @apply tw:[font-size:14px]; }
+.form-field input { @apply tw:block; @apply tw:w-full; @apply tw:[min-height:42px]; @apply tw:[padding:9px_12px]; @apply tw:[border:1px_solid_#cddccb]; @apply tw:[border-radius:9px]; @apply tw:[background:#fff]; @apply tw:[color:#203127]; @apply tw:[font:inherit]; @apply tw:[font-size:14px]; }
 .class-registration :is(input, button, a):focus-visible { @apply tw:[outline:3px_solid_#609e46]; @apply tw:[outline-offset:3px]; }
 .form-field input:focus { @apply tw:[border-color:#609e46]; }
 .form-field input[aria-invalid='true'] { @apply tw:[border-color:#c14d45]; }
@@ -464,7 +466,7 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .username-feedback { @apply tw:[min-height:17px]; }
 .username-feedback i { @apply tw:[margin-right:7px]; }
 .class-registration .available { @apply tw:[color:#36762e]; }
-.primary-button, .secondary-button { @apply tw:flex; @apply tw:justify-center; @apply tw:items-center; @apply tw:[gap:10px]; @apply tw:w-full; @apply tw:[min-height:46px]; @apply tw:[border-radius:9px]; @apply tw:[padding:11px_15px]; @apply tw:[border:1px_solid_#50823d]; @apply tw:[background:#50863f]; @apply tw:[color:#fff]; @apply tw:[font:inherit]; @apply tw:[font-size:13px]; @apply tw:[font-weight:650]; @apply tw:text-center; @apply tw:[text-decoration:none]; @apply tw:cursor-pointer; }
+.primary-button, .secondary-button { @apply tw:flex; @apply tw:justify-center; @apply tw:items-center; @apply tw:[gap:10px]; @apply tw:w-full; @apply tw:[min-height:42px]; @apply tw:[border-radius:9px]; @apply tw:[padding:9px_14px]; @apply tw:[border:1px_solid_#50823d]; @apply tw:[background:#50863f]; @apply tw:[color:#fff]; @apply tw:[font:inherit]; @apply tw:[font-size:13px]; @apply tw:[font-weight:650]; @apply tw:text-center; @apply tw:[text-decoration:none]; @apply tw:cursor-pointer; }
 .primary-button:hover:enabled { @apply tw:[background:#427133]; }
 .secondary-button { @apply tw:[background:#fff]; @apply tw:[border-color:#d7e2d2]; @apply tw:[color:#3d6338]; }
 .class-registration button:disabled, .class-registration input:disabled { @apply tw:cursor-default; @apply tw:[opacity:.58]; }
@@ -496,7 +498,7 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .state-icon { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:60px]; @apply tw:[height:60px]; @apply tw:[margin:0_auto]; @apply tw:[border-radius:50%]; @apply tw:[background:#f2f6ef]; @apply tw:[color:#6a8660]; @apply tw:[font-size:23px]; }
 .success-icon { @apply tw:[background:#eaf5e2]; @apply tw:[color:#4b8737]; }
 @media (max-width: 1080px) { .registration-layout { @apply tw:[grid-template-columns:1fr]; } .registration-design-panel { @apply tw:[min-height:420px]; } }
-@media (max-width: 768px) { .registration-design-panel { @apply tw:hidden; } .registration-form-panel { @apply tw:[padding:max(1rem,_env(safe-area-inset-top))_max(.75rem,_env(safe-area-inset-right))_max(1rem,_env(safe-area-inset-bottom))_max(.75rem,_env(safe-area-inset-left))]; } }
+@media (max-width: 768px) { .registration-design-panel { @apply tw:hidden; } .registration-form-panel { @apply tw:[padding:max(1rem,_env(safe-area-inset-top))_max(.75rem,_env(safe-area-inset-right))_max(1rem,_env(safe-area-inset-bottom))_max(.75rem,_env(safe-area-inset-left))]; } .account-registration-form { @apply tw:[grid-template-columns:1fr]; } .account-registration-form :is(.verified-student, .enrollment-note) { @apply tw:[grid-column:auto]; } }
 @media (max-width: 540px) { .registration-brand { @apply tw:[margin-bottom:20px]; } .registration-card { @apply tw:[padding:25px_20px]; @apply tw:[border-radius:20px]; } h1 { @apply tw:[font-size:24px]; } .registration-steps { @apply tw:[gap:10px]; } .registration-steps li { @apply tw:[font-size:11px]; } .name-grid { @apply tw:grid-cols-1; } .name-grid > small { @apply tw:[grid-column:auto]; } }
 @media (prefers-reduced-motion: reduce) { .fa-spin { @apply tw:animate-none; } }
 
