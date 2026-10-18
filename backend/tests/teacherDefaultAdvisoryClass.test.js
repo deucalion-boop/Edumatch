@@ -10,7 +10,7 @@ const { createTeacherClass, getTeacherSubjects, getTeacherStudents } = require('
 const teacherId = 'mapeh-teacher';
 const sectionId = 'sincerity-section';
 
-function fixture({ teacher = {}, subjects = [], lessons = [], assessments = [], enrollments = [], attendance = [] } = {}) {
+function fixture({ teacher = {}, students = [], subjects = [], lessons = [], assessments = [], enrollments = [], attendance = [] } = {}) {
   const account = {
     id: teacherId,
     name: 'Maria Clara',
@@ -26,7 +26,7 @@ function fixture({ teacher = {}, subjects = [], lessons = [], assessments = [], 
     ...teacher,
   };
   client = createFakeSupabase({
-    users: [account],
+    users: [account, ...students],
     sections: [
       { id: sectionId, name: 'Sincerity', is_active: true },
       { id: 'inactive-section', name: 'Inactive', is_active: false },
@@ -153,6 +153,7 @@ test('an inactive assigned advisory class is restored with its existing ID, code
 test('existing handled classes and their records remain intact without an extra default class', async () => {
   const handled = existingClass({ id: 'handled-class', class_name: 'MAPEH 10 - Unity', code: 'MAP-UNITY' });
   const user = fixture({
+    students: [{ id: 'student', role: 'student', status: 'active' }],
     subjects: [handled],
     lessons: [{ id: 'lesson', created_by: teacherId, subject_id: handled.id }],
     assessments: [{ id: 'assessment', created_by: teacherId, subject_id: handled.id }],
@@ -182,6 +183,25 @@ test('existing handled classes and their records remain intact without an extra 
     attendance: client.tables.attendance_records,
   }, initialRecords);
   assert.deepEqual(client.writes, []);
+});
+
+test('inactive students are excluded from displayed class counts', async () => {
+  const handled = existingClass({ id: 'handled-class', class_name: 'MAPEH 10 - Unity', code: 'MAP-UNITY' });
+  const user = fixture({
+    students: [
+      { id: 'active-student', role: 'student', status: 'active' },
+      { id: 'inactive-student', role: 'student', status: 'inactive' },
+    ],
+    subjects: [handled],
+    enrollments: [
+      { id: 'active-enrollment', teacher_id: teacherId, subject_id: handled.id, student_id: 'active-student', status: 'approved' },
+      { id: 'inactive-enrollment', teacher_id: teacherId, subject_id: handled.id, student_id: 'inactive-student', status: 'approved' },
+    ],
+  });
+
+  const { response } = await loadClasses(user);
+  assert.equal(response.subjects[0].approvedStudentsCount, 1);
+  assert.equal(response.subjects[0].canDelete, false);
 });
 
 for (const advisorySectionId of [null, sectionId]) {

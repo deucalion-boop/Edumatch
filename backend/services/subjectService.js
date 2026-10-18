@@ -179,12 +179,29 @@ async function getTeacherSubjectCounts(teacherId) {
   const results = await Promise.all([
     client.from('lessons').select('subject_id').eq('created_by', normalizedTeacherId).not('subject_id', 'is', null),
     client.from('assessments').select('subject_id').eq('created_by', normalizedTeacherId).not('subject_id', 'is', null),
-    client.from('subject_enrollments').select('subject_id,status').eq('teacher_id', normalizedTeacherId),
+    client.from('subject_enrollments').select('subject_id,student_id,status').eq('teacher_id', normalizedTeacherId),
     client.from('attendance_records').select('subject_id').eq('teacher_id', normalizedTeacherId)
       .eq('attendance_scope', 'handled_class').not('subject_id', 'is', null),
   ]);
   const failed = results.find((result) => result.error);
   if (failed) throw subjectError(failed.error, 'Failed to count class records in Supabase');
+
+  const enrollmentRows = results[2].data || [];
+  const approvedStudentIds = [...new Set(enrollmentRows
+    .filter((row) => row.status === 'approved' && row.student_id)
+    .map((row) => String(row.student_id)))];
+  let activeStudentIds = new Set();
+  if (approvedStudentIds.length > 0) {
+    const { data: studentRows, error: studentError } = await client.from('users')
+      .select('id,status')
+      .in('id', approvedStudentIds)
+      .eq('role', 'student');
+    if (studentError) throw subjectError(studentError, 'Failed to count active class students in Supabase');
+    activeStudentIds = new Set((studentRows || [])
+      .filter((row) => String(row.status || '').toLowerCase() === 'active')
+      .map((row) => String(row.id)));
+  }
+
   const countBy = (rows, predicate = () => true) => (rows || []).reduce((map, row) => {
     if (predicate(row) && row.subject_id) map.set(String(row.subject_id), (map.get(String(row.subject_id)) || 0) + 1);
     return map;
@@ -192,8 +209,11 @@ async function getTeacherSubjectCounts(teacherId) {
   return {
     lessons: countBy(results[0].data),
     assessments: countBy(results[1].data),
-    approvedEnrollments: countBy(results[2].data, (row) => row.status === 'approved'),
-    pendingEnrollments: countBy(results[2].data, (row) => row.status === 'pending'),
+    approvedEnrollments: countBy(enrollmentRows, (row) => row.status === 'approved'),
+    activeApprovedEnrollments: countBy(enrollmentRows, (row) => (
+      row.status === 'approved' && activeStudentIds.has(String(row.student_id || ''))
+    )),
+    pendingEnrollments: countBy(enrollmentRows, (row) => row.status === 'pending'),
     attendance: countBy(results[3].data),
   };
 }

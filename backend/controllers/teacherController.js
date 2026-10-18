@@ -1096,7 +1096,8 @@ const getTeacherSubjects = asyncHandler(async (req, res) => {
     subjects: subjects.map((subject) => {
       const lessonCount = counts.lessons.get(String(subject._id)) || 0;
       const assessmentCount = counts.assessments.get(String(subject._id)) || 0;
-      const approvedStudentsCount = counts.approvedEnrollments.get(String(subject._id)) || 0;
+      const approvedStudentsCount = counts.activeApprovedEnrollments.get(String(subject._id)) || 0;
+      const enrolledStudentsCount = counts.approvedEnrollments.get(String(subject._id)) || 0;
       const pendingRequestsCount = counts.pendingEnrollments.get(String(subject._id)) || 0;
       const attendanceRecordCount = counts.attendance.get(String(subject._id)) || 0;
       const deletionBlockers = [];
@@ -1105,7 +1106,7 @@ const getTeacherSubjects = asyncHandler(async (req, res) => {
 
       if (lessonCount > 0) deletionBlockers.push(formatCountLabel(lessonCount, 'lesson'));
       if (assessmentCount > 0) deletionBlockers.push(formatCountLabel(assessmentCount, 'assessment'));
-      if (approvedStudentsCount > 0) deletionBlockers.push(formatCountLabel(approvedStudentsCount, 'approved student'));
+      if (enrolledStudentsCount > 0) deletionBlockers.push(formatCountLabel(enrolledStudentsCount, 'approved student'));
       if (pendingRequestsCount > 0) deletionBlockers.push(formatCountLabel(pendingRequestsCount, 'pending request'));
       if (attendanceRecordCount > 0) deletionBlockers.push(formatCountLabel(attendanceRecordCount, 'attendance record'));
 
