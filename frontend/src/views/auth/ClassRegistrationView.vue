@@ -14,7 +14,7 @@
 
       <section class="registration-card" aria-labelledby="registration-title" :aria-busy="loadingInvitation || verifying || submitting">
         <header>
-          <p class="eyebrow">CLASS INVITATION</p>
+          <p class="eyebrow"><i class="fas fa-user-check" aria-hidden="true"></i> CLASS INVITATION</p>
           <h1 id="registration-title">{{ completed ? 'Welcome to your class' : 'Join your class' }}</h1>
           <p v-if="invitation" class="class-name">{{ invitation.className }}</p>
           <p v-else class="intro">Use the class invitation your teacher shared with you.</p>
@@ -80,13 +80,13 @@
               <button type="button" class="text-button" :disabled="submitting" @click="backToVerification">Change</button>
             </div>
             <div class="form-field">
-              <label for="student-email">Gmail address</label>
+              <label for="student-email"><i class="fas fa-at" aria-hidden="true"></i> Gmail address</label>
               <input id="student-email" v-model="email" type="email" required maxlength="254" autocomplete="email" placeholder="yourname@gmail.com" :disabled="submitting" aria-describedby="email-hint" />
               <small id="email-hint">Use your own Gmail address for account recovery.</small>
             </div>
             <div class="form-field">
-              <label for="student-username">Username</label>
-              <input id="student-username" v-model="username" type="text" required maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" :disabled="submitting" :aria-invalid="usernameStatus === 'unavailable' || usernameStatus === 'invalid'" aria-describedby="username-feedback" />
+              <label for="student-username"><i class="fas fa-id-badge" aria-hidden="true"></i> Username</label>
+              <input id="student-username" v-model="username" type="text" required maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Choose a username" :disabled="submitting" :aria-invalid="usernameStatus === 'unavailable' || usernameStatus === 'invalid'" aria-describedby="username-feedback" />
               <small id="username-feedback" class="username-feedback" :class="{ available: usernameStatus === 'available', invalid: ['unavailable', 'invalid', 'error'].includes(usernameStatus) }" role="status" aria-live="polite">
                 <i v-if="usernameStatus === 'checking'" class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>{{ usernameFeedback }}
               </small>
@@ -97,23 +97,25 @@
               </div>
             </div>
             <div class="form-field">
-              <label for="student-password">Password</label>
+              <label for="student-password"><i class="fas fa-lock" aria-hidden="true"></i> Password</label>
               <div class="password-field">
-                <input id="student-password" v-model="password" :type="showPassword ? 'text' : 'password'" required minlength="8" maxlength="16" autocomplete="new-password" :disabled="submitting" aria-describedby="password-hint" />
+                <input id="student-password" v-model="password" :type="showPassword ? 'text' : 'password'" required minlength="8" maxlength="16" autocomplete="new-password" placeholder="Create your password" :disabled="submitting" aria-describedby="password-hint" />
                 <button type="button" :aria-label="showPassword ? 'Hide password' : 'Show password'" :disabled="submitting" @click="showPassword = !showPassword"><i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'" aria-hidden="true"></i></button>
               </div>
               <small id="password-hint">8–16 characters, with uppercase and lowercase letters and a number.</small>
             </div>
             <div class="form-field">
-              <label for="student-confirm-password">Confirm password</label>
-              <input id="student-confirm-password" v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" required minlength="8" maxlength="16" autocomplete="new-password" :disabled="submitting" :aria-invalid="Boolean(confirmPassword && confirmPassword !== password)" aria-describedby="password-match" />
+              <label for="student-confirm-password"><i class="fas fa-lock" aria-hidden="true"></i> Confirm password</label>
+              <input id="student-confirm-password" v-model="confirmPassword" :type="showPassword ? 'text' : 'password'" required minlength="8" maxlength="16" autocomplete="new-password" placeholder="Confirm your password" :disabled="submitting" :aria-invalid="Boolean(confirmPassword && confirmPassword !== password)" aria-describedby="password-match" />
               <small v-if="confirmPassword && confirmPassword !== password" id="password-match" class="invalid">Passwords do not match.</small>
             </div>
             <p class="enrollment-note"><i class="fas fa-lock" aria-hidden="true"></i> Your account will be assigned to the class and section on your teacher’s list.</p>
+            <div class="account-form-actions">
             <button type="submit" class="primary-button" :disabled="submitting || alreadyRegistered || !usernameCheckedAndAvailable">
               {{ submitting ? 'Creating your account…' : 'Create account and join class' }}
             </button>
             <button type="button" class="secondary-button" :disabled="submitting" @click="backToVerification">Back to verification</button>
+            </div>
           </form>
           <p v-if="invitation.expiresAt" class="invitation-expiry">Invitation expires {{ formatExpiry(invitation.expiresAt) }}</p>
         </template>
@@ -129,10 +131,10 @@
         <span class="registration-design-shape registration-design-shape-bottom" aria-hidden="true"></span>
         <div class="registration-design-content">
           <div class="registration-design-heading">
-            <h2>Join your class and start learning with EduMatch.</h2>
+            <h2>Finish setup and enter a role-based workspace built for momentum.</h2>
             <img src="/logo.png" alt="EduMatch Logo" class="registration-design-logo" />
           </div>
-          <p>Verify your place on the class list, create your student account, and enter a learning workspace built around your progress.</p>
+          <p>EduMatch brings together student tracking, learning activities, and role-based management in one focused platform.</p>
         </div>
       </aside>
     </div>
@@ -439,7 +441,8 @@ onBeforeUnmount(() => {
 .registration-design-shape-top { @apply tw:[width:300px] tw:[height:190px] tw:[top:8%] tw:[right:7%] tw:[clip-path:polygon(14%_0,_100%_0,_86%_100%,_0_100%)] tw:[background:linear-gradient(135deg,_rgba(255,_255,_255,_0.16),_rgba(255,_255,_255,_0.05))] tw:[transform:rotate(-8deg)]; }
 .registration-design-shape-bottom { @apply tw:[width:360px] tw:[height:220px] tw:[bottom:8%] tw:[left:4%] tw:[clip-path:polygon(0_18%,_76%_0,_100%_82%,_24%_100%)] tw:[background:linear-gradient(135deg,_rgba(17,_17,_17,_0.08),_rgba(255,_255,_255,_0.12))] tw:[transform:rotate(7deg)]; }
 @keyframes registration-card-enter { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-.eyebrow { @apply tw:[margin:0_0_6px]; @apply tw:[color:#4a7b36]; @apply tw:[font-size:10px]; @apply tw:[font-weight:800]; @apply tw:[letter-spacing:1.5px]; }
+.eyebrow { @apply tw:inline-flex tw:items-center tw:[gap:7px] tw:w-fit; @apply tw:[margin:0_0_9px] tw:[padding:6px_10px] tw:[border:1px_solid_#cfe4bf] tw:[border-radius:999px] tw:[background:#eef8e7]; @apply tw:[color:#315c22] tw:[font-size:10px] tw:[font-weight:800] tw:[letter-spacing:1.5px]; }
+.eyebrow i { @apply tw:[color:#5d9b42]! tw:[-webkit-text-fill-color:#5d9b42]!; }
 h1 { @apply tw:[margin:0]; @apply tw:[font-size:27px]; @apply tw:[line-height:1.25]; @apply tw:[font-weight:750]; }
 h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .class-name, .intro { @apply tw:[margin:10px_0_0]; @apply tw:[color:#647368]; @apply tw:[font-size:14px]; @apply tw:[line-height:1.6]; @apply tw:[overflow-wrap:anywhere]; }
@@ -450,13 +453,21 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .registration-steps .current { @apply tw:[color:#36682d]; @apply tw:[font-weight:650]; }
 .registration-steps .current span, .registration-steps .done span { @apply tw:[color:#fff]; @apply tw:[background:#518b40]; }
 .registration-form { @apply tw:grid; @apply tw:[gap:13px]; }
-.account-registration-form { @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))]; }
-.account-registration-form :is(.verified-student, .enrollment-note) { @apply tw:[grid-column:1/-1]; }
+.account-registration-form { @apply tw:[grid-template-columns:1fr] tw:[gap:10px]; }
+.account-registration-form :is(.verified-student, .account-form-heading, .enrollment-note, .account-form-actions) { @apply tw:[grid-column:1/-1]; }
+.account-form-heading { @apply tw:flex tw:items-center tw:[gap:9px] tw:[margin-top:2px] tw:[padding-top:10px] tw:[border-top:1px_solid_#e8efe4]; }
+.account-form-heading > span { @apply tw:inline-flex tw:items-center tw:justify-center tw:shrink-0 tw:[width:30px] tw:[height:30px] tw:[border-radius:9px] tw:[background:#edf6e8] tw:[color:#4b7f36]; }
+.account-form-heading > span i { @apply tw:[color:#4b7f36]! tw:[-webkit-text-fill-color:#4b7f36]!; }
+.account-form-heading strong { @apply tw:block tw:[color:#243929] tw:[font-size:12px] tw:[line-height:1.25]; }
+.account-form-heading small { @apply tw:block tw:[margin-top:2px] tw:[color:#738071] tw:[font-size:10px] tw:[line-height:1.35]; }
+.account-form-actions { @apply tw:grid tw:[grid-template-columns:1fr] tw:[gap:5px]; }
+.account-form-actions .secondary-button { @apply tw:order-none tw:[min-height:30px] tw:[padding:4px] tw:[border:0] tw:[background:transparent] tw:[box-shadow:none] tw:[text-decoration:underline] tw:[text-underline-offset:3px]; }
 .name-grid { @apply tw:grid; @apply tw:grid-cols-2; @apply tw:[gap:10px_16px]; }
 .name-grid > small { @apply tw:[grid-column:1/-1]; }
 .form-description { @apply tw:[margin:0]; @apply tw:[color:#607065]; @apply tw:[font-size:14px]; @apply tw:[line-height:1.6]; }
 .form-field { @apply tw:grid; @apply tw:[gap:7px]; }
 .form-field label { @apply tw:[font-size:13px]; @apply tw:[color:#263d2c]; @apply tw:[font-weight:650]; }
+.form-field label i { @apply tw:[width:15px] tw:[margin-right:5px] tw:text-center tw:[color:#62a74a]! tw:[-webkit-text-fill-color:#62a74a]!; }
 .form-field input { @apply tw:block; @apply tw:w-full; @apply tw:[min-height:42px]; @apply tw:[padding:9px_12px]; @apply tw:[border:1px_solid_#cddccb]; @apply tw:[border-radius:9px]; @apply tw:[background:#fff]; @apply tw:[color:#203127]; @apply tw:[font:inherit]; @apply tw:[font-size:14px]; }
 .class-registration :is(input, button, a):focus-visible { @apply tw:[outline:3px_solid_#609e46]; @apply tw:[outline-offset:3px]; }
 .form-field input:focus { @apply tw:[border-color:#609e46]; }
@@ -498,8 +509,8 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .state-icon { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:60px]; @apply tw:[height:60px]; @apply tw:[margin:0_auto]; @apply tw:[border-radius:50%]; @apply tw:[background:#f2f6ef]; @apply tw:[color:#6a8660]; @apply tw:[font-size:23px]; }
 .success-icon { @apply tw:[background:#eaf5e2]; @apply tw:[color:#4b8737]; }
 @media (max-width: 1080px) { .registration-layout { @apply tw:[grid-template-columns:1fr]; } .registration-design-panel { @apply tw:[min-height:420px]; } }
-@media (max-width: 768px) { .registration-design-panel { @apply tw:hidden; } .registration-form-panel { @apply tw:[padding:max(1rem,_env(safe-area-inset-top))_max(.75rem,_env(safe-area-inset-right))_max(1rem,_env(safe-area-inset-bottom))_max(.75rem,_env(safe-area-inset-left))]; } .account-registration-form { @apply tw:[grid-template-columns:1fr]; } .account-registration-form :is(.verified-student, .enrollment-note) { @apply tw:[grid-column:auto]; } }
-@media (max-width: 540px) { .registration-brand { @apply tw:[margin-bottom:20px]; } .registration-card { @apply tw:[padding:25px_20px]; @apply tw:[border-radius:20px]; } h1 { @apply tw:[font-size:24px]; } .registration-steps { @apply tw:[gap:10px]; } .registration-steps li { @apply tw:[font-size:11px]; } .name-grid { @apply tw:grid-cols-1; } .name-grid > small { @apply tw:[grid-column:auto]; } }
+@media (max-width: 768px) { .registration-design-panel { @apply tw:hidden; } .registration-form-panel { @apply tw:[padding:max(1rem,_env(safe-area-inset-top))_max(.75rem,_env(safe-area-inset-right))_max(1rem,_env(safe-area-inset-bottom))_max(.75rem,_env(safe-area-inset-left))]; } .account-registration-form { @apply tw:[grid-template-columns:1fr]; } .account-registration-form :is(.verified-student, .account-form-heading, .enrollment-note, .account-form-actions) { @apply tw:[grid-column:auto]; } }
+@media (max-width: 540px) { .registration-brand { @apply tw:[margin-bottom:20px]; } .registration-card { @apply tw:[padding:25px_20px]; @apply tw:[border-radius:20px]; } h1 { @apply tw:[font-size:24px]; } .registration-steps { @apply tw:[gap:10px]; } .registration-steps li { @apply tw:[font-size:11px]; } .name-grid { @apply tw:grid-cols-1; } .name-grid > small { @apply tw:[grid-column:auto]; } .account-form-actions { @apply tw:[grid-template-columns:1fr]; } .account-form-actions .secondary-button { @apply tw:order-none; } }
 @media (prefers-reduced-motion: reduce) { .fa-spin { @apply tw:animate-none; } }
 
 </style>
