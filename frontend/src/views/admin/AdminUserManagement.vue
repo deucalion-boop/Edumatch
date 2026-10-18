@@ -747,7 +747,7 @@
                     <span class="info-label">Email address</span>
                     <span class="info-value">{{ selectedUser.email || 'N/A' }}</span>
                   </div>
-                  <div v-if="['teacher', 'headteacher', 'secretary'].includes(selectedUser.role)" class="info-item">
+                  <div class="info-item info-item--wide">
                     <span class="info-label">Username</span>
                     <span class="info-value">{{ selectedUser.username || 'N/A' }}</span>
                   </div>
