@@ -30,7 +30,6 @@
           <label class="registry-field registry-search" for="registry-search"><span>Search students</span><input id="registry-search" v-model="filters.search" type="search" placeholder="Search name, username or email"></label>
           <label class="registry-field" for="registry-status"><span>Registration status</span><select id="registry-status" v-model="filters.status"><option value="">All statuses</option><option value="pending">Pending</option><option value="registered">Registered</option><option value="expired">Expired code</option><option value="revoked">Revoked code</option></select></label>
           <label class="registry-field" for="registry-assignment"><span>Class assignment</span><select id="registry-assignment" v-model="filters.unassigned"><option :value="false">All students</option><option :value="true">Unassigned only</option></select></label>
-          <button type="button" class="registry-button registry-secondary" :disabled="loading" @click="loadRegistry({ force: true })"><i class="fas" :class="loading ? 'fa-spinner fa-spin' : 'fa-rotate-right'" aria-hidden="true"></i>Refresh</button>
         </div>
         <div class="registry-selection-bar"><span>{{ selectedIds.length ? `${selectedIds.length} students selected` : `${students.length} students in this view` }}</span><div class="registry-button-row"><button v-if="selectedIds.length" type="button" class="registry-text-button" @click="selectedIds = []">Clear selection</button><button type="button" class="registry-button registry-secondary" :disabled="!selectedIds.length || Boolean(busy)" @click="openDialog('assign')"><i class="fas fa-chalkboard-user" aria-hidden="true"></i>Assign Classes</button></div></div>
         <p v-if="loading && !loaded" class="registry-empty" role="status">Loading the student registry…</p>
@@ -302,7 +301,7 @@ onBeforeUnmount(() => {
 .registry-link-actions > input, .registry-field input, .registry-field select { @apply tw:w-full tw:[min-height:44px] tw:[padding:.65rem_.75rem] tw:[border:1px_solid_#ccdac4] tw:[border-radius:8px] tw:bg-white tw:[font-size:.82rem] tw:[color:#2d4521] tw:box-border; }
 .registry-field input:focus, .registry-field select:focus, .registry-link-actions > input:focus { @apply tw:[outline:2px_solid_#84b869] tw:[outline-offset:2px]; }
 .registry-help { @apply tw:block tw:[margin:.65rem_0_0] tw:[font-size:.74rem] tw:[color:#6d7e62] tw:[line-height:1.6]; }
-.registry-toolbar { @apply tw:grid tw:[grid-template-columns:minmax(180px,_1fr)_180px_170px_auto] tw:items-end tw:[gap:.8rem]; }
+.registry-toolbar { @apply tw:grid tw:[grid-template-columns:minmax(180px,_1fr)_180px_170px] tw:items-end tw:[gap:.8rem]; }
 .registry-field { @apply tw:grid tw:[gap:.4rem] tw:[font-size:.76rem] tw:font-semibold tw:[color:#466238]; }
 .registry-field small { @apply tw:font-normal tw:[font-size:.72rem] tw:[line-height:1.5] tw:[color:#6d7e62]; }
 .registry-selection-bar, .registry-pagination { @apply tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:[gap:.75rem] tw:[margin:1rem_0] tw:[font-size:.76rem] tw:[color:#657b58]; }
