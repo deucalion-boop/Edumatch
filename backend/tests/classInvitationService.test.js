@@ -279,7 +279,7 @@ test('removing a class invitation revokes only its link and preserves registered
   const result = await service.revokeInvitation(teacherId, invitationId);
   assert.deepEqual(result, { id: invitationId, status: 'revoked' });
   assert.equal(client.tables.class_invitations[0].status, 'revoked');
-  assert.ok(client.tables.class_invitations[0].revoked_at);
+  assert.ok(client.tables.class_invitations[0].updated_at);
   assert.equal(client.tables.class_registration_students.length, 1);
   assert.equal(client.tables.class_registration_students[0].student_id, 'registered-student-id');
   await service.revokeInvitation(teacherId, invitationId);

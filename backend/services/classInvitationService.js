@@ -285,7 +285,7 @@ async function revokeInvitation(teacherId, id) {
   if (!existing) throw fail('Invitation not found.', 404);
   if (existing.status !== 'revoked') {
     const { error } = await getSupabaseStorageClient().from('class_invitations')
-      .update({ status: 'revoked', revoked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .update({ status: 'revoked', updated_at: new Date().toISOString() })
       .eq('id', id).eq('teacher_id', teacherId).eq('subject_id', context.subject.id);
     if (error) throw databaseError(error);
   }
