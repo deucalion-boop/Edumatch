@@ -417,17 +417,17 @@ onBeforeUnmount(() => {
 .class-registration { @apply tw:[min-height:100dvh]; @apply tw:[background:#f8fafc]; @apply tw:[color:#182b21]; @apply tw:[font-family:'Inter',_'Segoe_UI',_sans-serif]; }
 .class-registration *, .class-registration *::before, .class-registration *::after { @apply tw:box-border; }
 .registration-layout { @apply tw:grid; @apply tw:[grid-template-columns:minmax(0,_1fr)_minmax(0,_1fr)]; @apply tw:[min-height:100dvh]; @apply tw:w-full; @apply tw:overflow-hidden; }
-.registration-form-panel { @apply tw:relative tw:isolate tw:flex tw:items-center tw:justify-center tw:overflow-x-hidden tw:overflow-y-auto; @apply tw:[min-height:100dvh]; @apply tw:[padding:clamp(1rem,_2.8vw,_2.25rem)_clamp(1.4rem,_3vw,_2.8rem)]; @apply tw:[background:#f8fafc]; }
+.registration-form-panel { @apply tw:relative tw:isolate tw:flex tw:items-center tw:justify-center tw:overflow-hidden; @apply tw:[min-height:100dvh]; @apply tw:[padding:clamp(.55rem,_1.4vh,_1rem)_clamp(1.4rem,_3vw,_2.8rem)]; @apply tw:[background:#f8fafc]; }
 .registration-form-panel::before { @apply tw:[content:''] tw:absolute tw:[inset:0] tw:[z-index:-2] tw:pointer-events-none; @apply tw:[background:radial-gradient(ellipse_62%_54%_at_50%_48%,_rgba(255,_255,_255,_0.98)_0%,_rgba(255,_255,_255,_0.76)_42%,_rgba(248,_250,_252,_0)_76%),______radial-gradient(circle_at_0_0,_rgba(126,_185,_77,_0.72)_0_3px,_transparent_3.5px)_77px_64px_/_204px_164px,______radial-gradient(circle_at_0_0,_rgba(232,_184,_36,_0.7)_0_3px,_transparent_3.5px)_115px_64px_/_268px_195px,______linear-gradient(rgba(148,_163,_184,_0.07)_1px,_transparent_1px)_0_0_/_40px_40px,______linear-gradient(90deg,_rgba(148,_163,_184,_0.07)_1px,_transparent_1px)_0_0_/_40px_40px]; }
 .registration-panel-geometry { @apply tw:absolute tw:[inset:0] tw:[z-index:-1] tw:overflow-hidden tw:pointer-events-none; }
 .registration-panel-shape { @apply tw:absolute tw:block; }
 .registration-panel-shape-top { @apply tw:[width:clamp(112px,_14vw,_178px)] tw:[height:clamp(112px,_14vw,_178px)] tw:[top:34px] tw:left-0; @apply tw:[background:linear-gradient(135deg,_rgba(165,_203,_126,_0.94),_rgba(83,_151,_70,_0.72))]; @apply tw:[clip-path:polygon(0_0,_78%_0,_0_78%)]; }
 .registration-panel-shape-bottom { @apply tw:[width:clamp(145px,_18vw,_230px)] tw:[height:clamp(130px,_17vw,_215px)] tw:right-0 tw:bottom-0; @apply tw:[background:linear-gradient(135deg,_rgba(165,_203,_126,_0.42),_rgba(73,_143,_67,_0.8))]; @apply tw:[clip-path:polygon(100%_20%,_100%_100%,_18%_100%)]; }
 .registration-shell { @apply tw:relative tw:[z-index:1] tw:w-full; @apply tw:[max-width:540px]; @apply tw:[margin:0_auto]; @apply tw:[animation:registration-card-enter_650ms_cubic-bezier(0.2,_0.75,_0.25,_1)_both]; }
-.registration-brand { @apply tw:flex; @apply tw:[gap:12px]; @apply tw:items-center; @apply tw:w-fit; @apply tw:[margin:0_auto_26px]; @apply tw:[font-size:23px]; @apply tw:[font-weight:750]; @apply tw:[text-decoration:none]; @apply tw:[color:#1d3826]; }
+.registration-brand { @apply tw:flex; @apply tw:[gap:9px]; @apply tw:items-center; @apply tw:w-fit; @apply tw:[margin:0_auto_10px]; @apply tw:[font-size:20px]; @apply tw:[font-weight:750]; @apply tw:[text-decoration:none]; @apply tw:[color:#1d3826]; }
 .registration-brand small { @apply tw:block; @apply tw:[margin-top:2px]; @apply tw:[font-size:12px]; @apply tw:[font-weight:500]; @apply tw:[color:#657869]; }
-.brand-mark { @apply tw:[width:49px]; @apply tw:[height:49px]; @apply tw:grid; @apply tw:place-items-center; @apply tw:[border:1px_solid_#cbdcc7]; @apply tw:[background:#fff]; @apply tw:[border-radius:16px]; @apply tw:overflow-hidden; }
-.brand-mark img { @apply tw:[width:43px] tw:[height:43px] tw:object-contain; }
+.brand-mark { @apply tw:[width:40px]; @apply tw:[height:40px]; @apply tw:grid; @apply tw:place-items-center; @apply tw:[border:1px_solid_#cbdcc7]; @apply tw:[background:#fff]; @apply tw:[border-radius:13px]; @apply tw:overflow-hidden; }
+.brand-mark img { @apply tw:[width:35px] tw:[height:35px] tw:object-contain; }
 .registration-card { @apply tw:relative tw:overflow-visible tw:[z-index:1] tw:[padding:clamp(.75rem,_.95vw,_.95rem)] tw:[border:1px_solid_rgba(255,_255,_255,_.92)] tw:[border-radius:29px] tw:[background:#fff] tw:[box-shadow:inset_0_1px_0_rgba(255,_255,_255,_.96),0_10px_22px_rgba(17,_17,_17,_.05)]; }
 .registration-card > header { @apply tw:text-left tw:[margin-bottom:.65rem] tw:[padding-bottom:.55rem] tw:[border-bottom:1px_solid_rgba(17,_17,_17,_.08)]; }
 .registration-design-panel { @apply tw:relative tw:flex tw:items-stretch tw:overflow-hidden; @apply tw:[min-height:100dvh]; @apply tw:[padding:clamp(1.6rem,_3vw,_3rem)]; @apply tw:[background:linear-gradient(135deg,_#1e4307_0%,_#ffd542_42%,_#bbff59_100%)]; }
@@ -448,13 +448,13 @@ h1 { @apply tw:[margin:0] tw:[color:#111] tw:[font-size:clamp(1.5rem,_1.6vw,_1.8
 h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .class-name, .intro { @apply tw:[margin:.5rem_0_0] tw:[color:#4b5563] tw:[font-size:.85rem] tw:[line-height:1.35] tw:[overflow-wrap:anywhere]; }
 .class-name { @apply tw:[font-weight:500]; }
-.registration-steps { @apply tw:[list-style:none]; @apply tw:flex; @apply tw:[gap:12px]; @apply tw:[padding:13px_0]; @apply tw:[margin:16px_0]; @apply tw:[border-top:1px_solid_#edf2ea]; @apply tw:[border-bottom:1px_solid_#edf2ea]; }
+.registration-steps { @apply tw:[list-style:none]; @apply tw:flex; @apply tw:[gap:12px]; @apply tw:[padding:7px_0]; @apply tw:[margin:7px_0]; @apply tw:[border-bottom:1px_solid_#edf2ea]; }
 .registration-steps li { @apply tw:[flex:1]; @apply tw:flex; @apply tw:items-center; @apply tw:[gap:8px]; @apply tw:[color:#67706b]; @apply tw:[font-size:12px]; @apply tw:[line-height:1.4]; }
-.registration-steps li span { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:25px]; @apply tw:[height:25px]; @apply tw:shrink-0; @apply tw:[border-radius:50%]; @apply tw:[background:#f1f4ef]; @apply tw:[color:#626d60]; @apply tw:[font-size:11px]; @apply tw:[font-weight:700]; }
+.registration-steps li span { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:22px]; @apply tw:[height:22px]; @apply tw:shrink-0; @apply tw:[border-radius:50%]; @apply tw:[background:#f1f4ef]; @apply tw:[color:#626d60]; @apply tw:[font-size:10px]; @apply tw:[font-weight:700]; }
 .registration-steps .current { @apply tw:[color:#36682d]; @apply tw:[font-weight:650]; }
 .registration-steps .current span, .registration-steps .done span { @apply tw:[color:#fff]; @apply tw:[background:#518b40]; }
-.registration-form { @apply tw:grid tw:[gap:.45rem]; }
-.account-registration-form { @apply tw:[grid-template-columns:1fr] tw:[gap:.45rem]; }
+.registration-form { @apply tw:grid tw:[gap:.3rem]; }
+.account-registration-form { @apply tw:[grid-template-columns:1fr] tw:[gap:.3rem]; }
 .account-registration-form :is(.verified-student, .account-form-heading, .enrollment-note, .account-form-actions) { @apply tw:[grid-column:1/-1]; }
 .account-form-heading { @apply tw:flex tw:items-center tw:[gap:9px] tw:[margin-top:2px] tw:[padding-top:10px] tw:[border-top:1px_solid_#e8efe4]; }
 .account-form-heading > span { @apply tw:inline-flex tw:items-center tw:justify-center tw:shrink-0 tw:[width:30px] tw:[height:30px] tw:[border-radius:9px] tw:[background:#edf6e8] tw:[color:#4b7f36]; }
@@ -469,7 +469,7 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .form-field { @apply tw:grid tw:[gap:.22rem]; }
 .form-field label { @apply tw:inline-flex tw:items-center tw:[font-size:.82rem] tw:[line-height:1.2] tw:[color:#111] tw:[font-weight:700]; }
 .form-field label i { @apply tw:[width:15px] tw:[margin-right:.4rem] tw:text-center tw:[color:#69aa47]! tw:[-webkit-text-fill-color:#69aa47]!; }
-.form-field input { @apply tw:block tw:w-full tw:[min-height:40px] tw:[padding:.52rem_1rem] tw:[border:1px_solid_rgba(17,_17,_17,_.1)] tw:[border-radius:12px] tw:[background:#fff] tw:[color:#203127] tw:[font:inherit] tw:[font-size:.95rem] tw:[font-weight:500]; }
+.form-field input { @apply tw:block tw:w-full tw:[min-height:36px] tw:[padding:.4rem_.8rem] tw:[border:1px_solid_rgba(17,_17,_17,_.1)] tw:[border-radius:10px] tw:[background:#fff] tw:[color:#203127] tw:[font:inherit] tw:[font-size:.9rem] tw:[font-weight:500]; }
 .class-registration :is(input, button, a):focus-visible { @apply tw:[outline:3px_solid_#609e46]; @apply tw:[outline-offset:3px]; }
 .form-field input:focus { @apply tw:outline-none tw:[border-color:#69aa47] tw:[box-shadow:0_0_0_4px_rgba(105,_170,_71,_.16)] tw:[background:#fbfff8] tw:[caret-color:#3f7f2a]; }
 .form-field input::placeholder { @apply tw:[color:#9ca3af]; }
@@ -479,16 +479,16 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .username-feedback { @apply tw:[min-height:17px]; }
 .username-feedback i { @apply tw:[margin-right:7px]; }
 .class-registration .available { @apply tw:[color:#36762e]; }
-.primary-button, .secondary-button { @apply tw:flex tw:justify-center tw:items-center tw:[gap:.5rem] tw:w-full tw:[min-height:40px] tw:[border-radius:12px] tw:[padding:.52rem_1rem] tw:[border:0] tw:[background:linear-gradient(135deg,_#69aa47_0%,_#3f7f2a_100%)] tw:[box-shadow:0_16px_32px_rgba(63,_127,_42,_.22)] tw:[color:#fff] tw:[font:inherit] tw:[font-size:.95rem] tw:[font-weight:600] tw:text-center tw:[text-decoration:none] tw:cursor-pointer; }
+.primary-button, .secondary-button { @apply tw:flex tw:justify-center tw:items-center tw:[gap:.5rem] tw:w-full tw:[min-height:36px] tw:[border-radius:10px] tw:[padding:.4rem_.8rem] tw:[border:0] tw:[background:linear-gradient(135deg,_#69aa47_0%,_#3f7f2a_100%)] tw:[box-shadow:0_12px_24px_rgba(63,_127,_42,_.18)] tw:[color:#fff] tw:[font:inherit] tw:[font-size:.9rem] tw:[font-weight:600] tw:text-center tw:[text-decoration:none] tw:cursor-pointer; }
 .primary-button:hover:enabled { @apply tw:[background:linear-gradient(135deg,_#5c9f3d_0%,_#356d24_100%)] tw:[box-shadow:0_18px_36px_rgba(63,_127,_42,_.3)]; }
 .secondary-button { @apply tw:[background:#fff]; @apply tw:[border-color:#d7e2d2]; @apply tw:[color:#3d6338]; }
 .class-registration button:disabled, .class-registration input:disabled { @apply tw:cursor-default; @apply tw:[opacity:.58]; }
 .class-registration button { @apply tw:[font-family:inherit]; }
 .password-field { @apply tw:relative; }
 .password-field input { @apply tw:[padding-right:48px]; }
-.password-field button { @apply tw:absolute tw:[right:.5rem] tw:[top:50%] tw:[transform:translateY(-50%)] tw:[width:36px] tw:[height:36px] tw:[border:0] tw:[border-radius:7px] tw:[background:transparent] tw:[color:#6b7e66] tw:cursor-pointer; }
+.password-field button { @apply tw:absolute tw:[right:.35rem] tw:[top:50%] tw:[transform:translateY(-50%)] tw:[width:32px] tw:[height:32px] tw:[border:0] tw:[border-radius:7px] tw:[background:transparent] tw:[color:#6b7e66] tw:cursor-pointer; }
 .password-field button:hover { @apply tw:[color:#3f7f2a] tw:[background:rgba(105,_170,_71,_.1)]; }
-.verified-student { @apply tw:flex; @apply tw:[gap:11px]; @apply tw:items-center; @apply tw:[padding:14px]; @apply tw:[border:1px_solid_#d9e8d3]; @apply tw:[border-radius:11px]; @apply tw:[background:#f5faf1]; }
+.verified-student { @apply tw:flex; @apply tw:[gap:9px]; @apply tw:items-center; @apply tw:[padding:8px_10px]; @apply tw:[border:1px_solid_#d9e8d3]; @apply tw:[border-radius:10px]; @apply tw:[background:#f5faf1]; }
 .verified-student > i { @apply tw:[color:#51843e]; @apply tw:[font-size:20px]; }
 .verified-student > div { @apply tw:[flex:1]; @apply tw:[min-width:0]; }
 .verified-student strong { @apply tw:block; @apply tw:[font-size:13px]; @apply tw:[overflow-wrap:anywhere]; }
@@ -500,10 +500,10 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .form-error { @apply tw:[padding:12px_14px]; @apply tw:[margin-bottom:18px]; @apply tw:[border:1px_solid_#edd6cc]; @apply tw:[border-radius:9px]; @apply tw:[background:#fff5f0]; @apply tw:[color:#913d2d]; @apply tw:[font-size:13px]; @apply tw:[line-height:1.6]; }
 .enrollment-note { @apply tw:[margin:0]; @apply tw:flex; @apply tw:items-start; @apply tw:[gap:9px]; @apply tw:[color:#6d786e]; @apply tw:[font-size:11px]; @apply tw:[line-height:1.6]; }
 .enrollment-note i { @apply tw:[margin-top:3px]; @apply tw:[color:#64805a]; }
-.registration-footer { @apply tw:[margin-top:24px]; @apply tw:[padding-top:19px]; @apply tw:[border-top:1px_solid_#eaf0e7]; @apply tw:[color:#73806f]; @apply tw:[font-size:12px]; @apply tw:text-center; }
+.registration-footer { @apply tw:[margin-top:8px]; @apply tw:[padding-top:8px]; @apply tw:[border-top:1px_solid_#eaf0e7]; @apply tw:[color:#73806f]; @apply tw:[font-size:11px]; @apply tw:text-center; }
 .registration-footer a, .text-link { @apply tw:[color:#427433]; @apply tw:[font-weight:600]; @apply tw:[text-decoration:underline]; @apply tw:[text-underline-offset:3px]; }
-.registration-help { @apply tw:[margin:19px_auto_0]; @apply tw:[padding:0_14px]; @apply tw:[color:#6e7c69]; @apply tw:[font-size:11px]; @apply tw:text-center; @apply tw:[line-height:1.6]; }
-.invitation-expiry { @apply tw:[margin:20px_0_0]; @apply tw:[color:#798675]; @apply tw:[font-size:10px]; @apply tw:text-center; }
+.registration-help { @apply tw:[margin:7px_auto_0]; @apply tw:[padding:0_14px]; @apply tw:[color:#6e7c69]; @apply tw:[font-size:10px]; @apply tw:text-center; @apply tw:[line-height:1.4]; }
+.invitation-expiry { @apply tw:[margin:7px_0_0]; @apply tw:[color:#798675]; @apply tw:[font-size:10px]; @apply tw:text-center; }
 .loading-state { @apply tw:flex; @apply tw:items-center; @apply tw:justify-center; @apply tw:[gap:10px]; @apply tw:[padding:40px_0]; @apply tw:[color:#527c45]; @apply tw:[font-size:14px]; }
 .invitation-error, .success-state { @apply tw:[padding-top:25px]; @apply tw:text-center; }
 .invitation-error p, .success-state p { @apply tw:[font-size:14px]; @apply tw:[line-height:1.7]; @apply tw:[color:#647267]; @apply tw:[overflow-wrap:anywhere]; }
@@ -512,7 +512,7 @@ h2 { @apply tw:[font-size:20px]; @apply tw:[margin:18px_0_12px]; }
 .state-icon { @apply tw:grid; @apply tw:place-items-center; @apply tw:[width:60px]; @apply tw:[height:60px]; @apply tw:[margin:0_auto]; @apply tw:[border-radius:50%]; @apply tw:[background:#f2f6ef]; @apply tw:[color:#6a8660]; @apply tw:[font-size:23px]; }
 .success-icon { @apply tw:[background:#eaf5e2]; @apply tw:[color:#4b8737]; }
 @media (max-width: 1080px) { .registration-layout { @apply tw:[grid-template-columns:1fr]; } .registration-design-panel { @apply tw:[min-height:420px]; } }
-@media (max-width: 768px) { .registration-design-panel { @apply tw:hidden; } .registration-form-panel { @apply tw:[padding:max(1rem,_env(safe-area-inset-top))_max(.75rem,_env(safe-area-inset-right))_max(1rem,_env(safe-area-inset-bottom))_max(.75rem,_env(safe-area-inset-left))]; } .account-registration-form { @apply tw:[grid-template-columns:1fr]; } .account-registration-form :is(.verified-student, .account-form-heading, .enrollment-note, .account-form-actions) { @apply tw:[grid-column:auto]; } }
+@media (max-width: 768px) { .registration-design-panel { @apply tw:hidden; } .registration-form-panel { @apply tw:overflow-y-auto tw:[padding:max(1rem,_env(safe-area-inset-top))_max(.75rem,_env(safe-area-inset-right))_max(1rem,_env(safe-area-inset-bottom))_max(.75rem,_env(safe-area-inset-left))]; } .account-registration-form { @apply tw:[grid-template-columns:1fr]; } .account-registration-form :is(.verified-student, .account-form-heading, .enrollment-note, .account-form-actions) { @apply tw:[grid-column:auto]; } }
 @media (max-width: 540px) { .registration-brand { @apply tw:[margin-bottom:20px]; } .registration-card { @apply tw:[padding:25px_20px]; @apply tw:[border-radius:20px]; } h1 { @apply tw:[font-size:24px]; } .registration-steps { @apply tw:[gap:10px]; } .registration-steps li { @apply tw:[font-size:11px]; } .name-grid { @apply tw:grid-cols-1; } .name-grid > small { @apply tw:[grid-column:auto]; } .account-form-actions { @apply tw:[grid-template-columns:1fr]; } .account-form-actions .secondary-button { @apply tw:order-none; } }
 @media (prefers-reduced-motion: reduce) { .fa-spin { @apply tw:animate-none; } }
 
