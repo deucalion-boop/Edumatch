@@ -276,6 +276,21 @@ async function renewInvitation(teacherId, id, expiresInDays = 30) {
   if (error) throw databaseError(error);
   return (await listInvitations(teacherId)).find(invitation => invitation.id === data);
 }
+async function revokeInvitation(teacherId, id) {
+  if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) throw fail('Invitation not found.', 404);
+  const context = await advisoryContext(teacherId);
+  const { data: existing, error: existingError } = await getSupabaseStorageClient().from('class_invitations')
+    .select('id,status').eq('id', id).eq('teacher_id', teacherId).eq('subject_id', context.subject.id).maybeSingle();
+  if (existingError) throw databaseError(existingError);
+  if (!existing) throw fail('Invitation not found.', 404);
+  if (existing.status !== 'revoked') {
+    const { error } = await getSupabaseStorageClient().from('class_invitations')
+      .update({ status: 'revoked', revoked_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', id).eq('teacher_id', teacherId).eq('subject_id', context.subject.id);
+    if (error) throw databaseError(error);
+  }
+  return { id, status: 'revoked' };
+}
 async function requireInvitation(token) {
   if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) throw fail('This invitation is invalid or unavailable.', 404, 'INVITATION_INVALID');
   const { data, error } = await getSupabaseStorageClient().from('class_invitations').select('*').eq('token_hash', digest(token)).maybeSingle();
@@ -349,5 +364,5 @@ async function registerStudent(token, body = {}) {
   return { studentId: data, fullName: student.full_name, section: student.section_name };
 }
 module.exports = { MAX_FILE_BYTES, MAX_ROSTER_ROWS, cleanText, normalizeName, invitationToken, getAdvisoryContext,
-  validateWorkbookArchive, parseWorkbook, validateRecords, previewRoster, createInvitation, renewInvitation, listInvitations, publicInvitation,
+  validateWorkbookArchive, parseWorkbook, validateRecords, previewRoster, createInvitation, renewInvitation, revokeInvitation, listInvitations, publicInvitation,
   verifyStudent, usernameAvailability, registerStudent, databaseError };

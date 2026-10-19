@@ -325,7 +325,7 @@
             <div v-if="invitationForSubject(subject.id)" class="class-invitation-summary">
               <div class="class-invitation-counts"><span><strong>{{ invitationForSubject(subject.id).registeredCount }}</strong> registered</span><span><strong>{{ invitationForSubject(subject.id).unregisteredCount }}</strong> unregistered</span><span :class="{ 'invitation-expired-copy': isInvitationExpired(invitationForSubject(subject.id)) }">{{ isInvitationExpired(invitationForSubject(subject.id)) ? 'Invitation expired' : 'Enrollment in progress' }}</span></div>
               <progress :value="invitationForSubject(subject.id).registeredCount || 0" :max="invitationForSubject(subject.id).totalCount || 1" :aria-label="`${invitationForSubject(subject.id).registeredCount} of ${invitationForSubject(subject.id).totalCount} invited students registered`"></progress>
-              <div class="class-invitation-tools"><button type="button" @click="openClassInvitation(subject.id)"><i class="fas fa-users" aria-hidden="true"></i>View invitation</button><button type="button" :disabled="isInvitationExpired(invitationForSubject(subject.id))" @click="copyInvitationLink(invitationForSubject(subject.id))"><i class="fas fa-copy" aria-hidden="true"></i>Copy link</button></div>
+              <div class="class-invitation-tools"><button type="button" @click="openClassInvitation(subject.id)"><i class="fas fa-users" aria-hidden="true"></i>View invitation</button><button type="button" :disabled="isInvitationExpired(invitationForSubject(subject.id))" @click="copyInvitationLink(invitationForSubject(subject.id))"><i class="fas fa-copy" aria-hidden="true"></i>Copy link</button><button type="button" class="class-invitation-remove" :disabled="removingInvitationId === invitationForSubject(subject.id).id" @click="removeClassInvitation(invitationForSubject(subject.id))"><i class="fas" :class="removingInvitationId === invitationForSubject(subject.id).id ? 'fa-spinner fa-spin' : 'fa-trash-alt'" aria-hidden="true"></i>{{ removingInvitationId === invitationForSubject(subject.id).id ? 'Removing...' : 'Remove link' }}</button></div>
             </div>
             <p v-else-if="subject.approvedStudentsCount === 0" class="subject-management-waiting">Waiting for students to join with the class code</p>
           </article>
@@ -924,6 +924,7 @@ const subjectsError = ref('')
 const students = ref([])
 const enrollmentRequests = ref([])
 const classInvitations = ref([])
+const removingInvitationId = ref('')
 const invitationLoadError = ref('')
 const isEnrollmentRefreshing = ref(false)
 const isClassInvitationModalOpen = ref(false)
@@ -1205,7 +1206,7 @@ const normalizeRosterSectionName = (value) => String(value || '').trim().toLower
 const invitationForSubject = (subjectId) => {
   if (!advisoryInvitationContext.value || String(subjectId) !== String(advisoryInvitationContext.value.advisoryClass.id)) return null
   return classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId) && invitation.status === 'active')
-    || classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId))
+    || classInvitations.value.find(invitation => String(invitation.subjectId) === String(subjectId) && invitation.status !== 'revoked')
 }
 const selectedClassInvitation = computed(() => {
   const invitation = invitationForSubject(advisoryInvitationContext.value?.advisoryClass.id)
@@ -1654,6 +1655,18 @@ const copyInvitationLink = async invitation => {
   if (isInvitationExpired(invitation)) { showToast('error', 'This invitation has expired. Open the invitation to renew it.'); return }
   try { await navigator.clipboard.writeText(invitation.invitationUrl); showToast('success', 'Class invitation link copied. Students register using their imported full names.') }
   catch { openClassInvitation(invitation.subjectId); showToast('error', 'Copying is unavailable. Select and copy the invitation link in the dialog.') }
+}
+const removeClassInvitation = async invitation => {
+  if (!invitation?.id || removingInvitationId.value || !window.confirm('Remove this class invitation link? The link will be revoked immediately. Registered students will not be removed.')) return
+  removingInvitationId.value = String(invitation.id)
+  try {
+    await axios.delete(`${resolveApiBaseUrl()}/teacher/class-invitations/${encodeURIComponent(invitation.id)}`, getAuthConfig())
+    classInvitations.value = classInvitations.value.map(item => String(item.id) === String(invitation.id) ? { ...item, status: 'revoked' } : item)
+    if (selectedInvitationId.value === String(invitation.id)) isClassInvitationModalOpen.value = false
+    showToast('success', 'Class invitation link removed and revoked. Registered students are unchanged.')
+  } catch (error) {
+    showToast('error', error.response?.data?.message || 'Unable to remove the class invitation link.')
+  } finally { removingInvitationId.value = '' }
 }
 
 const focusEnrollmentRequest = async () => {
@@ -2357,6 +2370,9 @@ onBeforeUnmount(() => {
 .class-invitation-tools button:active:not(:disabled) { @apply tw:[background:#e8f3e1]; }
 .class-invitation-tools button:disabled { @apply tw:opacity-50 tw:cursor-not-allowed; }
 .class-invitation-tools button:focus-visible { @apply tw:[outline:2px_solid_#87b765] tw:[outline-offset:2px]; }
+.class-invitation-tools .class-invitation-remove { @apply tw:[color:#a13c34] tw:[border-color:#efd0cc]; }
+.class-invitation-tools .class-invitation-remove i { @apply tw:[color:#b34a40]; }
+.class-invitation-tools .class-invitation-remove:hover:not(:disabled) { @apply tw:[background:#fff3f1] tw:[border-color:#e4aaa3]; }
 .invitation-expired-copy { @apply tw:[color:#a3482d]; }
 .invitation-queue-summary { @apply tw:grid tw:[gap:.3rem] tw:[margin-top:.8rem] tw:[padding:.7rem] tw:[border-top:1px_solid_#e0ead9] tw:[font-size:.74rem] tw:[color:#567048]; }
 .invitation-queue-summary strong { @apply tw:[color:#365a24]; }

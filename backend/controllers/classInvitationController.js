@@ -23,6 +23,8 @@ const preview = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Roster p
 const create = asyncHandler(async (req, res) => sendSuccess(res, 201, 'Student invitations created.', { invitation: await service.createInvitation(req.user._id, req.body) }));
 const renew = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Invitation renewed. Unregistered students can use the link again.',
   { invitation: await service.renewInvitation(req.user._id, req.params.id, req.body.expiresInDays) }));
+const revoke = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Invitation link removed and revoked. Registered students are unchanged.',
+  { invitation: await service.revokeInvitation(req.user._id, req.params.id) }));
 const list = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Student invitations loaded.', { invitations: await service.listInvitations(req.user._id) }));
 const details = asyncHandler(async (req, res) => sendSuccess(res, 200, 'Invitation available.', { invitation: await service.publicInvitation(req.params.token) }));
 const verify = asyncHandler(async (req, res) => {
@@ -34,4 +36,4 @@ const register = asyncHandler(async (req, res) => {
   await service.registerStudent(req.params.token, req.body);
   return sendSuccess(res, 201, 'Registration complete. You can now sign in to EduMatch.', { registered: true });
 });
-module.exports = { rosterUpload, advisory, preview, create, renew, list, details, verify, username, register };
+module.exports = { rosterUpload, advisory, preview, create, renew, revoke, list, details, verify, username, register };

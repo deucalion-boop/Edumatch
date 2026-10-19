@@ -17,6 +17,7 @@ teacher.get('/advisory', controller.advisory);
 teacher.post('/preview', uploadLimiter, controller.rosterUpload, controller.preview);
 teacher.post('/', writeLimiter, controller.create);
 teacher.post('/:id/renew', writeLimiter, controller.renew);
+teacher.delete('/:id', writeLimiter, controller.revoke);
 publicRoutes.use((_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 publicRoutes.get('/:token', readLimiter, controller.details);
 publicRoutes.post('/:token/verify', registrationLimiter, controller.verify);

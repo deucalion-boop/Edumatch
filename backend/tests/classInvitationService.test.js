@@ -272,6 +272,21 @@ test('registered students, expired invitations, unavailable teachers/classes and
   assert.equal(client.writes.length, 0);
 });
 
+test('removing a class invitation revokes only its link and preserves registered students', async () => {
+  fixture();
+  client.tables.class_registration_students[0].registered_at = new Date().toISOString();
+  client.tables.class_registration_students[0].student_id = 'registered-student-id';
+  const result = await service.revokeInvitation(teacherId, invitationId);
+  assert.deepEqual(result, { id: invitationId, status: 'revoked' });
+  assert.equal(client.tables.class_invitations[0].status, 'revoked');
+  assert.ok(client.tables.class_invitations[0].revoked_at);
+  assert.equal(client.tables.class_registration_students.length, 1);
+  assert.equal(client.tables.class_registration_students[0].student_id, 'registered-student-id');
+  await service.revokeInvitation(teacherId, invitationId);
+  assert.equal(client.writes.filter(write => write.table === 'class_invitations').length, 1);
+  await rejects(service.revokeInvitation('another-teacher', invitationId), 403, /unavailable for this teacher account/i);
+});
+
 test('create payloads cannot bypass required name parts, duplicates, ownership or expiry', async () => {
   fixture();
   await rejects(service.createInvitation(teacherId, { records: [{ firstName: 'Juan', lastName: 'dela Cruz', fullName: 'Other Student', status: 'valid', errors: [] }] }), 400, /invalid or duplicate/);
