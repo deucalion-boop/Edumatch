@@ -25,7 +25,7 @@
       </section>
 
       <section class="registry-panel" aria-labelledby="registry-directory-title">
-        <div class="registry-section-heading"><div><span class="registry-eyebrow">Department student registry</span><h2 id="registry-directory-title">Student directory</h2><p>Only students and teacher classes under your department appear here. Pending students join their assigned classes after registration.</p></div></div>
+        <div class="registry-section-heading"><div><span class="registry-eyebrow">Department student registry</span><h2 id="registry-directory-title">Student directory</h2><p>Only students and teacher classes under your department appear here. Pending students join their assigned classes after registration.</p></div><div class="registry-button-row"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="downloadWorkbook('template')"><i class="fas fa-file-arrow-down" aria-hidden="true"></i>Excel Template</button><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="downloadWorkbook('export')"><i class="fas fa-file-excel" aria-hidden="true"></i>Export</button><button type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || !classes.length" :title="classes.length ? 'Import students from Excel' : 'An active teacher class is required first'" @click="openDialog('import')"><i class="fas fa-file-import" aria-hidden="true"></i>Import Students</button></div></div>
         <div class="registry-toolbar">
           <label class="registry-field registry-search" for="registry-search"><span>Search students</span><input id="registry-search" v-model="filters.search" type="search" placeholder="Search name, username or email"></label>
           <label class="registry-field" for="registry-status"><span>Registration status</span><select id="registry-status" v-model="filters.status"><option value="">All statuses</option><option value="pending">Pending</option><option value="registered">Registered</option><option value="expired">Expired code</option><option value="revoked">Revoked code</option></select></label>
@@ -42,11 +42,24 @@
         <nav v-if="students.length > pageSize" class="registry-pagination" aria-label="Student registry pages"><span>Page {{ currentPage }} of {{ totalPages }}</span><div class="registry-button-row"><button type="button" class="registry-button registry-secondary" :disabled="currentPage === 1" @click="currentPage--">Previous</button><button type="button" class="registry-button registry-secondary" :disabled="currentPage >= totalPages" @click="currentPage++">Next</button></div></nav>
       </section>
 
-      <Teleport to="body"><dialog ref="dialog" class="registry-dialog" :class="{ 'registry-dialog-wide': dialogMode === 'assign' }" aria-labelledby="registry-dialog-title" aria-describedby="registry-dialog-description" @cancel.prevent>
+      <Teleport to="body"><dialog ref="dialog" class="registry-dialog" :class="{ 'registry-dialog-wide': ['assign', 'import'].includes(dialogMode) }" aria-labelledby="registry-dialog-title" aria-describedby="registry-dialog-description" @cancel.prevent>
         <div class="registry-dialog-content"><header class="registry-section-heading"><div><span class="registry-eyebrow">Student management</span><h2 id="registry-dialog-title">{{ dialogTitle }}</h2></div><button type="button" class="registry-icon-button" aria-label="Close student management dialog" :disabled="Boolean(busy)" @click="closeDialog"><i class="fas fa-xmark" aria-hidden="true"></i></button></header><p id="registry-dialog-description" class="registry-dialog-description">{{ dialogDescription }}</p>
           <p v-if="dialogError" class="registry-notice is-error" role="alert">{{ dialogError }}</p>
 
-          <template v-if="dialogMode === 'assign'">
+          <template v-if="dialogMode === 'import'">
+            <div class="registry-upload">
+              <label class="registry-field" for="registry-import-class"><span>Teacher class</span><select id="registry-import-class" v-model="importSubjectId" :disabled="Boolean(busy)"><option value="" disabled>Select the class these students will join</option><option v-for="teacherClass in classes" :key="teacherClass.id" :value="teacherClass.id">{{ teacherClass.teacherName }} — {{ teacherClass.className || teacherClass.name }}</option></select></label>
+              <label class="registry-field" for="registry-import-file"><span>Excel class list (.xlsx)</span><input id="registry-import-file" ref="fileInput" type="file" accept=".xlsx" :disabled="Boolean(busy)" @change="selectFile"><small>Use only First Name and Last Name columns. Maximum 1,000 students and 2 MB.</small></label>
+              <button type="button" class="registry-button registry-secondary" :disabled="!importFile || busy === 'preview'" @click="previewImport">{{ busy === 'preview' ? 'Checking spreadsheet…' : 'Preview Students' }}</button>
+            </div>
+            <div v-if="previewRecords.length" class="registry-preview">
+              <div class="registry-preview-summary"><span><strong>{{ validPreviewRecords.length }}</strong> ready</span><span><strong>{{ invalidPreviewRecords.length }}</strong> need correction</span><span><strong>{{ possibleDuplicates }}</strong> possible duplicates</span></div>
+              <div class="registry-preview-table registry-table-wrap"><table class="registry-table"><thead><tr><th>Row</th><th>First Name</th><th>Last Name</th><th>Review</th></tr></thead><tbody><tr v-for="record in previewRecords" :key="record.rowNumber"><td>{{ record.rowNumber }}</td><td>{{ record.firstName || 'Missing' }}</td><td>{{ record.lastName || 'Missing' }}</td><td><span v-if="record.status === 'valid' && !record.warnings?.length" class="registry-status status-registered">Ready</span><ul v-if="record.errors?.length || record.warnings?.length" class="registry-preview-messages"><li v-for="message in [...(record.errors || []), ...(record.warnings || [])]" :key="message">{{ message }}</li></ul></td></tr></tbody></table></div>
+              <label v-if="possibleDuplicates" class="registry-check-label"><input v-model="allowPossibleDuplicates" type="checkbox"><span>I reviewed the similar names and confirm that the ready rows are different students.</span></label>
+              <p v-if="invalidPreviewRecords.length" class="registry-help">Correct invalid rows in the spreadsheet and preview it again before importing.</p>
+            </div>
+          </template>
+          <template v-else-if="dialogMode === 'assign'">
             <p class="registry-selection-summary">{{ selectedIds.length }} {{ selectedIds.length === 1 ? 'student' : 'students' }} selected. Choose every class they should belong to.</p>
             <label class="registry-field" for="registry-class-search"><span>Find teacher classes</span><input id="registry-class-search" v-model="classSearch" type="search" placeholder="Search teacher, class or subject"></label>
             <div class="registry-class-options"><label v-for="teacherClass in filteredClasses" :key="teacherClass.id" class="registry-class-option"><input v-model="assignmentClassIds" type="checkbox" :value="teacherClass.id"><span><strong>{{ teacherClass.className || teacherClass.name }}</strong><small>{{ teacherClass.teacherName }}<template v-if="teacherClass.className && teacherClass.name"> · {{ teacherClass.name }}</template></small></span></label><p v-if="!filteredClasses.length" class="registry-help">No active teacher classes match. Teachers need an active class before students can be assigned.</p></div>
@@ -54,7 +67,7 @@
             <label v-if="requiresAssignmentConfirmation" class="registry-check-label"><input v-model="assignmentConfirmed" type="checkbox"><span>Assign the selected classes to every selected unassigned student.</span></label>
           </template>
           <div v-else-if="selectedStudent" class="registry-student-context"><strong>{{ studentName(selectedStudent) }}</strong><span>{{ statusLabel(selectedStudent.status) }}</span></div>
-          <footer class="registry-dialog-footer"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="closeDialog">Cancel</button><button v-if="dialogMode === 'assign'" type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || !assignmentClassIds.length || (requiresAssignmentConfirmation && !assignmentConfirmed)" @click="saveAssignments">{{ busy === 'assign' ? 'Saving…' : 'Save Class Assignments' }}</button><button v-else type="button" class="registry-button" :class="['revoke', 'link'].includes(dialogMode) ? 'registry-danger' : 'registry-primary'" :disabled="Boolean(busy)" @click="confirmAction">{{ busy ? 'Saving…' : dialogMode === 'revoke' ? 'Revoke Code' : dialogMode === 'code' ? 'Issue New Code' : 'Replace Shared Link' }}</button></footer>
+          <footer class="registry-dialog-footer"><button type="button" class="registry-button registry-secondary" :disabled="Boolean(busy)" @click="closeDialog">Cancel</button><button v-if="dialogMode === 'import'" type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || !importSubjectId || !validPreviewRecords.length || invalidPreviewRecords.length || (possibleDuplicates && !allowPossibleDuplicates)" @click="commitImport">{{ busy === 'import' ? 'Importing…' : `Import ${validPreviewRecords.length} Students` }}</button><button v-else-if="dialogMode === 'assign'" type="button" class="registry-button registry-primary" :disabled="Boolean(busy) || !assignmentClassIds.length || (requiresAssignmentConfirmation && !assignmentConfirmed)" @click="saveAssignments">{{ busy === 'assign' ? 'Saving…' : 'Save Class Assignments' }}</button><button v-else type="button" class="registry-button" :class="['revoke', 'link'].includes(dialogMode) ? 'registry-danger' : 'registry-primary'" :disabled="Boolean(busy)" @click="confirmAction">{{ busy ? 'Saving…' : dialogMode === 'revoke' ? 'Revoke Code' : dialogMode === 'code' ? 'Issue New Code' : 'Replace Shared Link' }}</button></footer>
         </div>
       </dialog></Teleport>
       <DashboardFooter />
@@ -104,6 +117,14 @@ const selectedStudent = ref(null)
 const classSearch = ref('')
 const assignmentClassIds = ref([])
 const assignmentConfirmed = ref(false)
+const fileInput = ref(null)
+const importFile = ref(null)
+const importSubjectId = ref('')
+const previewRecords = ref([])
+const allowPossibleDuplicates = ref(false)
+const validPreviewRecords = computed(() => previewRecords.value.filter(record => record.status === 'valid' && !record.errors?.length))
+const invalidPreviewRecords = computed(() => previewRecords.value.filter(record => record.status !== 'valid' || record.errors?.length))
+const possibleDuplicates = computed(() => validPreviewRecords.value.filter(record => record.warnings?.length).length)
 const requiresAssignmentConfirmation = computed(() => selectedIds.value.length > 1)
 const filteredClasses = computed(() => {
   const search = classSearch.value.trim().toLocaleLowerCase()
@@ -111,8 +132,8 @@ const filteredClasses = computed(() => {
 })
 const now = ref(Date.now())
 const linkExpired = computed(() => Date.parse(registrationLink.value?.expiresAt || '') <= now.value)
-const dialogTitle = computed(() => ({ assign: 'Assign teacher classes', revoke: 'Revoke registration code?', code: 'Issue a new registration code?', link: 'Replace shared school link?' })[dialogMode.value])
-const dialogDescription = computed(() => ({ assign: 'Choose classes handled by teachers in your department. Only unassigned students can be assigned here. Existing class assignments cannot be replaced.', revoke: 'This unused code will stop working. You can issue a new code later if the student still needs to register.', code: 'The student receives a fresh code that expires in 30 days. Their previous code will stop working.', link: 'All students will need the new shared school link. Existing unused student codes remain separate; share the replacement link with your school.' })[dialogMode.value])
+const dialogTitle = computed(() => ({ import: 'Import students from Excel', assign: 'Assign teacher classes', revoke: 'Revoke registration code?', code: 'Issue a new registration code?', link: 'Replace shared school link?' })[dialogMode.value])
+const dialogDescription = computed(() => ({ import: 'Upload the same two-column Excel class list used by teachers, review every row, then add the students to one active teacher class.', assign: 'Choose classes handled by teachers in your department. Only unassigned students can be assigned here. Existing class assignments cannot be replaced.', revoke: 'This unused code will stop working. You can issue a new code later if the student still needs to register.', code: 'The student receives a fresh code that expires in 30 days. Their previous code will stop working.', link: 'All students will need the new shared school link. Existing unused student codes remain separate; share the replacement link with your school.' })[dialogMode.value])
 let controller
 let loadVersion = 0
 let filterTimer
@@ -168,7 +189,13 @@ async function openDialog(mode, student = null) {
   dialogMode.value = mode
   selectedStudent.value = student
   dialogError.value = ''
-  if (mode === 'assign') {
+  if (mode === 'import') {
+    importFile.value = null
+    importSubjectId.value = classes.value.length === 1 ? classes.value[0].id : ''
+    previewRecords.value = []
+    allowPossibleDuplicates.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  } else if (mode === 'assign') {
     if (!selectedIds.value.length || students.value.some(student => selectedIds.value.includes(student.id) && !canAssignClasses(student))) return
     classSearch.value = ''
     assignmentConfirmed.value = false
@@ -179,6 +206,52 @@ async function openDialog(mode, student = null) {
   dialog.value?.showModal()
 }
 function closeDialog() { if (!busy.value) dialog.value?.close() }
+function selectFile(event) {
+  dialogError.value = ''
+  previewRecords.value = []
+  allowPossibleDuplicates.value = false
+  const selected = event.target.files?.[0]
+  importFile.value = null
+  if (!selected) return
+  if (!/\.xlsx$/i.test(selected.name)) { dialogError.value = 'Choose an Excel workbook ending in .xlsx.'; event.target.value = ''; return }
+  if (!selected.size) { dialogError.value = 'The Excel file is empty.'; event.target.value = ''; return }
+  if (selected.size > 2 * 1024 * 1024) { dialogError.value = 'The Excel file must be 2 MB or smaller.'; event.target.value = ''; return }
+  importFile.value = selected
+}
+async function previewImport() {
+  if (busy.value || !importFile.value) return
+  busy.value = 'preview'; dialogError.value = ''; previewRecords.value = []; allowPossibleDuplicates.value = false
+  try {
+    const payload = new FormData(); payload.append('file', importFile.value)
+    const response = await axios.post(`${endpoint}/preview`, payload, authConfig())
+    previewRecords.value = Array.isArray(response.data?.records) ? response.data.records : []
+    if (!previewRecords.value.length) dialogError.value = 'No student rows were found in this workbook.'
+  } catch (error) { dialogError.value = await errorMessage(error, 'Unable to read this spreadsheet. Check the file and try again.') }
+  finally { busy.value = '' }
+}
+async function commitImport() {
+  if (busy.value || !importSubjectId.value || !validPreviewRecords.value.length || invalidPreviewRecords.value.length || (possibleDuplicates.value && !allowPossibleDuplicates.value)) return
+  busy.value = 'import'; dialogError.value = ''
+  try {
+    const response = await axios.post(`${endpoint}/import`, { subjectId: importSubjectId.value, records: validPreviewRecords.value.map(({ firstName, lastName }) => ({ firstName, lastName })), allowPossibleDuplicates: allowPossibleDuplicates.value }, authConfig())
+    notice.type = 'success'; notice.message = response.data?.message || `${validPreviewRecords.value.length} students imported successfully.`
+    dialog.value?.close(); await loadRegistry({ force: true })
+  } catch (error) { dialogError.value = await errorMessage(error, 'Unable to import these students. Review the spreadsheet and try again.') }
+  finally { busy.value = '' }
+}
+async function downloadWorkbook(type) {
+  if (busy.value) return
+  busy.value = `download-${type}`
+  try {
+    const response = await axios.get(`${endpoint}/${type}`, { ...authConfig(), params: type === 'export' ? queryParams() : {}, responseType: 'blob' })
+    const url = URL.createObjectURL(response.data)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = type === 'template' ? 'student-import-template.xlsx' : 'edumatch-student-registry.xlsx'
+    document.body.appendChild(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url)
+  } catch (error) { notice.type = 'error'; notice.message = await errorMessage(error, `Unable to download the ${type === 'template' ? 'Excel template' : 'student registry'}.`) }
+  finally { busy.value = '' }
+}
 function closeOnBackdrop(event) {
   if (event.target !== dialog.value) return
   const bounds = dialog.value.getBoundingClientRect()

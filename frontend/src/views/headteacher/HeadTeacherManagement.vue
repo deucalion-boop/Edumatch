@@ -662,6 +662,17 @@
             </button>
           </div>
 
+          <div class="headteacher-student-import-choice">
+            <div>
+              <strong>Upload an Excel class list</strong>
+              <p>Import First Name and Last Name columns, preview the students, and assign them to a teacher class.</p>
+            </div>
+            <button type="button" class="headteacher-button headteacher-button-primary" @click="openStudentExcelImport">
+              <i class="fas fa-file-excel"></i>
+              Import Excel
+            </button>
+          </div>
+
           <StudentPrivateRegistration :api-base-url="resolveApiBaseUrl()" :auth-token="authStore.token || ''" is-head-teacher :teacher-id="studentForm.teacherId" hide-heading />
         </div>
       </div>
@@ -1160,6 +1171,11 @@ const openStudentCreateModal = (teacher = null) => {
   isStudentCreateModalOpen.value = true
 }
 
+const openStudentExcelImport = () => {
+  closeStudentCreateModal()
+  router.push('/headteacher/students')
+}
+
 const closeStudentCreateModal = () => {
   isStudentCreateModalOpen.value = false
   resetStudentForm()
@@ -1477,6 +1493,26 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.headteacher-student-import-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid #cfe0c5;
+  border-radius: 12px;
+  background: #f4f9f0;
+  color: #31551e;
+}
+.headteacher-student-import-choice > div { min-width: 0; }
+.headteacher-student-import-choice strong { display: block; margin-bottom: .25rem; }
+.headteacher-student-import-choice p { margin: 0; color: #64748b; font-size: .8rem; line-height: 1.5; }
+.headteacher-student-import-choice .headteacher-button { flex: 0 0 auto; }
+@media (max-width: 600px) {
+  .headteacher-student-import-choice { align-items: stretch; flex-direction: column; }
+  .headteacher-student-import-choice .headteacher-button { width: 100%; }
+}
 .headteacher-main > .headteacher-top-header { margin-bottom: 1.5rem !important; }
 .teacher-registration-panel {
   margin-bottom: 1.5rem;
