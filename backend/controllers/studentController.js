@@ -7,7 +7,7 @@ const { sendSuccess } = require('../utils/responseHelper');
 const { computeMasteryFromSubmissions } = require('../utils/studentProgress');
 const { computeAcademicProgress } = require('../services/supabaseAcademicProgressService');
 const { uploadFile } = require('../services/storageService');
-const { resolveStoredFileUrl, downloadOrRedirectStoredFile } = require('../utils/fileStorage');
+const { resolveStoredFileUrl, viewStoredFile } = require('../utils/fileStorage');
 const { findSectionById, normalizeSectionId } = require('../services/sectionService');
 const { findSupabaseAccount, listSupabaseAccounts } = require('../services/supabaseAccountService');
 const { listSupabaseAssessments, listSupabaseLessons, findSupabaseLesson } = require('../services/supabaseContentService');
@@ -296,10 +296,8 @@ function toAttachmentResponse(attachment, lessonId, req) {
     extension: String(attachment?.extension || '').trim().toLowerCase(),
     size: Number(attachment?.size || 0),
     uploadedAt: attachment?.uploadedAt || null,
-    url: resolveStoredFileUrl(req, attachment?.storedPath, {
-      fileName: attachment?.originalName || '',
-    }),
-    downloadUrl: `${host}/api/student/lessons/${lessonId}/attachments/${attachmentId}/download`,
+    url: `${host}/api/student/lessons/${lessonId}/attachments/${attachmentId}/view`,
+    downloadUrl: '',
     canPreviewInline: String(attachment?.mimeType || '').toLowerCase().startsWith('image/')
       || isPdfLikeAttachment(attachment),
   };
@@ -704,11 +702,9 @@ const getStudentLessons = asyncHandler(async (req, res) => {
         }
         : null,
       pdfOriginalName: primaryAttachment?.originalName || lesson.pdfOriginalName,
-      pdfPath: resolveStoredFileUrl(req, primaryAttachment?.storedPath || lesson.pdfPath, {
-        fileName: primaryAttachment?.originalName || lesson.pdfOriginalName || '',
-      }),
+      pdfPath: `${host}/api/student/lessons/${lesson._id}/view`,
       attachments: attachments.map((attachment) => toAttachmentResponse(attachment, lesson._id, req)),
-      downloadUrl: `${host}/api/student/lessons/${lesson._id}/download`,
+      downloadUrl: '',
       postedAt: lesson.createdAt,
       createdAt: lesson.createdAt,
       progress: progressByLessonId.get(String(lesson._id)) || {
@@ -750,7 +746,7 @@ const getStudentTeachers = asyncHandler(async (_req, res) => {
   });
 });
 
-const downloadStudentLessonPdf = asyncHandler(async (req, res) => {
+const viewStudentLessonPdf = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
   const lesson = await findSupabaseLesson(req.params.id);
 
@@ -766,27 +762,26 @@ const downloadStudentLessonPdf = asyncHandler(async (req, res) => {
     status: 'approved',
   });
   if (!enrollment) {
-    const error = new Error('You must be enrolled in this subject before downloading lessons');
+    const error = new Error('You must be enrolled in this subject before viewing lessons');
     error.statusCode = 403;
     throw error;
   }
 
   const primaryAttachment = resolvePrimaryLessonAttachment(lesson);
   if (!primaryAttachment) {
-    const error = new Error('Lesson has no downloadable files');
+    const error = new Error('Lesson has no viewable files');
     error.statusCode = 404;
     throw error;
   }
 
-  return downloadOrRedirectStoredFile(
-    req,
+  return viewStoredFile(
     res,
     primaryAttachment.storedPath || lesson.pdfPath,
     primaryAttachment.originalName || lesson.pdfOriginalName
   );
 });
 
-const downloadStudentLessonAttachment = asyncHandler(async (req, res) => {
+const viewStudentLessonAttachment = asyncHandler(async (req, res) => {
   assertGradeTenStudentAccess(req);
   const lesson = await findSupabaseLesson(req.params.id);
 
@@ -802,7 +797,7 @@ const downloadStudentLessonAttachment = asyncHandler(async (req, res) => {
     status: 'approved',
   });
   if (!enrollment) {
-    const error = new Error('You must be enrolled in this subject before downloading attachments');
+    const error = new Error('You must be enrolled in this subject before viewing attachments');
     error.statusCode = 403;
     throw error;
   }
@@ -815,7 +810,13 @@ const downloadStudentLessonAttachment = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  return downloadOrRedirectStoredFile(req, res, attachment.storedPath, attachment.originalName);
+  return viewStoredFile(res, attachment.storedPath, attachment.originalName);
+});
+
+const denyStudentLessonDownload = asyncHandler(async () => {
+  const error = new Error('Lesson downloads are disabled. Open this material in the EduMatch lesson reader.');
+  error.statusCode = 403;
+  throw error;
 });
 
 const getAvailableAssessments = asyncHandler(async (_req, res) => {
@@ -1819,8 +1820,9 @@ module.exports = {
   getStudentLessons,
   updateStudentLessonProgress,
   getStudentTeachers,
-  downloadStudentLessonPdf,
-  downloadStudentLessonAttachment,
+  viewStudentLessonPdf,
+  viewStudentLessonAttachment,
+  denyStudentLessonDownload,
   getAvailableAssessments,
   getAssessmentForExam,
   startAssessmentSession,

@@ -49,6 +49,8 @@ const {
   findSupabaseLesson,
   createSupabaseAssessment,
   listSupabaseAssessments,
+  findSupabaseAssessment,
+  updateSupabaseAssessment,
 } = require('../services/supabaseContentService');
 const { createAdminMessageNotification } = require('../services/notificationService');
 const {
@@ -63,6 +65,38 @@ const DEFAULT_LESSON_ANALYTICS_MONTHS = 3;
 const MIN_LESSON_ANALYTICS_MONTHS = 1;
 const MAX_LESSON_ANALYTICS_MONTHS = 12;
 const RECENT_TEACHER_CONTENT_DAYS = 30;
+const MANAGED_QUESTION_TYPES = new Set(['multiple-choice', 'true-false', 'short-answer', 'essay']);
+
+function normalizeManagedLessonIds(value, fallback = '') {
+  const ids = (Array.isArray(value) ? value : [])
+    .map((item) => String(item?._id || item?.id || item || '').trim()).filter(Boolean);
+  const fallbackId = String(fallback || '').trim();
+  if (fallbackId && !ids.includes(fallbackId)) ids.unshift(fallbackId);
+  return [...new Set(ids)];
+}
+
+function normalizeManagedQuestions(value) {
+  if (!Array.isArray(value) || value.length === 0) throw Object.assign(new Error('Add at least one assessment question'), { statusCode: 400 });
+  return value.map((question, index) => {
+    const type = String(question?.type || 'multiple-choice').trim().toLowerCase();
+    const questionText = String(question?.questionText || '').trim();
+    const options = Array.isArray(question?.options) ? question.options.map((item) => String(item || '').trim()).filter(Boolean) : [];
+    const correctAnswer = String(question?.correctAnswer || '').trim();
+    const points = Number(question?.points || 1);
+    const minWords = question?.minWords === null || question?.minWords === undefined || question?.minWords === '' ? null : Number(question.minWords);
+    const maxWords = question?.maxWords === null || question?.maxWords === undefined || question?.maxWords === '' ? null : Number(question.maxWords);
+    if (!questionText) throw Object.assign(new Error(`Question ${index + 1} requires a prompt`), { statusCode: 400 });
+    if (!MANAGED_QUESTION_TYPES.has(type)) throw Object.assign(new Error(`Question ${index + 1} has an unsupported type`), { statusCode: 400 });
+    if (!Number.isFinite(points) || points <= 0) throw Object.assign(new Error(`Question ${index + 1} points must be greater than zero`), { statusCode: 400 });
+    if (type === 'multiple-choice' && options.length < 2) throw Object.assign(new Error(`Question ${index + 1} requires at least two choices`), { statusCode: 400 });
+    if (type !== 'essay' && !correctAnswer) throw Object.assign(new Error(`Question ${index + 1} requires a correct answer`), { statusCode: 400 });
+    if (type === 'multiple-choice' && !options.includes(correctAnswer)) throw Object.assign(new Error(`Question ${index + 1} correct answer must match one of its choices`), { statusCode: 400 });
+    if (minWords !== null && (!Number.isFinite(minWords) || minWords < 0)) throw Object.assign(new Error(`Question ${index + 1} has an invalid minimum word count`), { statusCode: 400 });
+    if (maxWords !== null && (!Number.isFinite(maxWords) || maxWords < 1)) throw Object.assign(new Error(`Question ${index + 1} has an invalid maximum word count`), { statusCode: 400 });
+    if (minWords !== null && maxWords !== null && minWords > maxWords) throw Object.assign(new Error(`Question ${index + 1} minimum words cannot exceed maximum words`), { statusCode: 400 });
+    return { ...question, questionText, type, options, correctAnswer, points, minWords, maxWords };
+  });
+}
 
 function sanitizeAnalyticsMonthCount(value) {
   const parsed = Number.parseInt(value, 10);
@@ -272,6 +306,8 @@ function headTeacherAssessmentToResponse(assessment, teacher, submissionCountsBy
     questionsCount: Array.isArray(assessment?.questions) ? assessment.questions.length : 0,
     questions: Array.isArray(assessment?.questions) ? assessment.questions : [],
     lessonTitle: String(assessment?.lessonId?.title || '').trim(),
+    lessonIds: (assessment?.lessonIds || []).map((item) => String(item?._id || item?.id || item)),
+    lessonTitles: (assessment?.lessonIds || []).map((item) => String(item?.title || '')).filter(Boolean),
     lessonTrack: String(assessment?.lessonId?.track || '').trim(),
     submissionsCount: submissionCountsByAssessment.get(String(assessment?._id || '')) || 0,
     publishedBy: assessment?.publishedBy
@@ -841,6 +877,7 @@ const getManagedTeacherAssessments = asyncHandler(async (req, res) => {
   const assessments = allAssessments.filter((assessment) => teacherIds.has(String(assessment.createdBy)));
   assessments.forEach((assessment) => {
     if (assessment.lessonId) assessment.lessonId = lessonMap.get(String(assessment.lessonId)) || assessment.lessonId;
+    assessment.lessonIds = (assessment.lessonIds || []).map((id) => lessonMap.get(String(id)) || id);
   });
   const submissionCountsByAssessment = new Map();
 
@@ -862,6 +899,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
   const {
     teacherId,
     lessonId,
+    lessonIds: lessonIdsRaw,
     subjectId,
     title,
     examType,
@@ -880,7 +918,9 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     deadlineAt: deadlineAtRaw,
   } = req.body || {};
 
-  if (!teacherId || !lessonId || !subjectId || !title || !examType || !difficulty || !numberOfItems) {
+  const lessonIds = normalizeManagedLessonIds(lessonIdsRaw, lessonId);
+  const primaryLessonId = lessonIds[0] || '';
+  if (!teacherId || !primaryLessonId || !subjectId || !title || !examType || !difficulty || !numberOfItems) {
     const error = new Error('teacherId, lessonId, subjectId, title, examType, difficulty, and numberOfItems are required');
     error.statusCode = 400;
     throw error;
@@ -893,11 +933,15 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
-  const lesson = await findSupabaseLesson(lessonId, teacher._id);
-  if (!lesson) {
+  const selectedLessons = await Promise.all(lessonIds.map((id) => findSupabaseLesson(id, teacher._id)));
+  const lesson = selectedLessons[0] || null;
+  if (selectedLessons.some((item) => !item)) {
     const error = new Error('Lesson not found for the selected teacher');
     error.statusCode = 404;
     throw error;
+  }
+  if (selectedLessons.some((item) => String(item.subjectId || '') !== String(lesson.subjectId || ''))) {
+    throw Object.assign(new Error('All selected lessons must belong to the same class and subject'), { statusCode: 400 });
   }
 
   const normalizedTitle = String(title || '').trim();
@@ -917,7 +961,7 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
 
   const existingAssessments = await listSupabaseAssessments(teacher._id);
   const duplicateAssessment = existingAssessments.find((item) => (
-    String(item.lessonId || '') === String(lessonId)
+    String(item.lessonId || '') === String(primaryLessonId)
     && String(item.title || '').trim().toLowerCase() === normalizedTitle.toLowerCase()
     && String(item.examType || '') === String(examType)
   ));
@@ -963,7 +1007,8 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     .filter(Boolean);
 
   const assessment = await createSupabaseAssessment({
-    lessonId,
+    lessonId: primaryLessonId,
+    lessonIds,
     title: normalizedTitle,
     examType,
     subject: normalizedSubject,
@@ -985,13 +1030,13 @@ const createManagedTeacherAssessment = asyncHandler(async (req, res) => {
     countsTowardRecommendation: assessmentPolicy.countsTowardRecommendation,
     assignmentScope: 'handled_class',
     assignedStudentIds,
-    questions: Array.isArray(questions) ? questions : [],
+    questions: normalizeManagedQuestions(questions),
     createdBy: teacher._id,
     publishedBy: req.user._id,
     lastModifiedBy: req.user._id,
   });
 
-  const hydratedAssessment = { ...assessment, lessonId: lesson };
+  const hydratedAssessment = { ...assessment, lessonId: lesson, lessonIds: selectedLessons };
 
   return sendSuccess(res, 201, 'Assessment created successfully', {
     assessment: headTeacherAssessmentToResponse(hydratedAssessment, teacher),
@@ -1018,7 +1063,7 @@ const updateManagedTeacherAssessment = asyncHandler(async (req, res) => {
     deadlineAt: deadlineAtRaw,
   } = req.body || {};
 
-  const assessment = await Assessment.findById(id);
+  const assessment = await findSupabaseAssessment(id) || await Assessment.findById(id);
   if (!assessment) {
     const error = new Error('Assessment not found');
     error.statusCode = 404;
@@ -1026,7 +1071,7 @@ const updateManagedTeacherAssessment = asyncHandler(async (req, res) => {
   }
 
   const teacher = await findManagedTeacherForHeadTeacher(req, assessment.createdBy, { department });
-  const lesson = await Lesson.findById(assessment.lessonId).select('track').lean();
+  const lesson = await findSupabaseLesson(assessment.lessonId) || await Lesson.findById(assessment.lessonId).select('track').lean();
 
   if (questions !== undefined) {
     if (!Array.isArray(questions)) {
@@ -1034,7 +1079,7 @@ const updateManagedTeacherAssessment = asyncHandler(async (req, res) => {
       error.statusCode = 400;
       throw error;
     }
-    assessment.questions = questions;
+    assessment.questions = normalizeManagedQuestions(questions);
   }
 
   const nextPolicy = buildAssessmentPolicy({
@@ -1126,13 +1171,27 @@ const updateManagedTeacherAssessment = asyncHandler(async (req, res) => {
   assessment.lastModifiedBy = req.user._id;
   if (!assessment.publishedBy) assessment.publishedBy = req.user._id;
 
-  await assessment.save();
-
-  const hydratedAssessment = await Assessment.findById(assessment._id)
-    .populate('lessonId', 'title track subject subjectId subjectCode')
-    .populate('publishedBy', 'name role')
-    .populate('lastModifiedBy', 'name role')
-    .lean();
+  let hydratedAssessment;
+  if (typeof assessment.save === 'function') {
+    await assessment.save();
+    hydratedAssessment = await Assessment.findById(assessment._id)
+      .populate('lessonId', 'title track subject subjectId subjectCode')
+      .populate('publishedBy', 'name role')
+      .populate('lastModifiedBy', 'name role')
+      .lean();
+  } else {
+    const requestedLessonIds = normalizeManagedLessonIds(req.body?.lessonIds, req.body?.lessonId || assessment.lessonId);
+    const managedLessons = await Promise.all(requestedLessonIds.map((lessonIdValue) => findSupabaseLesson(lessonIdValue, teacher._id)));
+    if (managedLessons.some((item) => !item)) throw Object.assign(new Error('One or more selected lessons were not found for the selected teacher'), { statusCode: 404 });
+    const updated = await updateSupabaseAssessment(assessment._id, teacher._id, {
+      ...assessment,
+      lessonId: requestedLessonIds[0],
+      lessonIds: requestedLessonIds,
+      publishedBy: assessment.publishedBy || req.user._id,
+      lastModifiedBy: req.user._id,
+    });
+    hydratedAssessment = { ...updated, lessonId: managedLessons[0], lessonIds: managedLessons };
+  }
 
   return sendSuccess(res, 200, 'Assessment updated successfully', {
     assessment: headTeacherAssessmentToResponse(hydratedAssessment, teacher),

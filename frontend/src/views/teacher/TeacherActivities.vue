@@ -729,16 +729,23 @@
                 </div>
 
                 <div v-if="!isActivityAssessment" class="form-group full">
-                  <label>Generated Questions</label>
+                  <label>Assessment Creation Method</label>
+                  <div class="assessment-method-options">
+                    <button type="button" :class="{ active: assessmentCreationMode === 'ai' }" @click="assessmentCreationMode = 'ai'"><i class="fas fa-wand-magic-sparkles"></i><span><strong>Generate Assessment Using AI</strong><small>Build questions from the selected lessons.</small></span></button>
+                    <button type="button" :class="{ active: assessmentCreationMode === 'manual' }" @click="startManualAssessment"><i class="fas fa-pen-to-square"></i><span><strong>Create Assessment Manually</strong><small>Write and configure every question yourself.</small></span></button>
+                  </div>
+                </div>
+
+                <div v-if="!isActivityAssessment" class="form-group full">
+                  <div class="draft-section-heading"><label>{{ assessmentCreationMode === 'manual' ? 'Manual Questions' : 'Generated Questions' }}</label><button v-if="assessmentCreationMode === 'manual'" type="button" class="btn btn-outline btn-sm" @click="addManualQuestion"><i class="fas fa-plus"></i> Add Question</button></div>
 
                   <div v-if="generatedQuestions.length === 0 || !isGeneratedPreviewVisible" class="draft-empty-state">
                     <div class="draft-empty-icon">
                       <i class="fas fa-wand-magic-sparkles"></i>
                     </div>
                     <article class="draft-item draft-item-empty">
-                      <h4>No generated questions yet</h4>
-                      <p class="draft-empty-message">Complete the setup above, then click Generate with AI. You can still edit every question before publishing.</p>
-                      <span>Click “Generate with AI” to create draft questions.</span>
+                      <h4>No questions yet</h4>
+                      <p class="draft-empty-message">{{ assessmentCreationMode === 'manual' ? 'Click Add Question to begin building the assessment.' : 'Complete the setup above, then generate an AI draft. You can edit every question before publishing.' }}</p>
                     </article>
                   </div>
 
@@ -774,7 +781,7 @@
                       </section>
 
                       <article v-for="(q, idx) in generatedQuestions" :key="idx" class="draft-item">
-                        <h4>Question {{ idx + 1 }}</h4>
+                        <div class="draft-question-heading"><h4>Question {{ idx + 1 }}</h4><button type="button" class="draft-delete-question" :aria-label="`Delete question ${idx + 1}`" @click="removeDraftQuestion(idx)"><i class="fas fa-trash"></i> Delete</button></div>
 
                         <div class="draft-question-meta">
                           <div class="form-group">
@@ -812,7 +819,7 @@
                           />
                         </div>
 
-                        <div v-if="showCorrectAnswers && q.type !== 'essay'" class="form-group full answer-highlight">
+                        <div v-if="(showCorrectAnswers || assessmentCreationMode === 'manual') && q.type !== 'essay'" class="form-group full answer-highlight">
                           <label>Correct Answer</label>
                           <input v-model.trim="q.answer" type="text" required />
                         </div>
@@ -858,7 +865,7 @@
                 <span v-else class="wizard-action-spacer" aria-hidden="true"></span>
                 <button v-if="challengeCurrentStep < 4" class="btn btn-primary" type="button" :disabled="!challengeCanContinue" :aria-disabled="!challengeCanContinue" @click="goToNextChallengeStep">Next <i class="fas fa-arrow-right"></i></button>
                 <button
-                  v-if="challengeCurrentStep === 4 && !isActivityAssessment"
+                  v-if="challengeCurrentStep === 4 && !isActivityAssessment && assessmentCreationMode === 'ai'"
                   class="btn btn-outline"
                   type="button"
                   id="generateAssessmentBtn"
@@ -1621,6 +1628,7 @@ function getAssessmentSaveMessage(response, fallback) {
 }
 
 const generatedQuestions = ref([]); // [{prompt, answer, options?:[]}]
+const assessmentCreationMode = ref("ai");
 const TOS_LEARNING_AREAS = ["Language and Communication", "Mathematics and Quantitative Reasoning", "Science and Scientific Reasoning", "Social Science and Humanities", "Business and Entrepreneurship", "Technology and Practical/Vocational Reasoning"];
 const TOS_COGNITIVE_LEVELS = ["Remembering", "Understanding", "Applying", "Analyzing", "Evaluating", "Creating"];
 const tosRows = computed(() => {
@@ -1824,6 +1832,7 @@ function resetAssessmentBuilder() {
   challengeForm.challengeDescription = "";
   challengeForm.activityAttachments = [];
   generatedQuestions.value = [];
+  assessmentCreationMode.value = "ai";
   generatedDraftMeta.value = null;
   isGeneratedPreviewVisible.value = false;
   showCorrectAnswers.value = false;
@@ -1995,25 +2004,26 @@ const toggleViewCorrectAnswers = () => {
 
 async function finalizeGeneratedAssessment() {
   try {
-    if (!generatedDraftMeta.value || generatedQuestions.value.length === 0) {
-      throw new Error("No generated assessment draft to save.");
+    if (generatedQuestions.value.length === 0) {
+      throw new Error("Add at least one assessment question before saving.");
     }
 
     isSavingGeneratedAssessment.value = true;
     flash.value = null;
 
+    const draftMeta = generatedDraftMeta.value || {};
     const createPayload = {
-      title: generatedDraftMeta.value.title,
-      examType: generatedDraftMeta.value.examType,
-      subject: generatedDraftMeta.value.subject || challengeForm.subject,
-      subjectCategory: generatedDraftMeta.value.subjectCategory || '',
-      difficulty: generatedDraftMeta.value.difficulty,
-      assessmentMode: String(challengeForm.assessmentMode || generatedDraftMeta.value.assessmentMode || "activity").trim(),
-      gradingPeriod: String(challengeForm.gradingPeriod || generatedDraftMeta.value.gradingPeriod || "").trim(),
-      assignmentScope: String(generatedDraftMeta.value.assignmentScope || "handled_class").trim(),
-      numberOfItems: generatedDraftMeta.value.numberOfItems,
-      examDurationMinutes: generatedDraftMeta.value.examDurationMinutes,
-      submissionDeadline: generatedDraftMeta.value.submissionDeadline,
+      title: draftMeta.title || String(challengeForm.challengeTitle || '').trim(),
+      examType: draftMeta.examType || challengeForm.challengeExamType,
+      subject: draftMeta.subject || challengeForm.subject,
+      subjectCategory: draftMeta.subjectCategory || '',
+      difficulty: draftMeta.difficulty || challengeForm.challengeDifficulty,
+      assessmentMode: String(challengeForm.assessmentMode || draftMeta.assessmentMode || "activity").trim(),
+      gradingPeriod: String(challengeForm.gradingPeriod || draftMeta.gradingPeriod || "").trim(),
+      assignmentScope: String(draftMeta.assignmentScope || "handled_class").trim(),
+      numberOfItems: generatedQuestions.value.length,
+      examDurationMinutes: draftMeta.examDurationMinutes || Number(challengeForm.examDurationMinutes),
+      submissionDeadline: draftMeta.submissionDeadline || buildSubmissionDeadlineIso(challengeForm.deadlineDate, challengeForm.deadlineTime),
       challengeDescription: String(challengeForm.challengeDescription || "").trim(),
       questions: generatedQuestions.value.map((question, index) => ({
         questionText: String(question.prompt || "").trim() || `Question ${index + 1}`,
@@ -2032,14 +2042,14 @@ async function finalizeGeneratedAssessment() {
         maxWords: question.maxWords === '' ? null : (question.maxWords ?? null),
       })),
     };
-    if (generatedDraftMeta.value.lessonId) {
-      createPayload.lessonId = generatedDraftMeta.value.lessonId;
+    if (draftMeta.lessonId || challengeForm.linkedLesson) {
+      createPayload.lessonId = draftMeta.lessonId || challengeForm.linkedLesson;
     }
-    if (generatedDraftMeta.value.lessonIds?.length) {
-      createPayload.lessonIds = generatedDraftMeta.value.lessonIds;
+    if (draftMeta.lessonIds?.length || challengeForm.lessonIds.length) {
+      createPayload.lessonIds = draftMeta.lessonIds?.length ? draftMeta.lessonIds : challengeForm.lessonIds;
     }
-    if (generatedDraftMeta.value.subjectId) {
-      createPayload.subjectId = generatedDraftMeta.value.subjectId;
+    if (draftMeta.subjectId || challengeForm.subjectId) {
+      createPayload.subjectId = draftMeta.subjectId || challengeForm.subjectId;
     }
 
     const attachments = Array.isArray(challengeForm.activityAttachments) ? challengeForm.activityAttachments : [];
@@ -2196,6 +2206,29 @@ function onOptionsInput(index, textValue) {
 
   if (!generatedQuestions.value[index]) return;
   generatedQuestions.value[index].options = lines;
+}
+
+function createEmptyAssessmentQuestion() {
+  return { prompt: "", type: "multiple-choice", options: ["", "", "", ""], answer: "", points: 1, explanation: "", instructions: "", expectedAnswer: "", rubric: "", learningArea: "", competency: "", cognitiveLevel: "", minWords: null, maxWords: null };
+}
+
+function startManualAssessment() {
+  assessmentCreationMode.value = "manual";
+  isGeneratedPreviewVisible.value = true;
+  showCorrectAnswers.value = true;
+  if (generatedQuestions.value.length === 0) addManualQuestion();
+}
+
+function addManualQuestion() {
+  assessmentCreationMode.value = "manual";
+  generatedQuestions.value.push(createEmptyAssessmentQuestion());
+  challengeForm.challengeQuestionCount = generatedQuestions.value.length;
+  isGeneratedPreviewVisible.value = true;
+}
+
+function removeDraftQuestion(index) {
+  generatedQuestions.value.splice(index, 1);
+  challengeForm.challengeQuestionCount = Math.max(1, generatedQuestions.value.length);
 }
 
 /** Lesson options for select */
@@ -3976,6 +4009,25 @@ onBeforeUnmount(() => {
   @apply tw:p-3 tw:text-center;
 }
 
+.assessment-method-options {
+  @apply tw:grid tw:[grid-template-columns:repeat(2,minmax(0,1fr))] tw:gap-3;
+}
+
+.assessment-method-options button {
+  @apply tw:flex tw:items-center tw:gap-3 tw:p-4 tw:text-left tw:rounded-xl tw:[border:1px_solid_var(--border-color)] tw:bg-white tw:cursor-pointer;
+}
+
+.assessment-method-options button.active {
+  @apply tw:[border-color:var(--primary-color)] tw:[background:var(--primary-light)] tw:[box-shadow:0_0_0_2px_color-mix(in_srgb,var(--primary-color)_18%,transparent)];
+}
+
+.assessment-method-options button > i { @apply tw:[color:var(--primary-color)] tw:text-xl; }
+.assessment-method-options button span { @apply tw:flex tw:flex-col tw:gap-1; }
+.assessment-method-options button small { @apply tw:[color:var(--text-muted)]; }
+.draft-section-heading,
+.draft-question-heading { @apply tw:flex tw:items-center tw:justify-between tw:gap-3; }
+.draft-delete-question { @apply tw:border-0 tw:bg-transparent tw:[color:#b42318] tw:font-semibold tw:cursor-pointer; }
+
 @media (prefers-reduced-motion: reduce) {
   .wizard-progress-track span,
   .wizard-step-marker,
@@ -3987,6 +4039,7 @@ onBeforeUnmount(() => {
 
 /* Mobile layout */
 @media (max-width: 768px) {
+  .assessment-method-options { @apply tw:[grid-template-columns:1fr]; }
   .builder-main {
     @apply tw:[padding:0.45rem];
   }

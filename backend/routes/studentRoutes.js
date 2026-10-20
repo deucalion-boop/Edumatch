@@ -8,8 +8,9 @@ const {
   getStudentLessons,
   updateStudentLessonProgress,
   getStudentTeachers,
-  downloadStudentLessonPdf,
-  downloadStudentLessonAttachment,
+  viewStudentLessonPdf,
+  viewStudentLessonAttachment,
+  denyStudentLessonDownload,
   getAvailableAssessments,
   getAssessmentForExam,
   startAssessmentSession,
@@ -53,8 +54,10 @@ router.get('/attendance', getStudentAttendanceHistory);
 router.get('/lessons', getStudentLessons);
 router.patch('/lessons/:id/progress', updateStudentLessonProgress);
 router.get('/teachers', getStudentTeachers);
-router.get('/lessons/:id/download', downloadStudentLessonPdf);
-router.get('/lessons/:id/attachments/:attachmentId/download', downloadStudentLessonAttachment);
+router.get('/lessons/:id/view', viewStudentLessonPdf);
+router.get('/lessons/:id/attachments/:attachmentId/view', viewStudentLessonAttachment);
+router.get('/lessons/:id/download', denyStudentLessonDownload);
+router.get('/lessons/:id/attachments/:attachmentId/download', denyStudentLessonDownload);
 router.get('/assessments', getAvailableAssessments);
 router.get('/assessments/:id', getAssessmentForExam);
 router.post('/assessments/:id/start', startAssessmentSession);

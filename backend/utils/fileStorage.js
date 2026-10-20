@@ -199,6 +199,18 @@ async function downloadOrRedirectStoredFile(req, res, storedPath, downloadName =
   });
 }
 
+async function viewStoredFile(res, storedPath, fileName = '') {
+  const raw = normalizeStoredPath(storedPath);
+  const buffer = await readStoredFileBuffer(raw);
+  res.setHeader('X-EduMatch-View-Only', 'true');
+  res.setHeader('Permissions-Policy', 'clipboard-read=(), clipboard-write=()');
+  return sendStoredFileBuffer(res, buffer, {
+    download: false,
+    fileName: fileName || path.posix.basename(raw),
+    contentType: guessContentType(fileName || raw),
+  });
+}
+
 function guessContentType(fileName = '') {
   const extension = path.extname(String(fileName || '')).toLowerCase();
   if (extension === '.pdf') return 'application/pdf';
@@ -332,4 +344,5 @@ module.exports = {
   resolveStoredFileUrl,
   serveStoredFile,
   verifyStorageAccessToken,
+  viewStoredFile,
 };

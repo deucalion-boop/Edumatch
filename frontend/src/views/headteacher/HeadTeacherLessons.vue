@@ -313,15 +313,18 @@
               </select>
             </label>
 
-            <label class="headteacher-form-group">
-              <span>Linked Lesson</span>
-              <select v-model="assessmentForm.lessonId" required :disabled="filteredAssessmentLessons.length === 0">
-                <option value="">{{ filteredAssessmentLessons.length === 0 ? 'Select teacher first' : 'Select lesson' }}</option>
-                <option v-for="lesson in filteredAssessmentLessons" :key="`assessment-lesson-${lesson.id}`" :value="lesson.id">
-                  {{ lesson.title }}
-                </option>
-              </select>
-            </label>
+            <div class="headteacher-form-group headteacher-form-group-full">
+              <span>Lessons to Cover</span>
+              <input v-model.trim="assessmentLessonSearch" type="search" placeholder="Search lessons" :disabled="!assessmentForm.teacherId" />
+              <div class="headteacher-lesson-multi-list">
+                <label v-for="lesson in searchableManagedLessons" :key="`assessment-lesson-${lesson.id}`" :class="{ selected: assessmentForm.lessonIds.includes(lesson.id) }">
+                  <input type="checkbox" :checked="assessmentForm.lessonIds.includes(lesson.id)" @change="toggleManagedLesson(lesson.id)" />
+                  <span>{{ lesson.title }}</span><i v-if="assessmentForm.lessonIds.includes(lesson.id)" class="fas fa-check-circle"></i>
+                </label>
+                <p v-if="searchableManagedLessons.length === 0">{{ assessmentForm.teacherId ? 'No matching lessons.' : 'Select a teacher first.' }}</p>
+              </div>
+              <div v-if="selectedAssessmentLessons.length" class="headteacher-selected-lesson-chips"><span v-for="lesson in selectedAssessmentLessons" :key="lesson.id">{{ lesson.title }} <button type="button" @click="toggleManagedLesson(lesson.id)">×</button></span></div>
+            </div>
           </div>
 
           <div class="headteacher-step-break">
@@ -370,7 +373,7 @@
             </div>
             <div class="headteacher-context-card">
               <span>Lesson</span>
-              <strong>{{ selectedAssessmentLesson?.title || 'Select lesson' }}</strong>
+              <strong>{{ selectedAssessmentLessons.length ? `${selectedAssessmentLessons.length} lesson${selectedAssessmentLessons.length === 1 ? '' : 's'}` : 'Select lessons' }}</strong>
             </div>
             <div class="headteacher-context-card">
               <span>Type</span>
@@ -465,6 +468,10 @@
           </div>
 
           <div class="headteacher-draft-box">
+            <div class="headteacher-creation-methods">
+              <button type="button" :class="{ active: assessmentCreationMode === 'ai' }" @click="assessmentCreationMode = 'ai'"><i class="fas fa-wand-magic-sparkles"></i><span><strong>Generate Assessment Using AI</strong><small>Generate from selected lesson content.</small></span></button>
+              <button type="button" :class="{ active: assessmentCreationMode === 'manual' }" @click="startManualManagedAssessment"><i class="fas fa-pen-to-square"></i><span><strong>Create Assessment Manually</strong><small>Write and configure every question.</small></span></button>
+            </div>
             <div class="headteacher-draft-head">
               <div>
                 <h3>Draft Questions</h3>
@@ -473,6 +480,7 @@
               <button v-if="generatedQuestions.length > 0" type="button" class="headteacher-button headteacher-button-outline" @click="toggleViewCorrectAnswers">
                 {{ showCorrectAnswers ? 'Hide Correct Answers' : 'View Correct Answers' }}
               </button>
+              <button v-if="assessmentCreationMode === 'manual'" type="button" class="headteacher-button headteacher-button-outline" @click="addManagedQuestion"><i class="fas fa-plus"></i> Add Question</button>
             </div>
 
             <div v-if="generatedQuestions.length === 0" class="headteacher-table-state">
@@ -482,26 +490,38 @@
 
             <div v-else class="headteacher-draft-list">
               <article v-for="(question, index) in generatedQuestions" :key="`draft-question-${index}`" class="headteacher-draft-item">
-                <h4>Question {{ index + 1 }}</h4>
+                <div class="headteacher-draft-question-head"><h4>Question {{ index + 1 }}</h4><button type="button" @click="removeManagedQuestion(index)"><i class="fas fa-trash"></i> Delete</button></div>
+                <label class="headteacher-form-group">
+                  <span>Question Type</span>
+                  <select v-model="question.type" @change="syncManagedQuestionType(question)"><option value="multiple-choice">Multiple Choice</option><option value="true-false">True or False</option><option value="short-answer">Short Answer</option><option value="essay">Essay</option></select>
+                </label>
                 <label class="headteacher-form-group headteacher-form-group-full">
                   <span>Prompt</span>
                   <textarea v-model.trim="question.prompt" rows="3" required />
                 </label>
-                <label v-if="question.options && question.options.length" class="headteacher-form-group headteacher-form-group-full">
+                <label v-if="question.type === 'multiple-choice'" class="headteacher-form-group headteacher-form-group-full">
                   <span>Options (one per line)</span>
                   <textarea :value="question.options.join('\n')" rows="4" @input="onOptionsInput(index, $event.target.value)" />
                 </label>
-                <label v-if="showCorrectAnswers" class="headteacher-form-group headteacher-form-group-full">
+                <label v-if="(showCorrectAnswers || assessmentCreationMode === 'manual') && question.type !== 'essay'" class="headteacher-form-group headteacher-form-group-full">
                   <span>Correct Answer</span>
                   <input v-model.trim="question.answer" type="text" required />
                 </label>
+                <label class="headteacher-form-group"><span>Points</span><input v-model.number="question.points" type="number" min="1" max="500" /></label>
+                <template v-if="question.type === 'essay'">
+                  <label class="headteacher-form-group headteacher-form-group-full"><span>Essay Instructions</span><textarea v-model.trim="question.instructions" rows="2" /></label>
+                  <label class="headteacher-form-group headteacher-form-group-full"><span>Expected Answer / Key Points</span><textarea v-model.trim="question.expectedAnswer" rows="3" /></label>
+                  <label class="headteacher-form-group headteacher-form-group-full"><span>Grading Rubric</span><textarea v-model.trim="question.rubric" rows="3" /></label>
+                  <label class="headteacher-form-group"><span>Minimum Words</span><input v-model.number="question.minWords" type="number" min="0" max="10000" /></label>
+                  <label class="headteacher-form-group"><span>Maximum Words</span><input v-model.number="question.maxWords" type="number" min="1" max="10000" /></label>
+                </template>
               </article>
             </div>
           </div>
 
           <div class="headteacher-modal-actions headteacher-assessment-actions">
             <button type="button" class="headteacher-button headteacher-button-outline" :disabled="isAssessmentGenerating || isAssessmentSaving" @click="resetAssessmentDraft">Clear Draft</button>
-            <button type="button" class="headteacher-button headteacher-button-outline" :disabled="!canGenerateAssessment || isAssessmentGenerating" :title="assessmentGenerateButtonTitle" @click="generateAssessmentWithAi">
+            <button v-if="assessmentCreationMode === 'ai'" type="button" class="headteacher-button headteacher-button-outline" :disabled="!canGenerateAssessment || isAssessmentGenerating" :title="assessmentGenerateButtonTitle" @click="generateAssessmentWithAi">
               <i class="fas" :class="isAssessmentGenerating ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'"></i>
               {{ isAssessmentGenerating ? 'Generating...' : (isEditingAssessment ? 'Regenerate Draft' : 'Generate with AI') }}
             </button>
@@ -599,6 +619,8 @@ const lessonFileInput = ref(null)
 const generatedQuestions = ref([])
 const generatedDraftMeta = ref(null)
 const showCorrectAnswers = ref(false)
+const assessmentCreationMode = ref('ai')
+const assessmentLessonSearch = ref('')
 const editingAssessmentId = ref('')
 const banner = reactive({
   type: 'success',
@@ -612,6 +634,7 @@ const form = reactive({
 const assessmentForm = reactive({
   teacherId: '',
   lessonId: '',
+  lessonIds: [],
   title: '',
   assessmentMode: 'activity',
   gradingPeriod: '',
@@ -673,6 +696,12 @@ const lessonPageStart = computed(() => lessons.value.length === 0 ? 0 : ((lesson
 const lessonPageEnd = computed(() => Math.min(lessonCurrentPage.value * lessonPageSize, lessons.value.length))
 const filteredAssessmentLessons = computed(() => lessons.value.filter((lesson) => lesson.teacher?.id === assessmentForm.teacherId))
 const selectedAssessmentLesson = computed(() => filteredAssessmentLessons.value.find((lesson) => lesson.id === assessmentForm.lessonId) || null)
+const selectedAssessmentLessons = computed(() => assessmentForm.lessonIds.map((id) => filteredAssessmentLessons.value.find((lesson) => lesson.id === id)).filter(Boolean))
+const searchableManagedLessons = computed(() => {
+  const query = assessmentLessonSearch.value.toLowerCase()
+  const selectedSubjectId = selectedAssessmentLessons.value[0]?.subjectId || ''
+  return filteredAssessmentLessons.value.filter((lesson) => (!selectedSubjectId || String(lesson.subjectId || '') === String(selectedSubjectId)) && (!query || String(lesson.title || '').toLowerCase().includes(query)))
+})
 const filteredManagedAssessments = computed(() => {
   if (!assessmentForm.teacherId) return managedAssessments.value
   return managedAssessments.value.filter((assessment) => assessment.teacherId === assessmentForm.teacherId)
@@ -872,6 +901,9 @@ const resetAssessmentDraft = () => {
   generatedDraftMeta.value = null
   showCorrectAnswers.value = false
   assessmentForm.lessonId = ''
+  assessmentForm.lessonIds = []
+  assessmentLessonSearch.value = ''
+  assessmentCreationMode.value = 'ai'
   assessmentForm.title = ''
   assessmentForm.assessmentMode = 'activity'
   assessmentForm.gradingPeriod = ''
@@ -895,6 +927,36 @@ const onOptionsInput = (index, value) => {
     .map((entry) => entry.trim())
     .filter(Boolean)
   if (generatedQuestions.value[index]) generatedQuestions.value[index].options = lines
+}
+
+const emptyManagedQuestion = () => ({ prompt: '', type: 'multiple-choice', options: ['', '', '', ''], answer: '', points: 1, explanation: '', instructions: '', expectedAnswer: '', rubric: '', minWords: null, maxWords: null })
+const addManagedQuestion = () => {
+  assessmentCreationMode.value = 'manual'
+  generatedQuestions.value.push(emptyManagedQuestion())
+  assessmentForm.numberOfItems = generatedQuestions.value.length
+  showCorrectAnswers.value = true
+}
+const startManualManagedAssessment = () => {
+  assessmentCreationMode.value = 'manual'
+  showCorrectAnswers.value = true
+  if (generatedQuestions.value.length === 0) addManagedQuestion()
+}
+const removeManagedQuestion = (index) => {
+  generatedQuestions.value.splice(index, 1)
+  assessmentForm.numberOfItems = Math.max(1, generatedQuestions.value.length)
+}
+const syncManagedQuestionType = (question) => {
+  if (question.type === 'true-false') question.options = ['True', 'False']
+  else if (question.type !== 'multiple-choice') question.options = []
+  else if (!question.options?.length) question.options = ['', '', '', '']
+  if (question.type === 'essay') question.answer = ''
+}
+const toggleManagedLesson = (lessonId) => {
+  const id = String(lessonId || '')
+  const index = assessmentForm.lessonIds.indexOf(id)
+  if (index >= 0) assessmentForm.lessonIds.splice(index, 1)
+  else assessmentForm.lessonIds.push(id)
+  assessmentForm.lessonId = assessmentForm.lessonIds[0] || ''
 }
 
 const validateAssessmentForm = () => {
@@ -933,6 +995,7 @@ const generateAssessmentWithAi = async () => {
     const payload = {
       teacherId: assessmentForm.teacherId,
       lessonId: assessmentForm.lessonId,
+      lessonIds: assessmentForm.lessonIds,
       subjectId: assessmentForm.subjectId,
       title: String(assessmentForm.title || '').trim(),
       examType: assessmentForm.examType,
@@ -989,13 +1052,14 @@ const saveManagedAssessment = async () => {
     const payload = {
       teacherId: assessmentForm.teacherId,
       lessonId: assessmentForm.lessonId,
+      lessonIds: assessmentForm.lessonIds,
       subjectId: assessmentForm.subjectId,
       title: String((generatedDraftMeta.value?.title || assessmentForm.title) || '').trim(),
       examType: generatedDraftMeta.value?.examType || assessmentForm.examType,
       subject: assessmentResolvedSubject.value || generatedDraftMeta.value?.subject,
       subjectCategory: generatedDraftMeta.value?.subjectCategory || '',
       difficulty: generatedDraftMeta.value?.difficulty || assessmentForm.difficulty,
-      numberOfItems: Number(generatedDraftMeta.value?.numberOfItems || assessmentForm.numberOfItems),
+      numberOfItems: generatedQuestions.value.length,
       examDurationMinutes: Number(generatedDraftMeta.value?.examDurationMinutes || assessmentForm.examDurationMinutes),
       submissionDeadline: generatedDraftMeta.value?.submissionDeadline || submissionDeadline,
       assessmentMode: String(assessmentForm.assessmentMode || generatedDraftMeta.value?.assessmentMode || 'activity').trim(),
@@ -1009,6 +1073,11 @@ const saveManagedAssessment = async () => {
         correctAnswer: String(question.answer || '').trim(),
         points: Number(question.points || 1),
         explanation: String(question.explanation || '').trim(),
+        instructions: String(question.instructions || '').trim(),
+        expectedAnswer: String(question.expectedAnswer || '').trim(),
+        rubric: String(question.rubric || '').trim(),
+        minWords: question.minWords === '' ? null : (question.minWords ?? null),
+        maxWords: question.maxWords === '' ? null : (question.maxWords ?? null),
       })),
     }
 
@@ -1036,6 +1105,7 @@ const startEditingAssessment = (assessment) => {
   editingAssessmentId.value = String(assessment?.id || '')
   assessmentForm.teacherId = String(assessment?.teacherId || '')
   assessmentForm.lessonId = String(assessment?.lessonId || '')
+  assessmentForm.lessonIds = Array.isArray(assessment?.lessonIds) && assessment.lessonIds.length ? [...assessment.lessonIds] : [assessmentForm.lessonId].filter(Boolean)
   assessmentForm.title = String(assessment?.title || '')
   assessmentForm.assessmentMode = String(assessment?.assessmentMode || 'activity')
   assessmentForm.gradingPeriod = String(assessment?.gradingPeriod || '')
@@ -1066,7 +1136,13 @@ const startEditingAssessment = (assessment) => {
     answer: question.correctAnswer || '',
     points: Number(question.points || 1),
     explanation: question.explanation || '',
+    instructions: question.instructions || '',
+    expectedAnswer: question.expectedAnswer || '',
+    rubric: question.rubric || '',
+    minWords: question.minWords ?? null,
+    maxWords: question.maxWords ?? null,
   }))
+  assessmentCreationMode.value = 'manual'
   showCorrectAnswers.value = false
   setBanner('success', 'Assessment loaded for editing. You can adjust the draft or regenerate it with AI.')
 }
@@ -1098,6 +1174,7 @@ watch(
   () => {
     if (!filteredAssessmentLessons.value.some((lesson) => lesson.id === assessmentForm.lessonId)) {
       assessmentForm.lessonId = ''
+      assessmentForm.lessonIds = []
     }
     if (!selectedAssessmentTeacherClasses.value.some((teacherClass) => teacherClass.id === assessmentForm.subjectId)) {
       assessmentForm.subjectId = ''
@@ -1705,6 +1782,22 @@ small {
 .headteacher-assessment-actions {
   @apply tw:[margin-top:1rem];
 }
+
+.headteacher-lesson-multi-list { @apply tw:grid tw:[max-height:220px] tw:overflow-y-auto tw:[border:1px_solid_#d7dee8] tw:rounded-xl tw:p-2; }
+.headteacher-lesson-multi-list label { @apply tw:flex tw:items-center tw:gap-3 tw:p-3 tw:rounded-lg tw:cursor-pointer; }
+.headteacher-lesson-multi-list label.selected { @apply tw:[background:#eef7e9] tw:[color:#315d1f]; }
+.headteacher-lesson-multi-list label span { @apply tw:flex-1 tw:font-semibold; }
+.headteacher-lesson-multi-list > p { @apply tw:p-3 tw:text-center tw:[color:#64748b]; }
+.headteacher-selected-lesson-chips { @apply tw:flex tw:flex-wrap tw:gap-2; }
+.headteacher-selected-lesson-chips > span { @apply tw:inline-flex tw:items-center tw:gap-2 tw:[background:#e7f1e1] tw:[color:#315d1f] tw:px-3 tw:py-1 tw:rounded-full tw:text-sm tw:font-semibold; }
+.headteacher-selected-lesson-chips button { @apply tw:border-0 tw:bg-transparent tw:cursor-pointer tw:[color:inherit]; }
+.headteacher-creation-methods { @apply tw:grid tw:[grid-template-columns:repeat(2,minmax(0,1fr))] tw:gap-3 tw:mb-5; }
+.headteacher-creation-methods > button { @apply tw:flex tw:items-center tw:gap-3 tw:p-4 tw:text-left tw:bg-white tw:[border:1px_solid_#d7dee8] tw:rounded-xl tw:cursor-pointer; }
+.headteacher-creation-methods > button.active { @apply tw:[border-color:#5c8f3d] tw:[background:#eef7e9] tw:[box-shadow:0_0_0_2px_rgba(92,143,61,0.14)]; }
+.headteacher-creation-methods span { @apply tw:flex tw:flex-col tw:gap-1; }
+.headteacher-creation-methods small { @apply tw:[color:#64748b]; }
+.headteacher-draft-question-head { @apply tw:flex tw:items-center tw:justify-between tw:gap-3; }
+.headteacher-draft-question-head button { @apply tw:border-0 tw:bg-transparent tw:[color:#b42318] tw:font-semibold tw:cursor-pointer; }
 
 .headteacher-ai-config-warning {
   @apply tw:[margin-top:0.85rem];

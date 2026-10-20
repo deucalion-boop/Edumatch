@@ -1,5 +1,9 @@
 <template>
-  <div class="lesson-pdf-reader">
+  <div class="lesson-pdf-reader" tabindex="0" @contextmenu.prevent @copy.prevent @cut.prevent @dragstart.prevent @selectstart.prevent>
+    <div class="lesson-pdf-security-note" role="note">
+      <i class="fas fa-shield-halved" aria-hidden="true"></i>
+      View-only material · Downloading, printing, and copying are disabled
+    </div>
     <div v-if="isLoading && pages.length === 0" class="lesson-pdf-state" role="status">
       <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
       <span>Preparing lesson pages...</span>
@@ -13,7 +17,7 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist'
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
@@ -34,6 +38,14 @@ let loadTask = null
 let pdfDocument = null
 let renderTasks = []
 let renderVersion = 0
+
+function preventProtectedShortcut(event) {
+  if (!(event.ctrlKey || event.metaKey)) return
+  if (['c', 'p', 's', 'a', 'u'].includes(String(event.key || '').toLowerCase())) {
+    event.preventDefault()
+    event.stopImmediatePropagation()
+  }
+}
 
 function bindCanvas(element, pageNumber) {
   if (element) canvases.set(pageNumber, element)
@@ -95,8 +107,15 @@ watch(() => props.data, (source) => {
 }, { immediate: true })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', preventProtectedShortcut, true)
+  window.removeEventListener('beforeprint', preventProtectedShortcut, true)
   renderVersion += 1
   void disposeDocument()
+})
+
+onMounted(() => {
+  window.addEventListener('keydown', preventProtectedShortcut, true)
+  window.addEventListener('beforeprint', preventProtectedShortcut, true)
 })
 </script>
 
@@ -107,6 +126,12 @@ onBeforeUnmount(() => {
   @apply tw:h-full;
   @apply tw:overflow-auto;
   @apply tw:[background:#d8dee7];
+  @apply tw:[user-select:none];
+  @apply tw:[-webkit-user-select:none];
+}
+
+.lesson-pdf-security-note {
+  @apply tw:sticky tw:top-0 tw:z-10 tw:flex tw:items-center tw:justify-center tw:[gap:0.5rem] tw:[padding:0.55rem_1rem] tw:[background:#1e293b] tw:text-white tw:[font-size:0.78rem] tw:[font-weight:700];
 }
 
 .lesson-pdf-pages {
@@ -126,6 +151,11 @@ onBeforeUnmount(() => {
   @apply tw:block;
   @apply tw:w-full;
   @apply tw:h-auto;
+  @apply tw:[pointer-events:none];
+}
+
+@media print {
+  .lesson-pdf-reader { display: none !important; }
 }
 
 .lesson-pdf-state {
