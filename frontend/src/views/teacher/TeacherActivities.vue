@@ -369,14 +369,30 @@
                   <p v-if="challengeStepAttempted[1] && challengeStepErrors.challengeTitle" id="challengeTitle-error" class="field-error" role="alert">{{ challengeStepErrors.challengeTitle }}</p>
                 </div>
 
-                <div v-if="!isActivityAssessment" class="form-group">
-                  <label for="linkedLesson">Linked Lesson</label>
-                  <select id="linkedLesson" v-model="challengeForm.linkedLesson" :required="!challengeForm.subjectId" :aria-invalid="Boolean(challengeStepAttempted[1] && challengeStepErrors.linkedLesson)" aria-describedby="challengeContext-error">
-                    <option value="">Select lesson</option>
-                    <option v-for="lesson in lessonOptions" :key="lesson.id" :value="lesson.id">
-                      {{ lesson.title }}{{ lesson.classLabel ? ` · ${lesson.classLabel}` : '' }}
-                    </option>
-                  </select>
+                <div v-if="!isActivityAssessment" class="form-group full">
+                  <label for="lessonSearch">Lessons to Cover <span class="optional-label">Select multiple</span></label>
+                  <div class="lesson-multi-select" :class="{ invalid: Boolean(challengeStepAttempted[1] && challengeStepErrors.linkedLesson) }">
+                    <div class="lesson-search-row">
+                      <i class="fas fa-search" aria-hidden="true"></i>
+                      <input id="lessonSearch" v-model.trim="lessonSearchQuery" type="search" placeholder="Search available lessons" autocomplete="off" />
+                      <button v-if="challengeForm.lessonIds.length" type="button" class="lesson-clear-button" @click="clearSelectedLessons">Clear all</button>
+                    </div>
+                    <div v-if="selectedAssessmentLessons.length" class="selected-lesson-chips" aria-label="Selected lessons">
+                      <span v-for="lesson in selectedAssessmentLessons" :key="`selected-${lesson.id}`" class="lesson-chip">
+                        {{ lesson.title }}
+                        <button type="button" :aria-label="`Deselect ${lesson.title}`" @click="toggleAssessmentLesson(lesson.id)"><i class="fas fa-times" aria-hidden="true"></i></button>
+                      </span>
+                    </div>
+                    <div class="lesson-checkbox-list" role="group" aria-label="Available lessons">
+                      <label v-for="lesson in searchableAssessmentLessons" :key="lesson.id" class="lesson-checkbox-option" :class="{ selected: challengeForm.lessonIds.includes(lesson.id) }">
+                        <input type="checkbox" :checked="challengeForm.lessonIds.includes(lesson.id)" @change="toggleAssessmentLesson(lesson.id)" />
+                        <span><strong>{{ lesson.title }}</strong><small>{{ lesson.classLabel || lesson.subject }}</small></span>
+                        <i v-if="challengeForm.lessonIds.includes(lesson.id)" class="fas fa-check-circle" aria-hidden="true"></i>
+                      </label>
+                      <p v-if="searchableAssessmentLessons.length === 0" class="lesson-empty-copy">No lessons match your search.</p>
+                    </div>
+                  </div>
+                  <p class="helper-copy">Questions use only selected lesson content and are distributed across the chosen lessons.</p>
                 </div>
 
                 <div v-if="!isActivityAssessment" class="form-group">
@@ -385,7 +401,7 @@
                     <option value="">
                       {{ teacherClasses.length === 0
                         ? 'No class available'
-                        : (challengeForm.linkedLesson ? 'Optional when lesson is linked' : 'Select class') }}
+                        : (challengeForm.lessonIds.length ? 'Optional when lessons are selected' : 'Select class') }}
                     </option>
                     <option v-for="classItem in teacherClasses" :key="classItem.id" :value="classItem.id">
                       {{ classItem.label }}
@@ -1428,6 +1444,7 @@ async function submitLesson() {
 const challengeForm = reactive({
   challengeTitle: "",
   linkedLesson: "",
+  lessonIds: [],
   subjectId: "",
   assessmentMode: "activity",
   gradingPeriod: "",
@@ -1452,6 +1469,21 @@ const challengeForm = reactive({
   challengeDescription: "",
   activityAttachments: [],
 });
+const lessonSearchQuery = ref("");
+
+function toggleAssessmentLesson(lessonId) {
+  const id = String(lessonId || "").trim();
+  if (!id) return;
+  const index = challengeForm.lessonIds.indexOf(id);
+  if (index >= 0) challengeForm.lessonIds.splice(index, 1);
+  else challengeForm.lessonIds.push(id);
+  challengeForm.linkedLesson = challengeForm.lessonIds[0] || "";
+}
+
+function clearSelectedLessons() {
+  challengeForm.lessonIds = [];
+  challengeForm.linkedLesson = "";
+}
 
 function getSelectedChallengeClass() {
   const selectedClassId = String(challengeForm.subjectId || "").trim();
@@ -1766,6 +1798,8 @@ function emitTeacherAssessmentCreated(savedAssessment) {
 function resetAssessmentBuilder() {
   challengeForm.challengeTitle = "";
   challengeForm.linkedLesson = "";
+  challengeForm.lessonIds = [];
+  lessonSearchQuery.value = "";
   challengeForm.subjectId = "";
   challengeForm.assessmentMode = "activity";
   challengeForm.gradingPeriod = "";
@@ -1882,6 +1916,7 @@ async function generateWithAi() {
 
     const payload = {
       lessonId: lessonId || undefined,
+      lessonIds: challengeForm.lessonIds,
       subjectId: subjectId || undefined,
       title,
       topic,
@@ -1920,6 +1955,7 @@ async function generateWithAi() {
     generatedDraftMeta.value = {
       title: String(draftAssessment.title || title),
       lessonId: lessonId,
+      lessonIds: Array.isArray(draftAssessment.lessonIds) ? draftAssessment.lessonIds : [...challengeForm.lessonIds],
       subjectId: String(draftAssessment.subjectId || subjectId),
       examType: String(draftAssessment.examType || examType),
       subject: String(draftAssessment.subject || subject),
@@ -1998,6 +2034,9 @@ async function finalizeGeneratedAssessment() {
     };
     if (generatedDraftMeta.value.lessonId) {
       createPayload.lessonId = generatedDraftMeta.value.lessonId;
+    }
+    if (generatedDraftMeta.value.lessonIds?.length) {
+      createPayload.lessonIds = generatedDraftMeta.value.lessonIds;
     }
     if (generatedDraftMeta.value.subjectId) {
       createPayload.subjectId = generatedDraftMeta.value.subjectId;
@@ -2197,6 +2236,18 @@ const lessonSubjectOptions = computed(() => {
   return getSubjectsForStrand("GENERAL");
 });
 const selectedLinkedLesson = computed(() => lessonOptions.value.find((lesson) => lesson.id === challengeForm.linkedLesson) || null);
+const selectedAssessmentLessons = computed(() => challengeForm.lessonIds
+  .map((id) => lessonOptions.value.find((lesson) => lesson.id === id))
+  .filter(Boolean));
+const searchableAssessmentLessons = computed(() => {
+  const query = lessonSearchQuery.value.toLowerCase();
+  const selectedClassId = selectedAssessmentLessons.value[0]?.subjectId || "";
+  return lessonOptions.value.filter((lesson) => (
+    (!selectedClassId || String(lesson.subjectId || "") === String(selectedClassId))
+    && (!query || [lesson.title, lesson.subject, lesson.classLabel]
+      .some((value) => String(value || "").toLowerCase().includes(query)))
+  ));
+});
 const selectedChallengeClass = computed(() => getSelectedChallengeClass());
 const selectedAssessmentStrand = computed(() => normalizeStrand(
   selectedLinkedLesson.value?.strand
@@ -2562,6 +2613,11 @@ watch(
 watch(
   () => challengeForm.assessmentMode,
   (value) => {
+    if (value === "activity") {
+      challengeForm.lessonIds = [];
+    } else if (challengeForm.linkedLesson && challengeForm.lessonIds.length === 0) {
+      challengeForm.lessonIds = [challengeForm.linkedLesson];
+    }
     if (value !== "grading_assessment") {
       challengeForm.gradingPeriod = "";
     }
@@ -3856,6 +3912,68 @@ onBeforeUnmount(() => {
 
 .wizard-action-spacer {
   @apply tw:[flex:1];
+}
+
+.lesson-multi-select {
+  @apply tw:[border:1px_solid_var(--border-color)] tw:rounded-xl tw:bg-white tw:overflow-hidden;
+}
+
+.lesson-multi-select.invalid {
+  @apply tw:[border-color:#dc2626];
+}
+
+.lesson-search-row {
+  @apply tw:flex tw:items-center tw:gap-2 tw:px-3 tw:[border-bottom:1px_solid_var(--border-color)];
+}
+
+.lesson-search-row input {
+  @apply tw:flex-1 tw:border-0 tw:outline-none tw:[box-shadow:none] tw:px-0;
+}
+
+.lesson-clear-button {
+  @apply tw:text-sm tw:font-semibold tw:[color:var(--primary-color)] tw:bg-transparent tw:border-0 tw:cursor-pointer tw:whitespace-nowrap;
+}
+
+.selected-lesson-chips {
+  @apply tw:flex tw:flex-wrap tw:gap-2 tw:p-3 tw:[border-bottom:1px_solid_var(--border-color)];
+}
+
+.lesson-chip {
+  @apply tw:inline-flex tw:items-center tw:gap-2 tw:px-3 tw:py-1 tw:rounded-full tw:text-sm tw:font-semibold tw:[background:var(--primary-light)] tw:[color:var(--primary-color)];
+}
+
+.lesson-chip button {
+  @apply tw:border-0 tw:bg-transparent tw:cursor-pointer tw:p-0 tw:[color:inherit];
+}
+
+.lesson-checkbox-list {
+  @apply tw:[max-height:220px] tw:overflow-y-auto tw:p-2;
+}
+
+.lesson-checkbox-option {
+  @apply tw:flex tw:items-center tw:gap-3 tw:p-3 tw:rounded-lg tw:cursor-pointer tw:[transition:background_0.15s_ease];
+}
+
+.lesson-checkbox-option:hover,
+.lesson-checkbox-option.selected {
+  @apply tw:[background:var(--primary-light)];
+}
+
+.lesson-checkbox-option > span {
+  @apply tw:flex tw:flex-col tw:flex-1;
+}
+
+.lesson-checkbox-option small,
+.lesson-empty-copy {
+  @apply tw:text-sm tw:[color:var(--text-muted)];
+}
+
+.lesson-checkbox-option > i {
+  @apply tw:[color:var(--primary-color)];
+}
+
+.lesson-empty-copy {
+  @apply tw:p-3 tw:text-center;
 }
 
 @media (prefers-reduced-motion: reduce) {

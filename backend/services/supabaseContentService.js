@@ -16,6 +16,14 @@ function referenceId(value) {
   return String(value?._id || value?.id || value || '').trim() || null;
 }
 
+function referenceIds(value, fallback = null) {
+  const values = Array.isArray(value) ? value : [];
+  const ids = values.map(referenceId).filter(Boolean);
+  const fallbackId = referenceId(fallback);
+  if (fallbackId && !ids.includes(fallbackId)) ids.unshift(fallbackId);
+  return [...new Set(ids)];
+}
+
 function normalizeAttachments(value) {
   return (Array.isArray(value) ? value : []).map((attachment) => ({
     _id: String(attachment?._id || crypto.randomUUID().replace(/-/g, '')),
@@ -56,6 +64,7 @@ function mapAssessment(row) {
     _id: row.id,
     id: row.id,
     lessonId: row.lesson_id || null,
+    lessonIds: referenceIds(row.lesson_ids, row.lesson_id),
     title: row.title,
     examType: row.exam_type,
     subject: row.subject,
@@ -141,6 +150,7 @@ async function createSupabaseAssessment(payload) {
   const row = {
     id: referenceId(payload.id) || undefined,
     lesson_id: referenceId(payload.lessonId),
+    lesson_ids: referenceIds(payload.lessonIds, payload.lessonId),
     title: String(payload.title || '').trim(),
     exam_type: String(payload.examType || '').trim(),
     subject: String(payload.subject || '').trim(),
@@ -202,6 +212,7 @@ async function updateSupabaseAssessment(id, createdBy, payload = {}) {
   if (!normalizedId || !ownerId) return null;
   const row = {
     lesson_id: referenceId(payload.lessonId),
+    lesson_ids: referenceIds(payload.lessonIds, payload.lessonId),
     title: String(payload.title || '').trim(),
     exam_type: String(payload.examType || '').trim(),
     subject: String(payload.subject || '').trim(),

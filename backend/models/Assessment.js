@@ -98,6 +98,12 @@ const assessmentSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    lessonIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Lesson',
+      default: [],
+      index: true,
+    },
     title: {
       type: String,
       required: true,

@@ -149,6 +149,19 @@ function parseAssessmentQuestions(value) {
   }
 }
 
+function parseLessonIds(value, fallback = '') {
+  let parsed = value;
+  if (typeof value === 'string') {
+    try { parsed = JSON.parse(value); } catch (_error) { parsed = value.split(','); }
+  }
+  const ids = (Array.isArray(parsed) ? parsed : [])
+    .map((item) => String(item?._id || item?.id || item || '').trim())
+    .filter(Boolean);
+  const fallbackId = String(fallback || '').trim();
+  if (fallbackId && !ids.includes(fallbackId)) ids.unshift(fallbackId);
+  return [...new Set(ids)];
+}
+
 function normalizeAssessmentQuestions(value) {
   if (!Array.isArray(value)) {
     const error = new Error('questions must be an array');
@@ -1134,6 +1147,7 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
   const lessonById = new Map(lessons.map((lesson) => [String(lesson._id), lesson]));
   assessments.forEach((assessment) => {
     if (assessment.lessonId) assessment.lessonId = lessonById.get(String(assessment.lessonId)) || assessment.lessonId;
+    assessment.lessonIds = (assessment.lessonIds || []).map((id) => lessonById.get(String(id)) || id);
   });
   const dedupedAssessments = uniqueBy(assessments, (assessment) => {
     if (assessment?._id) return String(assessment._id);
@@ -1192,6 +1206,8 @@ const getTeacherAssessments = asyncHandler(async (req, res) => {
       points: Number(question?.points || 1),
     })),
     lessonTitle: assessment.lessonId?.title || '',
+    lessonIds: (assessment.lessonIds || []).map((item) => String(item?._id || item?.id || item)),
+    lessonTitles: (assessment.lessonIds || []).map((item) => String(item?.title || '')).filter(Boolean),
     lessonTrack: getLessonTrack(assessment.lessonId),
     lessonSubject: String(assessment?.lessonId?.subject || '').trim(),
     submissionsCount: submissionCountsByAssessment.get(String(assessment._id)) || 0,
@@ -1552,6 +1568,7 @@ const downloadTeacherLessonAttachment = asyncHandler(async (req, res) => {
 const createAssessment = asyncHandler(async (req, res) => {
   const {
     lessonId,
+    lessonIds: lessonIdsRaw,
     subjectId: subjectIdRaw,
     title,
     examType,
@@ -1598,7 +1615,8 @@ const createAssessment = asyncHandler(async (req, res) => {
   const normalizedNumberOfItems = isActivityAssessment
     ? 1
     : Number(numberOfItems || 0);
-  const normalizedLessonId = String(lessonId || '').trim();
+  const normalizedLessonIds = parseLessonIds(lessonIdsRaw, lessonId);
+  const normalizedLessonId = normalizedLessonIds[0] || '';
   const normalizedSubjectId = String(subjectIdRaw || '').trim();
   const hasLinkedLesson = Boolean(normalizedLessonId);
   let selectedClass = null;
@@ -1613,10 +1631,11 @@ const createAssessment = asyncHandler(async (req, res) => {
     ? parseExamDurationMinutes(examDurationMinutesRaw ?? 30, { required: true })
     : parseExamDurationMinutes(examDurationMinutesRaw, { required: true });
 
-  const lesson = hasLinkedLesson
-    ? await findSupabaseLesson(normalizedLessonId, req.user._id)
-    : null;
-  if (hasLinkedLesson && !lesson) {
+  const lessons = hasLinkedLesson
+    ? await Promise.all(normalizedLessonIds.map((id) => findSupabaseLesson(id, req.user._id)))
+    : [];
+  const lesson = lessons[0] || null;
+  if (hasLinkedLesson && lessons.some((item) => !item)) {
     const error = new Error('Lesson not found for this teacher');
     error.statusCode = 404;
     throw error;
@@ -1655,6 +1674,11 @@ const createAssessment = asyncHandler(async (req, res) => {
   }
   if (isActivityAssessment && lesson && String(lesson.subjectId || '') !== String(selectedClass._id || '')) {
     const error = new Error('Related lesson must belong to the selected class and subject');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (lessons.some((item) => String(item.subjectId || '') !== String(lesson?.subjectId || ''))) {
+    const error = new Error('All selected lessons must belong to the same class and subject');
     error.statusCode = 400;
     throw error;
   }
@@ -1747,6 +1771,7 @@ const createAssessment = asyncHandler(async (req, res) => {
     assessment = await createSupabaseAssessment({
       id: assessmentId,
       lessonId: lesson?._id || undefined,
+      lessonIds: lessons.map((item) => item._id),
       title: normalizedTitle,
       examType: normalizedExamType,
       subject: normalizedSubject,

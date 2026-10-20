@@ -481,6 +481,7 @@ const getAiStatus = asyncHandler(async (_req, res) => {
 const generateAssessmentWithAi = asyncHandler(async (req, res) => {
   const {
     lessonId,
+    lessonIds: lessonIdsRaw,
     subjectId,
     teacherId,
     topic,
@@ -499,7 +500,12 @@ const generateAssessmentWithAi = asyncHandler(async (req, res) => {
     deadlineAt: deadlineAtRaw,
   } = req.body;
 
-  if ((!lessonId && !subjectId) || !examType || !difficulty || !numberOfItems || !String(subject || '').trim()) {
+  const lessonIds = [...new Set([
+    ...(Array.isArray(lessonIdsRaw) ? lessonIdsRaw : []),
+    lessonId,
+  ].map((value) => String(value || '').trim()).filter(Boolean))];
+  const primaryLessonId = lessonIds[0] || '';
+  if ((!primaryLessonId && !subjectId) || !examType || !difficulty || !numberOfItems || !String(subject || '').trim()) {
     const error = new Error('lessonId or subjectId, examType, subject, difficulty, and numberOfItems are required');
     error.statusCode = 400;
     throw error;
@@ -526,8 +532,21 @@ const generateAssessmentWithAi = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const { ownerTeacher, lesson } = await resolveAssessmentOwnerContext(req, lessonId, teacherId);
-  const selectedClass = !lessonId && subjectId
+  const { ownerTeacher, lesson } = await resolveAssessmentOwnerContext(req, primaryLessonId, teacherId);
+  const lessons = primaryLessonId
+    ? await Promise.all(lessonIds.map((id) => findSupabaseLesson(id, ownerTeacher?._id || req.user._id)))
+    : [];
+  if (lessons.some((item) => !item)) {
+    const error = new Error('One or more selected lessons were not found for this teacher');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (lessons.some((item) => String(item.subjectId || '') !== String(lesson?.subjectId || ''))) {
+    const error = new Error('All selected lessons must belong to the same class and subject');
+    error.statusCode = 400;
+    throw error;
+  }
+  const selectedClass = !primaryLessonId && subjectId
     ? {
       _id: String(subjectId),
       id: String(subjectId),
@@ -537,7 +556,7 @@ const generateAssessmentWithAi = asyncHandler(async (req, res) => {
       track: normalizeStrand(ownerTeacher?.strand || '') || 'GENERAL',
     }
     : null;
-  if (!lessonId && !selectedClass) {
+  if (!primaryLessonId && !selectedClass) {
     const error = new Error('Selected class was not found');
     error.statusCode = 404;
     throw error;
@@ -581,20 +600,15 @@ const generateAssessmentWithAi = asyncHandler(async (req, res) => {
   ).trim();
 
   if (lesson) {
-    const lessonPdfPath = resolveLessonPdfPath(lesson);
-    if (!lessonPdfPath) {
-      const error = new Error('No PDF attachment found for the lesson');
-      error.statusCode = 400;
-      throw error;
-    }
-    const lessonFileBuffer = await readStoredFileBuffer(lessonPdfPath);
-    extractedText = await extractTextFromPdf(lessonFileBuffer);
-
-    if (!extractedText || extractedText.trim().length < 50) {
-      const error = new Error('Unable to extract enough text from the lesson PDF for AI generation');
-      error.statusCode = 400;
-      throw error;
-    }
+    const perLessonCharacterBudget = Math.max(1000, Math.floor(14500 / lessons.length));
+    const lessonTexts = await Promise.all(lessons.map(async (selectedLesson) => {
+      const lessonPdfPath = resolveLessonPdfPath(selectedLesson);
+      if (!lessonPdfPath) throw Object.assign(new Error(`No PDF attachment found for lesson: ${selectedLesson.title}`), { statusCode: 400 });
+      const text = await extractTextFromPdf(await readStoredFileBuffer(lessonPdfPath));
+      if (!text || text.trim().length < 50) throw Object.assign(new Error(`Unable to extract enough text from lesson: ${selectedLesson.title}`), { statusCode: 400 });
+      return `LESSON: ${selectedLesson.title}\n${text.trim().slice(0, perLessonCharacterBudget)}`;
+    }));
+    extractedText = lessonTexts.join('\n\n--- END LESSON ---\n\n');
   } else {
     if (!normalizedTopic) {
       const error = new Error('topic is required when generating without a linked lesson');
@@ -633,7 +647,7 @@ Return ONLY valid JSON with this format:
     }
   ]
 }
-${lesson ? 'Lesson text:' : 'Topic and class context:'}
+${lesson ? `Selected lesson texts (${lessons.length}). Use ONLY these texts. Distribute the ${Number(numberOfItems)} questions as evenly as possible across all selected lessons:` : 'Topic and class context:'}
 ${extractedText.slice(0, 15000)}`;
   let generationMode = `${aiConfig.provider || 'provider'}-api`;
   let parsedTitle = '';
@@ -739,7 +753,8 @@ ${String(rawOutput || '').slice(0, 12000)}`;
   return sendSuccess(res, 200, 'Assessment draft generated successfully', {
     draftAssessment: {
       title: normalizedTitle,
-      lessonId: lessonId || '',
+      lessonId: primaryLessonId,
+      lessonIds,
       subjectId: String(selectedClass?._id || subjectId || ''),
       examType,
       subject: normalizedSubject,
