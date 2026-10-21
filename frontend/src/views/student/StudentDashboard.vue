@@ -348,7 +348,15 @@
           </router-link>
         </div>
 
-        <div class="pathway-progress-card">
+        <div
+          class="pathway-progress-card pathway-progress-card--interactive"
+          role="button"
+          tabindex="0"
+          aria-label="View strand fit ranking"
+          @click="goToStrandRanking"
+          @keydown.enter.prevent="goToStrandRanking"
+          @keydown.space.prevent="goToStrandRanking"
+        >
           <span class="pathway-progress-card__label">{{ recommendationMeta.ready ? 'Recommendation ready' : 'Pathway completion' }}</span>
           <div
             class="pathway-progress-ring"
@@ -389,7 +397,7 @@
         </div>
       </section>
 
-      <section v-if="!isInitialLoading && rankedStrandRecommendations.length" class="strand-ranking-section">
+      <section v-if="!isInitialLoading && rankedStrandRecommendations.length" ref="strandRankingSection" class="strand-ranking-section" tabindex="-1">
         <header>
           <div><span class="premium-eyebrow">AI strand recommendation</span><h2>Strand fit ranking</h2></div>
           <p>Ranked from the strongest to the lowest match using your graded subject performance.</p>
@@ -768,6 +776,12 @@ export default {
     if (this.clockTimer) window.clearInterval(this.clockTimer)
   },
   methods: {
+    goToStrandRanking() {
+      const target = this.$refs.strandRankingSection
+      if (!target) return
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      window.setTimeout(() => target.focus({ preventScroll: true }), 450)
+    },
     formatAcademicValue(value) {
       return value === null || value === undefined ? 'N/A' : `${Number(value).toFixed(1)}%`
     },
@@ -4834,6 +4848,26 @@ export default {
   @apply tw:[background:rgba(255,_255,_255,_0.1)];
   @apply tw:[box-shadow:inset_0_1px_0_rgba(255,_255,_255,_0.12)];
   @apply tw:[backdrop-filter:blur(14px)];
+}
+
+.pathway-progress-card--interactive {
+  @apply tw:cursor-pointer;
+  @apply tw:[transition:transform_180ms_ease,_background_180ms_ease,_box-shadow_180ms_ease];
+}
+
+.pathway-progress-card--interactive:hover {
+  @apply tw:[transform:translateY(-3px)];
+  @apply tw:[background:rgba(255,_255,_255,_0.15)];
+  @apply tw:[box-shadow:inset_0_1px_0_rgba(255,_255,_255,_0.16),_0_14px_28px_rgba(8,_32,_2,_0.18)];
+}
+
+.pathway-progress-card--interactive:focus-visible {
+  @apply tw:[outline:3px_solid_rgba(220,_239,_210,_0.9)];
+  @apply tw:[outline-offset:4px];
+}
+
+.strand-ranking-section:focus {
+  @apply tw:outline-none;
 }
 
 .pathway-progress-card__label {
