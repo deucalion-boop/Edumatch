@@ -222,4 +222,17 @@ onMounted(load)
 @media (max-width:520px) { .announcement-hero-icon { @apply tw:hidden; }.announcement-panel { @apply tw:[padding:1rem]; }.audience-heading,.publish-footer { align-items:stretch; flex-direction:column; }.publish-footer .publish-button { width:100%; }.urgent-copy small { line-height:1.35; } }
 .announcement-form .publish-footer .publish-button > .publish-button-icon { margin:0; color:#fff!important; }
 .announcement-form .publish-footer .publish-button > span { color:inherit; }
+:global(body.admin-dashboard) .announcement-form .publish-footer .publish-button.btn-primary {
+  background:#4f8a35!important;
+  background-image:none!important;
+  border-color:#4f8a35!important;
+  color:#fff!important;
+  box-shadow:0 10px 22px rgba(63,127,42,.22)!important;
+}
+:global(body.admin-dashboard) .announcement-form .publish-footer .publish-button.btn-primary:hover:not(:disabled),
+:global(body.admin-dashboard) .announcement-form .publish-footer .publish-button.btn-primary:focus-visible {
+  background:#3f7f2a!important;
+  border-color:#3f7f2a!important;
+  box-shadow:0 14px 26px rgba(63,127,42,.28)!important;
+}
 </style>

@@ -3960,7 +3960,6 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   @apply tw:[grid-template-columns:minmax(0,_1.35fr)_minmax(280px,_0.9fr)];
   @apply tw:[padding:1.15rem];
   @apply tw:[border-color:var(--progress-border)];
-  @apply tw:[border-left:4px_solid_var(--progress-green)];
   @apply tw:[border-radius:8px];
   @apply tw:[background:#ffffff];
   @apply tw:[box-shadow:0_5px_14px_rgba(31,_51,_25,_0.06)];
@@ -3969,7 +3968,6 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
 #progressContent .course-item:hover {
   @apply tw:transform-none;
   @apply tw:[border-color:#c5d5bf];
-  @apply tw:[border-left-color:var(--progress-green-dark)];
   @apply tw:[box-shadow:0_8px_20px_rgba(31,_51,_25,_0.09)];
 }
 
@@ -4047,7 +4045,6 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
   @apply tw:[grid-template-columns:minmax(0,_1.35fr)_minmax(280px,_0.9fr)];
   @apply tw:[padding:1.15rem];
   @apply tw:[border-color:var(--course-border)];
-  @apply tw:[border-left:4px_solid_var(--course-green)];
   @apply tw:[border-radius:8px];
   @apply tw:[background:#ffffff];
   @apply tw:[box-shadow:0_5px_14px_rgba(31,_51,_25,_0.06)];
@@ -4056,7 +4053,6 @@ body.admin-dashboard .btn.btn-primary.export-report-btn:active i {
 #coursesContent .course-item:hover {
   @apply tw:transform-none;
   @apply tw:[border-color:#c5d5bf];
-  @apply tw:[border-left-color:var(--course-green-dark)];
   @apply tw:[box-shadow:0_8px_20px_rgba(31,_51,_25,_0.09)];
 }
 
