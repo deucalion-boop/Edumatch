@@ -1832,7 +1832,9 @@ const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
       .sort({ createdAt: -1 })
       .lean(),
     Assessment.find()
-      .select('title subject difficulty examType createdAt')
+      .select('title subject difficulty examType createdBy publishedBy createdAt')
+      .populate('createdBy', 'name email department')
+      .populate('publishedBy', 'name email department')
       .sort({ createdAt: -1 })
       .lean(),
     getRecentActivities(10),
@@ -2054,14 +2056,19 @@ const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
             createdAt: lesson.createdAt || null,
           };
         }),
-        assessments: assessmentDetails.map((assessment) => ({
-          id: String(assessment._id),
-          title: assessment.title || 'Untitled assessment',
-          subject: assessment.subject || '-',
-          difficulty: assessment.difficulty || '-',
-          examType: assessment.examType || '-',
-          createdAt: assessment.createdAt || null,
-        })),
+        assessments: assessmentDetails.map((assessment) => {
+          const publisher = assessment.publishedBy || assessment.createdBy;
+          return {
+            id: String(assessment._id),
+            title: assessment.title || 'Untitled assessment',
+            subject: assessment.subject || '-',
+            difficulty: assessment.difficulty || '-',
+            examType: assessment.examType || '-',
+            department: publisher?.department || 'Unassigned',
+            publishedBy: publisher?.name || publisher?.email || 'Unknown user',
+            createdAt: assessment.createdAt || null,
+          };
+        }),
       },
       topSubjects,
       topTracks,

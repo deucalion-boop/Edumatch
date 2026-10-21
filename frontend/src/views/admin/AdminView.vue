@@ -491,15 +491,18 @@
         </div>
 
         <div class="modal-panel-body">
-          <div v-if="activeMetricKey === 'lessons'" class="analytics-table-filters">
-            <label for="lesson-department-filter">Department</label>
-            <select id="lesson-department-filter" v-model="selectedLessonDepartment">
+          <div v-if="['lessons', 'assessments'].includes(activeMetricKey)" class="analytics-table-filters">
+            <label for="content-department-filter">Department</label>
+            <select id="content-department-filter" v-model="selectedContentDepartment">
               <option value="all">All departments</option>
-              <option v-for="department in lessonDepartments" :key="department" :value="department">
+              <option v-for="department in contentDepartments" :key="department" :value="department">
                 {{ department }}
               </option>
             </select>
-            <span>{{ activeMetricModal.rows.length }} lesson{{ activeMetricModal.rows.length === 1 ? '' : 's' }}</span>
+            <span>
+              {{ activeMetricModal.rows.length }}
+              {{ activeMetricKey === 'lessons' ? 'lesson' : 'assessment' }}{{ activeMetricModal.rows.length === 1 ? '' : 's' }}
+            </span>
           </div>
           <div class="analytics-table-wrap">
             <table class="analytics-table">
@@ -560,7 +563,7 @@ export default {
     const analyticsError = ref('')
     const isMetricsModalOpen = ref(false)
     const activeMetricKey = ref('students')
-    const selectedLessonDepartment = ref('all')
+    const selectedContentDepartment = ref('all')
     // Metrics data
     const metrics = reactive({
       totalStudents: 0,
@@ -714,21 +717,23 @@ export default {
           { key: 'subject', label: 'Subject', type: 'text' },
           { key: 'difficulty', label: 'Difficulty', type: 'text' },
           { key: 'examType', label: 'Exam Type', type: 'text' },
+          { key: 'department', label: 'Department', type: 'text' },
+          { key: 'publishedBy', label: 'Published by', type: 'text' },
           { key: 'createdAt', label: 'Created', type: 'date' },
         ],
       },
     }
-    const lessonDepartments = computed(() => [...new Set(
-      (metrics.detailTables?.lessons || [])
-        .map((lesson) => String(lesson.department || 'Unassigned').trim() || 'Unassigned')
+    const contentDepartments = computed(() => [...new Set(
+      (metrics.detailTables?.[activeMetricKey.value] || [])
+        .map((item) => String(item.department || 'Unassigned').trim() || 'Unassigned')
     )].sort((left, right) => left.localeCompare(right)))
     const activeMetricModal = computed(() => {
       const key = activeMetricKey.value
       const config = metricModalConfig[key] || metricModalConfig.students
       let rows = Array.isArray(metrics.detailTables?.[key]) ? metrics.detailTables[key] : []
-      if (key === 'lessons' && selectedLessonDepartment.value !== 'all') {
-        rows = rows.filter((lesson) => (
-          String(lesson.department || 'Unassigned').trim() === selectedLessonDepartment.value
+      if (['lessons', 'assessments'].includes(key) && selectedContentDepartment.value !== 'all') {
+        rows = rows.filter((item) => (
+          String(item.department || 'Unassigned').trim() === selectedContentDepartment.value
         ))
       }
 
@@ -766,7 +771,7 @@ export default {
 
     const openMetricDetails = (key) => {
       activeMetricKey.value = metricModalConfig[key] ? key : 'students'
-      if (activeMetricKey.value === 'lessons') selectedLessonDepartment.value = 'all'
+      if (['lessons', 'assessments'].includes(activeMetricKey.value)) selectedContentDepartment.value = 'all'
       isMetricsModalOpen.value = true
       if (typeof document !== 'undefined') {
         document.body.classList.add('admin-modal-open')
@@ -1283,8 +1288,8 @@ export default {
       roleTrendSubtitle,
       activeMetricKey,
       activeMetricModal,
-      selectedLessonDepartment,
-      lessonDepartments,
+      selectedContentDepartment,
+      contentDepartments,
       isSidebarOpen,
       isActive,
       toggleSidebar,

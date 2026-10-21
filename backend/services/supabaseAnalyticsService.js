@@ -185,7 +185,7 @@ async function readAnalyticsRows() {
   const [usersResult, lessonsResult, assessmentsResult] = await Promise.all([
     client.from('users').select('id,name,email,role,status,department,created_at,updated_at'),
     client.from('lessons').select('id,title,subject,track,created_by,published_by,created_at,updated_at'),
-    client.from('assessments').select('id,title,subject,difficulty,exam_type,created_at,updated_at'),
+    client.from('assessments').select('id,title,subject,difficulty,exam_type,created_by,published_by,created_at,updated_at'),
   ]);
 
   if (usersResult.error) throw analyticsError(usersResult.error, 'Failed to read user analytics from Supabase');
@@ -394,7 +394,19 @@ async function getSupabaseAnalytics() {
             createdAt: lesson.created_at || null,
           };
         }),
-        assessments: assessments.map((assessment) => ({ id: String(assessment.id), title: assessment.title || 'Untitled assessment', subject: assessment.subject || '-', difficulty: assessment.difficulty || '-', examType: assessment.exam_type || '-', createdAt: assessment.created_at || null })),
+        assessments: assessments.map((assessment) => {
+          const publisher = usersById.get(String(assessment.published_by || assessment.created_by || ''));
+          return {
+            id: String(assessment.id),
+            title: assessment.title || 'Untitled assessment',
+            subject: assessment.subject || '-',
+            difficulty: assessment.difficulty || '-',
+            examType: assessment.exam_type || '-',
+            department: publisher?.department || 'Unassigned',
+            publishedBy: publisher?.name || publisher?.email || 'Unknown user',
+            createdAt: assessment.created_at || null,
+          };
+        }),
       },
       topSubjects,
       topTracks: [...trackMap.values()].sort((left, right) => right.assessmentCount - left.assessmentCount).slice(0, 5),
