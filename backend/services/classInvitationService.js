@@ -276,6 +276,27 @@ async function renewInvitation(teacherId, id, expiresInDays = 30) {
   if (error) throw databaseError(error);
   return (await listInvitations(teacherId)).find(invitation => invitation.id === data);
 }
+async function addInvitationStudent(teacherId, id, body = {}) {
+  if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) throw fail('Invitation not found.', 404);
+  const context = await validationContext(teacherId);
+  const { data: invitation, error: invitationError } = await getSupabaseStorageClient().from('class_invitations')
+    .select('id,subject_id,status,expires_at').eq('id', id).eq('teacher_id', teacherId).eq('subject_id', context.subject.id).maybeSingle();
+  if (invitationError) throw databaseError(invitationError);
+  if (!invitation) throw fail('Invitation not found.', 404);
+  if (invitation.status !== 'active' || Date.parse(invitation.expires_at) <= Date.now()) {
+    throw fail('Renew this invitation before adding another student.', 409);
+  }
+  const existingStudents = await rows('class_registration_students', 'id', query => query.eq('invitation_id', id));
+  if (existingStudents.length >= MAX_ROSTER_ROWS) throw fail(`This invitation already has the maximum of ${MAX_ROSTER_ROWS} students.`, 409);
+  const [record] = validateRecords([{ firstName: body?.firstName, lastName: body?.lastName }], context);
+  if (record.status !== 'valid') throw fail(record.errors[0] || 'Enter a valid student name.');
+  const { error } = await getSupabaseStorageClient().from('class_registration_students').insert({
+    id: crypto.randomUUID(), invitation_id: id, teacher_id: teacherId, full_name: record.fullName,
+    normalized_name: record.normalizedName, section_id: context.section.id, section_name: context.section.name,
+  });
+  if (error) throw databaseError(error);
+  return (await listInvitations(teacherId)).find(item => item.id === id);
+}
 async function revokeInvitation(teacherId, id) {
   if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) throw fail('Invitation not found.', 404);
   const context = await advisoryContext(teacherId);
@@ -364,5 +385,5 @@ async function registerStudent(token, body = {}) {
   return { studentId: data, fullName: student.full_name, section: student.section_name };
 }
 module.exports = { MAX_FILE_BYTES, MAX_ROSTER_ROWS, cleanText, normalizeName, invitationToken, getAdvisoryContext,
-  validateWorkbookArchive, parseWorkbook, validateRecords, previewRoster, createInvitation, renewInvitation, revokeInvitation, listInvitations, publicInvitation,
+  validateWorkbookArchive, parseWorkbook, validateRecords, previewRoster, createInvitation, renewInvitation, addInvitationStudent, revokeInvitation, listInvitations, publicInvitation,
   verifyStudent, usernameAvailability, registerStudent, databaseError };

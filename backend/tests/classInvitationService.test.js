@@ -340,6 +340,26 @@ test('valid creation sends only canonical names and server-mapped sections, then
   assert.equal(rpcInput.p_token_hash, digest(invitation.invitationUrl.split('/').at(-1)));
 });
 
+test('teacher can manually add a validated student to an active invitation', async () => {
+  fixture();
+  const invitation = await service.addInvitationStudent(teacherId, invitationId, { firstName: ' Maria ', lastName: ' Santos ' });
+  assert.equal(invitation.totalCount, 2);
+  assert.equal(invitation.unregisteredCount, 2);
+  assert.ok(invitation.students.some(student => student.fullName === 'Maria Santos'));
+  const added = client.tables.class_registration_students.find(row => row.normalized_name === 'maria santos');
+  assert.equal(added.invitation_id, invitationId);
+  assert.equal(added.teacher_id, teacherId);
+  assert.equal(added.section_id, 'charity');
+  assert.equal(added.section_name, 'Charity');
+});
+
+test('manual invitation entry rejects duplicate names and expired invitations', async () => {
+  fixture();
+  await rejects(service.addInvitationStudent(teacherId, invitationId, { firstName: 'Juan', lastName: 'dela Cruz' }), 400, /already has an account|imported student list/);
+  client.tables.class_invitations[0].expires_at = new Date(Date.now() - 1000).toISOString();
+  await rejects(service.addInvitationStudent(teacherId, invitationId, { firstName: 'Maria', lastName: 'Santos' }), 409, /Renew this invitation/);
+});
+
 test('registration ignores client enrollment fields and hashes the password before the atomic RPC', async () => {
   fixture();
   let rpcInput;

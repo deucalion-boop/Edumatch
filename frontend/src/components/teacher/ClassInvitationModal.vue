@@ -39,6 +39,12 @@
             <label class="invitation-field"><span>Class invitation link</span><div class="invitation-link-field"><input :value="generatedInvitation.invitationUrl" type="url" readonly aria-label="Shareable class invitation link" @focus="$event.target.select()"><button type="button" class="invitation-button primary" :disabled="isExpired || !hasAdvisoryContext" @click="copyLink"><i class="fas fa-copy" aria-hidden="true"></i>{{ copied ? 'Copied' : 'Copy link' }}</button></div></label>
             <p class="invitation-help">Expires {{ formatExpiry(generatedInvitation.expiresAt) }}. Share this link with the class. Students enter their full names as listed below.</p>
             <div class="invitation-share-instructions"><strong>Students complete their own registration</strong><ol><li>Open the class invitation link.</li><li>Enter their full name to match the imported class list.</li><li>Provide an email, choose an available username, and create a password.</li></ol><p>Successful registration automatically enrolls the student in your designated advisory class and section.</p></div>
+            <form class="invitation-add-student" @submit.prevent="addStudentManually">
+              <div><strong>Add a student manually</strong><span>Add their name to this invitation without importing another spreadsheet.</span></div>
+              <label><span>First name</span><input v-model.trim="manualStudent.firstName" type="text" maxlength="100" autocomplete="off" :disabled="busy || isExpired" required></label>
+              <label><span>Last name</span><input v-model.trim="manualStudent.lastName" type="text" maxlength="100" autocomplete="off" :disabled="busy || isExpired" required></label>
+              <button type="submit" class="invitation-button primary" :disabled="busy || isExpired || !manualStudent.firstName || !manualStudent.lastName"><i class="fas" :class="busy ? 'fa-spinner fa-spin' : 'fa-user-plus'" aria-hidden="true"></i>{{ busy ? 'Adding…' : 'Add to table' }}</button>
+            </form>
             <div class="invitation-table-wrap" tabindex="0" aria-label="Invited student enrollment"><table><thead><tr><th>Full name</th><th>Section</th><th>Enrollment</th></tr></thead><tbody><tr v-for="student in generatedInvitation.students || []" :key="student.id"><td>{{ student.fullName }}</td><td>{{ student.section }}</td><td><span class="invitation-status" :class="{ waiting: student.status !== 'registered' }">{{ student.status === 'registered' ? 'Registered' : 'Unregistered' }}</span></td></tr></tbody></table></div>
           </template>
         </div>
@@ -79,6 +85,7 @@ const busy = ref(false)
 const copied = ref(false)
 const error = ref('')
 const notice = ref('')
+const manualStudent = ref({ firstName: '', lastName: '' })
 const controller = new AbortController()
 let previousFocus = null
 let previousOverflow = ''
@@ -196,6 +203,22 @@ async function renewInvitation() {
     if (failure.code !== 'ERR_CANCELED') error.value = failure.response?.data?.message || (failure.isAxiosError ? 'Unable to renew this invitation. Check your connection and try again.' : failure.message) || 'Unable to renew this invitation. Please try again.'
   } finally { busy.value = false }
 }
+async function addStudentManually() {
+  if (busy.value || isExpired.value || !generatedInvitation.value?.id || !manualStudent.value.firstName || !manualStudent.value.lastName) return
+  busy.value = true
+  error.value = ''
+  notice.value = ''
+  try {
+    const response = await axios.post(`${props.apiBaseUrl}/teacher/class-invitations/${encodeURIComponent(generatedInvitation.value.id)}/students`, manualStudent.value, requestConfig())
+    if (!response.data?.invitation) throw new Error('The updated invitation could not be confirmed.')
+    generatedInvitation.value = response.data.invitation
+    manualStudent.value = { firstName: '', lastName: '' }
+    notice.value = 'Student added to the invitation table.'
+    emit('imported', generatedInvitation.value)
+  } catch (failure) {
+    if (failure.code !== 'ERR_CANCELED') error.value = failure.response?.data?.message || failure.message || 'Unable to add this student.'
+  } finally { busy.value = false }
+}
 function handleKeydown(event) {
   if (event.key === 'Escape') { event.stopImmediatePropagation(); event.preventDefault(); requestClose(); return }
   if (event.key !== 'Tab') return
@@ -283,6 +306,12 @@ onBeforeUnmount(() => {
 .invitation-share-instructions { @apply tw:[padding:.9rem] tw:[margin:1rem_0] tw:[border:1px_solid_#dfe9d8] tw:[border-radius:11px] tw:[background:#f7faf4] tw:[font-size:.78rem] tw:[line-height:1.6]; }
 .invitation-share-instructions ol { @apply tw:[margin:.4rem_0] tw:[padding-left:1.2rem]; }
 .invitation-share-instructions p { @apply tw:[margin:0] tw:[color:#687760]; }
+.invitation-add-student { @apply tw:grid tw:[grid-template-columns:minmax(180px,_1fr)_minmax(130px,_.75fr)_minmax(130px,_.75fr)_auto] tw:items-end tw:[gap:.65rem] tw:[margin:1rem_0] tw:[padding:.85rem] tw:[border:1px_solid_#d8e6d0] tw:[border-radius:11px] tw:[background:#f8fbf5]; }
+.invitation-add-student > div { @apply tw:grid tw:[gap:.15rem] tw:self-center; }
+.invitation-add-student > div strong { @apply tw:[font-size:.8rem] tw:[color:#315e1b]; }
+.invitation-add-student > div span { @apply tw:[font-size:.69rem] tw:[line-height:1.35] tw:[color:#687760]; }
+.invitation-add-student label { @apply tw:grid tw:[gap:.3rem] tw:[font-size:.7rem] tw:font-semibold tw:[color:#4b633f]; }
+.invitation-add-student input { @apply tw:w-full tw:[min-width:0] tw:[height:40px] tw:[padding:.55rem_.65rem] tw:[border:1px_solid_#cfddc8] tw:[border-radius:9px] tw:bg-white tw:[font:inherit]; }
 .invitation-footer { @apply tw:flex tw:justify-between tw:flex-wrap tw:[gap:.6rem] tw:[padding:1rem_1.5rem] tw:[border-top:1px_solid_#e4ebdf]; }
 .invitation-footer-share { @apply tw:flex tw:flex-wrap tw:[gap:.6rem]; }
 .invitation-button { @apply tw:inline-flex tw:items-center tw:justify-center tw:[gap:.4rem] tw:[min-height:40px] tw:[padding:.55rem_.85rem] tw:[border:1px_solid_#ccdec2] tw:[border-radius:9px] tw:[font:inherit] tw:[font-size:.78rem] tw:font-semibold tw:cursor-pointer; }
@@ -304,5 +333,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, .invitation-tab
   .invitation-footer > .invitation-button, .invitation-footer-share { @apply tw:w-full; }
   .invitation-footer-share > .invitation-button { @apply tw:flex-1; }
   .invitation-preview-table table { @apply tw:[min-width:460px]; }
+  .invitation-add-student { @apply tw:[grid-template-columns:1fr]; }
 }
 </style>
