@@ -191,7 +191,6 @@
     <section
       v-if="showGradesPanel"
       class="premium-panel premium-focus-panel premium-grades-panel"
-      style="background: transparent !important; background-image: none !important;"
       data-dashboard-section="grades"
       aria-labelledby="recent-results-title"
     >
