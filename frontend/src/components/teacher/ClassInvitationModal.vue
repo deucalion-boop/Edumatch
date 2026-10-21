@@ -21,7 +21,6 @@
               <small v-if="file">{{ file.name }}</small>
             </div>
             <p class="invitation-help">We check required fields, repeated names, and students already imported or registered before creating the invitation.</p>
-            <button type="button" class="invitation-manual" :disabled="busy || !hasAdvisoryContext" @click="emit('manual')"><i class="fas fa-link" aria-hidden="true"></i>Create a private registration link instead</button>
           </template>
           <template v-else-if="step === 2">
             <div class="invitation-review-summary" aria-live="polite"><span><strong>{{ validRecords.length }}</strong> ready to invite</span><span :class="{ invalid: invalidRecords.length > 0 }"><strong>{{ invalidRecords.length }}</strong> need correction</span></div>
