@@ -184,7 +184,7 @@ async function readAnalyticsRows() {
   const client = getSupabaseStorageClient();
   const [usersResult, lessonsResult, assessmentsResult] = await Promise.all([
     client.from('users').select('id,name,email,role,status,department,created_at,updated_at'),
-    client.from('lessons').select('id,title,subject,track,created_at,updated_at'),
+    client.from('lessons').select('id,title,subject,track,created_by,published_by,created_at,updated_at'),
     client.from('assessments').select('id,title,subject,difficulty,exam_type,created_at,updated_at'),
   ]);
 
@@ -249,6 +249,7 @@ async function getSupabaseAnalytics() {
     : 0;
   const { aiUserIds: _aiUserIds, ...publicAiUsage } = aiUsage;
   const activeUsers = users.filter((user) => user.status === 'active');
+  const usersById = new Map(users.map((user) => [String(user.id), user]));
 
   const roleStats = Object.fromEntries(ANALYTICS_ROLES.map((role) => [
     role,
@@ -381,7 +382,18 @@ async function getSupabaseAnalytics() {
         teachers: users.filter((user) => user.role === 'teacher').map(detailUser),
         headTeachers: users.filter((user) => user.role === 'headteacher').map(detailUser),
         secretaries: users.filter((user) => user.role === 'secretary').map(detailUser),
-        lessons: lessons.map((lesson) => ({ id: String(lesson.id), title: lesson.title || 'Untitled lesson', subject: lesson.subject || '-', track: lesson.track || '-', createdAt: lesson.created_at || null })),
+        lessons: lessons.map((lesson) => {
+          const publisher = usersById.get(String(lesson.published_by || lesson.created_by || ''));
+          return {
+            id: String(lesson.id),
+            title: lesson.title || 'Untitled lesson',
+            subject: lesson.subject || '-',
+            track: lesson.track || '-',
+            department: publisher?.department || 'Unassigned',
+            publishedBy: publisher?.name || publisher?.email || 'Unknown user',
+            createdAt: lesson.created_at || null,
+          };
+        }),
         assessments: assessments.map((assessment) => ({ id: String(assessment.id), title: assessment.title || 'Untitled assessment', subject: assessment.subject || '-', difficulty: assessment.difficulty || '-', examType: assessment.exam_type || '-', createdAt: assessment.created_at || null })),
       },
       topSubjects,

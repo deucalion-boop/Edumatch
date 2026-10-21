@@ -1826,7 +1826,9 @@ const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
       .sort({ createdAt: -1 })
       .lean(),
     Lesson.find()
-      .select('title subject track createdAt')
+      .select('title subject track createdBy publishedBy createdAt')
+      .populate('createdBy', 'name email department')
+      .populate('publishedBy', 'name email department')
       .sort({ createdAt: -1 })
       .lean(),
     Assessment.find()
@@ -2040,13 +2042,18 @@ const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
           status: user.status || '-',
           createdAt: user.createdAt || null,
         })),
-        lessons: lessonDetails.map((lesson) => ({
-          id: String(lesson._id),
-          title: lesson.title || 'Untitled lesson',
-          subject: lesson.subject || '-',
-          track: lesson.track || '-',
-          createdAt: lesson.createdAt || null,
-        })),
+        lessons: lessonDetails.map((lesson) => {
+          const publisher = lesson.publishedBy || lesson.createdBy;
+          return {
+            id: String(lesson._id),
+            title: lesson.title || 'Untitled lesson',
+            subject: lesson.subject || '-',
+            track: lesson.track || '-',
+            department: publisher?.department || 'Unassigned',
+            publishedBy: publisher?.name || publisher?.email || 'Unknown user',
+            createdAt: lesson.createdAt || null,
+          };
+        }),
         assessments: assessmentDetails.map((assessment) => ({
           id: String(assessment._id),
           title: assessment.title || 'Untitled assessment',

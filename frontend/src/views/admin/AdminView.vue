@@ -491,6 +491,16 @@
         </div>
 
         <div class="modal-panel-body">
+          <div v-if="activeMetricKey === 'lessons'" class="analytics-table-filters">
+            <label for="lesson-department-filter">Department</label>
+            <select id="lesson-department-filter" v-model="selectedLessonDepartment">
+              <option value="all">All departments</option>
+              <option v-for="department in lessonDepartments" :key="department" :value="department">
+                {{ department }}
+              </option>
+            </select>
+            <span>{{ activeMetricModal.rows.length }} lesson{{ activeMetricModal.rows.length === 1 ? '' : 's' }}</span>
+          </div>
           <div class="analytics-table-wrap">
             <table class="analytics-table">
               <thead>
@@ -550,6 +560,7 @@ export default {
     const analyticsError = ref('')
     const isMetricsModalOpen = ref(false)
     const activeMetricKey = ref('students')
+    const selectedLessonDepartment = ref('all')
     // Metrics data
     const metrics = reactive({
       totalStudents: 0,
@@ -690,6 +701,8 @@ export default {
           { key: 'title', label: 'Title', type: 'text' },
           { key: 'subject', label: 'Subject', type: 'text' },
           { key: 'track', label: 'Track', type: 'text' },
+          { key: 'department', label: 'Department', type: 'text' },
+          { key: 'publishedBy', label: 'Published by', type: 'text' },
           { key: 'createdAt', label: 'Created', type: 'date' },
         ],
       },
@@ -705,10 +718,19 @@ export default {
         ],
       },
     }
+    const lessonDepartments = computed(() => [...new Set(
+      (metrics.detailTables?.lessons || [])
+        .map((lesson) => String(lesson.department || 'Unassigned').trim() || 'Unassigned')
+    )].sort((left, right) => left.localeCompare(right)))
     const activeMetricModal = computed(() => {
       const key = activeMetricKey.value
       const config = metricModalConfig[key] || metricModalConfig.students
-      const rows = Array.isArray(metrics.detailTables?.[key]) ? metrics.detailTables[key] : []
+      let rows = Array.isArray(metrics.detailTables?.[key]) ? metrics.detailTables[key] : []
+      if (key === 'lessons' && selectedLessonDepartment.value !== 'all') {
+        rows = rows.filter((lesson) => (
+          String(lesson.department || 'Unassigned').trim() === selectedLessonDepartment.value
+        ))
+      }
 
       return {
         title: config.title,
@@ -744,6 +766,7 @@ export default {
 
     const openMetricDetails = (key) => {
       activeMetricKey.value = metricModalConfig[key] ? key : 'students'
+      if (activeMetricKey.value === 'lessons') selectedLessonDepartment.value = 'all'
       isMetricsModalOpen.value = true
       if (typeof document !== 'undefined') {
         document.body.classList.add('admin-modal-open')
@@ -1258,7 +1281,10 @@ export default {
       selectedRoleTrendPeriod,
       roleTrendPeriods,
       roleTrendSubtitle,
+      activeMetricKey,
       activeMetricModal,
+      selectedLessonDepartment,
+      lessonDepartments,
       isSidebarOpen,
       isActive,
       toggleSidebar,
@@ -1845,6 +1871,33 @@ export default {
   @apply tw:[border:1px_solid_#e2e8f0];
   @apply tw:[border-radius:16px];
   @apply tw:[background:#ffffff];
+}
+
+.analytics-table-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+.analytics-table-filters label {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.analytics-table-filters select {
+  min-width: 190px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #0f172a;
+  padding: 0.6rem 2.25rem 0.6rem 0.75rem;
+}
+
+.analytics-table-filters span {
+  margin-left: auto;
 }
 
 .analytics-table {
