@@ -20,6 +20,7 @@
             <h4 class="nav-section-title">Navigation</h4>
             <router-link to="/admin/dashboard" class="nav-link sidebar-item sidebar-item--dashboard" :class="{ active: isActive('/admin/dashboard') }" @click="closeSidebar"><i class="fas fa-tachometer-alt"></i><span>Overview</span></router-link>
             <router-link to="/admin/users" class="nav-link sidebar-item sidebar-item--users" :class="{ active: isActive('/admin/users') }" @click="closeSidebar"><i class="fas fa-user-cog"></i><span>User Management</span></router-link>
+            <router-link to="/admin/sections" class="nav-link sidebar-item sidebar-item--sections" :class="{ active: isActive('/admin/sections') }" @click="closeSidebar"><i class="fas fa-layer-group"></i><span>Manage Sections</span></router-link>
             <router-link to="/admin/requests" class="nav-link sidebar-item sidebar-item--requests" :class="{ active: isActive('/admin/requests') }" @click="closeSidebar"><i class="fas fa-inbox"></i><span>Request</span></router-link>
             <router-link to="/admin/announcements" class="nav-link sidebar-item active" aria-current="page" @click="closeSidebar"><i class="fas fa-bullhorn"></i><span>Announcements</span></router-link>
             <router-link to="/admin/audit-logs" class="nav-link sidebar-item sidebar-item--audit-logs" :class="{ active: isActive('/admin/audit-logs') }" @click="closeSidebar"><i class="fas fa-clipboard-list"></i><span>Audit Logs</span></router-link>

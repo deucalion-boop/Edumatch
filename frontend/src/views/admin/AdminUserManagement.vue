@@ -83,6 +83,7 @@
               <i class="fas fa-user-cog"></i>
               <span>User Management</span>
             </router-link>
+            <router-link to="/admin/sections" class="nav-link sidebar-item sidebar-item--sections" :class="{ active: isActive('/admin/sections') }" @click="closeSidebar"><i class="fas fa-layer-group"></i><span>Manage Sections</span></router-link>
             <router-link to="/admin/requests" class="nav-link sidebar-item sidebar-item--requests" :class="{ active: isActive('/admin/requests') }" @click="closeSidebar">
               <i class="fas fa-inbox"></i>
               <span>Request</span>
