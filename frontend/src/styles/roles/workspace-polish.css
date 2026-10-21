@@ -129,7 +129,6 @@ body.teacher-dashboard .teacher-main :is(.section-card, .stat-card, .activity-ca
 body.student-dashboard .student-dashboard:not(.student-theme-dark) .student-main :is(.section-card, .stat-card, .activity-card, .content-card, .premium-panel, .premium-summary-card),
 body.headteacher-dashboard .headteacher-main :is(.headteacher-section-card, .headteacher-stat-card, .headteacher-attention-row) {
   @apply tw:[border-radius:18px];
-  @apply tw:[box-shadow:var(--workspace-shadow)];
 }
 
 body.teacher-dashboard .teacher-main :is(.section-card, .stat-card, .activity-card, .content-card),
