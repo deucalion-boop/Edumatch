@@ -142,7 +142,6 @@ body.headteacher-dashboard .headteacher-main :is(.headteacher-section-card, .hea
 body.teacher-dashboard .teacher-main :is(.section-card, .stat-card, .activity-card, .content-card):hover,
 body.student-dashboard .student-dashboard:not(.student-theme-dark) .student-main :is(.section-card, .stat-card, .activity-card, .content-card, .premium-panel, .premium-summary-card):hover,
 body.headteacher-dashboard .headteacher-main :is(.headteacher-section-card, .headteacher-stat-card):hover {
-  @apply tw:[border-color:#d4e4df];
   @apply tw:[box-shadow:0_16px_34px_rgba(27,_43,_65,_0.09)];
   @apply tw:[transform:translateY(-2px)];
 }
