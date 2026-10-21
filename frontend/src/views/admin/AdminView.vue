@@ -488,17 +488,30 @@
 
         <div class="modal-panel-body">
           <div v-if="['lessons', 'assessments'].includes(activeMetricKey)" class="analytics-table-filters">
-            <label for="content-department-filter">Department</label>
-            <select id="content-department-filter" v-model="selectedContentDepartment">
-              <option value="all">All departments</option>
-              <option v-for="department in contentDepartments" :key="department" :value="department">
-                {{ department }}
-              </option>
-            </select>
-            <span>
-              {{ activeMetricModal.rows.length }}
-              {{ activeMetricKey === 'lessons' ? 'lesson' : 'assessment' }}{{ activeMetricModal.rows.length === 1 ? '' : 's' }}
-            </span>
+            <div class="analytics-filter-heading">
+              <span class="analytics-filter-icon" aria-hidden="true">
+                <i class="fas fa-building"></i>
+              </span>
+              <div>
+                <label for="content-department-filter">Filter by department</label>
+                <small>Choose which department's records to display.</small>
+              </div>
+            </div>
+            <div class="analytics-filter-actions">
+              <div class="analytics-filter-select-wrap">
+                <select id="content-department-filter" v-model="selectedContentDepartment">
+                  <option value="all">All departments</option>
+                  <option v-for="department in contentDepartments" :key="department" :value="department">
+                    {{ department }}
+                  </option>
+                </select>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+              </div>
+              <span class="analytics-filter-count" aria-live="polite">
+                <strong>{{ activeMetricModal.rows.length }}</strong>
+                {{ activeMetricKey === 'lessons' ? 'lesson' : 'assessment' }}{{ activeMetricModal.rows.length === 1 ? '' : 's' }}
+              </span>
+            </div>
           </div>
           <div class="analytics-table-wrap">
             <table class="analytics-table">
@@ -699,7 +712,6 @@ export default {
         columns: [
           { key: 'title', label: 'Title', type: 'text' },
           { key: 'subject', label: 'Subject', type: 'text' },
-          { key: 'track', label: 'Track', type: 'text' },
           { key: 'department', label: 'Department', type: 'text' },
           { key: 'publishedBy', label: 'Published by', type: 'text' },
           { key: 'createdAt', label: 'Created', type: 'date' },
@@ -1877,28 +1889,113 @@ export default {
 .analytics-table-filters {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 1rem;
-  color: #475569;
-  font-size: 0.875rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #dbe5d5;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f8fbf6 0%, #ffffff 70%);
+  box-shadow: 0 6px 18px rgba(63, 127, 42, 0.06);
 }
 
-.analytics-table-filters label {
+.analytics-filter-heading,
+.analytics-filter-actions {
+  display: flex;
+  align-items: center;
+}
+
+.analytics-filter-heading {
+  min-width: 0;
+  gap: 0.75rem;
+}
+
+.analytics-filter-icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 11px;
+  background: #e9f5e3;
+  color: #3f7f2a;
+}
+
+.analytics-filter-heading div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.analytics-filter-heading label {
   color: #0f172a;
   font-weight: 700;
+  font-size: 0.88rem;
+  line-height: 1.2;
 }
 
-.analytics-table-filters select {
-  min-width: 190px;
+.analytics-filter-heading small {
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.analytics-filter-actions {
+  flex: 0 0 auto;
+  gap: 0.65rem;
+}
+
+.analytics-filter-select-wrap {
+  position: relative;
+}
+
+.analytics-filter-select-wrap select {
+  min-width: 205px;
+  appearance: none;
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  border-radius: 11px;
   background: #fff;
   color: #0f172a;
-  padding: 0.6rem 2.25rem 0.6rem 0.75rem;
+  padding: 0.65rem 2.5rem 0.65rem 0.85rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.analytics-table-filters span {
-  margin-left: auto;
+.analytics-filter-select-wrap select:focus {
+  outline: none;
+  border-color: #69aa47;
+  box-shadow: 0 0 0 3px rgba(105, 170, 71, 0.16);
+}
+
+.analytics-filter-select-wrap i {
+  position: absolute;
+  top: 50%;
+  right: 0.85rem;
+  color: #64748b;
+  font-size: 0.7rem;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.analytics-filter-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  min-width: 104px;
+  justify-content: center;
+  border: 1px solid #cfe4c4;
+  border-radius: 999px;
+  background: #eef8e9;
+  color: #386c27;
+  padding: 0.58rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.analytics-filter-count strong {
+  font-size: 0.95rem;
 }
 
 .analytics-table {
@@ -2030,6 +2127,29 @@ export default {
 }
 
 @media (max-width: 768px) {
+  .analytics-table-filters,
+  .analytics-filter-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .analytics-table-filters {
+    padding: 0.85rem;
+  }
+
+  .analytics-filter-actions {
+    width: 100%;
+  }
+
+  .analytics-filter-select-wrap select,
+  .analytics-filter-count {
+    width: 100%;
+  }
+
+  .analytics-filter-count {
+    box-sizing: border-box;
+  }
+
   :global(body.admin-dashboard) .analytics-grid {
     @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))]!;
     @apply tw:[gap:0.9rem]!;
