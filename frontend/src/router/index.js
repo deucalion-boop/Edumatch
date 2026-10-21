@@ -24,7 +24,6 @@ import TeacherSettings from '../views/teacher/TeacherSettings.vue'
 import AdminView from '../views/admin/AdminView.vue'
 import AdminUserManagement from '../views/admin/AdminUserManagement.vue'
 import AdminRequest from '../views/admin/AdminRequest.vue'
-import AdminLoginAttempts from '../views/admin/AdminLoginAttempts.vue'
 import AdminAuditLogs from '../views/admin/AdminAuditLogs.vue'
 import AdminSettings from '../views/admin/AdminSettings.vue'
 import AdminProfile from '../views/admin/AdminProfile.vue'
@@ -219,7 +218,7 @@ const routes = [
   { path: '/admin/dashboard', name: 'admin-dashboard', component: AdminView, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/users', name: 'admin-users', component: AdminUserManagement, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/requests', name: 'admin-requests', component: AdminRequest, meta: { requiresAuth: true, roles: ['admin'] } },
-  { path: '/admin/login-attempts', name: 'admin-login-attempts', component: AdminLoginAttempts, meta: { requiresAuth: true, roles: ['admin'] } },
+  { path: '/admin/login-attempts', redirect: '/admin/audit-logs' },
   { path: '/admin/audit-logs', name: 'admin-audit-logs', component: AdminAuditLogs, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/settings', name: 'admin-settings', component: AdminSettings, meta: { requiresAuth: true, roles: ['admin'] } },
   { path: '/admin/profile', name: 'admin-profile', component: AdminProfile, meta: { requiresAuth: true, roles: ['admin'] } },

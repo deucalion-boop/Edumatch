@@ -190,7 +190,12 @@ function buildMetadata(req) {
         ? Object.values(req.files).reduce((total, items) => total + (Array.isArray(items) ? items.length : 0), 0)
         : 0;
 
+  const contextMetadata = req.auditLogContext?.metadata && typeof req.auditLogContext.metadata === 'object'
+    ? sanitizeObjectEntries(req.auditLogContext.metadata)
+    : {};
+
   return {
+    ...contextMetadata,
     params: sanitizeObjectEntries(req.params),
     query: sanitizeObjectEntries(req.query),
     bodyKeys,

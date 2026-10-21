@@ -170,15 +170,35 @@ function resolveClientUserAgent(req) {
 }
 
 async function recordLoginAttempt(req, { username = '', user = null, outcome = 'failed', reason = '' } = {}) {
+  const normalizedOutcome = outcome === 'success' ? 'success' : 'failed';
+  const normalizedUsername = String(username || user?.username || '').trim().slice(0, 120);
+  const normalizedReason = String(reason || '').trim().slice(0, 300);
+  req.auditLogContext = {
+    ...(req.auditLogContext || {}),
+    actorUserId: user?._id || req.auditLogContext?.actorUserId || null,
+    actorName: String(user?.name || req.auditLogContext?.actorName || '').trim().slice(0, 200),
+    actorEmail: String(user?.email || req.auditLogContext?.actorEmail || '').trim().toLowerCase().slice(0, 200),
+    actorRole: String(user?.role || req.auditLogContext?.actorRole || '').trim().toLowerCase().slice(0, 50),
+    actorIdentifier: normalizedUsername,
+    targetId: user?._id || req.auditLogContext?.targetId || null,
+    targetLabel: String(user?.name || normalizedUsername || user?.email || '').trim().slice(0, 220),
+    actionLabel: normalizedOutcome === 'success' ? 'Login attempt succeeded' : 'Login attempt failed',
+    metadata: {
+      ...(req.auditLogContext?.metadata || {}),
+      loginOutcome: normalizedOutcome,
+      loginReason: normalizedReason,
+    },
+  };
+
   try {
     await persistLoginAttempt({
       userId: user?._id || null,
-      username: String(username || user?.username || '').trim().slice(0, 120),
+      username: normalizedUsername,
       name: String(user?.name || '').trim().slice(0, 200),
       email: String(user?.email || '').trim().toLowerCase().slice(0, 200),
       role: String(user?.role || '').trim().toLowerCase().slice(0, 50),
-      outcome: outcome === 'success' ? 'success' : 'failed',
-      reason: String(reason || '').trim().slice(0, 300),
+      outcome: normalizedOutcome,
+      reason: normalizedReason,
       ipAddress: resolveClientIpAddress(req).slice(0, 120),
       userAgent: resolveClientUserAgent(req),
     });

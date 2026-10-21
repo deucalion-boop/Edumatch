@@ -87,10 +87,6 @@
               <span>Request</span>
             </router-link>
             <router-link to="/admin/announcements" class="nav-link sidebar-item" :class="{ active: isActive('/admin/announcements') }" @click="closeSidebar"><i class="fas fa-bullhorn"></i><span>Announcements</span></router-link>
-            <router-link to="/admin/login-attempts" class="nav-link sidebar-item sidebar-item--login-attempts" :class="{ active: isActive('/admin/login-attempts') }" @click="closeSidebar">
-              <i class="fas fa-right-to-bracket"></i>
-              <span>Login Attempts</span>
-            </router-link>
             <router-link to="/admin/audit-logs" class="nav-link sidebar-item sidebar-item--audit-logs" :class="{ active: isActive('/admin/audit-logs') }" @click="closeSidebar">
               <i class="fas fa-clipboard-list"></i>
               <span>Audit Logs</span>
@@ -243,6 +239,7 @@
                     <div class="audit-action">
                       <strong>{{ log.actionLabel || 'System action' }}</strong>
                       <span v-if="log.targetLabel">{{ log.targetLabel }}</span>
+                      <span v-if="log.metadata?.loginReason" class="audit-login-reason">{{ log.metadata.loginReason }}</span>
                       <small>
                         <span v-if="log.durationMs > 0">{{ formatNumber(log.durationMs) }} ms</span>
                         <span v-if="log.ipAddress">IP: {{ log.ipAddress }}</span>
