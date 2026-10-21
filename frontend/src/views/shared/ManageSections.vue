@@ -30,7 +30,7 @@
       <button v-if="isAdmin && isSidebarOpen" type="button" class="sidebar-backdrop" aria-label="Close sidebar" @click="closeSidebar"></button>
 
       <main :class="isAdmin ? 'admin-main' : 'secretary-sections-main'">
-        <div v-if="isAdmin" class="page-header sections-page-header fade-in"><div class="header-left"><h2>Manage Sections</h2><p>Create and maintain capacity-aware sections without changing historical records.</p></div><button type="button" class="btn btn-primary sections-add-button" @click="openCreate"><i class="fas fa-plus"></i><span>Add section</span></button></div>
+        <div v-if="isAdmin" class="page-header sections-page-header fade-in"><div class="header-left"><h2>Manage Sections</h2><p>Create and maintain capacity-aware sections without changing historical records.</p></div><button type="button" class="btn btn-primary sections-add-button" style="background: #4f8a35 !important; background-image: none !important; border-color: #4f8a35 !important; color: #ffffff !important;" @click="openCreate"><i class="fas fa-plus"></i><span>Add section</span></button></div>
         <header v-else class="secretary-page-header"><div><p>School structure</p><h1>Manage Sections</h1><span>Create and maintain capacity-aware sections without changing historical records.</span></div><button type="button" class="legacy-primary" @click="openCreate"><i class="fas fa-plus"></i>Add section</button></header>
 
         <section :class="isAdmin ? 'section-card sections-workspace fade-in' : 'secretary-workspace'">
