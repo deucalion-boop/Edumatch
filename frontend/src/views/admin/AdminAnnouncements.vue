@@ -50,7 +50,7 @@
           <div class="compose-section compose-section--delivery"><div class="compose-section-label"><span>3</span><strong>Delivery options</strong></div><label class="urgent-option"><input v-model="form.urgent" type="checkbox"><span class="urgent-icon"><i class="fas fa-triangle-exclamation"></i></span><span class="urgent-copy"><strong>Mark as urgent</strong><small>Highlights the announcement so recipients notice it immediately.</small></span><span class="toggle-control" aria-hidden="true"></span></label></div>
           <p v-if="formError" class="form-message error" role="alert">{{ formError }}</p>
           <p v-if="successMessage" class="form-message success" role="status">{{ successMessage }}</p>
-          <div class="publish-footer"><span><i class="fas fa-users"></i>{{ form.audienceRoles.length }} of {{ audienceOptions.length }} audience groups selected</span><button class="publish-button" type="submit" :disabled="saving"><i class="fas" :class="saving ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>{{ saving ? 'Posting...' : 'Post announcement' }}</button></div>
+          <div class="publish-footer"><span><i class="fas fa-users"></i>{{ form.audienceRoles.length }} of {{ audienceOptions.length }} audience groups selected</span><button class="publish-button" type="submit" :disabled="saving"><i class="fas publish-button-icon" :class="saving ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>{{ saving ? 'Posting...' : 'Post announcement' }}</button></div>
         </form>
 
         <section class="announcement-panel history-panel section-card">
@@ -221,5 +221,5 @@ onMounted(load)
 @media (max-width:900px) { .announcement-admin-grid { @apply tw:[grid-template-columns:1fr]; }.announcement-admin-main { @apply tw:[padding:1.25rem]; } }
 @media (max-width:900px) { .history-panel { position:static; }.audience-grid { grid-template-columns:1fr; } }
 @media (max-width:520px) { .announcement-hero-icon { @apply tw:hidden; }.announcement-panel { @apply tw:[padding:1rem]; }.audience-heading,.publish-footer { align-items:stretch; flex-direction:column; }.publish-footer .publish-button { width:100%; }.urgent-copy small { line-height:1.35; } }
-.publish-button > i { color: #fff !important; }
+.announcement-form .publish-footer .publish-button > .publish-button-icon { color: #fff !important; }
 </style>
