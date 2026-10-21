@@ -4196,18 +4196,18 @@ export default {
   @apply tw:grid;
   @apply tw:[grid-template-columns:minmax(15rem,_0.62fr)_minmax(0,_1.38fr)];
   @apply tw:[gap:1.25rem];
-  @apply tw:items-stretch;
+  @apply tw:items-start;
 }
 
 .grades-performance-card {
   @apply tw:flex;
   @apply tw:flex-col;
-  @apply tw:justify-center;
-  @apply tw:[min-height:23rem];
-  @apply tw:[padding:clamp(1.5rem,_3vw,_2.2rem)];
+  @apply tw:justify-start;
+  @apply tw:[min-height:12rem];
+  @apply tw:[padding:clamp(1.25rem,_2.5vw,_1.65rem)];
   @apply tw:[color:#172033];
   @apply tw:[border:1px_solid_#dce7d7];
-  @apply tw:[border-radius:20px];
+  @apply tw:[border-radius:16px];
   @apply tw:[box-shadow:var(--workspace-shadow,_0_12px_30px_rgba(27,_43,_65,_0.065))];
 }
 
@@ -4222,7 +4222,7 @@ export default {
 .grades-performance-card > strong {
   @apply tw:[margin-top:0.5rem];
   @apply tw:[color:#172033];
-  @apply tw:[font-size:clamp(3rem,_6vw,_4.5rem)];
+  @apply tw:[font-size:clamp(2.5rem,_4vw,_3.5rem)];
   @apply tw:[font-weight:850];
   @apply tw:[letter-spacing:-0.065em];
   @apply tw:[line-height:1];
@@ -4239,7 +4239,7 @@ export default {
 
 .grades-performance-card__track {
   @apply tw:[height:0.55rem];
-  @apply tw:[margin-top:1.5rem];
+  @apply tw:[margin-top:1rem];
   @apply tw:overflow-hidden;
   @apply tw:[border-radius:999px];
   @apply tw:[background:#e7eee3];
@@ -4265,9 +4265,10 @@ export default {
 
 .grades-results-feed {
   @apply tw:[min-width:0];
+  @apply tw:[min-height:12rem];
   @apply tw:[padding:clamp(1.25rem,_2.5vw,_1.75rem)];
   @apply tw:[border:1px_solid_#e0eadb];
-  @apply tw:[border-radius:20px];
+  @apply tw:[border-radius:16px];
   @apply tw:[background:rgba(255,_255,_255,_0.8)];
   @apply tw:[box-shadow:0_8px_24px_rgba(30,_67,_7,_0.05)];
 }
@@ -4489,7 +4490,7 @@ export default {
   }
 
   .grades-performance-card {
-    @apply tw:[min-height:17rem];
+    @apply tw:[min-height:12rem];
   }
 }
 
