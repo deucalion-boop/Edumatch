@@ -444,7 +444,7 @@ export default {
     })
     const calendarFilterOptions = [
       { key: 'lesson', label: 'Lessons', icon: 'fas fa-circle' },
-      { key: 'deadline', label: 'Deadlines', icon: 'fas fa-clock' },
+      { key: 'deadline', label: 'Activities created', icon: 'fas fa-clock' },
       { key: 'completed', label: 'Completed', icon: 'fas fa-check-circle' },
     ]
     const tourSteps = [
