@@ -130,7 +130,6 @@ body.student-dashboard .student-dashboard:not(.student-theme-dark) .student-main
 body.headteacher-dashboard .headteacher-main :is(.headteacher-section-card, .headteacher-stat-card, .headteacher-attention-row) {
   @apply tw:[border:1px_solid_var(--workspace-border)];
   @apply tw:[border-radius:18px];
-  @apply tw:[background:var(--workspace-surface)];
   @apply tw:[box-shadow:var(--workspace-shadow)];
 }
 
