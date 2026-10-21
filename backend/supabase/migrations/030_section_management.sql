@@ -1,4 +1,4 @@
-alter table public.sections add column if not exists grade_level text not null default '10';
+alter table public.sections add column if not exists grade_level text not null default 'Grade 10';
 alter table public.sections add column if not exists strand text not null default '';
 alter table public.sections add column if not exists school_year text not null default '2026-2027';
 alter table public.sections add column if not exists capacity integer not null default 40;

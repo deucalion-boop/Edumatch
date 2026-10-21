@@ -88,7 +88,7 @@ const sections = ref([]), loading = ref(false), error = ref(''), search = ref(''
 const modal = ref(false), editing = ref(null), saving = ref(false), modalError = ref('')
 const isSidebarOpen = ref(false), isAccountMenuOpen = ref(false), accountMenuRef = ref(null)
 const currentYear = new Date().getFullYear()
-const form = reactive({ name: '', gradeLevel: '10', strand: '', schoolYear: `${currentYear}-${currentYear + 1}`, capacity: 40 })
+const form = reactive({ name: '', gradeLevel: 'Grade 10', strand: '', schoolYear: `${currentYear}-${currentYear + 1}`, capacity: 40 })
 const api = computed(() => `${resolveApiBaseUrl()}/${role.value}/manage-sections`)
 const cfg = () => ({ headers: authStore.token ? { Authorization: `Bearer ${authStore.token}` } : {} })
 const years = computed(() => [...new Set(sections.value.map(item => item.schoolYear).filter(Boolean))].sort().reverse())
@@ -108,9 +108,9 @@ const handleDocumentClick = event => { if (!(accountMenuRef.value && event.targe
 const handleDocumentKeydown = event => { if (event.key === 'Escape') { closeAccountMenu(); closeSidebar(); closeModal() } }
 
 async function load() { loading.value = true; error.value = ''; try { sections.value = (await axios.get(api.value, cfg())).data?.sections || [] } catch (requestError) { error.value = requestError.response?.data?.message || 'Unable to load sections' } finally { loading.value = false } }
-function reset() { Object.assign(form, { name: '', gradeLevel: '10', strand: '', schoolYear: `${currentYear}-${currentYear + 1}`, capacity: 40 }) }
+function reset() { Object.assign(form, { name: '', gradeLevel: 'Grade 10', strand: '', schoolYear: `${currentYear}-${currentYear + 1}`, capacity: 40 }) }
 function openCreate() { editing.value = null; reset(); modalError.value = ''; modal.value = true }
-function openEdit(item) { editing.value = item; Object.assign(form, { name: item.name, gradeLevel: '10', strand: item.strand, schoolYear: item.schoolYear, capacity: item.capacity }); modalError.value = ''; modal.value = true }
+function openEdit(item) { editing.value = item; Object.assign(form, { name: item.name, gradeLevel: 'Grade 10', strand: item.strand, schoolYear: item.schoolYear, capacity: item.capacity }); modalError.value = ''; modal.value = true }
 async function save() { saving.value = true; modalError.value = ''; try { editing.value ? await axios.put(`${api.value}/${editing.value.id}`, form, cfg()) : await axios.post(api.value, form, cfg()); modal.value = false; await load() } catch (requestError) { modalError.value = requestError.response?.data?.message || 'Unable to save section' } finally { saving.value = false } }
 async function toggleArchive(item) { if (!confirm(`${item.isActive ? 'Archive' : 'Restore'} ${item.name}?`)) return; try { await axios.patch(`${api.value}/${item.id}/archive`, { archived: item.isActive }, cfg()); await load() } catch (requestError) { error.value = requestError.response?.data?.message || 'Unable to update section' } }
 async function remove(item) { if (!confirm(`Permanently delete ${item.name}? Referenced sections cannot be deleted.`)) return; try { await axios.delete(`${api.value}/${item.id}`, cfg()); await load() } catch (requestError) { error.value = requestError.response?.data?.message || 'Unable to delete section' } }

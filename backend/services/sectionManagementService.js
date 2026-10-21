@@ -3,10 +3,9 @@ const { getSupabaseStorageClient } = require('./supabaseStorageService');
 const clean = (value) => String(value || '').trim();
 function fail(message, statusCode = 400) { return Object.assign(new Error(message), { statusCode }); }
 function payload(input = {}) {
-  const name = clean(input.name); const gradeLevel = clean(input.gradeLevel); const schoolYear = clean(input.schoolYear);
+  const name = clean(input.name); const gradeLevel = 'Grade 10'; const schoolYear = clean(input.schoolYear);
   const strand = clean(input.strand); const capacity = Number(input.capacity);
   if (!name || name.length > 80) throw fail('Section name is required and must be 80 characters or fewer');
-  if (!gradeLevel || gradeLevel.length > 30) throw fail('Grade level is required');
   if (!/^\d{4}-\d{4}$/.test(schoolYear)) throw fail('School year must use YYYY-YYYY format');
   const [start, end] = schoolYear.split('-').map(Number); if (end !== start + 1) throw fail('School year must cover consecutive years');
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > 200) throw fail('Capacity must be between 1 and 200');
