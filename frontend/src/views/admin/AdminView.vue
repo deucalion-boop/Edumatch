@@ -487,7 +487,7 @@
         </div>
 
         <div class="modal-panel-body">
-          <div v-if="['lessons', 'assessments'].includes(activeMetricKey)" class="analytics-table-filters">
+          <div v-if="['students', 'lessons', 'assessments'].includes(activeMetricKey)" class="analytics-table-filters">
             <div class="analytics-filter-heading">
               <span class="analytics-filter-icon" aria-hidden="true">
                 <i class="fas fa-building"></i>
@@ -509,7 +509,7 @@
               </div>
               <span class="analytics-filter-count" aria-live="polite">
                 <strong>{{ activeMetricModal.rows.length }}</strong>
-                {{ activeMetricKey === 'lessons' ? 'lesson' : 'assessment' }}{{ activeMetricModal.rows.length === 1 ? '' : 's' }}
+                {{ metricRecordLabel }}{{ activeMetricModal.rows.length === 1 ? '' : 's' }}
               </span>
             </div>
           </div>
@@ -671,6 +671,8 @@ export default {
         columns: [
           { key: 'name', label: 'Name', type: 'text' },
           { key: 'email', label: 'Email', type: 'text' },
+          { key: 'department', label: 'Department', type: 'text' },
+          { key: 'teacher', label: 'Teacher', type: 'text' },
           { key: 'status', label: 'Status', type: 'text' },
           { key: 'createdAt', label: 'Created', type: 'date' },
         ],
@@ -735,11 +737,16 @@ export default {
       (metrics.detailTables?.[activeMetricKey.value] || [])
         .map((item) => String(item.department || 'Unassigned').trim() || 'Unassigned')
     )].sort((left, right) => left.localeCompare(right)))
+    const metricRecordLabel = computed(() => ({
+      students: 'student',
+      lessons: 'lesson',
+      assessments: 'assessment',
+    }[activeMetricKey.value] || 'record'))
     const activeMetricModal = computed(() => {
       const key = activeMetricKey.value
       const config = metricModalConfig[key] || metricModalConfig.students
       let rows = Array.isArray(metrics.detailTables?.[key]) ? metrics.detailTables[key] : []
-      if (['lessons', 'assessments'].includes(key) && selectedContentDepartment.value !== 'all') {
+      if (['students', 'lessons', 'assessments'].includes(key) && selectedContentDepartment.value !== 'all') {
         rows = rows.filter((item) => (
           String(item.department || 'Unassigned').trim() === selectedContentDepartment.value
         ))
@@ -779,7 +786,7 @@ export default {
 
     const openMetricDetails = (key) => {
       activeMetricKey.value = metricModalConfig[key] ? key : 'students'
-      if (['lessons', 'assessments'].includes(activeMetricKey.value)) selectedContentDepartment.value = 'all'
+      if (['students', 'lessons', 'assessments'].includes(activeMetricKey.value)) selectedContentDepartment.value = 'all'
       isMetricsModalOpen.value = true
       if (typeof document !== 'undefined') {
         document.body.classList.add('admin-modal-open')
@@ -1298,6 +1305,7 @@ export default {
       activeMetricModal,
       selectedContentDepartment,
       contentDepartments,
+      metricRecordLabel,
       isSidebarOpen,
       isActive,
       toggleSidebar,

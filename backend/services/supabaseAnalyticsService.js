@@ -182,20 +182,23 @@ async function readAiUsage(client, now) {
 
 async function readAnalyticsRows() {
   const client = getSupabaseStorageClient();
-  const [usersResult, lessonsResult, assessmentsResult] = await Promise.all([
-    client.from('users').select('id,name,email,role,status,department,created_at,updated_at'),
+  const [usersResult, lessonsResult, assessmentsResult, enrollmentsResult] = await Promise.all([
+    client.from('users').select('id,name,email,role,status,department,managed_by,created_at,updated_at'),
     client.from('lessons').select('id,title,subject,track,created_by,published_by,created_at,updated_at'),
     client.from('assessments').select('id,title,subject,difficulty,exam_type,created_by,published_by,created_at,updated_at'),
+    client.from('subject_enrollments').select('student_id,teacher_id,status').eq('status', 'approved'),
   ]);
 
   if (usersResult.error) throw analyticsError(usersResult.error, 'Failed to read user analytics from Supabase');
   if (lessonsResult.error) throw analyticsError(lessonsResult.error, 'Failed to read lesson analytics from Supabase');
   if (assessmentsResult.error) throw analyticsError(assessmentsResult.error, 'Failed to read assessment analytics from Supabase');
+  if (enrollmentsResult.error) throw analyticsError(enrollmentsResult.error, 'Failed to read student teacher assignments from Supabase');
 
   return {
     users: usersResult.data || [],
     lessons: lessonsResult.data || [],
     assessments: assessmentsResult.data || [],
+    enrollments: enrollmentsResult.data || [],
   };
 }
 
@@ -228,7 +231,7 @@ function detailUser(user) {
 
 async function getSupabaseAnalytics() {
   const now = new Date();
-  const [{ users, lessons, assessments }, aiUsage] = await Promise.all([
+  const [{ users, lessons, assessments, enrollments }, aiUsage] = await Promise.all([
     readAnalyticsRows(),
     readAiUsage(getSupabaseStorageClient(), now),
   ]);
@@ -250,6 +253,16 @@ async function getSupabaseAnalytics() {
   const { aiUserIds: _aiUserIds, ...publicAiUsage } = aiUsage;
   const activeUsers = users.filter((user) => user.status === 'active');
   const usersById = new Map(users.map((user) => [String(user.id), user]));
+  const teacherNamesByStudent = new Map();
+  enrollments.forEach((enrollment) => {
+    const teacher = usersById.get(String(enrollment.teacher_id || ''));
+    if (!teacher || teacher.role !== 'teacher') return;
+    const studentId = String(enrollment.student_id || '');
+    if (!studentId) return;
+    const names = teacherNamesByStudent.get(studentId) || new Set();
+    names.add(teacher.name || teacher.email || 'Teacher');
+    teacherNamesByStudent.set(studentId, names);
+  });
 
   const roleStats = Object.fromEntries(ANALYTICS_ROLES.map((role) => [
     role,
@@ -378,7 +391,16 @@ async function getSupabaseAnalytics() {
       roleTrendsByPeriod,
       learningFunnel: { labels: ['Lessons', 'Assessments', 'Submissions'], values: [lessons.length, assessments.length, 0] },
       detailTables: {
-        students: users.filter((user) => user.role === 'student').map(detailUser),
+        students: users.filter((user) => user.role === 'student').map((user) => {
+          const manager = usersById.get(String(user.managed_by || ''));
+          const assignedTeachers = [...(teacherNamesByStudent.get(String(user.id)) || [])];
+          return {
+            ...detailUser(user),
+            teacher: assignedTeachers.join(', ')
+              || (manager?.role === 'teacher' ? (manager.name || manager.email) : '')
+              || 'Unassigned',
+          };
+        }),
         teachers: users.filter((user) => user.role === 'teacher').map(detailUser),
         headTeachers: users.filter((user) => user.role === 'headteacher').map(detailUser),
         secretaries: users.filter((user) => user.role === 'secretary').map(detailUser),

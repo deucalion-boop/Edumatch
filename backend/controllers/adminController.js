@@ -1810,7 +1810,8 @@ const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
     ]),
     Submission.distinct('assessmentId'),
     User.find({ role: ROLE_STUDENT })
-      .select('name email status createdAt')
+      .select('name email status department managedBy createdAt')
+      .populate('managedBy', 'name email role')
       .sort({ createdAt: -1 })
       .lean(),
     User.find({ role: ROLE_TEACHER })
@@ -2019,6 +2020,10 @@ const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
           id: String(user._id),
           name: user.name || 'Unnamed user',
           email: user.email || '-',
+          department: user.department || 'Unassigned',
+          teacher: user.managedBy?.role === ROLE_TEACHER
+            ? (user.managedBy?.name || user.managedBy?.email || 'Unassigned')
+            : 'Unassigned',
           status: user.status || '-',
           createdAt: user.createdAt || null,
         })),
