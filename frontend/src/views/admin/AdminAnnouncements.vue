@@ -212,7 +212,6 @@ onMounted(load)
 .refresh-button { display:grid; flex:0 0 38px; width:38px; height:38px; place-items:center; padding:0; border-radius:10px; }
 .history-list { padding-right:.25rem; }
 .history-card { position:relative; overflow:hidden; transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
-.history-card::before { content:''; position:absolute; inset:0 auto 0 0; width:3px; background:#69aa47; opacity:.65; }
 .history-card:hover { border-color:#b9d8aa; transform:translateY(-1px); box-shadow:0 8px 20px rgba(30,67,7,.07); }
 .history-title strong { color:var(--admin-text); line-height:1.35; }
 .history-title span { display:inline-flex; align-items:center; gap:.3rem; }
