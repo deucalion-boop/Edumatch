@@ -884,7 +884,7 @@ const getAuditLogs = asyncHandler(async (req, res) => {
   const method = String(req.query.method || '').trim().toUpperCase();
   const result = String(req.query.result || '').trim().toLowerCase();
   const requestedPage = Number.parseInt(req.query.page, 10);
-  const limit = 50;
+  const limit = 15;
   const succeeded = result === 'success' ? true : (result === 'failed' ? false : null);
   const auditResult = await listAuditLogs({
     search,

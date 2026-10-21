@@ -36,25 +36,30 @@
 
       <div class="announcement-admin-grid">
         <form class="announcement-panel announcement-form section-card" @submit.prevent="publish">
-          <div class="panel-heading"><div><h3>Compose message</h3><p>Recipients will see this in their notification feed and announcements page.</p></div></div>
-          <label class="form-field"><span>Title</span><input v-model="form.title" maxlength="200" required placeholder="Enter a clear announcement title"><small>{{ form.title.length }}/200</small></label>
-          <label class="form-field"><span>Message</span><textarea v-model="form.content" maxlength="5000" rows="9" required placeholder="Write the full announcement"></textarea><small>{{ form.content.length }}/5000</small></label>
-          <fieldset class="audience-field"><legend>Audience</legend>
-            <label v-for="option in audienceOptions" :key="option.value" class="audience-option"><input v-model="form.audienceRoles" type="checkbox" :value="option.value"><span><i :class="option.icon"></i><strong>{{ option.label }}</strong></span></label>
+          <div class="panel-heading compose-heading"><div class="panel-heading-icon"><i class="fas fa-pen-to-square"></i></div><div><h3>Compose message</h3><p>Recipients will see this in their notification feed and announcements page.</p></div></div>
+          <div class="compose-section">
+            <div class="compose-section-label"><span>1</span><strong>Announcement details</strong></div>
+            <label class="form-field"><span>Title <em>Required</em></span><input v-model="form.title" maxlength="200" required placeholder="Example: Campus closed on Friday"><small :class="{ 'near-limit': form.title.length >= 180 }">{{ form.title.length }}/200</small></label>
+            <label class="form-field"><span>Message <em>Required</em></span><textarea v-model="form.content" maxlength="5000" rows="8" required placeholder="Write the announcement details, important dates, and any action recipients need to take."></textarea><small :class="{ 'near-limit': form.content.length >= 4500 }">{{ form.content.length }}/5000</small></label>
+          </div>
+          <fieldset class="audience-field compose-section">
+            <div class="audience-heading"><div class="compose-section-label"><span>2</span><strong>Select audience</strong></div><div class="audience-shortcuts"><button type="button" @click="selectAllAudiences">Select all</button><button type="button" @click="clearAudiences">Clear</button></div></div>
+            <legend class="sr-only">Audience</legend><p class="audience-help">Choose one or more groups to receive this announcement.</p>
+            <div class="audience-grid"><label v-for="option in audienceOptions" :key="option.value" class="audience-option"><input v-model="form.audienceRoles" type="checkbox" :value="option.value"><span><i :class="option.icon"></i><strong>{{ option.label }}</strong><i class="fas fa-circle-check audience-check"></i></span></label></div>
           </fieldset>
-          <label class="urgent-option"><input v-model="form.urgent" type="checkbox"><span><strong>Mark as urgent</strong><small>Highlights the announcement for recipients.</small></span></label>
+          <div class="compose-section compose-section--delivery"><div class="compose-section-label"><span>3</span><strong>Delivery options</strong></div><label class="urgent-option"><input v-model="form.urgent" type="checkbox"><span class="urgent-icon"><i class="fas fa-triangle-exclamation"></i></span><span class="urgent-copy"><strong>Mark as urgent</strong><small>Highlights the announcement so recipients notice it immediately.</small></span><span class="toggle-control" aria-hidden="true"></span></label></div>
           <p v-if="formError" class="form-message error" role="alert">{{ formError }}</p>
           <p v-if="successMessage" class="form-message success" role="status">{{ successMessage }}</p>
-          <button class="publish-button" type="submit" :disabled="saving"><i class="fas" :class="saving ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>{{ saving ? 'Posting...' : 'Post announcement' }}</button>
+          <div class="publish-footer"><span><i class="fas fa-users"></i>{{ form.audienceRoles.length }} of {{ audienceOptions.length }} audience groups selected</span><button class="publish-button" type="submit" :disabled="saving"><i class="fas" :class="saving ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>{{ saving ? 'Posting...' : 'Post announcement' }}</button></div>
         </form>
 
         <section class="announcement-panel history-panel section-card">
-          <div class="panel-heading"><div><h3>Published announcements</h3><p>Recent school messages and their recipient totals.</p></div><button type="button" class="refresh-button" :disabled="loading" @click="load"><i class="fas fa-rotate"></i></button></div>
-          <p v-if="loading" class="history-state">Loading announcements...</p>
+          <div class="panel-heading history-heading"><div><h3>Published announcements</h3><p>Recent school messages and their recipient totals.</p></div><button type="button" class="refresh-button" :disabled="loading" aria-label="Refresh announcements" title="Refresh" @click="load"><i class="fas fa-rotate" :class="{ 'fa-spin': loading }"></i></button></div>
+          <p v-if="loading" class="history-state"><i class="fas fa-spinner fa-spin"></i><span>Loading announcements...</span></p>
           <div v-else-if="loadError" class="history-state error"><p>{{ loadError }}</p><button type="button" @click="load">Try again</button></div>
           <div v-else-if="announcements.length" class="history-list">
             <article v-for="item in announcements" :key="item.id" class="history-card">
-              <div class="history-title"><strong>{{ item.title }}</strong><span v-if="item.urgent">Urgent</span></div>
+              <div class="history-title"><strong>{{ item.title }}</strong><span v-if="item.urgent"><i class="fas fa-triangle-exclamation"></i> Urgent</span></div>
               <p>{{ item.content }}</p>
               <div class="audience-tags"><span v-for="role in item.audienceRoles" :key="role">{{ roleLabel(role) }}</span></div>
               <small>{{ item.recipientCount }} recipient{{ item.recipientCount === 1 ? '' : 's' }} · {{ formatDate(item.createdAt) }}</small>
@@ -97,6 +102,8 @@ const config = () => ({ headers: { Authorization: `Bearer ${auth.token}` } })
 const isActive = (path) => route.path === path
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
 const closeSidebar = () => { isSidebarOpen.value = false }
+const selectAllAudiences = () => { form.audienceRoles = audienceOptions.map((option) => option.value) }
+const clearAudiences = () => { form.audienceRoles = [] }
 
 async function load() {
   loading.value = true; loadError.value = ''
@@ -159,7 +166,60 @@ onMounted(load)
 .history-card p { @apply tw:whitespace-pre-wrap; @apply tw:[color:var(--admin-muted)]; @apply tw:[line-height:1.5]; }.history-card small { @apply tw:[color:var(--admin-muted)]; }
 .audience-tags { @apply tw:flex; @apply tw:flex-wrap; @apply tw:[gap:.35rem]; @apply tw:[margin:.7rem_0]; }.audience-tags span { @apply tw:[padding:.25rem_.5rem]; @apply tw:[border:1px_solid_rgba(30,_67,_7,_.1)]; @apply tw:[border-radius:99px]; @apply tw:[background:rgba(187,_255,_89,_.22)]; @apply tw:[color:#1e4307]; @apply tw:[font-size:.75rem]; @apply tw:[font-weight:700]; }
 .history-state { @apply tw:[padding:2rem_1rem]; @apply tw:text-center; @apply tw:[color:var(--admin-muted)]; }.history-state.error { @apply tw:[color:var(--danger)]; }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.announcement-form { align-self:start; }
+.compose-heading { align-items:center; padding-bottom:1rem; border-bottom:1px solid var(--admin-border); }
+.panel-heading-icon { display:grid; flex:0 0 42px; width:42px; height:42px; place-items:center; border-radius:12px; background:rgba(187,255,89,.24); color:#3f7f2a; font-size:1rem; }
+.compose-section { padding:1rem 0; border-bottom:1px solid var(--admin-border); }
+.compose-section-label { display:flex; align-items:center; gap:.55rem; margin-bottom:.8rem; color:var(--admin-text); }
+.compose-section-label > span { display:grid; width:24px; height:24px; place-items:center; border-radius:50%; background:#3f7f2a; color:#fff; font-size:.72rem; font-weight:800; }
+.form-field { position:relative; }
+.form-field > span { display:flex; align-items:center; justify-content:space-between; }
+.form-field em { padding:.15rem .4rem; border-radius:99px; background:var(--admin-surface-alt); color:var(--admin-muted); font-size:.65rem; font-style:normal; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.form-field input, .form-field textarea { transition:border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+.form-field input:hover, .form-field textarea:hover { border-color:#a9c99a; }
+.form-field small.near-limit { color:var(--warning); font-weight:700; }
+.audience-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.audience-heading .compose-section-label { margin-bottom:0; }
+.audience-help { margin:.55rem 0 .8rem; color:var(--admin-muted); font-size:.82rem; }
+.audience-shortcuts { display:flex; gap:.35rem; }
+.audience-shortcuts button { border:0; background:transparent; color:#3f7f2a; padding:.35rem .45rem; font:inherit; font-size:.75rem; font-weight:800; cursor:pointer; }
+.audience-shortcuts button:hover { text-decoration:underline; }
+.audience-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem; }
+.audience-option { display:block; margin:0; }
+.audience-option span { min-height:58px; box-sizing:border-box; justify-content:flex-start; }
+.audience-option span > i:first-child { display:grid; width:30px; height:30px; place-items:center; border-radius:9px; background:var(--admin-surface-alt); color:#64748b; }
+.audience-option .audience-check { margin-left:auto; color:#69aa47; opacity:0; transform:scale(.75); transition:opacity .2s ease, transform .2s ease; }
+.audience-option input:focus-visible + span { outline:3px solid rgba(105,170,71,.2); outline-offset:2px; }
+.audience-option input:checked + span .audience-check { opacity:1; transform:scale(1); }
+.audience-option input:checked + span > i:first-child { background:#dff2d5; color:#3f7f2a; }
+.compose-section--delivery { border-bottom:0; }
+.urgent-option { position:relative; align-items:center; cursor:pointer; transition:border-color .2s ease, background .2s ease; }
+.urgent-option > input { position:absolute; opacity:0; }
+.urgent-icon { display:grid; flex:0 0 36px; width:36px; height:36px; place-items:center; border-radius:10px; background:#fff4e5; color:#d97706; }
+.urgent-copy { flex:1; }
+.toggle-control { position:relative; flex:0 0 42px; width:42px; height:24px; border-radius:99px; background:#cbd5e1; transition:background .2s ease; }
+.toggle-control::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(15,23,42,.25); transition:transform .2s ease; }
+.urgent-option input:checked ~ .toggle-control { background:#f59e0b; }
+.urgent-option input:checked ~ .toggle-control::after { transform:translateX(18px); }
+.urgent-option:has(input:checked) { border-color:#f5c66e; background:#fffaf0; }
+.publish-footer { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--admin-border); }
+.publish-footer > span { color:var(--admin-muted); font-size:.78rem; }
+.publish-footer > span i { margin-right:.4rem; color:#3f7f2a; }
+.publish-footer .publish-button { width:auto; min-width:190px; margin-top:0; padding:.78rem 1.1rem; }
+.history-panel { align-self:start; position:sticky; top:1rem; }
+.history-heading { padding-bottom:1rem; border-bottom:1px solid var(--admin-border); }
+.refresh-button { display:grid; flex:0 0 38px; width:38px; height:38px; place-items:center; padding:0; border-radius:10px; }
+.history-list { padding-right:.25rem; }
+.history-card { position:relative; overflow:hidden; transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+.history-card::before { content:''; position:absolute; inset:0 auto 0 0; width:3px; background:#69aa47; opacity:.65; }
+.history-card:hover { border-color:#b9d8aa; transform:translateY(-1px); box-shadow:0 8px 20px rgba(30,67,7,.07); }
+.history-title strong { color:var(--admin-text); line-height:1.35; }
+.history-title span { display:inline-flex; align-items:center; gap:.3rem; }
+.history-card > small { display:block; padding-top:.7rem; border-top:1px solid var(--admin-border); }
+.history-state { display:flex; flex-direction:column; align-items:center; gap:.6rem; }
 @media (max-width:900px) { .announcement-admin-grid { @apply tw:[grid-template-columns:1fr]; }.announcement-admin-main { @apply tw:[padding:1.25rem]; } }
-@media (max-width:520px) { .announcement-hero-icon { @apply tw:hidden; }.announcement-panel { @apply tw:[padding:1rem]; } }
+@media (max-width:900px) { .history-panel { position:static; }.audience-grid { grid-template-columns:1fr; } }
+@media (max-width:520px) { .announcement-hero-icon { @apply tw:hidden; }.announcement-panel { @apply tw:[padding:1rem]; }.audience-heading,.publish-footer { align-items:stretch; flex-direction:column; }.publish-footer .publish-button { width:100%; }.urgent-copy small { line-height:1.35; } }
 .publish-button > i { color: #fff !important; }
 </style>

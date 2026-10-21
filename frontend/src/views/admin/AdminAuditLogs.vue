@@ -155,17 +155,6 @@
             </div>
 
             <div class="filter-group">
-              <label for="auditMethod"><i class="fas fa-code-branch"></i> Method</label>
-              <select id="auditMethod" v-model="filters.method" class="filter-select">
-                <option value="ALL">All Methods</option>
-                <option value="POST">POST</option>
-                <option value="PUT">PUT</option>
-                <option value="PATCH">PATCH</option>
-                <option value="DELETE">DELETE</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
               <label for="auditResult"><i class="fas fa-circle-check"></i> Result</label>
               <select id="auditResult" v-model="filters.result" class="filter-select">
                 <option value="all">All Results</option>
@@ -316,7 +305,7 @@ const authStore = useAuthStore()
 const SIDEBAR_BREAKPOINT = 1024
 const AUTO_REFRESH_SECONDS = 5
 const AUTO_REFRESH_INTERVAL_MS = AUTO_REFRESH_SECONDS * 1000
-const PAGE_SIZE = 50
+const PAGE_SIZE = 15
 
 const isSidebarOpen = ref(false)
 const isAccountMenuOpen = ref(false)
@@ -332,7 +321,6 @@ const filters = reactive({
   search: '',
   category: 'all',
   role: 'all',
-  method: 'ALL',
   result: 'all',
 })
 
@@ -340,7 +328,6 @@ const activeFilters = reactive({
   search: '',
   category: 'all',
   role: 'all',
-  method: 'ALL',
   result: 'all',
 })
 
@@ -650,7 +637,6 @@ const syncActiveFilters = () => {
   activeFilters.search = String(filters.search || '').trim()
   activeFilters.category = String(filters.category || 'all').trim() || 'all'
   activeFilters.role = String(filters.role || 'all').trim().toLowerCase() || 'all'
-  activeFilters.method = String(filters.method || 'ALL').trim().toUpperCase() || 'ALL'
   activeFilters.result = String(filters.result || 'all').trim().toLowerCase() || 'all'
 }
 
@@ -683,7 +669,6 @@ const fetchAuditLogs = async ({ silent = false } = {}) => {
     if (activeFilters.search) params.set('search', activeFilters.search)
     if (activeFilters.category !== 'all') params.set('category', activeFilters.category)
     if (activeFilters.role !== 'all') params.set('role', activeFilters.role)
-    if (activeFilters.method !== 'ALL') params.set('method', activeFilters.method)
     if (activeFilters.result !== 'all') params.set('result', activeFilters.result)
     params.set('page', String(pagination.page || 1))
 
@@ -718,7 +703,6 @@ const resetFilters = async () => {
   filters.search = ''
   filters.category = 'all'
   filters.role = 'all'
-  filters.method = 'ALL'
   filters.result = 'all'
   syncActiveFilters()
   pagination.page = 1
