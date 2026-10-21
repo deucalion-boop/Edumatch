@@ -4205,15 +4205,14 @@ export default {
   @apply tw:justify-center;
   @apply tw:[min-height:23rem];
   @apply tw:[padding:clamp(1.5rem,_3vw,_2.2rem)];
-  @apply tw:[color:#fff];
-  @apply tw:[border:1px_solid_rgba(255,_255,_255,_0.14)];
+  @apply tw:[color:#172033];
+  @apply tw:[border:1px_solid_#dce7d7];
   @apply tw:[border-radius:20px];
-  @apply tw:[background:radial-gradient(circle_at_90%_8%,_rgba(220,_234,_211,_0.22),_transparent_12rem),______linear-gradient(145deg,_#173806,_#4f7d3a)];
-  @apply tw:[box-shadow:0_18px_40px_rgba(30,_67,_7,_0.19)];
+  @apply tw:[box-shadow:var(--workspace-shadow,_0_12px_30px_rgba(27,_43,_65,_0.065))];
 }
 
 .grades-performance-card__eyebrow {
-  @apply tw:[color:#ffffff];
+  @apply tw:[color:#4f8a35];
   @apply tw:[font-size:0.7rem];
   @apply tw:[font-weight:800];
   @apply tw:[letter-spacing:0.1em];
@@ -4222,7 +4221,7 @@ export default {
 
 .grades-performance-card > strong {
   @apply tw:[margin-top:0.5rem];
-  @apply tw:[color:#fff];
+  @apply tw:[color:#172033];
   @apply tw:[font-size:clamp(3rem,_6vw,_4.5rem)];
   @apply tw:[font-weight:850];
   @apply tw:[letter-spacing:-0.065em];
@@ -4234,7 +4233,7 @@ export default {
   @apply tw:items-center;
   @apply tw:[gap:0.45rem];
   @apply tw:[margin-top:0.8rem];
-  @apply tw:[color:#ffffff];
+  @apply tw:[color:#475569];
   @apply tw:[font-size:0.8rem];
 }
 
@@ -4243,30 +4242,25 @@ export default {
   @apply tw:[margin-top:1.5rem];
   @apply tw:overflow-hidden;
   @apply tw:[border-radius:999px];
-  @apply tw:[background:rgba(255,_255,_255,_0.15)];
+  @apply tw:[background:#e7eee3];
 }
 
 .grades-performance-card__track span {
   @apply tw:block;
   @apply tw:h-full;
   @apply tw:[border-radius:inherit];
-  @apply tw:[background:#dcead3];
+  @apply tw:[background:#4f8a35];
   @apply tw:[transition:width_600ms_ease];
 }
 
 .grades-performance-card > small {
   @apply tw:[margin-top:0.65rem];
-  @apply tw:[color:#ffffff];
+  @apply tw:[color:#64748b];
   @apply tw:[font-size:0.65rem];
 }
 
 .grades-performance-card > p i {
-  @apply tw:[color:#ffffff];
-}
-
-.premium-dashboard .grades-performance-card :is(span, strong, p, small, i) {
-  @apply tw:[color:#ffffff]!;
-  @apply tw:[-webkit-text-fill-color:#ffffff]!;
+  @apply tw:[color:#4f8a35];
 }
 
 .grades-results-feed {
