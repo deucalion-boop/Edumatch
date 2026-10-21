@@ -23,7 +23,7 @@ const {
   getAnalytics,
 } = require('../controllers/adminController');
 const { getAdminAttendanceReport } = require('../controllers/attendanceController');
-const { getSectionDirectory } = require('../controllers/sectionController');
+const { getSectionDirectory, listManagedSections, createManagedSection, updateManagedSection, archiveManagedSection, deleteManagedSection } = require('../controllers/sectionController');
 const { inviteLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
 const {
   getStudentAccountRequests,
@@ -54,6 +54,10 @@ router.post('/users/:id/send-invite', inviteLimiter, sendUserInvite);
 router.get('/analytics', getAnalytics);
 router.get('/attendance/report', getAdminAttendanceReport);
 router.get('/sections', getSectionDirectory);
+router.route('/manage-sections').get(listManagedSections).post(createManagedSection);
+router.put('/manage-sections/:id', updateManagedSection);
+router.patch('/manage-sections/:id/archive', archiveManagedSection);
+router.delete('/manage-sections/:id', deleteManagedSection);
 router.get('/settings/security', getSecuritySettings);
 router.put('/settings/security', saveSecuritySettings);
 router.get('/settings/system', getSystemSettings);

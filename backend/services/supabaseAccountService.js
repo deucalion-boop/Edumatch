@@ -9,6 +9,14 @@ const ACCOUNT_STATUSES = ['pending', 'active', 'inactive', 'suspended'];
 
 function accountError(error, fallbackMessage) {
   let message = String(error?.message || fallbackMessage);
+  const sectionAssignmentErrors = {
+    SECTION_NOT_FOUND: 'The selected section no longer exists.',
+    SECTION_ARCHIVED: 'The selected section is archived and cannot accept students.',
+    SECTION_GRADE_MISMATCH: 'The student grade level does not match the selected section.',
+    SECTION_CAPACITY_EXCEEDED: 'The selected section has reached its student capacity.',
+  };
+  const sectionErrorKey = Object.keys(sectionAssignmentErrors).find((key) => message.includes(key));
+  if (sectionErrorKey) message = sectionAssignmentErrors[sectionErrorKey];
   if (error?.code === '23505') {
     const constraint = `${error.constraint || ''} ${error.message || ''}`;
     if (constraint.includes('users_single_secretary_unique')) {
@@ -29,7 +37,7 @@ function accountError(error, fallbackMessage) {
   normalized.code = error?.code;
   normalized.details = error?.details;
   normalized.hint = error?.hint;
-  normalized.statusCode = error?.code === '23505' ? 409 : 500;
+  normalized.statusCode = error?.code === '23505' || sectionErrorKey ? 409 : 500;
   return normalized;
 }
 

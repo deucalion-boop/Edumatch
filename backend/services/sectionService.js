@@ -33,16 +33,19 @@ function mapSectionRow(row) {
 }
 
 async function ensureDefaultSections() {
-  const rows = DEFAULT_SECTION_NAMES
+  const names = DEFAULT_SECTION_NAMES
     .map(normalizeSectionName)
-    .filter(Boolean)
-    .map((name) => ({ name, is_active: true, description: '' }));
-  if (rows.length === 0) return;
+    .filter(Boolean);
+  if (names.length === 0) return;
 
   const client = getSupabaseStorageClient();
-  const { error } = await client
-    .from('sections')
-    .upsert(rows, { onConflict: 'name', ignoreDuplicates: true });
+  const { data: existing, error: readError } = await client.from('sections').select('name');
+  if (readError) throw sectionError(readError, 'Failed to read default sections from Supabase');
+  const savedNames = new Set((existing || []).map((row) => normalizeSectionName(row.name).toLowerCase()));
+  const rows = names.filter((name) => !savedNames.has(name.toLowerCase()))
+    .map((name) => ({ name, is_active: true, description: '' }));
+  if (!rows.length) return;
+  const { error } = await client.from('sections').insert(rows);
   if (error) throw sectionError(error, 'Failed to create default sections in Supabase');
 }
 

@@ -11,7 +11,7 @@ const {
   endSchoolYearArchiveStudents,
 } = require('../controllers/secretaryController');
 const { getSecretaryAttendanceOverview } = require('../controllers/attendanceController');
-const { getSectionDirectory } = require('../controllers/sectionController');
+const { getSectionDirectory, listManagedSections, createManagedSection, updateManagedSection, archiveManagedSection, deleteManagedSection } = require('../controllers/sectionController');
 const { uploadProfileImage } = require('../utils/uploadMiddleware');
 const { inviteLimiter, uploadLimiter } = require('../middlewares/rateLimiters');
 const {
@@ -42,6 +42,10 @@ router.route('/users/:id').get(getUserById).put(uploadLimiter, uploadProfileImag
 router.post('/users/:id/messages', sendUserMessage);
 router.post('/users/:id/send-invite', inviteLimiter, sendUserInvite);
 router.get('/sections', getSectionDirectory);
+router.route('/manage-sections').get(listManagedSections).post(createManagedSection);
+router.put('/manage-sections/:id', updateManagedSection);
+router.patch('/manage-sections/:id/archive', archiveManagedSection);
+router.delete('/manage-sections/:id', deleteManagedSection);
 router.get('/students/archived', getArchivedStudentRecords);
 router.get('/students/archived/export-requests/current', getArchivedPdfExportRequestStatus);
 router.post('/students/archived/export-requests', requestArchivedPdfExport);

@@ -28,6 +28,7 @@
             <i class="fas fa-user-graduate"></i>
             <span>Student Records</span>
           </router-link>
+          <router-link to="/secretary/sections" class="nav-link" :class="{ active: route.path === '/secretary/sections' }" @click="closeSidebar"><i class="fas fa-layer-group"></i><span>Manage Sections</span></router-link>
           <router-link to="/secretary/archived" class="nav-link" :class="{ active: route.path === '/secretary/archived' }" @click="closeSidebar">
             <i class="fas fa-box-archive"></i>
             <span>Archived</span>

@@ -50,7 +50,7 @@
           <div class="compose-section compose-section--delivery"><div class="compose-section-label"><span>3</span><strong>Delivery options</strong></div><label class="urgent-option"><input v-model="form.urgent" type="checkbox"><span class="urgent-icon"><i class="fas fa-triangle-exclamation"></i></span><span class="urgent-copy"><strong>Mark as urgent</strong><small>Highlights the announcement so recipients notice it immediately.</small></span><span class="toggle-control" aria-hidden="true"></span></label></div>
           <p v-if="formError" class="form-message error" role="alert">{{ formError }}</p>
           <p v-if="successMessage" class="form-message success" role="status">{{ successMessage }}</p>
-          <div class="publish-footer"><span><i class="fas fa-users"></i>{{ form.audienceRoles.length }} of {{ audienceOptions.length }} audience groups selected</span><button class="publish-button" type="submit" :disabled="saving"><i class="fas publish-button-icon" :class="saving ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>{{ saving ? 'Posting...' : 'Post announcement' }}</button></div>
+          <div class="publish-footer"><span><i class="fas fa-users"></i>{{ form.audienceRoles.length }} of {{ audienceOptions.length }} audience groups selected</span><button class="btn btn-primary publish-button" type="submit" :disabled="saving"><i class="fas publish-button-icon" :class="saving ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i><span>{{ saving ? 'Posting...' : 'Post announcement' }}</span></button></div>
         </form>
 
         <section class="announcement-panel history-panel section-card">
@@ -156,7 +156,7 @@ onMounted(load)
 .audience-option input:checked + span { @apply tw:[border-color:#69AA47]; @apply tw:[background:rgba(187,_255,_89,_.2)]; @apply tw:[color:#1E4307]; @apply tw:[box-shadow:inset_0_0_0_1px_rgba(105,_170,_71,_.18)]; }
 .urgent-option { @apply tw:flex; @apply tw:items-start; @apply tw:[gap:.7rem]; @apply tw:[padding:.85rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:var(--admin-surface-alt)]; @apply tw:[color:var(--admin-text)]; }
 .urgent-option span { @apply tw:grid; @apply tw:[gap:.15rem]; }.urgent-option small { @apply tw:[color:var(--admin-muted)]; }
-.publish-button { @apply tw:w-full; @apply tw:[margin-top:1rem]; @apply tw:[padding:.85rem]; @apply tw:[border:1px_solid_#69AA47]; @apply tw:[border-radius:var(--radius-lg)]; @apply tw:[background:#69AA47]; @apply tw:[color:#FFFFFF]; @apply tw:[font-weight:800]; @apply tw:cursor-pointer; @apply tw:[transition:var(--transition-fast)]; }.publish-button:hover:not(:disabled) { @apply tw:[border-color:#3F7F2A]; @apply tw:[background:#3F7F2A]; @apply tw:[box-shadow:0_10px_22px_rgba(63,_127,_42,_.22)]; @apply tw:[transform:translateY(-1px)]; }.publish-button i { @apply tw:[margin-right:.5rem]; }.publish-button:disabled { @apply tw:[opacity:.65]; @apply tw:cursor-wait; }
+.publish-button { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-height:44px; cursor:pointer; }.publish-button:disabled { opacity:.65; cursor:wait; transform:none!important; }
 .form-message { @apply tw:[padding:.75rem]; @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-md)]; }.form-message.error { @apply tw:[background:var(--admin-surface-alt)]; @apply tw:[color:var(--danger)]; }.form-message.success { @apply tw:[background:var(--admin-surface-alt)]; @apply tw:[color:var(--success)]; }
 .refresh-button, .history-state button { @apply tw:[border:1px_solid_var(--admin-border)]; @apply tw:[border-radius:var(--radius-md)]; @apply tw:[background:var(--admin-surface)]; @apply tw:[color:var(--admin-text)]; @apply tw:[padding:.55rem_.7rem]; @apply tw:cursor-pointer; @apply tw:[transition:var(--transition-fast)]; }
 .refresh-button:hover:not(:disabled), .history-state button:hover { @apply tw:[background:#69AA47]; @apply tw:[border-color:#69AA47]; @apply tw:[color:#FFFFFF]; }
@@ -221,5 +221,6 @@ onMounted(load)
 @media (max-width:900px) { .announcement-admin-grid { @apply tw:[grid-template-columns:1fr]; }.announcement-admin-main { @apply tw:[padding:1.25rem]; } }
 @media (max-width:900px) { .history-panel { position:static; }.audience-grid { grid-template-columns:1fr; } }
 @media (max-width:520px) { .announcement-hero-icon { @apply tw:hidden; }.announcement-panel { @apply tw:[padding:1rem]; }.audience-heading,.publish-footer { align-items:stretch; flex-direction:column; }.publish-footer .publish-button { width:100%; }.urgent-copy small { line-height:1.35; } }
-.announcement-form .publish-footer .publish-button > .publish-button-icon { color: #fff !important; }
+.announcement-form .publish-footer .publish-button > .publish-button-icon { margin:0; color:#fff!important; }
+.announcement-form .publish-footer .publish-button > span { color:inherit; }
 </style>
