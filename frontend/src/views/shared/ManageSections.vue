@@ -1,5 +1,5 @@
 <template>
-  <div :class="isAdmin ? 'admin-dashboard admin-sections-page' : 'secretary-sections-page'">
+  <div :class="isAdmin ? 'admin-dashboard admin-sections-page' : 'teacher-dashboard secretary-dashboard-page secretary-sections-page'">
     <header v-if="isAdmin" class="admin-header">
       <div class="container"><div class="admin-header-content">
         <button type="button" class="mobile-menu-toggle" @click="toggleSidebar" :aria-label="isSidebarOpen ? 'Close menu' : 'Open menu'" :aria-expanded="String(isSidebarOpen)" aria-controls="admin-sidebar-drawer" title="Menu"><i class="fas fa-bars"></i></button>
@@ -23,15 +23,32 @@
           <router-link v-for="item in adminNav" :key="item.path" :to="item.path" class="nav-link sidebar-item" :class="[{ active: isActive(item.path) }, item.className]" @click="closeSidebar"><i :class="item.icon"></i><span>{{ item.label }}</span></router-link>
         </div></nav>
       </aside>
-      <aside v-else class="secretary-sections-sidebar">
-        <div class="secretary-brand"><img src="/logo.png" alt="EduMatch" /><div><b>EduMatch</b><small>Secretary Portal</small></div></div>
-        <nav><router-link to="/secretary/dashboard"><i class="fas fa-home"></i>Dashboard</router-link><router-link to="/secretary/sections" class="active"><i class="fas fa-layer-group"></i>Manage Sections</router-link><router-link to="/secretary/students"><i class="fas fa-users"></i>Student Records</router-link></nav>
+      <aside v-else id="secretary-sidebar-drawer" class="teacher-sidebar" :class="{ active: isSidebarOpen }">
+        <div class="sidebar-header">
+          <div class="teacher-logo"><div class="secretary-logo-icon"><img src="/logo.png" alt="EduMatch" class="secretary-logo-img" /></div><div class="teacher-logo-text"><h2>EduMatch</h2><p>Secretary Portal</p></div></div>
+          <button type="button" class="sidebar-close" aria-label="Close sidebar" @click="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="sidebar-nav"><div class="nav-section">
+          <h4 class="nav-section-title">Workspace</h4>
+          <router-link to="/secretary/dashboard" class="nav-link" @click="closeSidebar"><i class="fas fa-home"></i><span>Dashboard</span></router-link>
+          <router-link to="/secretary/teachers" class="nav-link" @click="closeSidebar"><i class="fas fa-users"></i><span>Teacher Monitoring</span></router-link>
+          <router-link to="/secretary/users" class="nav-link" @click="closeSidebar"><i class="fas fa-user-cog"></i><span>User Management</span></router-link>
+          <router-link to="/secretary/students" class="nav-link" @click="closeSidebar"><i class="fas fa-user-graduate"></i><span>Student Records</span></router-link>
+          <router-link to="/secretary/sections" class="nav-link active" @click="closeSidebar"><i class="fas fa-layer-group"></i><span>Manage Sections</span></router-link>
+          <router-link to="/secretary/archived" class="nav-link" @click="closeSidebar"><i class="fas fa-box-archive"></i><span>Archived</span></router-link>
+        </div></nav>
+        <div class="sidebar-footer"><div class="secretary-profile"><div class="secretary-avatar"><i class="fas fa-user" aria-hidden="true"></i></div><div class="secretary-info"><h5>{{ displayName }}</h5><div class="secretary-profile-meta"><p class="secretary-role">Secretary</p><div class="secretary-status"><span class="secretary-profile-status-indicator active"></span><span>active</span></div></div></div></div></div>
       </aside>
-      <button v-if="isAdmin && isSidebarOpen" type="button" class="sidebar-backdrop" aria-label="Close sidebar" @click="closeSidebar"></button>
+      <button v-if="isSidebarOpen" type="button" class="sidebar-backdrop" aria-label="Close sidebar" @click="closeSidebar"></button>
 
-      <main :class="isAdmin ? 'admin-main' : 'secretary-sections-main'">
+      <main :class="isAdmin ? 'admin-main' : 'teacher-main secretary-main dashboard-container secretary-sections-main'">
         <div v-if="isAdmin" class="page-header sections-page-header fade-in"><div class="header-left"><h2>Manage Sections</h2><p>Create and maintain capacity-aware sections without changing historical records.</p></div><button type="button" class="btn btn-primary sections-add-button" style="background: #4f8a35 !important; background-image: none !important; border-color: #4f8a35 !important; color: #ffffff !important;" @click="openCreate"><i class="fas fa-plus"></i><span>Add section</span></button></div>
-        <header v-else class="secretary-page-header"><div><p>School structure</p><h1>Manage Sections</h1><span>Create and maintain capacity-aware sections without changing historical records.</span></div><button type="button" class="legacy-primary" @click="openCreate"><i class="fas fa-plus"></i>Add section</button></header>
+        <header v-else class="top-header secretary-top-header dashboard-header">
+          <div class="header-content secretary-header-content dashboard-header-content">
+            <div class="header-left secretary-header-copy dashboard-header-copy"><button type="button" class="mobile-menu-toggle" @click="toggleSidebar" aria-label="Open sidebar"><i class="fas fa-bars"></i></button><div><h1>Manage Sections</h1><p class="header-subtitle">Create and maintain capacity-aware sections without changing historical records.</p></div></div>
+            <div class="secretary-header-tools"><button type="button" class="legacy-primary sections-add-button" @click="openCreate"><i class="fas fa-plus"></i><span>Add section</span></button><div ref="accountMenuRef" class="account-menu secretary-account-menu"><button type="button" class="header-tour-btn account-menu-trigger" aria-label="Settings menu" title="Settings" :aria-expanded="String(isAccountMenuOpen)" @click="toggleAccountMenu"><i class="fas fa-cog"></i></button><div v-if="isAccountMenuOpen" class="account-menu-dropdown"><button type="button" class="account-menu-item" @click="goToProfile"><i class="fas fa-user"></i><span>Profile</span></button><button type="button" class="account-menu-item" @click="goToSettings"><i class="fas fa-cog"></i><span>Settings</span></button><button type="button" class="account-menu-item danger" @click="handleLogout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button></div></div></div>
+          </div>
+        </header>
 
         <section :class="isAdmin ? 'section-card sections-workspace fade-in' : 'secretary-workspace'">
           <div class="sections-toolbar">
@@ -50,7 +67,7 @@
             <div v-if="!filtered.length" class="sections-state"><i class="fas fa-layer-group"></i><strong>No matching sections</strong><span>Adjust the filters or create a new section.</span></div>
           </div>
         </section>
-        <DashboardFooter v-if="isAdmin" />
+        <DashboardFooter />
       </main>
     </div>
   </div>
@@ -76,6 +93,7 @@ const route = useRoute()
 const router = useRouter()
 const role = computed(() => authStore.user?.role === 'secretary' ? 'secretary' : 'admin')
 const isAdmin = computed(() => role.value === 'admin')
+const displayName = computed(() => String(authStore.user?.name || authStore.user?.displayName || 'Secretary').trim())
 const adminNav = [
   { path: '/admin/dashboard', label: 'Overview', icon: 'fas fa-tachometer-alt', className: 'sidebar-item--dashboard' },
   { path: '/admin/users', label: 'User Management', icon: 'fas fa-user-cog', className: 'sidebar-item--users' },
@@ -101,8 +119,8 @@ const toggleAccountMenu = () => { isAccountMenuOpen.value = !isAccountMenuOpen.v
 const closeAccountMenu = () => { isAccountMenuOpen.value = false }
 const closeModal = () => { if (!saving.value) modal.value = false }
 const syncMobileMenuBodyState = () => document.body.classList.toggle('admin-mobile-menu-open', isAdmin.value && window.innerWidth <= SIDEBAR_BREAKPOINT && isSidebarOpen.value)
-const goToProfile = () => { closeAccountMenu(); router.push('/admin/profile') }
-const goToSettings = () => { closeAccountMenu(); router.push('/admin/settings') }
+const goToProfile = () => { closeAccountMenu(); router.push(isAdmin.value ? '/admin/profile' : '/secretary/profile') }
+const goToSettings = () => { closeAccountMenu(); router.push(isAdmin.value ? '/admin/settings' : '/secretary/settings') }
 const handleLogout = () => { closeAccountMenu(); authStore.logout(); router.push('/auth/login') }
 const handleDocumentClick = event => { if (!(accountMenuRef.value && event.target instanceof Node && accountMenuRef.value.contains(event.target))) closeAccountMenu() }
 const handleDocumentKeydown = event => { if (event.key === 'Escape') { closeAccountMenu(); closeSidebar(); closeModal() } }
@@ -125,6 +143,6 @@ onBeforeUnmount(() => { document.body.classList.remove('admin-mobile-menu-open')
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 .sections-page-header{display:flex;align-items:center;justify-content:space-between;gap:1rem}.sections-add-button{display:inline-flex;align-items:center;gap:.55rem}:global(body.admin-dashboard) .sections-add-button{border-color:#4f8a35!important;background:#4f8a35!important;background-image:none!important;color:#fff!important}:global(body.admin-dashboard) .sections-add-button:hover{border-color:#3f722b!important;background:#3f722b!important;background-image:none!important}.sections-workspace{border:1px solid #69aa47!important;padding:1.25rem}.sections-toolbar{display:grid;grid-template-columns:minmax(240px,1fr) 190px 160px;gap:.85rem;align-items:end;margin-bottom:1.25rem}.sections-toolbar label{display:grid;gap:.4rem;color:#334155;font-size:.78rem;font-weight:700}.sections-toolbar input,.sections-toolbar select{width:100%;min-height:43px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#0f172a;padding:.65rem .8rem;font:inherit}.sections-search div{position:relative}.sections-search i{position:absolute;top:50%;left:.85rem;color:#94a3b8;transform:translateY(-50%)}.sections-search input{padding-left:2.45rem}.sections-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:1rem}.section-record-card{border:1px solid #e2e8f0;border-radius:14px;background:#fff;padding:1rem;box-shadow:0 5px 14px rgba(15,23,42,.04)}.section-card-heading{display:flex;justify-content:space-between;gap:.75rem}.section-card-heading h3{margin:.45rem 0 .15rem;color:#0f172a;font-size:1.05rem}.section-card-heading p{margin:0;color:#64748b;font-size:.82rem}.section-status{display:inline-flex;border-radius:999px;padding:.25rem .55rem;font-size:.68rem;font-weight:800;text-transform:uppercase}.section-status--active{background:#dcfce7;color:#166534}.section-status--archived{background:#e2e8f0;color:#475569}.section-actions{display:flex;gap:.3rem}.section-actions button{display:grid;width:34px;height:34px;place-items:center;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc;color:#475569;cursor:pointer}.section-actions button:hover{border-color:#9fca8c;background:#f0f8ec;color:#315f22}.section-actions button.danger{color:#dc2626}.section-capacity{margin:1.2rem 0}.section-capacity div,.section-record-card footer{display:flex;justify-content:space-between;gap:.6rem}.section-capacity span,.section-capacity small{color:#64748b;font-size:.78rem}.section-capacity progress{width:100%;height:8px;margin:.65rem 0 .4rem;accent-color:#69aa47}.section-record-card footer{border-top:1px solid #edf2f7;padding-top:.8rem;color:#64748b;font-size:.75rem}.section-record-card footer span{display:flex;align-items:center;gap:.4rem}.sections-state{grid-column:1/-1;display:grid;min-height:220px;place-content:center;justify-items:center;gap:.55rem;color:#64748b;text-align:center}.sections-state i{color:#69aa47;font-size:1.55rem}.sections-message{margin:.75rem 0;padding:.8rem 1rem;border-radius:10px}.sections-message--error{border:1px solid #fecaca;background:#fef2f2;color:#b91c1c}
 .sections-modal{position:fixed;inset:0;z-index:1400;display:grid;place-items:center;padding:1rem;background:rgba(15,23,42,.55);backdrop-filter:blur(5px)}.sections-modal form{width:min(610px,100%);border:1px solid #e2e8f0;border-radius:18px;background:#fff;padding:1.35rem;box-shadow:0 25px 60px rgba(15,23,42,.24)}.sections-modal header,.sections-modal footer{display:flex;align-items:center;justify-content:space-between;gap:1rem}.sections-modal h2{margin:0}.sections-modal header p{margin:.3rem 0 0;color:#64748b;font-size:.85rem}.sections-modal header button{display:grid;width:38px;height:38px;place-items:center;border:1px solid #e2e8f0;border-radius:10px;background:#fff}.sections-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.3rem 0}.sections-form-grid label{display:grid;gap:.4rem;color:#334155;font-size:.82rem;font-weight:700}.sections-form-grid input,.sections-form-grid select{width:100%;min-height:43px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;background:#fff;padding:.65rem .75rem}.sections-modal footer{justify-content:flex-end}.modal-primary,.modal-secondary,.legacy-primary{border:0;border-radius:10px;padding:.72rem 1rem;font-weight:800;cursor:pointer}.modal-primary,.legacy-primary{background:#4f8a35;color:#fff}.modal-secondary{background:#eef2f7;color:#334155}
-.secretary-sections-layout{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.secretary-sections-page{min-height:100vh;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui}.secretary-sections-sidebar{border-right:1px solid #e5e7eb;background:#fff;padding:1.2rem}.secretary-brand{display:flex;align-items:center;gap:.7rem;padding:.5rem .5rem 1.2rem;border-bottom:1px solid #e5e7eb}.secretary-brand img{width:44px}.secretary-brand div{display:grid}.secretary-brand small{color:#64748b}.secretary-sections-sidebar nav{display:grid;gap:.35rem;margin-top:2rem}.secretary-sections-sidebar a{display:flex;gap:.7rem;padding:.8rem;border-radius:12px;color:#475569;font-weight:700;text-decoration:none}.secretary-sections-sidebar a.active{background:#eaf6e5;color:#3f7f2a}.secretary-sections-main{padding:2rem;min-width:0}.secretary-page-header{display:flex;align-items:center;justify-content:space-between}.secretary-page-header p{margin:0;color:#4f8a35;text-transform:uppercase;font-size:.75rem;font-weight:800}.secretary-page-header h1{margin:.15rem 0}.secretary-page-header span{color:#64748b}.secretary-workspace{margin-top:1.5rem}.secretary-workspace .sections-toolbar{grid-template-columns:minmax(240px,1fr) 190px 160px}.secretary-workspace .sections-grid{grid-template-columns:repeat(auto-fill,minmax(285px,1fr))}
-@media(max-width:768px){.sections-page-header{align-items:stretch;flex-direction:column}.sections-toolbar{grid-template-columns:1fr!important}.sections-form-grid{grid-template-columns:1fr}.secretary-sections-layout{grid-template-columns:1fr}.secretary-sections-sidebar{display:none}.secretary-sections-main{padding:1rem}.secretary-page-header{align-items:stretch;flex-direction:column;gap:1rem}}
+.secretary-sections-layout{display:contents}.secretary-sections-page{min-height:100vh}.secretary-sections-main{min-width:0}.secretary-workspace{margin:1.5rem 2rem 0;padding:1.25rem;border:1px solid rgba(148,163,184,.14);border-radius:18px;background:#fff;box-shadow:0 18px 42px rgba(15,23,42,.08)}.secretary-workspace .sections-toolbar{grid-template-columns:minmax(240px,1fr) 190px 160px}.secretary-workspace .sections-grid{grid-template-columns:repeat(auto-fill,minmax(285px,1fr))}.secretary-header-tools .legacy-primary{display:inline-flex;align-items:center;gap:.55rem;min-height:42px;border-radius:12px;padding:.7rem 1rem;background:#245b13;color:#fff}.secretary-header-tools .legacy-primary:hover{background:#1e4307}
+@media(max-width:768px){.sections-page-header{align-items:stretch;flex-direction:column}.sections-toolbar{grid-template-columns:1fr!important}.sections-form-grid{grid-template-columns:1fr}.secretary-workspace{margin:1rem;padding:1rem}.secretary-header-tools{width:100%;justify-content:flex-end}}
 </style>
