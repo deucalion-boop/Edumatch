@@ -1815,7 +1815,7 @@ const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
       .sort({ createdAt: -1 })
       .lean(),
     User.find({ role: ROLE_TEACHER })
-      .select('name email status createdAt')
+      .select('name email status department createdAt')
       .sort({ createdAt: -1 })
       .lean(),
     User.find({ role: ROLE_HEADTEACHER })
@@ -2031,6 +2031,7 @@ const getLegacyMongoAnalytics = asyncHandler(async (_req, res) => {
           id: String(user._id),
           name: user.name || 'Unnamed user',
           email: user.email || '-',
+          department: user.department || 'Unassigned',
           status: user.status || '-',
           createdAt: user.createdAt || null,
         })),
