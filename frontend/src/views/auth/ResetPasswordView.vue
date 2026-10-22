@@ -205,4 +205,19 @@ export default {
 
 @import '../../styles/auth.tailwind.css';
 
+.login-page .auth-submit-btn {
+  background: linear-gradient(135deg, #3f7f2a, #69aa47) !important;
+  box-shadow: 0 8px 20px rgb(63 127 42 / 24%);
+}
+
+.login-page .auth-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #315f22, #4f8f35) !important;
+  box-shadow: 0 10px 24px rgb(63 127 42 / 34%);
+}
+
+.login-page .auth-submit-btn:disabled {
+  background: linear-gradient(135deg, #7da66b, #9abd8b) !important;
+  opacity: 0.72;
+}
+
 </style>
