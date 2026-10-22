@@ -10,6 +10,7 @@
         <router-link to="/secretary/teachers" class="nav-link" @click="closeSidebar"><i class="fas fa-users"></i><span>Teacher Monitoring</span></router-link>
         <router-link to="/secretary/users" class="nav-link" @click="closeSidebar"><i class="fas fa-user-cog"></i><span>User Management</span></router-link>
         <router-link to="/secretary/students" class="nav-link" @click="closeSidebar"><i class="fas fa-user-graduate"></i><span>Student Records</span></router-link>
+        <router-link to="/secretary/sections" class="nav-link" @click="closeSidebar"><i class="fas fa-layer-group"></i><span>Manage Sections</span></router-link>
         <router-link to="/secretary/archived" class="nav-link" @click="closeSidebar"><i class="fas fa-box-archive"></i><span>Archived</span></router-link>
       </div></nav>
       <div class="sidebar-footer"><div class="secretary-profile"><div class="secretary-avatar"><i class="fas fa-user"></i></div><div class="secretary-info"><h5>{{ displayName }}</h5><div class="secretary-profile-meta"><p class="secretary-role">Secretary</p><div class="secretary-status"><span class="secretary-profile-status-indicator active"></span><span>active</span></div></div></div></div></div>
