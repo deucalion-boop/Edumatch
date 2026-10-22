@@ -1001,6 +1001,15 @@
                     </button>
                     <button
                       type="button"
+                      class="pagination-btn attendance-export-btn"
+                      :disabled="!canExportAttendance"
+                      @click="exportAttendanceToExcel"
+                    >
+                      <i class="fas fa-file-excel" aria-hidden="true"></i>
+                      {{ isAttendanceExporting ? 'Exporting...' : 'Export Excel' }}
+                    </button>
+                    <button
+                      type="button"
                       class="pagination-btn attendance-lock-btn"
                       :disabled="!canLockAttendance"
                       @click="lockAttendance"
@@ -1973,6 +1982,7 @@ const isAttendanceLoading = ref(false)
 const isAttendanceHistoryLoading = ref(false)
 const isAttendanceSaving = ref(false)
 const isAttendanceLocking = ref(false)
+const isAttendanceExporting = ref(false)
 const attendanceMessage = ref('')
 const attendanceMessageType = ref('success')
 const attendanceSearchQuery = ref('')
@@ -2607,6 +2617,12 @@ const canLockAttendance = computed(() => {
   )
 })
 
+const canExportAttendance = computed(() => Boolean(
+  filteredAttendanceRoster.value.length > 0
+  && !isAttendanceLoading.value
+  && !isAttendanceExporting.value
+))
+
 const lessonTotalPages = computed(() => Math.max(1, Math.ceil(filteredLessons.value.length / pageSize)))
 
 const assessmentTotalPages = computed(() => Math.max(1, Math.ceil(filteredAssessments.value.length / pageSize)))
@@ -2719,6 +2735,143 @@ const applyBulkAttendanceStatus = (status) => {
   filteredAttendanceRoster.value.forEach((student) => {
     student.attendanceStatus = status
   })
+}
+
+const sanitizeWorksheetName = (value) => String(value || 'Attendance')
+  .replace(/[\\/*?:\[\]]/g, ' ')
+  .trim()
+  .slice(0, 31) || 'Attendance'
+
+const sanitizeFileName = (value) => String(value || 'attendance')
+  .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
+  .replace(/\s+/g, '-')
+  .replace(/-+/g, '-')
+  .replace(/^-|-$/g, '') || 'attendance'
+
+const exportAttendanceToExcel = async () => {
+  if (!canExportAttendance.value) return
+
+  isAttendanceExporting.value = true
+  clearAttendanceFeedback()
+
+  try {
+    const excelModule = await import('exceljs')
+    const ExcelWorkbook = excelModule.Workbook || excelModule.default?.Workbook
+    if (!ExcelWorkbook) throw new Error('Excel workbook module is unavailable')
+
+    const workbook = new ExcelWorkbook()
+    workbook.creator = 'EduMatch'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+
+    const classLabel = attendanceRosterContextLabel.value || 'Attendance'
+    const worksheet = workbook.addWorksheet(sanitizeWorksheetName(classLabel), {
+      views: [{ state: 'frozen', ySplit: 7 }],
+      pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
+    })
+
+    const exportedStudents = filteredAttendanceRoster.value
+    const exportSummary = exportedStudents.reduce((summary, student) => {
+      const status = String(student?.attendanceStatus || 'Present').trim().toLowerCase()
+      if (status === 'present') summary.present += 1
+      if (status === 'late') summary.late += 1
+      if (status === 'absent') summary.absent += 1
+      if (status === 'excused') summary.excused += 1
+      return summary
+    }, { present: 0, late: 0, absent: 0, excused: 0 })
+
+    worksheet.mergeCells('A1:F1')
+    worksheet.getCell('A1').value = 'EduMatch Attendance Report'
+    worksheet.getCell('A2').value = 'Class / Section'
+    worksheet.getCell('B2').value = classLabel
+    worksheet.getCell('D2').value = 'Date'
+    worksheet.getCell('E2').value = attendanceDateKey.value ? new Date(`${attendanceDateKey.value}T00:00:00`) : ''
+    worksheet.getCell('E2').numFmt = 'mmm d, yyyy'
+    worksheet.getCell('A3').value = 'Teacher'
+    worksheet.getCell('B3').value = teacherFullName.value || teacher.displayName || teacher.name || 'Teacher'
+    worksheet.getCell('D3').value = 'Scope'
+    worksheet.getCell('E3').value = attendanceScopeLabel(attendanceScope.value)
+    worksheet.getCell('A4').value = 'Exported students'
+    worksheet.getCell('B4').value = exportedStudents.length
+    worksheet.getCell('C4').value = `Present: ${exportSummary.present}`
+    worksheet.getCell('D4').value = `Late: ${exportSummary.late}`
+    worksheet.getCell('E4').value = `Absent: ${exportSummary.absent}`
+    worksheet.getCell('F4').value = `Excused: ${exportSummary.excused}`
+    worksheet.getCell('A5').value = attendanceRosterHasFilters.value
+      ? 'This export reflects the active attendance search and status filters.'
+      : 'This export contains the complete loaded attendance roster.'
+    worksheet.mergeCells('A5:F5')
+
+    const headerRow = worksheet.getRow(7)
+    headerRow.values = ['No.', 'Student name', 'Email', 'Grade level', 'Section', 'Attendance status']
+
+    exportedStudents.forEach((student, index) => {
+      worksheet.addRow([
+        index + 1,
+        String(student?.name || 'Unnamed student'),
+        String(student?.email || ''),
+        String(student?.gradeLevel || ''),
+        String(student?.sectionName || ''),
+        String(student?.attendanceStatus || 'Present'),
+      ])
+    })
+
+    worksheet.getColumn(1).width = 8
+    worksheet.getColumn(2).width = 28
+    worksheet.getColumn(3).width = 34
+    worksheet.getColumn(4).width = 16
+    worksheet.getColumn(5).width = 20
+    worksheet.getColumn(6).width = 20
+
+    worksheet.getCell('A1').font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } }
+    worksheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E4307' } }
+    worksheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'left' }
+    worksheet.getRow(1).height = 28
+
+    for (const labelCell of ['A2', 'D2', 'A3', 'D3', 'A4']) {
+      worksheet.getCell(labelCell).font = { name: 'Arial', bold: true, color: { argb: 'FF334155' } }
+    }
+    worksheet.getRow(5).font = { name: 'Arial', italic: true, color: { argb: 'FF64748B' } }
+    headerRow.font = { name: 'Arial', bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F8A35' } }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 24
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber < 8) return
+      row.font = { name: 'Arial', size: 10, color: { argb: 'FF1F2937' } }
+      row.alignment = { vertical: 'middle' }
+      row.height = 21
+      if (rowNumber % 2 === 0) {
+        row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F8F0' } }
+      }
+      row.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' }
+      row.getCell(4).alignment = { vertical: 'middle', horizontal: 'center' }
+      row.getCell(5).alignment = { vertical: 'middle', horizontal: 'center' }
+      row.getCell(6).alignment = { vertical: 'middle', horizontal: 'center' }
+    })
+
+    worksheet.autoFilter = { from: 'A7', to: `F${7 + exportedStudents.length}` }
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const downloadUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `${sanitizeFileName(classLabel)}-${attendanceDateKey.value || getTodayDateKey()}-attendance.xlsx`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(downloadUrl)
+
+    attendanceMessage.value = `Excel attendance report exported for ${exportedStudents.length} student${exportedStudents.length === 1 ? '' : 's'}.`
+    attendanceMessageType.value = 'success'
+  } catch (error) {
+    console.error('Failed to export attendance to Excel:', error)
+    attendanceMessage.value = 'Unable to export the attendance report. Please try again.'
+    attendanceMessageType.value = 'error'
+  } finally {
+    isAttendanceExporting.value = false
+  }
 }
 
 const isAttendanceRecordSelected = (record) => {
@@ -10924,7 +11077,7 @@ onBeforeUnmount(() => {
 
 #teacherRecordsAttendancePanel .attendance-toolbar-actions {
   @apply tw:grid;
-  @apply tw:[grid-template-columns:repeat(3,_minmax(0,_1fr))];
+  @apply tw:[grid-template-columns:repeat(2,_minmax(0,_1fr))];
   @apply tw:[gap:0.45rem];
 }
 
@@ -10953,8 +11106,15 @@ onBeforeUnmount(() => {
   @apply tw:[color:#52634a];
 }
 
+#teacherRecordsAttendancePanel .attendance-export-btn {
+  @apply tw:[border-color:#217346];
+  @apply tw:[background:#ffffff];
+  @apply tw:[color:#217346];
+}
+
 #teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-load-btn:not(:disabled):hover,
-#teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover {
+#teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-lock-btn:not(:disabled):hover,
+#teacherRecordsAttendancePanel .attendance-toolbar-actions .attendance-export-btn:not(:disabled):hover {
   @apply tw:[border-color:#4f7d3a];
   @apply tw:[background:#e5efe0];
   @apply tw:[color:#1e4307];
