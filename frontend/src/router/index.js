@@ -233,6 +233,11 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (to.hash) return { el: to.hash, behavior: 'smooth', top: 24 }
+    if (savedPosition) return savedPosition
+    return { top: 0 }
+  },
 })
 
 const initialPath = typeof window !== 'undefined' ? window.location.pathname : ''

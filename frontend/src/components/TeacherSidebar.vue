@@ -56,10 +56,17 @@
               </router-link>
             </div>
           </div>
-          <router-link to="/teacher/students" class="nav-link" data-tour="teacher-students-link" :class="{ active: isActiveRoute('/teacher/students') }" @click="closeSidebar">
-            <i class="fas fa-user-graduate"></i>
-            <span>Students</span>
-          </router-link>
+          <div class="nav-dropdown nav-dropdown-students">
+            <button type="button" class="nav-link nav-link-dropdown" data-nav-group="students" data-tour="teacher-students-link" :class="{ active: isStudentsRouteActive || isStudentsMenuOpen, 'is-expanded': isStudentsMenuOpen }" :aria-expanded="isStudentsMenuOpen ? 'true' : 'false'" aria-controls="teacher-students-sublinks" @click="toggleStudentsMenu">
+              <span class="nav-link-main"><i class="fas fa-user-graduate"></i><span class="nav-link-copy"><span class="nav-link-title">Students</span></span></span>
+              <i class="fas fa-chevron-down nav-link-caret" aria-hidden="true"></i>
+            </button>
+            <div v-if="isStudentsMenuOpen" id="teacher-students-sublinks" class="nav-sublinks">
+              <router-link :to="buildStudentsSectionRoute('class-management')" class="nav-sublink" :class="{ active: isStudentsSectionActive('class-management') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Class Management</span><span class="nav-sublink-caption">Create and manage classes</span></span></router-link>
+              <router-link :to="buildStudentsSectionRoute('pending-requests')" class="nav-sublink" :class="{ active: isStudentsSectionActive('pending-requests') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Pending Requests</span><span class="nav-sublink-caption">Review enrollment requests</span></span></router-link>
+              <router-link :to="buildStudentsSectionRoute('student-list')" class="nav-sublink" :class="{ active: isStudentsSectionActive('student-list') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Student List</span><span class="nav-sublink-caption">View the student roster</span></span></router-link>
+            </div>
+          </div>
           <div class="nav-dropdown">
             <button
               type="button"
@@ -147,15 +154,21 @@ const teacherFullName = computed(() => authStore.user?.name || 'Teacher')
 const teacherRole = 'Teacher'
 const teacherStatus = computed(() => authStore.user?.status === 'active' ? 'Active' : 'Offline')
 const activitiesOpen = ref(false)
+const studentsOpen = ref(false)
 const recordsOpen = ref(false)
 const isActivitiesRouteActive = computed(() => route.path.startsWith('/teacher/activities'))
+const isStudentsRouteActive = computed(() => route.path.startsWith('/teacher/students'))
 const isRecordsRouteActive = computed(() => route.path.startsWith('/teacher/records'))
 const isActivitiesMenuOpen = computed(() => activitiesOpen.value || isActivitiesRouteActive.value)
+const isStudentsMenuOpen = computed(() => studentsOpen.value || isStudentsRouteActive.value)
 const isRecordsMenuOpen = computed(() => recordsOpen.value || isRecordsRouteActive.value)
 const toggleActivitiesMenu = () => { activitiesOpen.value = !activitiesOpen.value }
+const toggleStudentsMenu = () => { studentsOpen.value = !studentsOpen.value }
 const toggleRecordsMenu = () => { recordsOpen.value = !recordsOpen.value }
 const isActiveRoute = path => route.path === path
 const buildActivitiesTabRoute = tab => ({ path: '/teacher/activities', query: { tab } })
+const buildStudentsSectionRoute = section => ({ path: '/teacher/students', hash: `#${section}` })
+const isStudentsSectionActive = section => isStudentsRouteActive.value && (route.hash || '#class-management') === `#${section}`
 const buildRecordsTabRoute = tab => ({ path: '/teacher/records', query: { tab } })
 const isActivitiesSubRouteActive = tab => isActivitiesRouteActive.value && String(route.query.tab || 'lesson') === tab
 const isRecordsSubRouteActive = tab => isRecordsRouteActive.value && String(route.query.tab || 'lessons') === tab

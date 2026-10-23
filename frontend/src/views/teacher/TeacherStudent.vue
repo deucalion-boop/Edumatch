@@ -53,7 +53,17 @@
               </router-link>
             </div>
           </div>
-          <router-link to="/teacher/students" class="nav-link" :class="{ active: isActiveRoute('/teacher/students') }" @click="closeSidebar"><i class="fas fa-user-graduate"></i><span>Students</span></router-link>
+          <div class="nav-dropdown nav-dropdown-students">
+            <button type="button" class="nav-link nav-link-dropdown" data-nav-group="students" :class="{ active: isStudentsRouteActive || isStudentsMenuOpen, 'is-expanded': isStudentsMenuOpen }" :aria-expanded="isStudentsMenuOpen ? 'true' : 'false'" aria-controls="teacher-students-sublinks" @click="toggleStudentsMenu">
+              <span class="nav-link-main"><i class="fas fa-user-graduate"></i><span class="nav-link-copy"><span class="nav-link-title">Students</span></span></span>
+              <i class="fas fa-chevron-down nav-link-caret" aria-hidden="true"></i>
+            </button>
+            <div v-if="isStudentsMenuOpen" id="teacher-students-sublinks" class="nav-sublinks">
+              <router-link :to="buildStudentsSectionRoute('class-management')" class="nav-sublink" :class="{ active: isStudentsSectionActive('class-management') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Class Management</span><span class="nav-sublink-caption">Create and manage classes</span></span></router-link>
+              <router-link :to="buildStudentsSectionRoute('pending-requests')" class="nav-sublink" :class="{ active: isStudentsSectionActive('pending-requests') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Pending Requests</span><span class="nav-sublink-caption">Review enrollment requests</span></span></router-link>
+              <router-link :to="buildStudentsSectionRoute('student-list')" class="nav-sublink" :class="{ active: isStudentsSectionActive('student-list') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Student List</span><span class="nav-sublink-caption">View the student roster</span></span></router-link>
+            </div>
+          </div>
           <div class="nav-dropdown">
             <button
               type="button"
@@ -200,7 +210,7 @@
       </section>
 
       <section class="student-management-grid">
-      <section class="section-card animated-card dashboard-panel class-management-panel" :class="{ 'has-open-class-menu': subjectActionsMenuId }" data-tour="students-subjects-section">
+      <section id="class-management" class="section-card animated-card dashboard-panel class-management-panel" :class="{ 'has-open-class-menu': subjectActionsMenuId }" data-tour="students-subjects-section">
         <div class="dashboard-panel-header class-management-header">
           <div class="class-management-header-copy">
             <span class="dashboard-panel-eyebrow">Teaching spaces</span>
@@ -332,7 +342,7 @@
         </div>
       </section>
 
-      <section class="section-card animated-card dashboard-panel enrollment-requests-section">
+      <section id="pending-requests" class="section-card animated-card dashboard-panel enrollment-requests-section">
         <div class="dashboard-panel-header">
           <div>
             <span class="dashboard-panel-eyebrow">Enrollment queue</span>
@@ -411,7 +421,7 @@
 
       </section>
 
-      <section class="section-card animated-card class-list-section student-list-panel" data-tour="students-classlist-section">
+      <section id="student-list" class="section-card animated-card class-list-section student-list-panel" data-tour="students-classlist-section">
         <div class="student-list-header">
           <div>
             <span class="dashboard-panel-eyebrow">Roster overview</span>
@@ -998,6 +1008,7 @@ let toastTimer = null
 let teacherAssignmentRefreshTimer = null
 let isTeacherAssignmentRefreshInFlight = false
 const activitiesMenuOpen = ref(route.path === '/teacher/activities' || route.path.startsWith('/teacher/activities/'))
+const studentsMenuOpen = ref(route.path === '/teacher/students' || route.path.startsWith('/teacher/students/'))
 const recordsMenuOpen = ref(route.path === '/teacher/records' || route.path.startsWith('/teacher/records/'))
 const normalizeActivitiesTab = (tab) => {
   const normalizedTab = String(tab || '').trim().toLowerCase()
@@ -1017,6 +1028,13 @@ const isActivitiesSubRouteActive = (tab) => (
 )
 const toggleActivitiesMenu = () => {
   activitiesMenuOpen.value = !activitiesMenuOpen.value
+}
+const isStudentsRouteActive = computed(() => route.path === '/teacher/students' || route.path.startsWith('/teacher/students/'))
+const isStudentsMenuOpen = computed(() => studentsMenuOpen.value)
+const buildStudentsSectionRoute = section => ({ path: '/teacher/students', hash: `#${section}` })
+const isStudentsSectionActive = section => isStudentsRouteActive.value && (route.hash || '#class-management') === `#${section}`
+const toggleStudentsMenu = () => {
+  studentsMenuOpen.value = !studentsMenuOpen.value
 }
 const normalizeRecordsTab = (tab) => {
   const normalizedTab = String(tab || '').trim().toLowerCase()
