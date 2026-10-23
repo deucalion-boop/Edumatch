@@ -478,7 +478,7 @@
             <i class="fas fa-search"></i>
             <input v-model.trim="studentSearch" type="search" placeholder="Search students..." aria-label="Search students" />
           </label>
-          <label v-if="studentRosterView !== 'advisory'" class="student-toolbar-select"><i class="fas fa-filter"></i><select v-model="studentClassFilter" aria-label="Filter by class"><option value="">All Classes</option><option v-for="subject in subjects" :key="subject.id" :value="String(subject.id)">{{ subject.className || subject.name }}</option></select></label>
+          <label v-if="studentRosterView === 'handled'" class="student-toolbar-select"><i class="fas fa-filter"></i><select v-model="studentClassFilter" aria-label="Filter by handled class"><option value="">All Handled Classes</option><option v-for="subject in handledClassFilterSubjects" :key="subject.id" :value="String(subject.id)">{{ subject.className || subject.name }}</option></select></label>
           <label class="student-toolbar-select"><i class="fas fa-arrow-down-wide-short"></i><select v-model="studentSort" aria-label="Sort students"><option value="name">Sort: Name</option><option value="progress">Sort: Progress</option><option value="average">Sort: Average</option><option value="status">Sort: Status</option></select></label>
           <div class="student-toolbar-actions">
             <button type="button" class="toolbar-icon-btn" title="Export roster" aria-label="Export roster" onclick="window.print()"><i class="fas fa-file-export"></i><span>Export</span></button>
@@ -1123,6 +1123,9 @@ const teacherSubject = computed(() => String(teacher.subject || authStore.user?.
 const teacherStrand = computed(() => String(teacher.strand || '').trim())
 const teacherAdvisorySectionName = computed(() => String(teacher.advisorySectionName || '').trim())
 const hasAdvisorySection = computed(() => Boolean(teacherAdvisorySectionName.value))
+const handledClassFilterSubjects = computed(() => subjects.value.filter((subject) => (
+  subject.classType !== 'advisory' && !String(subject.advisorySectionId || '').trim()
+)))
 const teacherStatus = computed(() => String(teacher.status || 'Online').trim() || 'Online')
 const teacherAvatarUrl = computed(() => {
   const profileImage = String(authStore.user?.profileImage || '').trim()
@@ -1449,7 +1452,9 @@ const fetchSubjects = (options = {}) => {
       track: subject.track || '',
       description: subject.description || '',
       advisorySectionId: String(subject.advisorySectionId || '').trim(),
-      classType: subject.classType === 'advisory' || subject.advisorySectionId ? 'advisory' : 'teacher_created',
+      classType: subject.classType === 'advisory' || subject.advisorySectionId
+        ? 'advisory'
+        : subject.classType === 'headteacher_assigned' ? 'headteacher_assigned' : 'teacher_created',
       lessonCount: Number(subject.lessonCount || 0),
       assessmentCount: Number(subject.assessmentCount || 0),
       approvedStudentsCount: Number(subject.approvedStudentsCount || 0),
