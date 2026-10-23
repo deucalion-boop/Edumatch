@@ -220,24 +220,6 @@
         </div>
       </header>
 
-      <section class="handled-class-card animated-card" data-tour="teacher-handled-class" aria-labelledby="handled-class-title">
-        <div class="handled-class-icon" :class="{ 'is-unassigned': !assignedHandledClass }">
-          <i class="fas" :class="assignedHandledClass ? 'fa-chalkboard-user' : 'fa-circle-exclamation'"></i>
-        </div>
-        <div class="handled-class-copy">
-          <span class="handled-class-kicker">Head Teacher assignment</span>
-          <h2 id="handled-class-title">{{ assignedHandledClass ? assignedHandledClass.className : 'No handled class section assigned' }}</h2>
-          <p v-if="assignedHandledClass">
-            You handle <strong>Section {{ assignedHandledClass.sectionName }}</strong> for {{ assignedHandledClass.subjectName }}. Use Students and Records to manage this class.
-          </p>
-          <p v-else>Your Head Teacher has not assigned a handled class section yet.</p>
-        </div>
-        <router-link v-if="assignedHandledClass" to="/teacher/students" class="handled-class-action">
-          Open handled class
-          <i class="fas fa-arrow-right" aria-hidden="true"></i>
-        </router-link>
-      </section>
-
       <div class="kpi-grid dashboard-kpi-grid animated-card" data-tour="teacher-kpi">
         <article v-for="card in summaryCards" :key="card.label" class="kpi-card">
           <div class="kpi-icon" :class="card.tone"><i :class="card.icon"></i></div>
@@ -451,7 +433,6 @@ export default {
       clearAllNotifications,
     } = useUserNotifications({ limit: 8, pollIntervalMs: 15000 })
     const students = ref([])
-    const handledClasses = ref([])
     const calendarLessons = ref([])
     const calendarAssessments = ref([])
     const calendarCompletedAssessments = ref([])
@@ -589,18 +570,6 @@ export default {
     })
     const teacherStrand = computed(() => String(teacher.strand || '').trim())
     const teacherStatus = computed(() => String(teacher.status || 'Online').trim() || 'Online')
-    const assignedHandledClass = computed(() => {
-      const assigned = handledClasses.value.find((subject) => String(subject.advisorySectionId || '').trim())
-      if (!assigned) return null
-      const sectionName = String(assigned.sectionName || assigned.advisorySectionName || '').trim()
-        || String(assigned.className || '').split(' - ').pop().trim()
-      return {
-        id: assigned.id || assigned._id || '',
-        className: String(assigned.className || assigned.name || 'Handled class').trim(),
-        subjectName: String(assigned.name || teacher.subject || 'your subject').trim(),
-        sectionName: sectionName || 'Assigned section',
-      }
-    })
     const summaryCards = computed(() => ([
       {
         label: 'Total Students',
@@ -1300,7 +1269,6 @@ export default {
           Array.isArray(subjectsResponse.data?.subjects) ? subjectsResponse.data.subjects : [],
           (subject, index) => subject.id || subject._id || `${subject.name || ''}-${index}`
         )
-        handledClasses.value = subjects
         const lessons = uniqueBy(
           Array.isArray(lessonsResponse.data?.lessons) ? lessonsResponse.data.lessons : [],
           (lesson, index) => lesson.id || lesson._id || `${lesson.title || ''}-${lesson.createdAt || ''}-${index}`
@@ -1354,7 +1322,6 @@ export default {
         calendarLessons.value = []
         calendarAssessments.value = []
         calendarCompletedAssessments.value = []
-        handledClasses.value = []
       }
     }
 
@@ -1456,7 +1423,6 @@ export default {
       accountMenuRef,
       notificationMenuRef,
       teacher,
-      assignedHandledClass,
       stats,
       summaryCards,
       activityNotifications,
@@ -1643,96 +1609,6 @@ export default {
 
 .notification-dropdown-close:hover {
   @apply tw:[background:#f8fafc];
-}
-
-.handled-class-card {
-  @apply tw:flex;
-  @apply tw:items-center;
-  @apply tw:[gap:1rem];
-  @apply tw:[margin-bottom:1.25rem];
-  @apply tw:[padding:1rem_1.15rem];
-  @apply tw:[border:1px_solid_rgba(132,_204,_22,_0.42)];
-  @apply tw:[border-radius:18px];
-  @apply tw:[background:linear-gradient(135deg,_#ffffff_0%,_#f4faec_100%)];
-  @apply tw:[box-shadow:0_14px_30px_rgba(30,_67,_7,_0.07)];
-}
-
-.handled-class-icon {
-  @apply tw:inline-flex;
-  @apply tw:items-center;
-  @apply tw:justify-center;
-  @apply tw:[width:52px];
-  @apply tw:[height:52px];
-  @apply tw:[border-radius:15px];
-  @apply tw:[background:#dff2cc];
-  @apply tw:[color:#356f14];
-  @apply tw:[font-size:1.2rem];
-  @apply tw:shrink-0;
-}
-
-.handled-class-icon.is-unassigned {
-  @apply tw:[background:#fff7ed];
-  @apply tw:[color:#c2410c];
-}
-
-.handled-class-copy {
-  @apply tw:[min-width:0];
-  @apply tw:flex-auto;
-}
-
-.handled-class-kicker {
-  @apply tw:block;
-  @apply tw:[margin-bottom:0.18rem];
-  @apply tw:[color:#4d7c0f];
-  @apply tw:[font-size:0.72rem];
-  @apply tw:[font-weight:800];
-  @apply tw:uppercase;
-  @apply tw:[letter-spacing:0.08em];
-}
-
-.handled-class-copy h2 {
-  @apply tw:[margin:0];
-  @apply tw:[color:#17310b];
-  @apply tw:[font-size:1.08rem];
-  @apply tw:[line-height:1.3];
-}
-
-.handled-class-copy p {
-  @apply tw:[margin:0.3rem_0_0];
-  @apply tw:[color:#526348];
-  @apply tw:[font-size:0.84rem];
-  @apply tw:[line-height:1.45];
-}
-
-.handled-class-action {
-  @apply tw:inline-flex;
-  @apply tw:items-center;
-  @apply tw:[gap:0.5rem];
-  @apply tw:[padding:0.7rem_0.9rem];
-  @apply tw:[border-radius:12px];
-  @apply tw:[background:#356f14];
-  @apply tw:[color:#ffffff];
-  @apply tw:[font-size:0.8rem];
-  @apply tw:[font-weight:800];
-  @apply tw:no-underline;
-  @apply tw:whitespace-nowrap;
-  @apply tw:shrink-0;
-}
-
-.handled-class-action:hover {
-  @apply tw:[background:#28580e];
-}
-
-@media (max-width: 640px) {
-  .handled-class-card {
-    @apply tw:items-start;
-    @apply tw:flex-wrap;
-  }
-
-  .handled-class-action {
-    @apply tw:w-full;
-    @apply tw:justify-center;
-  }
 }
 
 .kpi-grid {
