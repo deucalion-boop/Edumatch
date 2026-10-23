@@ -14,7 +14,12 @@
           >
             <i class="fas fa-bars"></i>
           </button>
-          <div class="admin-logo">
+          <router-link
+            to="/admin/dashboard"
+            class="admin-logo"
+            aria-label="Return to Admin Overview"
+            title="Back to Overview"
+          >
             <div class="admin-logo-icon">
               <img src="/logo.png" alt="EduMatch" class="admin-logo-img" />
             </div>
@@ -22,7 +27,7 @@
               <h1>EduMatch Admin</h1>
               <span class="page-title">User Management</span>
             </div>
-          </div>
+          </router-link>
           <div class="admin-actions">
             <div ref="accountMenuRef" class="account-menu">
               <button
