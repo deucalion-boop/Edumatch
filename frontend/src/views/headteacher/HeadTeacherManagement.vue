@@ -298,11 +298,20 @@
                       <small v-else class="headteacher-handled-empty">No handled classes</small>
                       <div class="headteacher-handled-add">
                         <input v-model.trim="handledClassSubjectDrafts[teacher.id]" class="headteacher-inline-input" type="text" maxlength="100" placeholder="Subject">
-                        <select v-model="handledClassDrafts[teacher.id]" class="headteacher-inline-select" :disabled="isUpdatingHandledClass">
-                          <option value="">Select section</option>
-                          <option v-for="section in getAvailableHandledSections(teacher)" :key="`handled-${teacher.id}-${section.id}`" :value="section.id">{{ section.name }}</option>
-                        </select>
-                        <button type="button" class="headteacher-directory-action-btn is-save" title="Assign handled class" :disabled="isUpdatingHandledClass || !handledClassDrafts[teacher.id] || !handledClassSubjectDrafts[teacher.id]" @click="assignHandledClassSection(teacher)">
+                        <div class="headteacher-multi-picker">
+                          <button type="button" class="headteacher-multi-picker-trigger" :disabled="isUpdatingHandledClass" :aria-expanded="openHandledPickerId === teacher.id ? 'true' : 'false'" @click="toggleHandledPicker(teacher.id)">
+                            <span>{{ handledSelectionLabel(teacher.id) }}</span><i class="fas fa-chevron-down"></i>
+                          </button>
+                          <div v-if="openHandledPickerId === teacher.id" class="headteacher-multi-picker-menu">
+                            <p>Select one or more sections</p>
+                            <label v-for="section in getAvailableHandledSections(teacher)" :key="`handled-${teacher.id}-${section.id}`">
+                              <input type="checkbox" :checked="isHandledSectionSelected(teacher.id, section.id)" @change="toggleHandledSectionDraft(teacher.id, section.id)">
+                              <span>{{ section.name }}</span>
+                            </label>
+                            <small v-if="getAvailableHandledSections(teacher).length === 0">No sections available for this subject.</small>
+                          </div>
+                        </div>
+                        <button type="button" class="headteacher-directory-action-btn is-save" title="Assign selected handled classes" :disabled="isUpdatingHandledClass || !getHandledSectionDrafts(teacher.id).length || !handledClassSubjectDrafts[teacher.id]" @click="assignHandledClassSection(teacher)">
                           <i class="fas" :class="isUpdatingHandledClass && updatingHandledTeacherId === teacher.id ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
                         </button>
                       </div>
@@ -474,11 +483,19 @@
                 </div>
                 <div class="headteacher-handled-add">
                   <input v-model.trim="handledClassSubjectDrafts[teacher.id]" class="headteacher-inline-input" type="text" maxlength="100" placeholder="Subject">
-                  <select v-model="handledClassDrafts[teacher.id]" class="headteacher-inline-select" :disabled="isUpdatingHandledClass">
-                    <option value="">Select handled section</option>
-                    <option v-for="section in getAvailableHandledSections(teacher)" :key="`mobile-handled-${teacher.id}-${section.id}`" :value="section.id">{{ section.name }}</option>
-                  </select>
-                  <button type="button" class="headteacher-button headteacher-button-primary headteacher-button-sm" :disabled="isUpdatingHandledClass || !handledClassDrafts[teacher.id] || !handledClassSubjectDrafts[teacher.id]" @click="assignHandledClassSection(teacher)">Assign</button>
+                  <div class="headteacher-multi-picker">
+                    <button type="button" class="headteacher-multi-picker-trigger" :disabled="isUpdatingHandledClass" :aria-expanded="openHandledPickerId === teacher.id ? 'true' : 'false'" @click="toggleHandledPicker(teacher.id)">
+                      <span>{{ handledSelectionLabel(teacher.id) }}</span><i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div v-if="openHandledPickerId === teacher.id" class="headteacher-multi-picker-menu">
+                      <p>Select one or more sections</p>
+                      <label v-for="section in getAvailableHandledSections(teacher)" :key="`mobile-handled-${teacher.id}-${section.id}`">
+                        <input type="checkbox" :checked="isHandledSectionSelected(teacher.id, section.id)" @change="toggleHandledSectionDraft(teacher.id, section.id)">
+                        <span>{{ section.name }}</span>
+                      </label>
+                    </div>
+                  </div>
+                  <button type="button" class="headteacher-button headteacher-button-primary headteacher-button-sm" :disabled="isUpdatingHandledClass || !getHandledSectionDrafts(teacher.id).length || !handledClassSubjectDrafts[teacher.id]" @click="assignHandledClassSection(teacher)">Assign {{ getHandledSectionDrafts(teacher.id).length || '' }}</button>
                 </div>
               </div>
 
@@ -916,6 +933,7 @@ const sections = ref([])
 const teacherAssignmentDrafts = reactive({})
 const handledClassDrafts = reactive({})
 const handledClassSubjectDrafts = reactive({})
+const openHandledPickerId = ref('')
 const isUpdatingHandledClass = ref(false)
 const updatingHandledTeacherId = ref('')
 const attendanceOverview = ref({
@@ -1426,21 +1444,49 @@ const getAvailableHandledSections = (teacher) => {
   return sections.value.filter((section) => section.isActive === true && !assignedIds.has(String(section.id)))
 }
 
+const getHandledSectionDrafts = (teacherId) => Array.isArray(handledClassDrafts[normalizeTeacherId(teacherId)])
+  ? handledClassDrafts[normalizeTeacherId(teacherId)]
+  : []
+
+const isHandledSectionSelected = (teacherId, sectionId) => getHandledSectionDrafts(teacherId).includes(String(sectionId))
+
+const toggleHandledSectionDraft = (teacherId, sectionId) => {
+  const normalizedTeacherId = normalizeTeacherId(teacherId)
+  const normalizedSectionId = String(sectionId || '').trim()
+  const current = getHandledSectionDrafts(normalizedTeacherId)
+  handledClassDrafts[normalizedTeacherId] = current.includes(normalizedSectionId)
+    ? current.filter((id) => id !== normalizedSectionId)
+    : [...current, normalizedSectionId]
+}
+
+const toggleHandledPicker = (teacherId) => {
+  const normalizedTeacherId = normalizeTeacherId(teacherId)
+  openHandledPickerId.value = openHandledPickerId.value === normalizedTeacherId ? '' : normalizedTeacherId
+}
+
+const handledSelectionLabel = (teacherId) => {
+  const selected = getHandledSectionDrafts(teacherId)
+  if (selected.length === 0) return 'Select sections'
+  if (selected.length === 1) return getSectionName(selected[0])
+  return `${selected.length} sections selected`
+}
+
 const assignHandledClassSection = async (teacher) => {
   const teacherId = normalizeTeacherId(teacher)
-  const sectionId = String(handledClassDrafts[teacherId] || '').trim()
+  const sectionIds = getHandledSectionDrafts(teacherId)
   const subject = String(handledClassSubjectDrafts[teacherId] || '').trim()
-  if (!teacherId || !sectionId || !subject) return
+  if (!teacherId || !sectionIds.length || !subject) return
   isUpdatingHandledClass.value = true
   updatingHandledTeacherId.value = teacherId
   assignmentMessage.value = ''
   try {
     await axios.post(`${resolveApiBaseUrl()}/headteacher/teachers/${encodeURIComponent(teacherId)}/handled-classes`, {
-      sectionId,
+      sectionIds,
       subject,
     }, getAuthConfig())
-    handledClassDrafts[teacherId] = ''
-    assignmentMessage.value = `Handled class ${subject} – Section ${getSectionName(sectionId)} assigned to ${teacher.name}.`
+    handledClassDrafts[teacherId] = []
+    openHandledPickerId.value = ''
+    assignmentMessage.value = `${sectionIds.length} handled class section${sectionIds.length === 1 ? '' : 's'} for ${subject} assigned to ${teacher.name}.`
     assignmentMessageType.value = 'success'
     await fetchTeachers()
   } catch (error) {
@@ -2345,6 +2391,99 @@ onBeforeUnmount(() => {
 .headteacher-handled-add .headteacher-inline-select {
   min-width: 0;
   flex: 1;
+}
+
+.headteacher-multi-picker {
+  position: relative;
+  min-width: 150px;
+  flex: 1;
+}
+
+.headteacher-multi-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 38px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #d7dfec;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.headteacher-multi-picker-trigger[aria-expanded='true'] {
+  border-color: #65a30d;
+  box-shadow: 0 0 0 3px rgba(101, 163, 13, 0.13);
+}
+
+.headteacher-multi-picker-trigger i {
+  color: #64748b;
+  transition: transform 0.18s ease;
+}
+
+.headteacher-multi-picker-trigger[aria-expanded='true'] i {
+  transform: rotate(180deg);
+}
+
+.headteacher-multi-picker-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 0.25rem;
+  width: max(210px, 100%);
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.55rem;
+  border: 1px solid #dbe4ef;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+}
+
+.headteacher-multi-picker-menu p {
+  margin: 0 0 0.25rem;
+  padding: 0.25rem 0.35rem;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.headteacher-multi-picker-menu label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem;
+  border-radius: 9px;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.headteacher-multi-picker-menu label:hover {
+  background: #f1f8ea;
+}
+
+.headteacher-multi-picker-menu input {
+  width: 16px;
+  height: 16px;
+  accent-color: #4d7c0f;
+}
+
+.headteacher-multi-picker-menu small {
+  padding: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.74rem;
 }
 
 .headteacher-inline-input {

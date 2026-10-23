@@ -175,17 +175,14 @@ function create(body = {}) {
 test('handled class assignments are independent from the single advisory section', async () => {
   fixture({ teacher: { advisory_section_id: sincerityId } });
   const first = await invoke(assignManagedTeacherHandledClass, {
-    params: { id: teacherId }, body: { sectionId: sincerityId, subject: 'MAPEH' },
-  });
-  const second = await invoke(assignManagedTeacherHandledClass, {
-    params: { id: teacherId }, body: { sectionId: unityId, subject: 'MAPEH' },
+    params: { id: teacherId }, body: { sectionIds: [sincerityId, unityId], subject: 'MAPEH' },
   });
   const third = await invoke(assignManagedTeacherHandledClass, {
     params: { id: teacherId }, body: { sectionId: unityId, subject: 'Music' },
   });
 
   assert.equal(first.statusCode, 201);
-  assert.equal(second.statusCode, 201);
+  assert.equal(first.response.handledClasses.length, 2);
   assert.equal(third.statusCode, 201);
   assert.equal(client.tables.users[0].advisory_section_id, sincerityId);
   assert.equal(client.tables.subjects.length, 3);

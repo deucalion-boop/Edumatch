@@ -631,43 +631,55 @@ const createStudentAccount = asyncHandler(async (req, res) => {
 const assignManagedTeacherHandledClass = asyncHandler(async (req, res) => {
   const department = ensureHeadTeacher(req);
   const teacher = await findManagedTeacherForHeadTeacher(req, req.params.id, { department });
-  const section = await getSectionOrThrow(req.body?.sectionId);
+  const requestedSectionIds = [...new Set(
+    (Array.isArray(req.body?.sectionIds) ? req.body.sectionIds : [req.body?.sectionId])
+      .map((value) => String(value || '').trim()).filter(Boolean)
+  )];
+  if (requestedSectionIds.length === 0) throw Object.assign(new Error('Select at least one handled class section'), { statusCode: 400 });
+  if (requestedSectionIds.length > 20) throw Object.assign(new Error('You can assign up to 20 sections at a time'), { statusCode: 400 });
+  const sections = await Promise.all(requestedSectionIds.map((sectionId) => getSectionOrThrow(sectionId)));
   const subject = String(req.body?.subject || teacher.subject || teacher.department || '').trim();
   const subjectValidation = nameError(subject, 'Subject', 100);
   if (subjectValidation) throw Object.assign(new Error(subjectValidation), { statusCode: 400 });
   const teacherId = String(teacher._id || teacher.id || '').trim();
   const existingClasses = await listTeacherSubjects(teacherId, { includeInactive: true });
-  const duplicate = existingClasses.find((entry) => (
-    entry.assignmentSource === 'headteacher'
-    && entry.handledSectionId === String(section.id)
-    && String(entry.name || '').toLowerCase() === subject.toLowerCase()
-    && entry.isActive
-  ));
-  if (duplicate) {
-    throw Object.assign(new Error(`${teacher.name} already handles ${subject} for Section ${section.name}`), { statusCode: 409 });
+  const duplicateSections = sections.filter((section) => existingClasses.some((entry) => (
+      entry.assignmentSource === 'headteacher'
+      && entry.handledSectionId === String(section.id)
+      && String(entry.name || '').toLowerCase() === subject.toLowerCase()
+      && entry.isActive
+    )));
+  if (duplicateSections.length) {
+    throw Object.assign(new Error(`${teacher.name} already handles ${subject} for ${duplicateSections.map((section) => `Section ${section.name}`).join(', ')}`), { statusCode: 409 });
   }
 
-  const handledClass = await assignHandledClass({
-    teacherId,
-    sectionId: section.id,
-    assignedBy: req.user._id || req.user.id,
-    name: subject,
-    track: normalizeStrand(teacher.strand) || 'GENERAL',
-    subjectCategory: getSubjectCategory(subject),
-    className: `${subject} 10 - ${section.name}`,
-    department,
-  });
+  const handledClasses = [];
+  for (const section of sections) {
+    handledClasses.push(await assignHandledClass({
+      teacherId,
+      sectionId: section.id,
+      assignedBy: req.user._id || req.user.id,
+      name: subject,
+      track: normalizeStrand(teacher.strand) || 'GENERAL',
+      subjectCategory: getSubjectCategory(subject),
+      className: `${subject} 10 - ${section.name}`,
+      department,
+    }));
+  }
 
-  return sendSuccess(res, 201, 'Handled class section assigned successfully', {
-    handledClass: {
-      id: handledClass.id,
-      name: handledClass.name,
-      className: handledClass.className,
-      code: handledClass.code,
-      handledSectionId: handledClass.handledSectionId,
-      section: { id: section.id, name: section.name },
-      assignmentSource: handledClass.assignmentSource,
-    },
+  const responseClasses = handledClasses.map((handledClass, index) => ({
+    id: handledClass.id,
+    name: handledClass.name,
+    className: handledClass.className,
+    code: handledClass.code,
+    handledSectionId: handledClass.handledSectionId,
+    section: { id: sections[index].id, name: sections[index].name },
+    assignmentSource: handledClass.assignmentSource,
+  }));
+
+  return sendSuccess(res, 201, `${responseClasses.length} handled class section${responseClasses.length === 1 ? '' : 's'} assigned successfully`, {
+    handledClass: responseClasses[0],
+    handledClasses: responseClasses,
   });
 });
 
