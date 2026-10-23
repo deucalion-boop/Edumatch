@@ -61,7 +61,7 @@
         <div class="headteacher-section-head headteacher-directory-head">
           <div class="headteacher-directory-heading">
             <h2 class="headteacher-section-title">Teacher Directory</h2>
-            <p class="headteacher-section-subtitle">Manage faculty accounts, access, and advisory assignments for {{ departmentLabel }}. Sections already used by another subject or teacher are unavailable.</p>
+            <p class="headteacher-section-subtitle">Manage faculty accounts, access, and handled class-section assignments for {{ departmentLabel }}. Sections already used by another subject or teacher are unavailable.</p>
           </div>
           <div v-if="!isLoading && teachers.length > 0" class="headteacher-directory-create-actions">
             <button
@@ -195,7 +195,7 @@
                   </th>
                   <th>Email</th>
                   <th>Department</th>
-                  <th>Advisory Section</th>
+                  <th>Handled Class Section</th>
                   <th>Status</th>
                   <th :aria-sort="getDirectoryAriaSort('date')">
                     <button type="button" class="headteacher-directory-sort-button" @click="toggleDirectorySort('date')">
@@ -273,7 +273,7 @@
                         @click.stop
                         @change="setTeacherAssignmentDraft(teacher.id, $event.target.value)"
                       >
-                        <option value="">No advisory section</option>
+                        <option value="">No handled section</option>
                         <option
                           v-for="section in getAssignableSections(teacher.id)"
                           :key="`table-teacher-section-${teacher.id}-${section.id}`"
@@ -309,8 +309,8 @@
                         type="button"
                         class="headteacher-directory-action-btn is-save"
                         :disabled="isUpdatingTeacherAssignment || !hasTeacherAssignmentChanged(teacher)"
-                        :aria-label="`Save advisory section for ${teacher.name}`"
-                        title="Save advisory section"
+                        :aria-label="`Save handled class section for ${teacher.name}`"
+                        title="Save handled class section"
                         @click.stop="saveTeacherAssignment(teacher)"
                       >
                         <i class="fas" :class="isUpdatingTeacherAssignment && updatingTeacherAssignmentId === teacher.id ? 'fa-spinner fa-spin' : 'fa-save'"></i>
@@ -403,8 +403,8 @@
               <div class="headteacher-mobile-assignment-card" @click.stop>
                 <div class="headteacher-mobile-assignment-head">
                   <div>
-                    <span class="headteacher-mobile-kicker">Advisory Assignment</span>
-                    <h4>Section Ownership</h4>
+                    <span class="headteacher-mobile-kicker">Handled Class Assignment</span>
+                    <h4>Class Section</h4>
                   </div>
                   <span
                     class="headteacher-assignment-state"
@@ -414,7 +414,7 @@
                   </span>
                 </div>
                 <p class="headteacher-mobile-assignment-copy">
-                  Choose the section this teacher will advise for advisory attendance and student account creation. Each section can be assigned to only one teacher across all subjects.
+                  Choose the class section this teacher will handle. It will appear on the teacher side and will be used for attendance and student account creation. Each section can be assigned to only one teacher.
                 </p>
                 <div class="headteacher-mobile-assignment">
                   <select
@@ -424,7 +424,7 @@
                     @click.stop
                     @change="setTeacherAssignmentDraft(teacher.id, $event.target.value)"
                   >
-                    <option value="">No advisory section</option>
+                    <option value="">No handled section</option>
                     <option
                       v-for="section in getAssignableSections(teacher.id)"
                       :key="`mobile-teacher-section-${teacher.id}-${section.id}`"
@@ -453,7 +453,7 @@
                   @click.stop="saveTeacherAssignment(teacher)"
                 >
                   <i class="fas" :class="isUpdatingTeacherAssignment && updatingTeacherAssignmentId === teacher.id ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-                  {{ isUpdatingTeacherAssignment && updatingTeacherAssignmentId === teacher.id ? 'Saving...' : 'Save Section' }}
+                  {{ isUpdatingTeacherAssignment && updatingTeacherAssignmentId === teacher.id ? 'Saving...' : 'Save Handled Class' }}
                 </button>
                 <button type="button" class="headteacher-button headteacher-button-outline headteacher-button-sm" @click.stop="updateStatus(teacher, teacher.status === 'active' ? 'inactive' : 'active')">
                   {{ teacher.status === 'active' ? 'Set Inactive' : 'Set Active' }}
@@ -1443,8 +1443,8 @@ const persistTeacherAssignment = async (teacher, advisorySectionId) => {
 
     const className = String(response.data?.advisoryClass?.className || '').trim()
     assignmentMessage.value = advisorySectionId
-      ? className ? `Advisory section assigned. Class "${className}" is ready.` : 'Advisory section assigned successfully.'
-      : 'Advisory section cleared successfully.'
+      ? className ? `Handled class section assigned. Class "${className}" is ready on the teacher side.` : 'Handled class section assigned successfully.'
+      : 'Handled class section cleared successfully.'
     assignmentMessageType.value = 'success'
 
     await fetchTeachers()
@@ -1456,7 +1456,7 @@ const persistTeacherAssignment = async (teacher, advisorySectionId) => {
       })
     }
   } catch (error) {
-    const message = error.response?.data?.message || 'Failed to save advisory assignment.'
+    const message = error.response?.data?.message || 'Failed to save the handled class-section assignment.'
     assignmentMessage.value = message
     assignmentMessageType.value = 'error'
     setTeacherAssignmentDraft(teacherId, teacher.advisorySectionId || '')
