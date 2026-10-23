@@ -1448,10 +1448,15 @@ const getSectionName = (sectionId) => sections.value.find((section) => String(se
 
 const getAvailableHandledSections = (teacher) => {
   const subject = String(teacher?.subject || teacher?.department || '').trim().toLowerCase()
+  const advisorySectionId = String(teacher?.advisorySectionId || '').trim()
   const assignedIds = new Set(getHandledClasses(teacher)
     .filter((entry) => String(entry.name || '').trim().toLowerCase() === subject)
     .map((entry) => String(entry.handledSectionId)))
-  return sections.value.filter((section) => section.isActive === true && !assignedIds.has(String(section.id)))
+  return sections.value.filter((section) => (
+    section.isActive === true
+    && String(section.id) !== advisorySectionId
+    && !assignedIds.has(String(section.id))
+  ))
 }
 
 const getHandledSectionDrafts = (teacherId) => Array.isArray(handledClassDrafts[normalizeTeacherId(teacherId)])

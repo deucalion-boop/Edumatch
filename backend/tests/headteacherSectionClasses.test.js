@@ -173,7 +173,7 @@ function create(body = {}) {
 }
 
 test('handled class assignments are independent from the single advisory section', async () => {
-  fixture({ teacher: { advisory_section_id: sincerityId } });
+  fixture({ teacher: { advisory_section_id: 'advisory-only-section' }, otherUsers: [] });
   const first = await invoke(assignManagedTeacherHandledClass, {
     params: { id: teacherId }, body: { sectionIds: [sincerityId, unityId], subject: 'MAPEH' },
   });
@@ -184,11 +184,20 @@ test('handled class assignments are independent from the single advisory section
   assert.equal(first.statusCode, 201);
   assert.equal(first.response.handledClasses.length, 2);
   assert.equal(third.statusCode, 201);
-  assert.equal(client.tables.users[0].advisory_section_id, sincerityId);
+  assert.equal(client.tables.users[0].advisory_section_id, 'advisory-only-section');
   assert.equal(client.tables.subjects.length, 3);
   assert.deepEqual(client.tables.subjects.map((row) => row.handled_section_id).sort(), [sincerityId, unityId, unityId].sort());
   assert.deepEqual(client.tables.subjects.map((row) => row.name).sort(), ['MAPEH', 'MAPEH', 'Music'].sort());
   assert.ok(client.tables.subjects.every((row) => row.assignment_source === 'headteacher'));
+});
+
+test('the advisory section cannot be assigned as a handled class section', async () => {
+  fixture({ teacher: { advisory_section_id: sincerityId } });
+  const snapshot = structuredClone(client.tables);
+  await assert.rejects(invoke(assignManagedTeacherHandledClass, {
+    params: { id: teacherId }, body: { sectionIds: [sincerityId], subject: 'MAPEH' },
+  }), /advisory section cannot also be selected/i);
+  assert.deepEqual(client.tables, snapshot);
 });
 
 test('removing a handled class preserves advisory ownership and its academic record', async () => {

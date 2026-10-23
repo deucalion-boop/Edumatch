@@ -637,6 +637,10 @@ const assignManagedTeacherHandledClass = asyncHandler(async (req, res) => {
   )];
   if (requestedSectionIds.length === 0) throw Object.assign(new Error('Select at least one handled class section'), { statusCode: 400 });
   if (requestedSectionIds.length > 20) throw Object.assign(new Error('You can assign up to 20 sections at a time'), { statusCode: 400 });
+  const advisorySectionId = String(teacher?.advisorySectionId?._id || teacher?.advisorySectionId?.id || teacher?.advisorySectionId || '').trim();
+  if (advisorySectionId && requestedSectionIds.includes(advisorySectionId)) {
+    throw Object.assign(new Error('The advisory section cannot also be selected as a handled class section'), { statusCode: 409 });
+  }
   const sections = await Promise.all(requestedSectionIds.map((sectionId) => getSectionOrThrow(sectionId)));
   const subject = String(req.body?.subject || teacher.subject || teacher.department || '').trim();
   const subjectValidation = nameError(subject, 'Subject', 100);
