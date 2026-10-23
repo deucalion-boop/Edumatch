@@ -532,11 +532,38 @@
       </section>
 
       <section class="headteacher-section-card headteacher-panel headteacher-content-card headteacher-directory-section headteacher-attendance-section">
-        <div class="headteacher-section-head">
+        <button
+          type="button"
+          class="headteacher-section-head headteacher-attendance-dropdown-trigger"
+          :aria-expanded="isAttendanceDropdownOpen ? 'true' : 'false'"
+          aria-controls="department-attendance-content"
+          @click="isAttendanceDropdownOpen = !isAttendanceDropdownOpen"
+        >
           <div>
             <h2 class="headteacher-section-title">Department Attendance Monitoring</h2>
             <p class="headteacher-section-subtitle">Recent attendance records for teachers managed inside {{ departmentLabel }}.</p>
           </div>
+          <span class="headteacher-attendance-dropdown-summary">
+            <strong>{{ filteredAttendanceRecords.length }}</strong>
+            <span>{{ attendanceTeacherFilter ? 'filtered records' : 'recent records' }}</span>
+            <i class="fas fa-chevron-down" :class="{ 'is-open': isAttendanceDropdownOpen }" aria-hidden="true"></i>
+          </span>
+        </button>
+
+        <div v-if="isAttendanceDropdownOpen" id="department-attendance-content" class="headteacher-attendance-dropdown-content">
+        <div v-if="!isLoading" class="headteacher-attendance-toolbar">
+          <label>
+            <span>Filter by teacher</span>
+            <select v-model="attendanceTeacherFilter">
+              <option value="">All teachers</option>
+              <option v-for="teacherOption in attendanceTeacherOptions" :key="teacherOption.id" :value="teacherOption.id">
+                {{ teacherOption.name }}
+              </option>
+            </select>
+          </label>
+          <button v-if="attendanceTeacherFilter" type="button" class="headteacher-attendance-clear-filter" @click="attendanceTeacherFilter = ''">
+            <i class="fas fa-times" aria-hidden="true"></i> Clear filter
+          </button>
         </div>
 
         <div v-if="isLoading" class="headteacher-table-state">
@@ -544,14 +571,14 @@
           <span>Loading attendance overview...</span>
         </div>
 
-        <div v-else-if="recentAttendanceRecords.length === 0" class="headteacher-table-state">
+        <div v-else-if="filteredAttendanceRecords.length === 0" class="headteacher-table-state">
           <i class="fas fa-calendar-check"></i>
-          <span>No attendance records available for managed teachers yet.</span>
+          <span>{{ attendanceTeacherFilter ? 'No attendance records found for the selected teacher.' : 'No attendance records available for managed teachers yet.' }}</span>
         </div>
 
         <div v-else class="headteacher-attendance-list">
           <article
-            v-for="record in recentAttendanceRecords"
+            v-for="record in filteredAttendanceRecords"
             :key="record.id"
             class="headteacher-attendance-card headteacher-attendance-card-interactive"
             role="button"
@@ -578,6 +605,7 @@
             <p class="headteacher-attendance-card-note">{{ attendanceScopeLabel(record.attendanceScope) }}<template v-if="record.section?.name"> / Section {{ record.section.name }}</template></p>
             <p class="headteacher-attendance-card-hint">Click to view student attendance details.</p>
           </article>
+        </div>
         </div>
       </section>
 
@@ -903,6 +931,8 @@ const attendanceOverview = ref({
   teacherSummaries: [],
   recentRecords: [],
 })
+const isAttendanceDropdownOpen = ref(true)
+const attendanceTeacherFilter = ref('')
 const selectedTeacher = ref(null)
 const selectedTeacherStudents = ref([])
 const selectedAttendanceRecord = ref(null)
@@ -956,6 +986,19 @@ const studentEligibleTeachers = computed(() => teachers.value.filter((teacher) =
 const attendanceStatuses = ['Present', 'Late', 'Absent', 'Excused']
 const activeSelectedTeacherStudents = computed(() => selectedTeacherStudents.value.filter((student) => normalizeStatus(student.status) === 'active').length)
 const recentAttendanceRecords = computed(() => Array.isArray(attendanceOverview.value?.recentRecords) ? attendanceOverview.value.recentRecords.slice(0, 12) : [])
+const attendanceTeacherOptions = computed(() => {
+  const uniqueTeachers = new Map()
+  recentAttendanceRecords.value.forEach((record) => {
+    const id = String(record?.teacher?.id || record?.teacherId || '').trim()
+    if (id && !uniqueTeachers.has(id)) uniqueTeachers.set(id, { id, name: record?.teacher?.name || 'Teacher' })
+  })
+  return [...uniqueTeachers.values()].sort((left, right) => left.name.localeCompare(right.name))
+})
+const filteredAttendanceRecords = computed(() => {
+  const teacherId = String(attendanceTeacherFilter.value || '').trim()
+  if (!teacherId) return recentAttendanceRecords.value
+  return recentAttendanceRecords.value.filter((record) => String(record?.teacher?.id || record?.teacherId || '').trim() === teacherId)
+})
 const selectedAttendanceEntries = computed(() => {
   const entries = Array.isArray(selectedAttendanceRecord.value?.entries) ? selectedAttendanceRecord.value.entries : []
   return [...entries].sort((left, right) => String(left?.studentName || '').localeCompare(String(right?.studentName || '')))
@@ -2661,6 +2704,109 @@ onBeforeUnmount(() => {
 
 .headteacher-attendance-section > .headteacher-section-head {
   @apply tw:[margin-bottom:1rem];
+}
+
+.headteacher-attendance-section > .headteacher-attendance-dropdown-trigger {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.headteacher-attendance-dropdown-trigger:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.22);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+
+.headteacher-attendance-dropdown-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.headteacher-attendance-dropdown-summary strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: #eaf5df;
+  color: #315d17;
+}
+
+.headteacher-attendance-dropdown-summary i {
+  margin-left: 0.25rem;
+  transition: transform 0.2s ease;
+}
+
+.headteacher-attendance-dropdown-summary i.is-open {
+  transform: rotate(180deg);
+}
+
+.headteacher-attendance-dropdown-content {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.headteacher-attendance-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.headteacher-attendance-toolbar label {
+  display: grid;
+  gap: 0.3rem;
+  min-width: min(280px, 100%);
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.headteacher-attendance-toolbar select {
+  min-height: 40px;
+  padding: 0.55rem 2rem 0.55rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+}
+
+.headteacher-attendance-clear-filter {
+  border: 0;
+  padding: 0.55rem 0.7rem;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .headteacher-attendance-dropdown-trigger,
+  .headteacher-attendance-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headteacher-attendance-dropdown-summary {
+    justify-content: space-between;
+  }
 }
 
 .headteacher-attendance-cell {
