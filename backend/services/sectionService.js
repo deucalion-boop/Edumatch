@@ -215,7 +215,7 @@ async function ensureTeacherAdvisoryClass(teacher, { allowDefault = false, onlyI
     if (!sectionId || entry.advisorySectionId === sectionId) return entry;
     if (entry.advisorySectionId) throw Object.assign(new Error('The default advisory class belongs to a different section. Contact your administrator.'), { statusCode: 409 });
     const { data, error } = await getSupabaseStorageClient().from('subjects')
-      .update({ advisory_section_id: sectionId, updated_at: new Date().toISOString() })
+      .update({ advisory_section_id: sectionId, assignment_source: 'advisory', updated_at: new Date().toISOString() })
       .eq('id', entry.id).eq('teacher_id', teacherId).select('*').single();
     if (error) throw sectionError(error, 'Failed to identify the default advisory class');
     return mapSubject(data);

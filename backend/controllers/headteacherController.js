@@ -6,7 +6,7 @@ const Submission = require('../models/Submission');
 const { sendSuccess } = require('../utils/responseHelper');
 const { ROLE_HEADTEACHER, ROLE_TEACHER, ROLE_STUDENT } = require('../constants/userRoles');
 const { normalizeGradingPeriod } = require('../constants/assessmentConfig');
-const { ensureTeacherSubject, findTeacherSubject, listTeacherSubjects } = require('../services/subjectService');
+const { assignHandledClass, ensureTeacherSubject, findTeacherSubject, listTeacherSubjects, removeHandledClass } = require('../services/subjectService');
 const { listSubjectEnrollments } = require('../services/supabaseEnrollmentService');
 const { inferSubjectCategory, normalizeSubjectCategory } = require('../services/recommendationService');
 const {
@@ -374,6 +374,8 @@ const getManagedTeachers = asyncHandler(async (req, res) => {
         name: subject.name,
         className: subject.className,
         code: subject.code,
+        handledSectionId: subject.handledSectionId,
+        assignmentSource: subject.assignmentSource,
       })),
     };
   });
@@ -623,6 +625,63 @@ const createStudentAccount = asyncHandler(async (req, res) => {
       advisorySectionId,
     },
     invite: inviteResult,
+  });
+});
+
+const assignManagedTeacherHandledClass = asyncHandler(async (req, res) => {
+  const department = ensureHeadTeacher(req);
+  const teacher = await findManagedTeacherForHeadTeacher(req, req.params.id, { department });
+  const section = await getSectionOrThrow(req.body?.sectionId);
+  const subject = String(req.body?.subject || teacher.subject || teacher.department || '').trim();
+  const subjectValidation = nameError(subject, 'Subject', 100);
+  if (subjectValidation) throw Object.assign(new Error(subjectValidation), { statusCode: 400 });
+  const teacherId = String(teacher._id || teacher.id || '').trim();
+  const existingClasses = await listTeacherSubjects(teacherId, { includeInactive: true });
+  const duplicate = existingClasses.find((entry) => (
+    entry.assignmentSource === 'headteacher'
+    && entry.handledSectionId === String(section.id)
+    && String(entry.name || '').toLowerCase() === subject.toLowerCase()
+    && entry.isActive
+  ));
+  if (duplicate) {
+    throw Object.assign(new Error(`${teacher.name} already handles ${subject} for Section ${section.name}`), { statusCode: 409 });
+  }
+
+  const handledClass = await assignHandledClass({
+    teacherId,
+    sectionId: section.id,
+    assignedBy: req.user._id || req.user.id,
+    name: subject,
+    track: normalizeStrand(teacher.strand) || 'GENERAL',
+    subjectCategory: getSubjectCategory(subject),
+    className: `${subject} 10 - ${section.name}`,
+    department,
+  });
+
+  return sendSuccess(res, 201, 'Handled class section assigned successfully', {
+    handledClass: {
+      id: handledClass.id,
+      name: handledClass.name,
+      className: handledClass.className,
+      code: handledClass.code,
+      handledSectionId: handledClass.handledSectionId,
+      section: { id: section.id, name: section.name },
+      assignmentSource: handledClass.assignmentSource,
+    },
+  });
+});
+
+const removeManagedTeacherHandledClass = asyncHandler(async (req, res) => {
+  const department = ensureHeadTeacher(req);
+  const teacher = await findManagedTeacherForHeadTeacher(req, req.params.id, { department });
+  const removed = await removeHandledClass({
+    teacherId: teacher._id || teacher.id,
+    subjectId: req.params.subjectId,
+    assignedBy: req.user._id || req.user.id,
+  });
+  if (!removed) throw Object.assign(new Error('Handled class assignment not found'), { statusCode: 404 });
+  return sendSuccess(res, 200, 'Handled class section removed successfully', {
+    handledClass: { id: removed.id, handledSectionId: removed.handledSectionId },
   });
 });
 
@@ -1242,6 +1301,7 @@ const sendManagedTeacherAnnouncement = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  assignManagedTeacherHandledClass,
   getManagedTeachers,
   createTeacherAccount,
   createStudentAccount,
@@ -1253,4 +1313,5 @@ module.exports = {
   createManagedTeacherAssessment,
   updateManagedTeacherAssessment,
   sendManagedTeacherAnnouncement,
+  removeManagedTeacherHandledClass,
 };

@@ -39,6 +39,9 @@ function mapSubject(row) {
     description: String(row.description || '').trim(),
     teacherId: String(row.teacher_id || '').trim(),
     advisorySectionId: String(row.advisory_section_id || '').trim(),
+    handledSectionId: String(row.handled_section_id || '').trim(),
+    assignmentSource: String(row.assignment_source || (row.advisory_section_id ? 'advisory' : 'teacher')).trim(),
+    assignedBy: String(row.assigned_by || '').trim(),
     isActive: row.is_active === true,
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null,
@@ -144,6 +147,58 @@ async function ensureTeacherSubject({ teacherId, name, track, subjectCategory = 
   return mapSubject(data);
 }
 
+async function assignHandledClass({ teacherId, sectionId, assignedBy, name, track = 'GENERAL', subjectCategory = '', className, department = '' }) {
+  const normalizedTeacherId = referenceId(teacherId);
+  const normalizedSectionId = referenceId(sectionId);
+  const normalizedAssignedBy = referenceId(assignedBy);
+  const normalizedName = String(name || '').trim();
+  const normalizedClassName = String(className || '').trim();
+  if (!normalizedTeacherId || !normalizedSectionId || !normalizedAssignedBy || !normalizedName || !normalizedClassName) {
+    throw Object.assign(new Error('teacherId, sectionId, assignedBy, name, and className are required'), { statusCode: 400 });
+  }
+
+  const client = getSupabaseStorageClient();
+  const existingQuery = client.from('subjects').select('*')
+    .eq('teacher_id', normalizedTeacherId)
+    .eq('handled_section_id', normalizedSectionId)
+    .eq('assignment_source', 'headteacher');
+  filterLiteralText(existingQuery, 'name', normalizedName);
+  const { data: existing, error: findError } = await existingQuery.limit(1).maybeSingle();
+  if (findError) throw subjectError(findError, 'Failed to check handled class assignment');
+
+  const values = {
+    teacher_id: normalizedTeacherId,
+    handled_section_id: normalizedSectionId,
+    assignment_source: 'headteacher',
+    assigned_by: normalizedAssignedBy,
+    name: normalizedName,
+    class_name: normalizedClassName,
+    track: String(track || 'GENERAL').trim() || 'GENERAL',
+    subject_category: String(subjectCategory || '').trim(),
+    department: String(department || '').trim(),
+    is_active: true,
+    updated_at: new Date().toISOString(),
+  };
+  const operation = existing
+    ? client.from('subjects').update(values).eq('id', existing.id)
+    : client.from('subjects').insert({ ...values, description: '', code: await generateUniqueSubjectCode(normalizedName) });
+  const { data, error } = await operation.select('*').single();
+  if (error) throw subjectError(error, 'Failed to assign handled class');
+  return mapSubject(data);
+}
+
+async function removeHandledClass({ teacherId, subjectId, assignedBy }) {
+  const subject = await findTeacherSubject(teacherId, subjectId, { includeInactive: true });
+  if (!subject || subject.assignmentSource !== 'headteacher' || subject.assignedBy !== referenceId(assignedBy)) return null;
+  const { data, error } = await getSupabaseStorageClient().from('subjects')
+    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .eq('id', subject.id).eq('teacher_id', referenceId(teacherId))
+    .eq('assignment_source', 'headteacher').eq('assigned_by', referenceId(assignedBy))
+    .select('*').single();
+  if (error) throw subjectError(error, 'Failed to remove handled class assignment');
+  return mapSubject(data);
+}
+
 async function updateTeacherSubject(teacherId, subjectId, changes = {}) {
   const subject = await findTeacherSubject(teacherId, subjectId);
   if (!subject) return null;
@@ -219,6 +274,7 @@ async function getTeacherSubjectCounts(teacherId) {
 }
 
 module.exports = {
+  assignHandledClass,
   deleteTeacherSubject,
   ensureTeacherSubject,
   findSubjectByCode,
@@ -226,6 +282,7 @@ module.exports = {
   getTeacherSubjectCounts,
   listTeacherSubjects,
   mapSubject,
+  removeHandledClass,
   updateAttendanceClassName,
   updateTeacherSubject,
 };

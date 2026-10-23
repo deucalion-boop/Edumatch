@@ -259,7 +259,7 @@
               <div class="subject-management-title-block">
                 <span class="subject-management-label" :class="{ 'is-advisory': subject.classType === 'advisory' }">
                   <i class="fas" :class="subject.classType === 'advisory' ? 'fa-user-shield' : 'fa-chalkboard-teacher'" aria-hidden="true"></i>
-                  {{ subject.classType === 'advisory' ? 'Head Teacher assigned advisory' : 'Teacher-created class' }}
+                  {{ subject.classType === 'advisory' ? 'Advisory class' : subject.classType === 'headteacher_assigned' ? 'Head Teacher assigned handled class' : 'Teacher-created class' }}
                 </span>
                 <h4>{{ subject.className || subject.name }}</h4>
                 <p>{{ subject.track || 'General' }} · {{ subject.code }}</p>

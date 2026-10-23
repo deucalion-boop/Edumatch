@@ -431,7 +431,9 @@ function subjectToResponse(subject) {
     description: String(subject?.description || '').trim(),
     teacherId: String(subject?.teacherId || ''),
     advisorySectionId,
-    classType: advisorySectionId ? 'advisory' : 'teacher_created',
+    handledSectionId: String(subject?.handledSectionId || '').trim(),
+    assignmentSource: String(subject?.assignmentSource || (advisorySectionId ? 'advisory' : 'teacher')).trim(),
+    classType: advisorySectionId ? 'advisory' : subject?.assignmentSource === 'headteacher' ? 'headteacher_assigned' : 'teacher_created',
     createdAt: subject?.createdAt || null,
     updatedAt: subject?.updatedAt || null,
   };
@@ -584,7 +586,7 @@ const deleteTeacherClass = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  if (subject.advisorySectionId) {
+  if (subject.advisorySectionId || subject.assignmentSource === 'headteacher') {
     const error = new Error('An advisory class assigned by your Head Teacher cannot be deleted. Ask your Head Teacher to update the advisory assignment.');
     error.statusCode = 409;
     throw error;

@@ -14,6 +14,8 @@ const {
   createManagedTeacherAssessment,
   updateManagedTeacherAssessment,
   sendManagedTeacherAnnouncement,
+  assignManagedTeacherHandledClass,
+  removeManagedTeacherHandledClass,
 } = require('../controllers/headteacherController');
 const { getAiStatus, generateAssessmentWithAi } = require('../controllers/aiController');
 const { getHeadTeacherAttendanceOverview } = require('../controllers/attendanceController');
@@ -56,6 +58,8 @@ router.post('/assessments/ai-generate', aiLimiter, generateAssessmentWithAi);
 router.post('/teachers', inviteLimiter, createTeacherAccount);
 router.post('/students', inviteLimiter, createStudentAccount);
 router.put('/teachers/:id', updateManagedTeacher);
+router.post('/teachers/:id/handled-classes', assignManagedTeacherHandledClass);
+router.delete('/teachers/:id/handled-classes/:subjectId', removeManagedTeacherHandledClass);
 router.post('/teachers/:id/announcements', sendManagedTeacherAnnouncement);
 
 module.exports = router;

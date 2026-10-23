@@ -196,6 +196,7 @@
                   <th>Email</th>
                   <th>Department</th>
                   <th>Advisory Section</th>
+                  <th>Handled Classes</th>
                   <th>Status</th>
                   <th :aria-sort="getDirectoryAriaSort('date')">
                     <button type="button" class="headteacher-directory-sort-button" @click="toggleDirectorySort('date')">
@@ -209,7 +210,7 @@
 
               <tbody v-if="paginatedTeachers.length === 0">
                 <tr>
-                  <td class="headteacher-directory-empty-cell" colspan="8">
+                  <td class="headteacher-directory-empty-cell" colspan="9">
                     <div class="headteacher-directory-empty">
                       <div class="headteacher-directory-empty-illustration" aria-hidden="true">
                         <span class="headteacher-empty-orbit headteacher-empty-orbit-one"></span>
@@ -282,6 +283,29 @@
                           {{ section.name }}
                         </option>
                       </select>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="headteacher-handled-classes" @click.stop>
+                      <div v-if="getHandledClasses(teacher).length" class="headteacher-handled-chips">
+                        <span v-for="handledClass in getHandledClasses(teacher)" :key="handledClass.id" class="headteacher-handled-chip">
+                          {{ handledClass.name }} · {{ getSectionName(handledClass.handledSectionId) }}
+                          <button type="button" :aria-label="`Remove ${handledClass.className}`" :disabled="isUpdatingHandledClass" @click="removeHandledClassAssignment(teacher, handledClass)">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </span>
+                      </div>
+                      <small v-else class="headteacher-handled-empty">No handled classes</small>
+                      <div class="headteacher-handled-add">
+                        <input v-model.trim="handledClassSubjectDrafts[teacher.id]" class="headteacher-inline-input" type="text" maxlength="100" placeholder="Subject">
+                        <select v-model="handledClassDrafts[teacher.id]" class="headteacher-inline-select" :disabled="isUpdatingHandledClass">
+                          <option value="">Select section</option>
+                          <option v-for="section in getAvailableHandledSections(teacher)" :key="`handled-${teacher.id}-${section.id}`" :value="section.id">{{ section.name }}</option>
+                        </select>
+                        <button type="button" class="headteacher-directory-action-btn is-save" title="Assign handled class" :disabled="isUpdatingHandledClass || !handledClassDrafts[teacher.id] || !handledClassSubjectDrafts[teacher.id]" @click="assignHandledClassSection(teacher)">
+                          <i class="fas" :class="isUpdatingHandledClass && updatingHandledTeacherId === teacher.id ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
+                        </button>
+                      </div>
                     </div>
                   </td>
                   <td>
@@ -433,6 +457,28 @@
                       {{ section.name }}
                     </option>
                   </select>
+                </div>
+              </div>
+
+              <div class="headteacher-mobile-assignment-card" @click.stop>
+                <div class="headteacher-mobile-assignment-head">
+                  <div><span class="headteacher-mobile-kicker">Teaching Assignments</span><h4>Handled Class Sections</h4></div>
+                  <span class="headteacher-assignment-state assigned">{{ getHandledClasses(teacher).length }}</span>
+                </div>
+                <p class="headteacher-mobile-assignment-copy">Assign multiple sections this teacher handles. This does not change the advisory section.</p>
+                <div v-if="getHandledClasses(teacher).length" class="headteacher-handled-chips">
+                  <span v-for="handledClass in getHandledClasses(teacher)" :key="`mobile-${handledClass.id}`" class="headteacher-handled-chip">
+                    {{ handledClass.name }} · {{ getSectionName(handledClass.handledSectionId) }}
+                    <button type="button" :disabled="isUpdatingHandledClass" @click="removeHandledClassAssignment(teacher, handledClass)"><i class="fas fa-times"></i></button>
+                  </span>
+                </div>
+                <div class="headteacher-handled-add">
+                  <input v-model.trim="handledClassSubjectDrafts[teacher.id]" class="headteacher-inline-input" type="text" maxlength="100" placeholder="Subject">
+                  <select v-model="handledClassDrafts[teacher.id]" class="headteacher-inline-select" :disabled="isUpdatingHandledClass">
+                    <option value="">Select handled section</option>
+                    <option v-for="section in getAvailableHandledSections(teacher)" :key="`mobile-handled-${teacher.id}-${section.id}`" :value="section.id">{{ section.name }}</option>
+                  </select>
+                  <button type="button" class="headteacher-button headteacher-button-primary headteacher-button-sm" :disabled="isUpdatingHandledClass || !handledClassDrafts[teacher.id] || !handledClassSubjectDrafts[teacher.id]" @click="assignHandledClassSection(teacher)">Assign</button>
                 </div>
               </div>
 
@@ -840,6 +886,10 @@ const assignmentMessageType = ref('success')
 const teachers = ref([])
 const sections = ref([])
 const teacherAssignmentDrafts = reactive({})
+const handledClassDrafts = reactive({})
+const handledClassSubjectDrafts = reactive({})
+const isUpdatingHandledClass = ref(false)
+const updatingHandledTeacherId = ref('')
 const attendanceOverview = ref({
   summary: {
     totalRecords: 0,
@@ -1320,6 +1370,65 @@ const getAssignableSections = (teacherId) => {
   })
 }
 
+const getHandledClasses = (teacher) => (Array.isArray(teacher?.classes) ? teacher.classes : [])
+  .filter((entry) => entry.assignmentSource === 'headteacher' && entry.handledSectionId)
+
+const getSectionName = (sectionId) => sections.value.find((section) => String(section.id) === String(sectionId))?.name || 'Unavailable section'
+
+const getAvailableHandledSections = (teacher) => {
+  const subject = String(handledClassSubjectDrafts[normalizeTeacherId(teacher)] || '').trim().toLowerCase()
+  const assignedIds = new Set(getHandledClasses(teacher)
+    .filter((entry) => String(entry.name || '').trim().toLowerCase() === subject)
+    .map((entry) => String(entry.handledSectionId)))
+  return sections.value.filter((section) => section.isActive === true && !assignedIds.has(String(section.id)))
+}
+
+const assignHandledClassSection = async (teacher) => {
+  const teacherId = normalizeTeacherId(teacher)
+  const sectionId = String(handledClassDrafts[teacherId] || '').trim()
+  const subject = String(handledClassSubjectDrafts[teacherId] || '').trim()
+  if (!teacherId || !sectionId || !subject) return
+  isUpdatingHandledClass.value = true
+  updatingHandledTeacherId.value = teacherId
+  assignmentMessage.value = ''
+  try {
+    await axios.post(`${resolveApiBaseUrl()}/headteacher/teachers/${encodeURIComponent(teacherId)}/handled-classes`, {
+      sectionId,
+      subject,
+    }, getAuthConfig())
+    handledClassDrafts[teacherId] = ''
+    assignmentMessage.value = `Handled class ${subject} – Section ${getSectionName(sectionId)} assigned to ${teacher.name}.`
+    assignmentMessageType.value = 'success'
+    await fetchTeachers()
+  } catch (error) {
+    assignmentMessage.value = error.response?.data?.message || 'Failed to assign the handled class section.'
+    assignmentMessageType.value = 'error'
+  } finally {
+    isUpdatingHandledClass.value = false
+    updatingHandledTeacherId.value = ''
+  }
+}
+
+const removeHandledClassAssignment = async (teacher, handledClass) => {
+  const teacherId = normalizeTeacherId(teacher)
+  if (!teacherId || !handledClass?.id) return
+  isUpdatingHandledClass.value = true
+  updatingHandledTeacherId.value = teacherId
+  assignmentMessage.value = ''
+  try {
+    await axios.delete(`${resolveApiBaseUrl()}/headteacher/teachers/${encodeURIComponent(teacherId)}/handled-classes/${encodeURIComponent(handledClass.id)}`, getAuthConfig())
+    assignmentMessage.value = `Handled class Section ${getSectionName(handledClass.handledSectionId)} removed from ${teacher.name}.`
+    assignmentMessageType.value = 'success'
+    await fetchTeachers()
+  } catch (error) {
+    assignmentMessage.value = error.response?.data?.message || 'Failed to remove the handled class assignment.'
+    assignmentMessageType.value = 'error'
+  } finally {
+    isUpdatingHandledClass.value = false
+    updatingHandledTeacherId.value = ''
+  }
+}
+
 const refreshSectionAvailability = async () => {
   try {
     const response = await axios.get(`${resolveApiBaseUrl()}/headteacher/sections`, getAuthConfig())
@@ -1356,6 +1465,7 @@ const fetchTeachers = async () => {
       subject: teacher.subject || teacher.department || departmentLabel.value,
       advisorySectionId: teacher.advisorySection?.id || teacher.advisorySectionId || '',
       advisorySectionName: teacher.advisorySection?.name || teacher.advisorySectionName || '',
+      classes: Array.isArray(teacher.classes) ? teacher.classes : [],
       status: normalizeStatus(teacher.status || 'active'),
       createdAt: teacher.createdAt || null,
       avatar: teacher.avatar || teacher.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.name || 'Teacher')}&background=334155&color=fff`,
@@ -1368,6 +1478,9 @@ const fetchTeachers = async () => {
         lastDate: attendanceByTeacherId.get(String(teacher.id || teacher._id || ''))?.lastDate || '',
       },
     }))
+    teachers.value.forEach((teacher) => {
+      if (!handledClassSubjectDrafts[teacher.id]) handledClassSubjectDrafts[teacher.id] = teacher.subject || teacher.department || ''
+    })
     syncTeacherAssignmentDrafts(teachers.value)
 
     summary.totalTeachers = Number(responseSummary.totalTeachers || teachers.value.length)
@@ -2141,6 +2254,71 @@ onBeforeUnmount(() => {
   @apply tw:[min-height:38px];
   @apply tw:[border-radius:11px];
   @apply tw:[font-size:0.76rem];
+}
+
+.headteacher-handled-classes {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 190px;
+}
+
+.headteacher-handled-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.headteacher-handled-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.5rem;
+  border: 1px solid #c7e5a8;
+  border-radius: 999px;
+  background: #eff9e7;
+  color: #315d17;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.headteacher-handled-chip button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.headteacher-handled-empty {
+  color: #94a3b8;
+}
+
+.headteacher-handled-add {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.headteacher-handled-add .headteacher-inline-select {
+  min-width: 0;
+  flex: 1;
+}
+
+.headteacher-inline-input {
+  min-width: 90px;
+  width: 110px;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid #d7dfec;
+  border-radius: 10px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 0.76rem;
+}
+
+.headteacher-inline-input:focus {
+  border-color: #65a30d;
+  outline: 2px solid rgba(101, 163, 13, 0.14);
 }
 
 .headteacher-directory-enterprise .headteacher-row-actions {

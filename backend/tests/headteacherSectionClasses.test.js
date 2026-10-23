@@ -15,6 +15,8 @@ require('../services/gmailService').sendEmailViaGmail = async (payload) => {
 const {
   createTeacherAccount,
   updateManagedTeacher,
+  assignManagedTeacherHandledClass,
+  removeManagedTeacherHandledClass,
 } = require('../controllers/headteacherController');
 const { listTeacherSubjects } = require('../services/subjectService');
 const { getAssignableSectionOrThrow, listSectionsWithAdvisers } = require('../services/sectionService');
@@ -169,6 +171,44 @@ function create(body = {}) {
     },
   });
 }
+
+test('handled class assignments are independent from the single advisory section', async () => {
+  fixture({ teacher: { advisory_section_id: sincerityId } });
+  const first = await invoke(assignManagedTeacherHandledClass, {
+    params: { id: teacherId }, body: { sectionId: sincerityId, subject: 'MAPEH' },
+  });
+  const second = await invoke(assignManagedTeacherHandledClass, {
+    params: { id: teacherId }, body: { sectionId: unityId, subject: 'MAPEH' },
+  });
+  const third = await invoke(assignManagedTeacherHandledClass, {
+    params: { id: teacherId }, body: { sectionId: unityId, subject: 'Music' },
+  });
+
+  assert.equal(first.statusCode, 201);
+  assert.equal(second.statusCode, 201);
+  assert.equal(third.statusCode, 201);
+  assert.equal(client.tables.users[0].advisory_section_id, sincerityId);
+  assert.equal(client.tables.subjects.length, 3);
+  assert.deepEqual(client.tables.subjects.map((row) => row.handled_section_id).sort(), [sincerityId, unityId, unityId].sort());
+  assert.deepEqual(client.tables.subjects.map((row) => row.name).sort(), ['MAPEH', 'MAPEH', 'Music'].sort());
+  assert.ok(client.tables.subjects.every((row) => row.assignment_source === 'headteacher'));
+});
+
+test('removing a handled class preserves advisory ownership and its academic record', async () => {
+  fixture({ teacher: { advisory_section_id: sincerityId } });
+  const assigned = await invoke(assignManagedTeacherHandledClass, {
+    params: { id: teacherId }, body: { sectionId: unityId, subject: 'MAPEH' },
+  });
+  const subjectId = assigned.response.handledClass.id;
+  const removed = await invoke(removeManagedTeacherHandledClass, {
+    params: { id: teacherId, subjectId },
+  });
+
+  assert.equal(removed.statusCode, 200);
+  assert.equal(client.tables.users[0].advisory_section_id, sincerityId);
+  assert.equal(client.tables.subjects[0].is_active, false);
+  assert.equal(client.tables.subjects[0].handled_section_id, unityId);
+});
 
 test('assigning a managed teacher a section automatically creates the named Grade 10 class and code', async () => {
   fixture();
