@@ -316,10 +316,21 @@
           <h1 id="recommendation-title">Recommendation progress</h1>
           <p>Turn your assessment results into a clearer picture of the academic strand that fits your strengths.</p>
         </div>
-        <router-link to="/student/dashboard" class="pathway-back-button">
-          <i class="fas fa-arrow-left" aria-hidden="true"></i>
-          <span>Back to dashboard</span>
-        </router-link>
+        <div class="pathway-header-actions">
+          <router-link
+            :to="isDemoMode
+              ? { path: '/student/dashboard', query: { section: 'recommendations' } }
+              : { path: '/student/dashboard', query: { section: 'recommendations', demo: '1' } }"
+            class="pathway-back-button pathway-demo-button"
+          >
+            <i class="fas" :class="isDemoMode ? 'fa-database' : 'fa-wand-magic-sparkles'" aria-hidden="true"></i>
+            <span>{{ isDemoMode ? 'Show real data' : 'View full demo results' }}</span>
+          </router-link>
+          <router-link to="/student/dashboard" class="pathway-back-button">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span>Back to dashboard</span>
+          </router-link>
+        </div>
       </header>
 
       <div v-if="isInitialLoading" class="pathway-loading" aria-label="Loading recommendation progress">
@@ -4716,6 +4727,20 @@ export default {
   @apply tw:[max-width:46rem];
 }
 
+.pathway-header-actions {
+  @apply tw:flex;
+  @apply tw:flex-none;
+  @apply tw:items-center;
+  @apply tw:justify-end;
+  @apply tw:[gap:0.65rem];
+}
+
+.pathway-demo-button {
+  @apply tw:[color:#fff];
+  @apply tw:[border-color:#2f6b1d];
+  @apply tw:[background:#2f6b1d];
+}
+
 .premium-dashboard .pathway-premium-header h1 {
   @apply tw:[margin:0.3rem_0_0.35rem];
   @apply tw:[color:#17350a];
@@ -5137,6 +5162,11 @@ export default {
     @apply tw:flex-col;
     @apply tw:[gap:1rem];
     @apply tw:[margin-bottom:1.25rem];
+  }
+
+  .pathway-header-actions {
+    @apply tw:w-full;
+    @apply tw:flex-col;
   }
 
   .pathway-back-button,
