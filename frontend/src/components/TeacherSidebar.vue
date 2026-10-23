@@ -62,9 +62,9 @@
               <i class="fas fa-chevron-down nav-link-caret" aria-hidden="true"></i>
             </button>
             <div v-if="isStudentsMenuOpen" id="teacher-students-sublinks" class="nav-sublinks">
-              <router-link :to="buildStudentsSectionRoute('class-management')" class="nav-sublink" :class="{ active: isStudentsSectionActive('class-management') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Class Management</span><span class="nav-sublink-caption">Create and manage classes</span></span></router-link>
-              <router-link :to="buildStudentsSectionRoute('pending-requests')" class="nav-sublink" :class="{ active: isStudentsSectionActive('pending-requests') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Pending Requests</span><span class="nav-sublink-caption">Review enrollment requests</span></span></router-link>
-              <router-link :to="buildStudentsSectionRoute('student-list')" class="nav-sublink" :class="{ active: isStudentsSectionActive('student-list') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Student List</span><span class="nav-sublink-caption">View the student roster</span></span></router-link>
+              <router-link :to="buildStudentsViewRoute('classes')" class="nav-sublink" :class="{ active: isStudentsViewActive('classes') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Class Management</span><span class="nav-sublink-caption">Create and manage classes</span></span></router-link>
+              <router-link :to="buildStudentsViewRoute('requests')" class="nav-sublink" :class="{ active: isStudentsViewActive('requests') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Pending Requests</span><span class="nav-sublink-caption">Review enrollment requests</span></span></router-link>
+              <router-link :to="buildStudentsViewRoute('list')" class="nav-sublink" :class="{ active: isStudentsViewActive('list') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Student List</span><span class="nav-sublink-caption">View the student roster</span></span></router-link>
             </div>
           </div>
           <div class="nav-dropdown">
@@ -167,8 +167,9 @@ const toggleStudentsMenu = () => { studentsOpen.value = !studentsOpen.value }
 const toggleRecordsMenu = () => { recordsOpen.value = !recordsOpen.value }
 const isActiveRoute = path => route.path === path
 const buildActivitiesTabRoute = tab => ({ path: '/teacher/activities', query: { tab } })
-const buildStudentsSectionRoute = section => ({ path: '/teacher/students', hash: `#${section}` })
-const isStudentsSectionActive = section => isStudentsRouteActive.value && (route.hash || '#class-management') === `#${section}`
+const activeStudentsView = computed(() => route.query.request ? 'requests' : String(route.query.view || 'classes'))
+const buildStudentsViewRoute = view => ({ path: '/teacher/students', query: { view } })
+const isStudentsViewActive = view => isStudentsRouteActive.value && activeStudentsView.value === view
 const buildRecordsTabRoute = tab => ({ path: '/teacher/records', query: { tab } })
 const isActivitiesSubRouteActive = tab => isActivitiesRouteActive.value && String(route.query.tab || 'lesson') === tab
 const isRecordsSubRouteActive = tab => isRecordsRouteActive.value && String(route.query.tab || 'lessons') === tab

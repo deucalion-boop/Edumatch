@@ -59,9 +59,9 @@
               <i class="fas fa-chevron-down nav-link-caret" aria-hidden="true"></i>
             </button>
             <div v-if="isStudentsMenuOpen" id="teacher-students-sublinks" class="nav-sublinks">
-              <router-link :to="buildStudentsSectionRoute('class-management')" class="nav-sublink" :class="{ active: isStudentsSectionActive('class-management') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Class Management</span><span class="nav-sublink-caption">Create and manage classes</span></span></router-link>
-              <router-link :to="buildStudentsSectionRoute('pending-requests')" class="nav-sublink" :class="{ active: isStudentsSectionActive('pending-requests') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Pending Requests</span><span class="nav-sublink-caption">Review enrollment requests</span></span></router-link>
-              <router-link :to="buildStudentsSectionRoute('student-list')" class="nav-sublink" :class="{ active: isStudentsSectionActive('student-list') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Student List</span><span class="nav-sublink-caption">View the student roster</span></span></router-link>
+              <router-link :to="buildStudentsViewRoute('classes')" class="nav-sublink" :class="{ active: isStudentsViewActive('classes') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Class Management</span><span class="nav-sublink-caption">Create and manage classes</span></span></router-link>
+              <router-link :to="buildStudentsViewRoute('requests')" class="nav-sublink" :class="{ active: isStudentsViewActive('requests') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Pending Requests</span><span class="nav-sublink-caption">Review enrollment requests</span></span></router-link>
+              <router-link :to="buildStudentsViewRoute('list')" class="nav-sublink" :class="{ active: isStudentsViewActive('list') }" @click="closeSidebar"><span class="nav-sublink-copy"><span class="nav-sublink-title">Student List</span><span class="nav-sublink-caption">View the student roster</span></span></router-link>
             </div>
           </div>
           <div class="nav-dropdown">
@@ -209,8 +209,8 @@
         </article>
       </section>
 
-      <section class="student-management-grid">
-      <section id="class-management" class="section-card animated-card dashboard-panel class-management-panel" :class="{ 'has-open-class-menu': subjectActionsMenuId }" data-tour="students-subjects-section">
+      <section class="student-management-grid" :class="{ 'is-single-view': activeStudentsView }">
+      <section v-if="activeStudentsView === 'classes'" id="class-management" class="section-card animated-card dashboard-panel class-management-panel" :class="{ 'has-open-class-menu': subjectActionsMenuId }" data-tour="students-subjects-section">
         <div class="dashboard-panel-header class-management-header">
           <div class="class-management-header-copy">
             <span class="dashboard-panel-eyebrow">Teaching spaces</span>
@@ -342,7 +342,7 @@
         </div>
       </section>
 
-      <section id="pending-requests" class="section-card animated-card dashboard-panel enrollment-requests-section">
+      <section v-if="activeStudentsView === 'requests'" id="pending-requests" class="section-card animated-card dashboard-panel enrollment-requests-section">
         <div class="dashboard-panel-header">
           <div>
             <span class="dashboard-panel-eyebrow">Enrollment queue</span>
@@ -421,7 +421,7 @@
 
       </section>
 
-      <section id="student-list" class="section-card animated-card class-list-section student-list-panel" data-tour="students-classlist-section">
+      <section v-if="activeStudentsView === 'list'" id="student-list" class="section-card animated-card class-list-section student-list-panel" data-tour="students-classlist-section">
         <div class="student-list-header">
           <div>
             <span class="dashboard-panel-eyebrow">Roster overview</span>
@@ -1031,8 +1031,14 @@ const toggleActivitiesMenu = () => {
 }
 const isStudentsRouteActive = computed(() => route.path === '/teacher/students' || route.path.startsWith('/teacher/students/'))
 const isStudentsMenuOpen = computed(() => studentsMenuOpen.value)
-const buildStudentsSectionRoute = section => ({ path: '/teacher/students', hash: `#${section}` })
-const isStudentsSectionActive = section => isStudentsRouteActive.value && (route.hash || '#class-management') === `#${section}`
+const STUDENTS_VIEW_KEYS = ['classes', 'requests', 'list']
+const activeStudentsView = computed(() => {
+  if (route.query.request) return 'requests'
+  const view = String(route.query.view || '').trim().toLowerCase()
+  return STUDENTS_VIEW_KEYS.includes(view) ? view : 'classes'
+})
+const buildStudentsViewRoute = view => ({ path: '/teacher/students', query: { view } })
+const isStudentsViewActive = view => isStudentsRouteActive.value && activeStudentsView.value === view
 const toggleStudentsMenu = () => {
   studentsMenuOpen.value = !studentsMenuOpen.value
 }
@@ -3695,6 +3701,10 @@ button.subject-remove-student-btn.btn-outline:hover:not(:disabled) {
   @apply tw:[gap:1rem];
   @apply tw:[align-items:start];
   @apply tw:[margin-bottom:1rem];
+}
+
+.student-management-grid.is-single-view {
+  @apply tw:[grid-template-columns:minmax(0,_1fr)];
 }
 
 .dashboard-panel,
