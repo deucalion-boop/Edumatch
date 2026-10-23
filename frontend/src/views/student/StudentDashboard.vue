@@ -807,7 +807,10 @@ export default {
       const subjectRows = [
         { subjectId: 'demo-math', subjectName: 'Mathematics', subjectCode: 'MATH 10', subjectCategory: 'Math', completionPercentage: 92, finalPercentage: 92, p1: 90, p2: 92, p3: 94, finalGrade: 92, activityAverage: 91, quizAverage: 93, examAverage: 92, evidenceCount: 12, minimumEvidenceCount: 3, performanceLevel: 'Excellent', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
         { subjectId: 'demo-science', subjectName: 'Science', subjectCode: 'SCI 10', subjectCategory: 'Science', completionPercentage: 88, finalPercentage: 89, p1: 87, p2: 89, p3: 91, finalGrade: 89, activityAverage: 90, quizAverage: 88, examAverage: 89, evidenceCount: 11, minimumEvidenceCount: 3, performanceLevel: 'Strong', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
+        { subjectId: 'demo-esp', subjectName: 'Edukasyon sa Pagpapakatao (ESP)', subjectCode: 'ESP 10', subjectCategory: 'AP', completionPercentage: 87, finalPercentage: 88, p1: 87, p2: 88, p3: 89, finalGrade: 88, activityAverage: 90, quizAverage: 87, examAverage: 88, evidenceCount: 10, minimumEvidenceCount: 3, performanceLevel: 'Strong', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
         { subjectId: 'demo-english', subjectName: 'English', subjectCode: 'ENG 10', subjectCategory: 'English', completionPercentage: 84, finalPercentage: 86, p1: 84, p2: 86, p3: 88, finalGrade: 86, activityAverage: 88, quizAverage: 85, examAverage: 86, evidenceCount: 10, minimumEvidenceCount: 3, performanceLevel: 'Strong', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
+        { subjectId: 'demo-filipino', subjectName: 'Filipino', subjectCode: 'FIL 10', subjectCategory: 'English', completionPercentage: 83, finalPercentage: 85, p1: 83, p2: 85, p3: 87, finalGrade: 85, activityAverage: 87, quizAverage: 84, examAverage: 85, evidenceCount: 10, minimumEvidenceCount: 3, performanceLevel: 'Strong', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
+        { subjectId: 'demo-mapeh', subjectName: 'MAPEH', subjectCode: 'MAPEH 10', subjectCategory: 'Technical', completionPercentage: 82, finalPercentage: 84, p1: 82, p2: 84, p3: 86, finalGrade: 84, activityAverage: 88, quizAverage: 82, examAverage: 83, evidenceCount: 9, minimumEvidenceCount: 3, performanceLevel: 'Developing', weights: { activity: 40, quiz: 20, exam: 40 }, hasSufficientData: true },
         { subjectId: 'demo-ap', subjectName: 'Araling Panlipunan', subjectCode: 'AP 10', subjectCategory: 'AP', completionPercentage: 79, finalPercentage: 82, p1: 80, p2: 82, p3: 84, finalGrade: 82, activityAverage: 84, quizAverage: 81, examAverage: 82, evidenceCount: 9, minimumEvidenceCount: 3, performanceLevel: 'Developing', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
         { subjectId: 'demo-tle', subjectName: 'Technology and Livelihood Education', subjectCode: 'TLE 10', subjectCategory: 'Technical', completionPercentage: 75, finalPercentage: 78, p1: 76, p2: 78, p3: 80, finalGrade: 78, activityAverage: 82, quizAverage: 77, examAverage: 76, evidenceCount: 8, minimumEvidenceCount: 3, performanceLevel: 'Developing', weights: { activity: 40, quiz: 20, exam: 40 }, hasSufficientData: true }
       ]
@@ -822,17 +825,17 @@ export default {
       const gradeRecords = subjectRows.map((subject) => ({ ...subject, completedPeriods: 3, periods: [{ period: '1st', grade: subject.p1 }, { period: '2nd', grade: subject.p2 }, { period: '3rd', grade: subject.p3 }] }))
       this.recommendation = { recommendedStrand: { name: 'STEM', score: 91 }, strandScores: { STEM: 91, ABM: 82, HUMSS: 79, TVL: 76 } }
       this.subjectInsights = {
-        assessmentAttemptsCount: 18,
+        assessmentAttemptsCount: 24,
         recommendationProgressPercent: 100,
         isRecommendationReady: true,
         recommendedStrand: { name: 'STEM', score: 91 },
         strandScores: { STEM: 91, ABM: 82, HUMSS: 79, TVL: 76 },
-        overallLearningProgress: { completionPercentage: 84, lessonsCompleted: 20, activitiesCompleted: 10, quizzesCompleted: 8, examsCompleted: 5 },
+        overallLearningProgress: { completionPercentage: 86, lessonsCompleted: 32, activitiesCompleted: 16, quizzesCompleted: 16, examsCompleted: 8 },
         subjectPerformance: subjectRows,
         gradeRecords,
-        rankedSubjects: subjectRows.map((subject, index) => ({ ...subject, rank: index + 1 })),
-        strongestSubject: subjectRows[0],
-        prioritySubject: subjectRows[4],
+        rankedSubjects: [...subjectRows].sort((left, right) => right.finalPercentage - left.finalPercentage).map((subject, index) => ({ ...subject, rank: index + 1 })),
+        strongestSubject: subjectRows.reduce((best, subject) => subject.finalPercentage > best.finalPercentage ? subject : best),
+        prioritySubject: subjectRows.reduce((priority, subject) => subject.finalPercentage < priority.finalPercentage ? subject : priority),
         strengthRecommendation: 'Your strong Mathematics and Science results show excellent analytical and problem-solving skills.',
         improvementRecommendation: 'Continue building your technical foundations through hands-on TLE activities and regular practice.',
         latestGradeResults: gradeRecords.slice(0, 4).map((subject, index) => ({ subjectId: subject.subjectId, subjectName: subject.subjectName, gradingPeriod: '3rd', examType: 'periodic_exam', grade: subject.p3, gradedAt: daysAgo(index + 1) }))
