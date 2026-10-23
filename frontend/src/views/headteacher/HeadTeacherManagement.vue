@@ -297,23 +297,11 @@
                       </div>
                       <small v-else class="headteacher-handled-empty">No handled classes</small>
                       <div class="headteacher-handled-add">
-                        <input v-model.trim="handledClassSubjectDrafts[teacher.id]" class="headteacher-inline-input" type="text" maxlength="100" placeholder="Subject">
                         <div class="headteacher-multi-picker">
                           <button type="button" class="headteacher-multi-picker-trigger" :disabled="isUpdatingHandledClass" :aria-expanded="openHandledPickerId === teacher.id ? 'true' : 'false'" @click="toggleHandledPicker(teacher.id)">
                             <span>{{ handledSelectionLabel(teacher.id) }}</span><i class="fas fa-chevron-down"></i>
                           </button>
-                          <div v-if="openHandledPickerId === teacher.id" class="headteacher-multi-picker-menu">
-                            <p>Select one or more sections</p>
-                            <label v-for="section in getAvailableHandledSections(teacher)" :key="`handled-${teacher.id}-${section.id}`">
-                              <input type="checkbox" :checked="isHandledSectionSelected(teacher.id, section.id)" @change="toggleHandledSectionDraft(teacher.id, section.id)">
-                              <span>{{ section.name }}</span>
-                            </label>
-                            <small v-if="getAvailableHandledSections(teacher).length === 0">No sections available for this subject.</small>
-                          </div>
                         </div>
-                        <button type="button" class="headteacher-directory-action-btn is-save" title="Assign selected handled classes" :disabled="isUpdatingHandledClass || !getHandledSectionDrafts(teacher.id).length || !handledClassSubjectDrafts[teacher.id]" @click="assignHandledClassSection(teacher)">
-                          <i class="fas" :class="isUpdatingHandledClass && updatingHandledTeacherId === teacher.id ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
-                        </button>
                       </div>
                     </div>
                   </td>
@@ -482,20 +470,11 @@
                   </span>
                 </div>
                 <div class="headteacher-handled-add">
-                  <input v-model.trim="handledClassSubjectDrafts[teacher.id]" class="headteacher-inline-input" type="text" maxlength="100" placeholder="Subject">
                   <div class="headteacher-multi-picker">
                     <button type="button" class="headteacher-multi-picker-trigger" :disabled="isUpdatingHandledClass" :aria-expanded="openHandledPickerId === teacher.id ? 'true' : 'false'" @click="toggleHandledPicker(teacher.id)">
                       <span>{{ handledSelectionLabel(teacher.id) }}</span><i class="fas fa-chevron-down"></i>
                     </button>
-                    <div v-if="openHandledPickerId === teacher.id" class="headteacher-multi-picker-menu">
-                      <p>Select one or more sections</p>
-                      <label v-for="section in getAvailableHandledSections(teacher)" :key="`mobile-handled-${teacher.id}-${section.id}`">
-                        <input type="checkbox" :checked="isHandledSectionSelected(teacher.id, section.id)" @change="toggleHandledSectionDraft(teacher.id, section.id)">
-                        <span>{{ section.name }}</span>
-                      </label>
-                    </div>
                   </div>
-                  <button type="button" class="headteacher-button headteacher-button-primary headteacher-button-sm" :disabled="isUpdatingHandledClass || !getHandledSectionDrafts(teacher.id).length || !handledClassSubjectDrafts[teacher.id]" @click="assignHandledClassSection(teacher)">Assign {{ getHandledSectionDrafts(teacher.id).length || '' }}</button>
                 </div>
               </div>
 
@@ -547,6 +526,37 @@
           </div>
         </div>
       </section>
+
+      <div v-if="handledPickerTeacher" class="headteacher-modal-shell headteacher-handled-picker-shell" @click.self="closeHandledPicker">
+        <section class="headteacher-modal-panel headteacher-handled-picker-modal" role="dialog" aria-modal="true" aria-labelledby="handled-picker-title">
+          <div class="headteacher-modal-head">
+            <div>
+              <span class="headteacher-students-eyebrow">Handled Classes</span>
+              <h3 id="handled-picker-title">Select sections for {{ handledPickerTeacher.name }}</h3>
+              <p>{{ handledPickerTeacher.subject || handledPickerTeacher.department }} · Select one or more sections.</p>
+            </div>
+            <button type="button" class="headteacher-modal-close" aria-label="Close section picker" @click="closeHandledPicker"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="headteacher-handled-picker-grid">
+            <label v-for="section in getAvailableHandledSections(handledPickerTeacher)" :key="`picker-${handledPickerTeacher.id}-${section.id}`" :class="{ selected: isHandledSectionSelected(handledPickerTeacher.id, section.id) }">
+              <input type="checkbox" :checked="isHandledSectionSelected(handledPickerTeacher.id, section.id)" @change="toggleHandledSectionDraft(handledPickerTeacher.id, section.id)">
+              <span class="headteacher-picker-check"><i class="fas fa-check"></i></span>
+              <span><strong>{{ section.name }}</strong><small>Handled class section</small></span>
+            </label>
+          </div>
+          <div v-if="getAvailableHandledSections(handledPickerTeacher).length === 0" class="headteacher-table-state">
+            <i class="fas fa-layer-group"></i><span>No additional sections are available for this subject.</span>
+          </div>
+          <div class="headteacher-modal-actions">
+            <span class="headteacher-picker-selection-count">{{ getHandledSectionDrafts(handledPickerTeacher.id).length }} selected</span>
+            <button type="button" class="headteacher-button headteacher-button-outline" @click="closeHandledPicker">Cancel</button>
+            <button type="button" class="headteacher-button headteacher-button-primary" :disabled="isUpdatingHandledClass || !getHandledSectionDrafts(handledPickerTeacher.id).length" @click="assignHandledClassSection(handledPickerTeacher)">
+              <i v-if="isUpdatingHandledClass" class="fas fa-spinner fa-spin"></i>
+              Assign selected sections
+            </button>
+          </div>
+        </section>
+      </div>
 
       <section class="headteacher-section-card headteacher-panel headteacher-content-card headteacher-directory-section headteacher-attendance-section">
         <button
@@ -932,7 +942,6 @@ const teachers = ref([])
 const sections = ref([])
 const teacherAssignmentDrafts = reactive({})
 const handledClassDrafts = reactive({})
-const handledClassSubjectDrafts = reactive({})
 const openHandledPickerId = ref('')
 const isUpdatingHandledClass = ref(false)
 const updatingHandledTeacherId = ref('')
@@ -951,6 +960,7 @@ const attendanceOverview = ref({
 })
 const isAttendanceDropdownOpen = ref(true)
 const attendanceTeacherFilter = ref('')
+const handledPickerTeacher = computed(() => teachers.value.find((teacher) => teacher.id === openHandledPickerId.value) || null)
 const selectedTeacher = ref(null)
 const selectedTeacherStudents = ref([])
 const selectedAttendanceRecord = ref(null)
@@ -1437,7 +1447,7 @@ const getHandledClasses = (teacher) => (Array.isArray(teacher?.classes) ? teache
 const getSectionName = (sectionId) => sections.value.find((section) => String(section.id) === String(sectionId))?.name || 'Unavailable section'
 
 const getAvailableHandledSections = (teacher) => {
-  const subject = String(handledClassSubjectDrafts[normalizeTeacherId(teacher)] || '').trim().toLowerCase()
+  const subject = String(teacher?.subject || teacher?.department || '').trim().toLowerCase()
   const assignedIds = new Set(getHandledClasses(teacher)
     .filter((entry) => String(entry.name || '').trim().toLowerCase() === subject)
     .map((entry) => String(entry.handledSectionId)))
@@ -1464,6 +1474,10 @@ const toggleHandledPicker = (teacherId) => {
   openHandledPickerId.value = openHandledPickerId.value === normalizedTeacherId ? '' : normalizedTeacherId
 }
 
+const closeHandledPicker = () => {
+  openHandledPickerId.value = ''
+}
+
 const handledSelectionLabel = (teacherId) => {
   const selected = getHandledSectionDrafts(teacherId)
   if (selected.length === 0) return 'Select sections'
@@ -1474,7 +1488,7 @@ const handledSelectionLabel = (teacherId) => {
 const assignHandledClassSection = async (teacher) => {
   const teacherId = normalizeTeacherId(teacher)
   const sectionIds = getHandledSectionDrafts(teacherId)
-  const subject = String(handledClassSubjectDrafts[teacherId] || '').trim()
+  const subject = String(teacher?.subject || teacher?.department || '').trim()
   if (!teacherId || !sectionIds.length || !subject) return
   isUpdatingHandledClass.value = true
   updatingHandledTeacherId.value = teacherId
@@ -1567,9 +1581,6 @@ const fetchTeachers = async () => {
         lastDate: attendanceByTeacherId.get(String(teacher.id || teacher._id || ''))?.lastDate || '',
       },
     }))
-    teachers.value.forEach((teacher) => {
-      if (!handledClassSubjectDrafts[teacher.id]) handledClassSubjectDrafts[teacher.id] = teacher.subject || teacher.department || ''
-    })
     syncTeacherAssignmentDrafts(teachers.value)
 
     summary.totalTeachers = Number(responseSummary.totalTeachers || teachers.value.length)
@@ -2384,7 +2395,7 @@ onBeforeUnmount(() => {
 
 .headteacher-handled-add {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.4rem;
 }
 
@@ -2485,21 +2496,131 @@ onBeforeUnmount(() => {
   font-size: 0.74rem;
 }
 
-.headteacher-inline-input {
-  min-width: 90px;
-  width: 110px;
-  padding: 0.55rem 0.6rem;
-  border: 1px solid #d7dfec;
-  border-radius: 10px;
-  background: #fff;
-  color: #0f172a;
-  font: inherit;
-  font-size: 0.76rem;
+.headteacher-handled-picker-shell {
+  z-index: 1200;
 }
 
-.headteacher-inline-input:focus {
+.headteacher-handled-picker-modal {
+  width: min(680px, calc(100vw - 2rem));
+  max-height: min(760px, calc(100vh - 2rem));
+  overflow-y: auto;
+}
+
+.headteacher-handled-picker-modal .headteacher-modal-head h3 {
+  margin: 0.28rem 0 0;
+  color: #0f172a;
+}
+
+.headteacher-handled-picker-modal .headteacher-modal-head p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+}
+
+.headteacher-handled-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.headteacher-handled-picker-grid > label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 66px;
+  padding: 0.75rem;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.headteacher-handled-picker-grid > label:hover {
+  border-color: #a3c978;
+  transform: translateY(-1px);
+}
+
+.headteacher-handled-picker-grid > label.selected {
   border-color: #65a30d;
-  outline: 2px solid rgba(101, 163, 13, 0.14);
+  background: #f1f8ea;
+  box-shadow: 0 0 0 2px rgba(101, 163, 13, 0.1);
+}
+
+.headteacher-handled-picker-grid input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.headteacher-picker-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: transparent;
+  background: #fff;
+}
+
+.headteacher-handled-picker-grid label.selected .headteacher-picker-check {
+  border-color: #4d7c0f;
+  background: #4d7c0f;
+  color: #fff;
+}
+
+.headteacher-handled-picker-grid label > span:last-child {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.headteacher-handled-picker-grid strong {
+  color: #1e293b;
+  font-size: 0.88rem;
+}
+
+.headteacher-handled-picker-grid small {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.headteacher-picker-selection-count {
+  margin-right: auto;
+  color: #4d7c0f;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.headteacher-directory-enterprise .headteacher-table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.headteacher-directory-enterprise .headteacher-table-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.headteacher-directory-enterprise .headteacher-table-wrap::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+@media (max-width: 640px) {
+  .headteacher-handled-picker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .headteacher-handled-picker-modal .headteacher-modal-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headteacher-picker-selection-count {
+    margin-right: 0;
+  }
 }
 
 .headteacher-directory-enterprise .headteacher-row-actions {
