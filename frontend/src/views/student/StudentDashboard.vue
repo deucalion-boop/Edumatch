@@ -491,6 +491,9 @@ export default {
     }
   },
   computed: {
+    isDemoMode() {
+      return ['1', 'true', 'yes'].includes(String(this.$route?.query?.demo || '').trim().toLowerCase())
+    },
     displayName() {
       const user = this.authStore?.user || {}
       return String(user.name || user.displayName || user.username || 'Student').trim() || 'Student'
@@ -753,6 +756,16 @@ export default {
   watch: {
     '$route.query.section'() {
       this.scheduleDashboardSectionFocus()
+    },
+    '$route.query.demo'() {
+      if (this.isDemoMode) {
+        if (this.refreshTimer) window.clearInterval(this.refreshTimer)
+        this.refreshTimer = null
+        this.applyRecommendationDemoData()
+      } else {
+        this.fetchDashboardData()
+        if (!this.refreshTimer) this.refreshTimer = window.setInterval(() => this.fetchDashboardData(), 60000)
+      }
     }
   },
   created() {
@@ -763,9 +776,10 @@ export default {
     if (typeof window !== 'undefined') {
       window.addEventListener('student-dashboard-section-focus', this.handleDashboardSectionFocus)
     }
-    this.fetchDashboardData()
+    if (this.isDemoMode) this.applyRecommendationDemoData()
+    else this.fetchDashboardData()
     this.scheduleDashboardSectionFocus()
-    this.refreshTimer = window.setInterval(() => this.fetchDashboardData(), 60000)
+    if (!this.isDemoMode) this.refreshTimer = window.setInterval(() => this.fetchDashboardData(), 60000)
   },
   beforeUnmount() {
     if (typeof window !== 'undefined') {
@@ -776,6 +790,52 @@ export default {
     if (this.clockTimer) window.clearInterval(this.clockTimer)
   },
   methods: {
+    applyRecommendationDemoData() {
+      const now = Date.now()
+      const daysAgo = (days) => new Date(now - (days * 86400000)).toISOString()
+      const subjectRows = [
+        { subjectId: 'demo-math', subjectName: 'Mathematics', subjectCode: 'MATH 10', subjectCategory: 'Math', completionPercentage: 92, finalPercentage: 92, p1: 90, p2: 92, p3: 94, finalGrade: 92, activityAverage: 91, quizAverage: 93, examAverage: 92, evidenceCount: 12, minimumEvidenceCount: 3, performanceLevel: 'Excellent', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
+        { subjectId: 'demo-science', subjectName: 'Science', subjectCode: 'SCI 10', subjectCategory: 'Science', completionPercentage: 88, finalPercentage: 89, p1: 87, p2: 89, p3: 91, finalGrade: 89, activityAverage: 90, quizAverage: 88, examAverage: 89, evidenceCount: 11, minimumEvidenceCount: 3, performanceLevel: 'Strong', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
+        { subjectId: 'demo-english', subjectName: 'English', subjectCode: 'ENG 10', subjectCategory: 'English', completionPercentage: 84, finalPercentage: 86, p1: 84, p2: 86, p3: 88, finalGrade: 86, activityAverage: 88, quizAverage: 85, examAverage: 86, evidenceCount: 10, minimumEvidenceCount: 3, performanceLevel: 'Strong', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
+        { subjectId: 'demo-ap', subjectName: 'Araling Panlipunan', subjectCode: 'AP 10', subjectCategory: 'AP', completionPercentage: 79, finalPercentage: 82, p1: 80, p2: 82, p3: 84, finalGrade: 82, activityAverage: 84, quizAverage: 81, examAverage: 82, evidenceCount: 9, minimumEvidenceCount: 3, performanceLevel: 'Developing', weights: { activity: 30, quiz: 30, exam: 40 }, hasSufficientData: true },
+        { subjectId: 'demo-tle', subjectName: 'Technology and Livelihood Education', subjectCode: 'TLE 10', subjectCategory: 'Technical', completionPercentage: 75, finalPercentage: 78, p1: 76, p2: 78, p3: 80, finalGrade: 78, activityAverage: 82, quizAverage: 77, examAverage: 76, evidenceCount: 8, minimumEvidenceCount: 3, performanceLevel: 'Developing', weights: { activity: 40, quiz: 20, exam: 40 }, hasSufficientData: true }
+      ]
+      this.lessons = subjectRows.map((subject, index) => ({ id: `demo-lesson-${index + 1}`, title: `${subject.subjectName} Learning Module`, teacherName: 'Demo Teacher', createdAt: daysAgo(index + 1) }))
+      this.subjects = subjectRows.map((subject) => ({ id: subject.subjectId, name: subject.subjectName, subjectCode: subject.subjectCode }))
+      this.assessments = subjectRows.flatMap((subject, index) => [
+        { id: `demo-quiz-${index + 1}`, title: `${subject.subjectName} Quiz`, lessonSubject: subject.subjectName, assessmentMode: 'quiz', createdAt: daysAgo(index + 2) },
+        { id: `demo-activity-${index + 1}`, title: `${subject.subjectName} Activity`, lessonSubject: subject.subjectName, assessmentMode: 'activity', createdAt: daysAgo(index + 3) }
+      ])
+      this.finalizedSubmissions = subjectRows.map((subject, index) => ({ id: `demo-submission-${index + 1}`, assessmentId: `demo-quiz-${index + 1}`, title: `${subject.subjectName} Quiz`, assessmentMode: 'quiz', score: subject.quizAverage, totalPoints: 100, percentage: subject.quizAverage, scoringStatus: 'final', submittedAt: daysAgo(index + 1), createdAt: daysAgo(index + 1) }))
+      this.activitySubmissions = subjectRows.map((subject, index) => ({ id: `demo-activity-submission-${index + 1}`, assessmentId: `demo-activity-${index + 1}`, status: 'graded', hasContent: true, gradeValue: subject.activityAverage, score: subject.activityAverage, totalPoints: 100, percentage: subject.activityAverage, gradedAt: daysAgo(index + 1), submittedAt: daysAgo(index + 2), createdAt: daysAgo(index + 2) }))
+      const gradeRecords = subjectRows.map((subject) => ({ ...subject, completedPeriods: 3, periods: [{ period: '1st', grade: subject.p1 }, { period: '2nd', grade: subject.p2 }, { period: '3rd', grade: subject.p3 }] }))
+      this.recommendation = { recommendedStrand: { name: 'STEM', score: 91 }, strandScores: { STEM: 91, ABM: 82, HUMSS: 79, TVL: 76 } }
+      this.subjectInsights = {
+        assessmentAttemptsCount: 18,
+        recommendationProgressPercent: 100,
+        isRecommendationReady: true,
+        recommendedStrand: { name: 'STEM', score: 91 },
+        strandScores: { STEM: 91, ABM: 82, HUMSS: 79, TVL: 76 },
+        overallLearningProgress: { completionPercentage: 84, lessonsCompleted: 20, activitiesCompleted: 10, quizzesCompleted: 8, examsCompleted: 5 },
+        subjectPerformance: subjectRows,
+        gradeRecords,
+        rankedSubjects: subjectRows.map((subject, index) => ({ ...subject, rank: index + 1 })),
+        strongestSubject: subjectRows[0],
+        prioritySubject: subjectRows[4],
+        strengthRecommendation: 'Your strong Mathematics and Science results show excellent analytical and problem-solving skills.',
+        improvementRecommendation: 'Continue building your technical foundations through hands-on TLE activities and regular practice.',
+        latestGradeResults: gradeRecords.slice(0, 4).map((subject, index) => ({ subjectId: subject.subjectId, subjectName: subject.subjectName, gradingPeriod: '3rd', examType: 'periodic_exam', grade: subject.p3, gradedAt: daysAgo(index + 1) }))
+      }
+      this.studentContext = { section: { name: 'Unity' }, adviser: { name: 'Maria Santos' } }
+      this.studentContextLoaded = true
+      this.studentContextFailed = false
+      this.pendingSubjects = []
+      this.attendanceRecords = []
+      this.attendanceSummary = { totalRecords: 20, presentCount: 18, lateCount: 1, absentCount: 1, excusedCount: 0 }
+      this.scoredAverageScore = 85.4
+      this.loadError = ''
+      this.isInitialLoading = false
+    },
     goToStrandRanking() {
       const target = this.$refs.strandRankingSection
       if (!target) return
