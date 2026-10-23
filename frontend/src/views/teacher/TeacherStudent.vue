@@ -447,7 +447,7 @@
             class="student-roster-tab"
             :class="{ active: studentRosterView === 'advisory' }"
             :aria-selected="studentRosterView === 'advisory'"
-            @click="studentRosterView = 'advisory'"
+            @click="studentRosterView = 'advisory'; studentClassFilter = ''"
           >
             <i class="fas fa-layer-group" aria-hidden="true"></i>
             <span>Advisory Class</span>
@@ -478,7 +478,7 @@
             <i class="fas fa-search"></i>
             <input v-model.trim="studentSearch" type="search" placeholder="Search students..." aria-label="Search students" />
           </label>
-          <label class="student-toolbar-select"><i class="fas fa-filter"></i><select v-model="studentClassFilter" aria-label="Filter by class"><option value="">All Classes</option><option v-for="subject in subjects" :key="subject.id" :value="String(subject.id)">{{ subject.className || subject.name }}</option></select></label>
+          <label v-if="studentRosterView !== 'advisory'" class="student-toolbar-select"><i class="fas fa-filter"></i><select v-model="studentClassFilter" aria-label="Filter by class"><option value="">All Classes</option><option v-for="subject in subjects" :key="subject.id" :value="String(subject.id)">{{ subject.className || subject.name }}</option></select></label>
           <label class="student-toolbar-select"><i class="fas fa-arrow-down-wide-short"></i><select v-model="studentSort" aria-label="Sort students"><option value="name">Sort: Name</option><option value="progress">Sort: Progress</option><option value="average">Sort: Average</option><option value="status">Sort: Status</option></select></label>
           <div class="student-toolbar-actions">
             <button type="button" class="toolbar-icon-btn" title="Export roster" aria-label="Export roster" onclick="window.print()"><i class="fas fa-file-export"></i><span>Export</span></button>
@@ -1289,7 +1289,7 @@ const visibleRosterStudents = computed(() => {
     : handledClassStudents.value
   const query = studentSearch.value.toLowerCase()
   return roster.filter(student => (!query || `${student.name} ${student.email} ${student.sectionName} ${student.subjectNames}`.toLowerCase().includes(query))
-    && (!studentClassFilter.value || student.subjectIds?.includes(studentClassFilter.value))
+    && (studentRosterView.value === 'advisory' || !studentClassFilter.value || student.subjectIds?.includes(studentClassFilter.value))
     && (!studentEnrollmentFilter.value || (studentEnrollmentFilter.value === 'registered' ? !student.isInvitationOnly || student.invitationStatus === 'registered' : student.status === studentEnrollmentFilter.value)))
     .sort((left, right) => {
       if (studentSort.value === 'progress') return Number(right.progress || 0) - Number(left.progress || 0)
