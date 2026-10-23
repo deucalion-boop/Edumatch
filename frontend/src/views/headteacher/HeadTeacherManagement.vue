@@ -2384,7 +2384,7 @@ onBeforeUnmount(() => {
 
 .headteacher-handled-add {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.4rem;
 }
 
@@ -2432,20 +2432,19 @@ onBeforeUnmount(() => {
 }
 
 .headteacher-multi-picker-menu {
-  position: absolute;
-  top: calc(100% + 0.4rem);
-  right: 0;
-  z-index: 30;
+  position: static;
   display: grid;
   gap: 0.25rem;
-  width: max(210px, 100%);
+  width: 100%;
   max-height: 240px;
   overflow-y: auto;
+  margin-top: 0.4rem;
   padding: 0.55rem;
   border: 1px solid #dbe4ef;
   border-radius: 13px;
   background: #fff;
   box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+  box-sizing: border-box;
 }
 
 .headteacher-multi-picker-menu p {
