@@ -288,18 +288,19 @@
                   <td>
                     <div class="headteacher-handled-classes" @click.stop>
                       <div v-if="getHandledClasses(teacher).length" class="headteacher-handled-chips">
-                        <span v-for="handledClass in getHandledClasses(teacher)" :key="handledClass.id" class="headteacher-handled-chip">
+                        <span v-for="handledClass in getHandledClasses(teacher).slice(0, 1)" :key="handledClass.id" class="headteacher-handled-chip">
                           {{ handledClass.name }} · {{ getSectionName(handledClass.handledSectionId) }}
                           <button type="button" :aria-label="`Remove ${handledClass.className}`" :disabled="isUpdatingHandledClass" @click="removeHandledClassAssignment(teacher, handledClass)">
                             <i class="fas fa-times"></i>
                           </button>
                         </span>
+                        <button v-if="getHandledClasses(teacher).length > 1" type="button" class="headteacher-handled-more" @click="toggleHandledPicker(teacher.id)">+{{ getHandledClasses(teacher).length - 1 }} more</button>
                       </div>
                       <small v-else class="headteacher-handled-empty">No handled classes</small>
                       <div class="headteacher-handled-add">
                         <div class="headteacher-multi-picker">
                           <button type="button" class="headteacher-multi-picker-trigger" :disabled="isUpdatingHandledClass" :aria-expanded="openHandledPickerId === teacher.id ? 'true' : 'false'" @click="toggleHandledPicker(teacher.id)">
-                            <span>{{ handledSelectionLabel(teacher.id) }}</span><i class="fas fa-chevron-down"></i>
+                            <span>Manage classes</span><i class="fas fa-chevron-right"></i>
                           </button>
                         </div>
                       </div>
@@ -464,15 +465,16 @@
                 </div>
                 <p class="headteacher-mobile-assignment-copy">Assign multiple sections this teacher handles. This does not change the advisory section.</p>
                 <div v-if="getHandledClasses(teacher).length" class="headteacher-handled-chips">
-                  <span v-for="handledClass in getHandledClasses(teacher)" :key="`mobile-${handledClass.id}`" class="headteacher-handled-chip">
+                  <span v-for="handledClass in getHandledClasses(teacher).slice(0, 2)" :key="`mobile-${handledClass.id}`" class="headteacher-handled-chip">
                     {{ handledClass.name }} · {{ getSectionName(handledClass.handledSectionId) }}
                     <button type="button" :disabled="isUpdatingHandledClass" @click="removeHandledClassAssignment(teacher, handledClass)"><i class="fas fa-times"></i></button>
                   </span>
+                  <button v-if="getHandledClasses(teacher).length > 2" type="button" class="headteacher-handled-more" @click="toggleHandledPicker(teacher.id)">+{{ getHandledClasses(teacher).length - 2 }} more</button>
                 </div>
                 <div class="headteacher-handled-add">
                   <div class="headteacher-multi-picker">
                     <button type="button" class="headteacher-multi-picker-trigger" :disabled="isUpdatingHandledClass" :aria-expanded="openHandledPickerId === teacher.id ? 'true' : 'false'" @click="toggleHandledPicker(teacher.id)">
-                      <span>{{ handledSelectionLabel(teacher.id) }}</span><i class="fas fa-chevron-down"></i>
+                      <span>Manage classes</span><i class="fas fa-chevron-right"></i>
                     </button>
                   </div>
                 </div>
@@ -537,6 +539,19 @@
             </div>
             <button type="button" class="headteacher-modal-close" aria-label="Close section picker" @click="closeHandledPicker"><i class="fas fa-times"></i></button>
           </div>
+          <div v-if="getHandledClasses(handledPickerTeacher).length" class="headteacher-current-handled">
+            <div class="headteacher-current-handled-head">
+              <div><strong>Currently handled</strong><small>Remove a section when this teacher no longer handles it.</small></div>
+              <span>{{ getHandledClasses(handledPickerTeacher).length }}</span>
+            </div>
+            <div class="headteacher-current-handled-list">
+              <article v-for="handledClass in getHandledClasses(handledPickerTeacher)" :key="`current-${handledClass.id}`">
+                <span><strong>{{ getSectionName(handledClass.handledSectionId) }}</strong><small>{{ handledClass.name }}</small></span>
+                <button type="button" :disabled="isUpdatingHandledClass" :aria-label="`Remove ${handledClass.className}`" @click="removeHandledClassAssignment(handledPickerTeacher, handledClass)"><i class="fas fa-trash-alt"></i></button>
+              </article>
+            </div>
+          </div>
+          <div class="headteacher-picker-divider"><span>Add more sections</span></div>
           <div class="headteacher-handled-picker-grid">
             <label v-for="section in getAvailableHandledSections(handledPickerTeacher)" :key="`picker-${handledPickerTeacher.id}-${section.id}`" :class="{ selected: isHandledSectionSelected(handledPickerTeacher.id, section.id) }">
               <input type="checkbox" :checked="isHandledSectionSelected(handledPickerTeacher.id, section.id)" @change="toggleHandledSectionDraft(handledPickerTeacher.id, section.id)">
@@ -2394,6 +2409,22 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
+.headteacher-handled-more {
+  border: 0;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.headteacher-handled-more:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
 .headteacher-handled-empty {
   color: #94a3b8;
 }
@@ -2444,7 +2475,7 @@ onBeforeUnmount(() => {
 }
 
 .headteacher-multi-picker-trigger[aria-expanded='true'] i {
-  transform: rotate(180deg);
+  transform: none;
 }
 
 .headteacher-multi-picker-menu {
@@ -2599,6 +2630,112 @@ onBeforeUnmount(() => {
   font-weight: 800;
 }
 
+.headteacher-current-handled {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #dbe4ef;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.headteacher-current-handled-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.65rem;
+}
+
+.headteacher-current-handled-head > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.headteacher-current-handled-head strong {
+  color: #1e293b;
+  font-size: 0.86rem;
+}
+
+.headteacher-current-handled-head small {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.headteacher-current-handled-head > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #e6f3d9;
+  color: #3f6212;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.headteacher-current-handled-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.headteacher-current-handled-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.headteacher-current-handled-list article > span {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.headteacher-current-handled-list article strong {
+  color: #1e293b;
+  font-size: 0.78rem;
+}
+
+.headteacher-current-handled-list article small {
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.headteacher-current-handled-list button {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fff7f7;
+  color: #dc2626;
+  cursor: pointer;
+}
+
+.headteacher-picker-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 1rem 0 0.25rem;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.headteacher-picker-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: #e2e8f0;
+}
+
 .headteacher-directory-enterprise .headteacher-table-wrap {
   scrollbar-width: thin;
   scrollbar-color: #94a3b8 transparent;
@@ -2615,6 +2752,10 @@ onBeforeUnmount(() => {
 
 @media (max-width: 640px) {
   .headteacher-handled-picker-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .headteacher-current-handled-list {
     grid-template-columns: 1fr;
   }
 
